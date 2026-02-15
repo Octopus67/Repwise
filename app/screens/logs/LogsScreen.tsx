@@ -30,19 +30,17 @@ import { sessionHasPR } from '../../utils/sessionEditConversion';
 import { useStore } from '../../store';
 import { Icon } from '../../components/common/Icon';
 import api from '../../services/api';
-import type { TrainingSessionResponse } from '../../types/training';
+import type { TrainingSessionResponse, WorkoutTemplateResponse } from '../../types/training';
 import type { LogsStackParamList } from '../../navigation/BottomTabNavigator';
 
-interface NutritionEntry {
-  id: string;
-  meal_name: string;
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-  entry_date: string;
-  created_at: string | null;
-}
+// ── New imports for redesign ────────────────────────────────────────────────
+import { QuickRelogRow } from '../../components/log/QuickRelogRow';
+import { CollapsibleSection } from '../../components/log/CollapsibleSection';
+import { StartWorkoutCard } from '../../components/log/StartWorkoutCard';
+import { TemplateRow } from '../../components/log/TemplateRow';
+import { computeQuickRelogItems, QuickRelogItem } from '../../utils/quickRelogLogic';
+import { groupEntriesBySlot, MealSlotName } from '../../utils/mealSlotLogic';
+import type { NutritionEntry } from '../../utils/mealSlotLogic';
 
 type Tab = 'nutrition' | 'training';
 
@@ -73,12 +71,21 @@ export function LogsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [showNutritionModal, setShowNutritionModal] = useState(false);
   const [showTrainingModal, setShowTrainingModal] = useState(false);
+  const [prefilledMealName, setPrefilledMealName] = useState<string | undefined>(undefined);
 
   // Training pagination state
   const [trainingSessions, setTrainingSessions] = useState<TrainingSessionResponse[]>([]);
   const [trainingPage, setTrainingPage] = useState(1);
   const [trainingTotalCount, setTrainingTotalCount] = useState(0);
   const [trainingLoadingMore, setTrainingLoadingMore] = useState(false);
+
+  // ── New state: Quick Re-log, favorites, templates ─────────────────────────
+  const [favorites, setFavorites] = useState<any[]>([]);
+  const [recentEntries, setRecentEntries] = useState<NutritionEntry[]>([]);
+  const [quickRelogItems, setQuickRelogItems] = useState<QuickRelogItem[]>([]);
+  const [quickRelogLoading, setQuickRelogLoading] = useState(true);
+  const [userTemplates, setUserTemplates] = useState<WorkoutTemplateResponse[]>([]);
+  const [staticTemplates, setStaticTemplates] = useState<any[]>([]);
 
   const selectedDate = useStore((s) => s.selectedDate);
   const setSelectedDate = useStore((s) => s.setSelectedDate);
@@ -115,7 +122,6 @@ export function LogsScreen() {
       if (replace) {
         setTrainingSessions(items);
       } else {
-        // Deduplicate by session ID
         setTrainingSessions((prev) => {
           const existingIds = new Set(prev.map((s) => s.id));
           const newItems = items.filter((s) => !existingIds.has(s.id));
@@ -130,21 +136,41 @@ export function LogsScreen() {
   }, []);
 
   const loadData = useCallback(async () => {
-    await Promise.allSettled([
+    // Compute 14-day window for Quick Re-log
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const recentStart = fourteenDaysAgo.toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
+
+    const [nutritionRes, trainingRes, favoritesRes, recentRes, userTemplatesRes, staticTemplatesRes] = await Promise.allSettled([
       loadNutritionData(),
       loadTrainingPage(1, true),
+      api.get('meals/favorites', { params: { limit: 10 } }),
+      api.get('nutrition/entries', { params: { start_date: recentStart, end_date: today, limit: 200 } }),
+      api.get('training/user-templates'),
+      api.get('training/templates'),
     ]);
+
+    if (favoritesRes.status === 'fulfilled') setFavorites(favoritesRes.value.data.items ?? []);
+    if (recentRes.status === 'fulfilled') setRecentEntries(recentRes.value.data.items ?? []);
+    if (userTemplatesRes.status === 'fulfilled') setUserTemplates(userTemplatesRes.value.data ?? []);
+    if (staticTemplatesRes.status === 'fulfilled') setStaticTemplates(staticTemplatesRes.value.data ?? []);
+
     setIsLoading(false);
   }, [loadNutritionData, loadTrainingPage]);
 
   useEffect(() => { loadData(); }, [loadData, selectedDate]);
 
+  // ── Compute Quick Re-log items when data changes ──────────────────────────
+  useEffect(() => {
+    const items = computeQuickRelogItems(recentEntries, favorites, 5);
+    setQuickRelogItems(items);
+    setQuickRelogLoading(false);
+  }, [recentEntries, favorites]);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await Promise.allSettled([
-      loadNutritionData(),
-      loadTrainingPage(1, true),
-    ]);
+    await loadData();
     setRefreshing(false);
   };
 
@@ -170,14 +196,6 @@ export function LogsScreen() {
     } catch { /* ignore */ }
   };
 
-  // Group nutrition entries by date
-  const groupedNutrition = nutritionEntries.reduce<Record<string, NutritionEntry[]>>((acc, entry) => {
-    const date = entry.entry_date;
-    if (!acc[date]) acc[date] = [];
-    acc[date].push(entry);
-    return acc;
-  }, {});
-
   // Group training sessions by date using utility
   const groupedTraining = groupSessionsByDate(trainingSessions);
 
@@ -195,17 +213,49 @@ export function LogsScreen() {
 
   const targets = adaptiveTargets ?? { calories: 2400, protein_g: 180, carbs_g: 250, fat_g: 65 };
 
+  // ── Meal slot grouping ────────────────────────────────────────────────────
+  const mealSlots = groupEntriesBySlot(todayEntries);
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
   const openAddModal = () => {
     if (tab === 'nutrition') {
+      setPrefilledMealName(undefined);
       setShowNutritionModal(true);
     } else {
-      // Feature flag: training_log_v2
       if (isTrainingLogV2Enabled()) {
         navigation.push('ActiveWorkout', { mode: 'new' });
       } else {
         setShowTrainingModal(true);
       }
     }
+  };
+
+  const handleAddToSlot = (slotName: MealSlotName) => {
+    setPrefilledMealName(slotName);
+    setShowNutritionModal(true);
+  };
+
+  const handleQuickRelogTap = (item: QuickRelogItem) => {
+    setPrefilledMealName(item.name);
+    setShowNutritionModal(true);
+  };
+
+  const handleStartEmpty = () => {
+    if (isTrainingLogV2Enabled()) {
+      navigation.push('ActiveWorkout', { mode: 'new' });
+    } else {
+      setShowTrainingModal(true);
+    }
+  };
+
+  const handleStartTemplate = (templateId: string) => {
+    navigation.push('ActiveWorkout', { mode: 'template', templateId });
+  };
+
+  const handleNutritionModalClose = () => {
+    setShowNutritionModal(false);
+    setPrefilledMealName(undefined);
   };
 
   let cardIndex = 0;
@@ -265,6 +315,49 @@ export function LogsScreen() {
     );
   };
 
+  // ── Training tab header (rendered above FlatList) ─────────────────────────
+  const trainingListHeader = () => (
+    <View>
+      {/* Start Workout Card */}
+      <StartWorkoutCard
+        userTemplates={userTemplates}
+        staticTemplates={staticTemplates}
+        onStartEmpty={handleStartEmpty}
+        onStartTemplate={handleStartTemplate}
+      />
+
+      {/* My Templates section — hidden if empty */}
+      {userTemplates.length > 0 && (
+        <CollapsibleSection title="My Templates" defaultExpanded={true}>
+          <View style={{ gap: spacing[2] }}>
+            {userTemplates.map((t) => (
+              <TemplateRow
+                key={t.id}
+                name={t.name}
+                exerciseCount={t.exercises.length}
+                onStart={() => handleStartTemplate(t.id)}
+              />
+            ))}
+            <TouchableOpacity
+              style={styles.browseLink}
+              onPress={() => {
+                // Browse all templates — for now, same as "From Template" in StartWorkoutCard
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.browseLinkText}>Browse all templates →</Text>
+            </TouchableOpacity>
+          </View>
+        </CollapsibleSection>
+      )}
+
+      {/* Section header for session history */}
+      {groupedTraining.length > 0 && (
+        <Text style={[styles.dateHeader, { marginTop: spacing[4] }]}>Recent Sessions</Text>
+      )}
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']} testID="logs-screen">
       <Text style={styles.title}>Logs</Text>
@@ -306,87 +399,147 @@ export function LogsScreen() {
           contentContainerStyle={styles.listContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent.primary} />}
         >
-          {/* CopyMealsBar at top of nutrition tab */}
-          <CopyMealsBar targetDate={selectedDate} onCopyComplete={loadData} />
+          {/* 1. Quick Re-log row at top */}
+          <QuickRelogRow
+            items={quickRelogItems}
+            onTapItem={handleQuickRelogTap}
+            loading={quickRelogLoading}
+          />
 
-          {/* BudgetBar after CopyMealsBar */}
+          {/* 2. BudgetBar (unchanged) */}
           <BudgetBar consumed={consumed} targets={targets} />
 
-          {Object.keys(groupedNutrition).length === 0 ? (
-            <View testID="logs-empty-state">
-            <EmptyState
-              icon={<Icon name="utensils" />}
-              title="No nutrition entries yet"
-              description="Tap the + button to log your first meal"
-              actionLabel="Log Nutrition"
-              onAction={() => setShowNutritionModal(true)}
-            />
+          {/* 3. Inline meal-slot rendering with swipe-to-delete */}
+          {mealSlots.map((slot) => (
+            <View key={slot.name} style={styles.slotContainer}>
+              {/* Slot header */}
+              <View style={styles.slotHeader}>
+                <Text style={styles.slotName}>{slot.name}</Text>
+                <Text style={styles.slotCalories}>
+                  {Math.round(slot.totals.calories)} kcal
+                </Text>
+              </View>
+
+              {/* Entries with swipe-to-delete */}
+              {slot.entries.length > 0 ? (
+                slot.entries.map((entry) => {
+                  const idx = cardIndex++;
+                  return (
+                    <StaggeredCard key={entry.id} index={idx}>
+                      <SwipeableRow onDelete={() => handleDeleteNutrition(entry.id)}>
+                        <Card style={styles.entryCard}>
+                          <View style={styles.entryHeader}>
+                            <View style={styles.entryNameRow}>
+                              <Text style={styles.entryName}>{entry.meal_name}</Text>
+                              {entry.created_at && (
+                                <Text style={styles.entryTimestamp}>
+                                  {formatEntryTime(entry.created_at)}
+                                </Text>
+                              )}
+                            </View>
+                          </View>
+                          <View style={styles.macroRow}>
+                            <MacroPill label="Cal" value={entry.calories} color={colors.chart.calories} />
+                            <MacroPill label="P" value={entry.protein_g} color={colors.semantic.positive} />
+                            <MacroPill label="C" value={entry.carbs_g} color={colors.semantic.warning} />
+                            <MacroPill label="F" value={entry.fat_g} color={colors.semantic.negative} />
+                          </View>
+                        </Card>
+                      </SwipeableRow>
+                    </StaggeredCard>
+                  );
+                })
+              ) : null}
+
+              {/* Add button for slot — always visible */}
+              <TouchableOpacity
+                style={styles.slotAddButton}
+                onPress={() => handleAddToSlot(slot.name)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.slotAddText}>+ Add to {slot.name}</Text>
+              </TouchableOpacity>
             </View>
-          ) : (
-            Object.entries(groupedNutrition)
-              .sort(([a], [b]) => b.localeCompare(a))
-              .map(([date, entries]) => (
-                <View key={date}>
-                  <Text style={styles.dateHeader}>{new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</Text>
-                  {entries.map((entry) => {
-                    const idx = cardIndex++;
-                    return (
-                      <StaggeredCard key={entry.id} index={idx}>
-                        <SwipeableRow onDelete={() => handleDeleteNutrition(entry.id)}>
-                          <Card style={styles.entryCard}>
-                            <View style={styles.entryHeader}>
-                              <View style={styles.entryNameRow}>
-                                <Text style={styles.entryName}>{entry.meal_name}</Text>
-                                {entry.created_at && (
-                                  <Text style={styles.entryTimestamp}>
-                                    {formatEntryTime(entry.created_at)}
-                                  </Text>
-                                )}
-                              </View>
-                            </View>
-                            <View style={styles.macroRow}>
-                              <MacroPill label="Cal" value={entry.calories} color={colors.chart.calories} />
-                              <MacroPill label="P" value={entry.protein_g} color={colors.semantic.positive} />
-                              <MacroPill label="C" value={entry.carbs_g} color={colors.semantic.warning} />
-                              <MacroPill label="F" value={entry.fat_g} color={colors.semantic.negative} />
-                            </View>
-                          </Card>
-                        </SwipeableRow>
-                      </StaggeredCard>
-                    );
-                  })}
-                </View>
-              ))
-          )}
-        </ScrollView>
-      ) : groupedTraining.length === 0 ? (
-        <ScrollView
-          style={styles.list}
-          contentContainerStyle={styles.listContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent.primary} />}
-        >
-          <View testID="logs-empty-state">
-          <EmptyState
-            icon={<Icon name="dumbbell" />}
-            title="No training sessions yet"
-            description="Tap the + button to log your first workout"
-            actionLabel="Log Training"
-            onAction={() => setShowTrainingModal(true)}
-          />
+          ))}
+
+          {/* 4. Favorites section — collapsed if Quick Re-log has ≥3 items */}
+          <CollapsibleSection
+            title="★ Favorites"
+            defaultExpanded={quickRelogItems.length < 3}
+          >
+            {favorites.length > 0 ? (
+              <View style={{ gap: spacing[2] }}>
+                {favorites.map((fav: any) => (
+                  <TouchableOpacity
+                    key={fav.id}
+                    style={styles.favoriteRow}
+                    onPress={() => {
+                      setPrefilledMealName(fav.name);
+                      setShowNutritionModal(true);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.favoriteName}>{fav.name}</Text>
+                      <Text style={styles.favoriteMacros}>
+                        {Math.round(fav.calories)} kcal
+                      </Text>
+                    </View>
+                    <Text style={styles.favoriteLogBtn}>Log</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.emptyFavText}>
+                Star foods when logging to save them here
+              </Text>
+            )}
+          </CollapsibleSection>
+
+          {/* 5. CopyMealsBar at bottom */}
+          <View style={{ marginTop: spacing[3] }}>
+            <CopyMealsBar targetDate={selectedDate} onCopyComplete={loadData} />
           </View>
         </ScrollView>
       ) : (
-        <FlatList
-          data={groupedTraining}
-          keyExtractor={(item) => item.date}
-          renderItem={renderTrainingGroup}
-          style={styles.list}
-          contentContainerStyle={styles.listContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent.primary} />}
-          onEndReached={loadMoreTraining}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={trainingListFooter}
-        />
+        /* ── Training Tab ──────────────────────────────────────────────── */
+        groupedTraining.length === 0 && userTemplates.length === 0 ? (
+          <ScrollView
+            style={styles.list}
+            contentContainerStyle={styles.listContent}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent.primary} />}
+          >
+            {/* Start Workout card even in empty state */}
+            <StartWorkoutCard
+              userTemplates={userTemplates}
+              staticTemplates={staticTemplates}
+              onStartEmpty={handleStartEmpty}
+              onStartTemplate={handleStartTemplate}
+            />
+            <View testID="logs-empty-state">
+              <EmptyState
+                icon={<Icon name="dumbbell" />}
+                title="No training sessions yet"
+                description="Tap Start Workout above or the + button to log your first workout"
+                actionLabel="Log Training"
+                onAction={() => setShowTrainingModal(true)}
+              />
+            </View>
+          </ScrollView>
+        ) : (
+          <FlatList
+            data={groupedTraining}
+            keyExtractor={(item) => item.date}
+            renderItem={renderTrainingGroup}
+            ListHeaderComponent={trainingListHeader}
+            style={styles.list}
+            contentContainerStyle={styles.listContent}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent.primary} />}
+            onEndReached={loadMoreTraining}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={trainingListFooter}
+          />
+        )
       )}
 
       <TouchableOpacity
@@ -400,8 +553,9 @@ export function LogsScreen() {
 
       <AddNutritionModal
         visible={showNutritionModal}
-        onClose={() => setShowNutritionModal(false)}
+        onClose={handleNutritionModalClose}
         onSuccess={loadData}
+        prefilledMealName={prefilledMealName}
       />
       <AddTrainingModal
         visible={showTrainingModal}
@@ -538,5 +692,80 @@ const styles = StyleSheet.create({
   loadingMore: {
     paddingVertical: spacing[4],
     alignItems: 'center',
+  },
+  // ── Meal slot styles ────────────────────────────────────────────────────
+  slotContainer: {
+    marginBottom: spacing[3],
+    backgroundColor: colors.bg.surface,
+    borderRadius: radius.md,
+    overflow: 'hidden',
+  },
+  slotHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing[2],
+    paddingHorizontal: spacing[3],
+    backgroundColor: colors.bg.surfaceRaised,
+  },
+  slotName: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+    color: colors.text.primary,
+  },
+  slotCalories: {
+    fontSize: typography.size.sm,
+    color: colors.text.secondary,
+    fontWeight: typography.weight.medium,
+  },
+  slotAddButton: {
+    alignItems: 'center',
+    paddingVertical: spacing[2],
+    borderTopWidth: 1,
+    borderTopColor: colors.border.subtle,
+  },
+  slotAddText: {
+    fontSize: typography.size.sm,
+    color: colors.accent.primary,
+    fontWeight: typography.weight.medium,
+  },
+  // ── Favorites styles ──────────────────────────────────────────────────
+  favoriteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing[2],
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.subtle,
+  },
+  favoriteName: {
+    fontSize: typography.size.base,
+    color: colors.text.primary,
+    fontWeight: typography.weight.medium,
+  },
+  favoriteMacros: {
+    fontSize: typography.size.sm,
+    color: colors.text.secondary,
+  },
+  favoriteLogBtn: {
+    fontSize: typography.size.sm,
+    color: colors.accent.primary,
+    fontWeight: typography.weight.semibold,
+    paddingHorizontal: spacing[3],
+  },
+  emptyFavText: {
+    fontSize: typography.size.sm,
+    color: colors.text.muted,
+    textAlign: 'center',
+    paddingVertical: spacing[2],
+  },
+  // ── Template browse link ──────────────────────────────────────────────
+  browseLink: {
+    paddingVertical: spacing[2],
+    alignItems: 'center',
+  },
+  browseLinkText: {
+    fontSize: typography.size.sm,
+    color: colors.accent.primary,
+    fontWeight: typography.weight.medium,
   },
 });
