@@ -54,10 +54,9 @@ class FoodDatabaseService:
         base = select(FoodItem)
         base = FoodItem.not_deleted(base)
 
-        # Text search on name — prefix match (fast with index).
-        # Use lower()+LIKE instead of ILIKE so SQLite can use COLLATE NOCASE index.
+        # Text search on name — prefix match first, then contains match.
         if query:
-            base = base.where(func.lower(FoodItem.name).like(func.lower(f"{query}%")))
+            base = base.where(func.lower(FoodItem.name).like(func.lower(f"%{query}%")))
 
         # Optional filters
         if category:
@@ -72,11 +71,25 @@ class FoodDatabaseService:
             count_stmt = select(func.count()).select_from(base.subquery())
             total = (await self.db.execute(count_stmt)).scalar_one()
 
-        # For search queries, simple name ordering is faster (avoids CASE expression
-        # that prevents index usage). For browsing (no query), use source-priority ordering.
+        # For search queries, prioritize simpler/shorter names (e.g. "Cheese" before
+        # "CHEESE & ARTISAN CRACKERS"). Exact matches first, then by name length.
         if query:
+            # Relevance: exact match → short prefix match → longer prefix → contains match
+            relevance = case(
+                (func.lower(FoodItem.name) == func.lower(query), 0),  # exact match
+                (func.lower(FoodItem.name).like(func.lower(f"{query}%")), 1),  # prefix match (starts with query)
+                else_=2,  # contains match
+            )
+            # Within same relevance tier, prefer shorter names (simpler foods)
+            source_priority = case(
+                (FoodItem.source == "usda", 0),
+                (FoodItem.source == "verified", 1),
+                (FoodItem.source == "community", 2),
+                (FoodItem.source == "custom", 3),
+                else_=4,
+            )
             items_stmt = (
-                base.order_by(FoodItem.name)
+                base.order_by(relevance, source_priority, func.length(FoodItem.name), FoodItem.name)
                 .offset(pagination.offset)
                 .limit(pagination.limit)
             )
