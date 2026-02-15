@@ -426,23 +426,6 @@ export function DashboardScreen({ navigation }: any) {
           />
         </Animated.View>
 
-        {/* Day Classification Badge */}
-        <Animated.View style={dayBadgeAnim}>
-          <DayBadge
-            isTrainingDay={dayClassification.isTrainingDay}
-            muscleGroups={dayClassification.muscleGroups}
-            isLoading={dayClassLoading}
-          />
-        </Animated.View>
-
-        {/* Sync Engine Day Indicator */}
-        <DayIndicator
-          dayClassification={syncDayClass}
-          explanation={syncExplanation}
-          isOverride={syncIsOverride}
-          isLoading={syncLoading}
-        />
-
         {/* Quick Actions — above the fold */}
         <Animated.View style={quickActionsAnim}>
           <SectionHeader title="Quick Log" />
