@@ -51,9 +51,10 @@ class ContentService:
         if module_id is not None:
             base = base.where(ContentArticle.module_id == module_id)
         if category is not None:
-            base = base.join(ContentModule, ContentArticle.module_id == ContentModule.id).where(
+            module_subq = select(ContentModule.id).where(
                 func.lower(ContentModule.name) == func.lower(category)
-            )
+            ).scalar_subquery()
+            base = base.where(ContentArticle.module_id == module_subq)
         if status is not None:
             base = base.where(ContentArticle.status == status)
         if tag is not None:

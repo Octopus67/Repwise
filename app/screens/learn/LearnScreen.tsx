@@ -7,6 +7,7 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -203,13 +204,24 @@ export function LearnScreen() {
     try {
       const { data } = await api.get('content/favorites');
       setFavorites(new Set((data.items ?? []).map((a: Article) => a.id)));
-    } catch { /* ignore */ }
+    } catch (err: any) {
+      console.warn('Load favorites failed:', err?.response?.status);
+    }
   }, []);
 
-  useEffect(() => { loadArticles(); }, [loadArticles]);
+  const prevCategoryRef = useRef(category);
+
   useEffect(() => { loadFavorites(); }, [loadFavorites]);
 
   useEffect(() => {
+    // Category changed — load immediately
+    if (prevCategoryRef.current !== category) {
+      prevCategoryRef.current = category;
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+      loadArticles();
+      return;
+    }
+    // Search changed — debounce
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     searchTimerRef.current = setTimeout(() => {
       loadArticles();
@@ -217,7 +229,7 @@ export function LearnScreen() {
     return () => {
       if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     };
-  }, [searchQuery]);
+  }, [category, searchQuery, loadArticles]);
 
   const displayArticles = category === '★ Favorites'
     ? articles.filter((a) => favorites.has(a.id))
@@ -231,15 +243,27 @@ export function LearnScreen() {
 
   const toggleFavorite = async (articleId: string) => {
     const isFav = favorites.has(articleId);
+    // Optimistic update
+    if (isFav) {
+      setFavorites((prev) => { const next = new Set(prev); next.delete(articleId); return next; });
+    } else {
+      setFavorites((prev) => new Set(prev).add(articleId));
+    }
     try {
       if (isFav) {
         await api.delete(`content/articles/${articleId}/favorite`);
-        setFavorites((prev) => { const next = new Set(prev); next.delete(articleId); return next; });
       } else {
         await api.post(`content/articles/${articleId}/favorite`);
-        setFavorites((prev) => new Set(prev).add(articleId));
       }
-    } catch { /* ignore */ }
+    } catch (err: any) {
+      console.warn('Favorite toggle failed:', err?.response?.status, err?.response?.data?.message);
+      // Revert on error
+      if (isFav) {
+        setFavorites((prev) => new Set(prev).add(articleId));
+      } else {
+        setFavorites((prev) => { const next = new Set(prev); next.delete(articleId); return next; });
+      }
+    }
   };
 
   const renderArticle = ({ item, index }: { item: Article; index: number }) => (
@@ -318,7 +342,7 @@ export function LearnScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg.base },
+  safe: { flex: 1, backgroundColor: colors.bg.base, paddingTop: Platform.OS === 'web' ? spacing[4] : 0 },
   title: {
     color: colors.text.primary,
     fontSize: typography.size.xl,
