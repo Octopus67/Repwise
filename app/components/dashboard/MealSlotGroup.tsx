@@ -55,16 +55,14 @@ export function MealSlotGroup({ slot, onAddToSlot }: MealSlotGroupProps) {
         </View>
       )}
 
-      {/* Empty slot */}
-      {!hasEntries && (
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => onAddToSlot(slot.name)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.addButtonText}>+</Text>
-        </TouchableOpacity>
-      )}
+      {/* Add button — always visible */}
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => onAddToSlot(slot.name)}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.addButtonText}>+</Text>
+      </TouchableOpacity>
     </View>
   );
 }
