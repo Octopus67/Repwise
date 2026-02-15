@@ -1,0 +1,1 @@
+"""Weekly Intelligence Report module."""

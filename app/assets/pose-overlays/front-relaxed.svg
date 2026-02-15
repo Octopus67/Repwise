@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 400" width="200" height="400">
+  <!-- Front Relaxed Pose - Placeholder silhouette -->
+  <g fill="#FFFFFF" opacity="1">
+    <!-- Head -->
+    <circle cx="100" cy="45" r="22" />
+    <!-- Neck -->
+    <rect x="92" y="67" width="16" height="15" rx="4" />
+    <!-- Torso -->
+    <path d="M70 82 L130 82 L125 200 L75 200 Z" />
+    <!-- Left arm -->
+    <path d="M70 82 L55 85 L48 160 L58 162 L65 100 L70 95 Z" />
+    <!-- Right arm -->
+    <path d="M130 82 L145 85 L152 160 L142 162 L135 100 L130 95 Z" />
+    <!-- Left leg -->
+    <path d="M75 200 L85 200 L88 320 L95 380 L80 382 L78 320 L72 200 Z" />
+    <!-- Right leg -->
+    <path d="M115 200 L125 200 L128 200 L122 320 L120 382 L105 380 L112 320 Z" />
+  </g>
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 400" width="200" height="400">
+  <!-- Side Pose - Placeholder silhouette -->
+  <g fill="#FFFFFF" opacity="1">
+    <!-- Head -->
+    <ellipse cx="105" cy="45" rx="20" ry="22" />
+    <!-- Neck -->
+    <rect x="98" y="67" width="14" height="15" rx="4" />
+    <!-- Torso (side view, narrower) -->
+    <path d="M90 82 L120 82 L118 200 L88 200 Z" />
+    <!-- Arm (hanging at side) -->
+    <path d="M88 85 L78 90 L75 160 L85 162 L88 100 Z" />
+    <!-- Front leg -->
+    <path d="M92 200 L105 200 L108 320 L112 380 L98 382 L95 320 Z" />
+    <!-- Back leg -->
+    <path d="M105 200 L118 200 L115 320 L118 380 L104 382 L102 320 Z" />
+  </g>
+</svg>

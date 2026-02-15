@@ -1,0 +1,712 @@
+# Implementation Plan: Training Log Redesign (Revised)
+
+## Pre-Execution Checklist
+
+Before starting any task, verify:
+- `pytest tests/` passes (backend baseline green)
+- `npx jest` passes from `app/` (frontend baseline green)
+- `alembic current` shows head revision (no pending migrations)
+- `react-native-svg` is in `app/package.json` dependencies (needed for RestTimerV2 progress ring)
+- `@react-native-async-storage/async-storage` is in `app/package.json` dependencies (needed for Zustand persist)
+- `expo-haptics` is in `app/package.json` dependencies (needed for set completion feedback)
+- `expo-av` is in `app/package.json` dependencies (needed for rest timer sound)
+- Feature flag system exists at `src/modules/feature_flags/service.py` with `FeatureFlagService.set_flag()`
+
+## Rollback Strategy (Global)
+
+Every step below is additive. No existing files are deleted. Rollback for any step = `git revert` the commit(s) for that step. The feature flag `training_log_v2` (created in Step 0) gates all new frontend UI. Setting it to `is_enabled=False` instantly reverts all users to the old `AddTrainingModal` flow without any code deployment.
+
+## Monitoring (Post-Launch)
+
+Instrument and alert on:
+- `training.workout.started` — count of workouts started per hour (new metric)
+- `training.workout.finished` — count of workouts finished per hour (new metric)
+- `training.workout.discarded` — count of workouts discarded (new metric)
+- `training.workout.completion_rate` — finished / (finished + discarded), alert if < 70%
+- `training.workout.crash_recovery` — count of "Resume workout?" prompts shown (new metric)
+- `training.session.create.latency_p99` — existing, watch for regression from new fields
+- `training.session.create.error_rate` — existing, alert if > 1%
+- `training.previous_performance.batch.latency_p99` — new endpoint, alert if > 500ms
+- `training.template.crud.error_rate` — new endpoints, alert if > 1%
+- `frontend.crash_rate` — existing, alert if > 1% in ActiveWorkoutScreen
+- `frontend.set_logging_speed_median` — new, target < 3 seconds
+
+## Tasks
+
+- [x] 0. Feature flag and dependency verification
+  - [x] 0.1 Create `training_log_v2` feature flag in the database
+    - Run: `python -c "..."` or create a seed script that calls `FeatureFlagService.set_flag('training_log_v2', is_enabled=False, description='Gates training log v2 redesign')`
+    - Verify: `GET /api/v1/feature-flags` returns the flag with `is_enabled: false`
+    - _Risk_: Feature flag table may not exist in dev DB. _Mitigation_: Run `alembic upgrade head` first.
+    - _Rollback_: Delete the flag row. No code changes.
+  - [x] 0.2 Verify all frontend dependencies are installed
+    - Run `npx expo install @react-native-async-storage/async-storage` if not already in package.json
+    - Confirm `react-native-svg`, `expo-haptics`, `expo-av` are present
+    - Run `npx jest` to confirm no regressions from dependency changes
+    - _Risk_: Version conflicts with Expo SDK 50. _Mitigation_: Use `npx expo install` which resolves compatible versions.
+    - _Rollback_: `git checkout app/package.json app/package-lock.json`
+
+- [x] 1. Backend: Alembic migration for `training_sessions` schema extension
+  - [x] 1.1 Add `start_time` and `end_time` nullable DateTime columns to `TrainingSession` model
+    - Modify `src/modules/training/models.py`
+    - Add: `start_time: Mapped[datetime | None] = mapped_column(nullable=True)` and same for `end_time`
+    - Import `datetime` from `datetime` module
+    - _Risk_: Column name collision. _Mitigation_: `start_time`/`end_time` are not reserved in PostgreSQL.
+    - _Rollback_: Revert model file. Migration handles DB rollback via `alembic downgrade`.
+  - [x] 1.2 Generate and apply Alembic migration for new columns
+    - Run: `alembic revision --autogenerate -m "add_start_time_end_time_to_training_sessions"`
+    - Review generated migration file in `src/database/migrations/versions/`
+    - Run: `alembic upgrade head`
+    - Verify: `alembic current` shows new head
+    - _Risk_: Autogenerate may pick up unrelated model changes. _Mitigation_: Review the migration diff before applying. Only `start_time` and `end_time` ADD COLUMN should be present.
+    - _Rollback_: `alembic downgrade -1`
+  - [x] 1.3 Extend `SetEntry` schema with `set_type` field
+    - Modify `src/modules/training/schemas.py`
+    - Add to `SetEntry`: `set_type: str = Field(default="normal", description="Set type: normal, warm-up, drop-set, amrap")`
+    - Add `@field_validator("set_type")` that validates against `{"normal", "warm-up", "drop-set", "amrap"}`
+    - Import `field_validator` from pydantic
+    - _Risk_: Existing sessions have sets without `set_type` in JSONB. _Mitigation_: Pydantic default `"normal"` handles deserialization of old data.
+    - _Rollback_: Revert schema file. No DB change needed (JSONB is schemaless).
+  - [x] 1.4 Extend `TrainingSessionCreate` with `start_time`, `end_time`, and future-date validator
+    - Add to `TrainingSessionCreate`: `start_time: datetime | None = Field(default=None)`, `end_time: datetime | None = Field(default=None)`
+    - Add `@field_validator("session_date")` with `@classmethod` that rejects `v > date.today()`
+    - Import `field_validator` from pydantic, `datetime` from datetime
+    - _Risk_: Timezone edge case — `date.today()` uses server timezone. _Mitigation_: Acceptable for v1. Users in UTC+14 could be blocked from logging "today" if server is UTC. Document as known limitation.
+    - _Rollback_: Revert schema file.
+  - [x] 1.5 Extend `TrainingSessionUpdate` with `start_time` and `end_time`
+    - Add: `start_time: datetime | None = None`, `end_time: datetime | None = None`
+    - _Rollback_: Revert schema file.
+  - [x] 1.6 Extend `TrainingSessionResponse` with `start_time` and `end_time`
+    - Add fields to class and update `from_orm_model` to pass `obj.start_time`, `obj.end_time`
+    - _Rollback_: Revert schema file.
+  - [x] 1.7 Update `TrainingService.create_session` to persist `start_time`/`end_time`
+    - In `src/modules/training/service.py`, pass `data.start_time` and `data.end_time` to `TrainingSession()` constructor
+    - _Rollback_: Revert service file.
+  - [x] 1.8 Update `TrainingService.update_session` to handle `start_time`/`end_time` with audit trail
+    - Add change tracking for `start_time` and `end_time` in the `changes` dict (same pattern as `session_date`)
+    - _Rollback_: Revert service file.
+  - [x] 1.9 Write backend tests for extended schemas and service
+    - Create `tests/test_training_log_redesign_properties.py`
+    - Test: `SetEntry` with `set_type="normal"` passes validation
+    - Test: `SetEntry` with `set_type="invalid"` raises ValidationError
+    - Test: `SetEntry` without `set_type` defaults to `"normal"`
+    - Test: `TrainingSessionCreate` with future `session_date` raises ValidationError
+    - Test: `TrainingSessionCreate` with today's date passes
+    - Test: `TrainingSessionCreate` with `start_time`/`end_time` serializes correctly
+    - Test: `TrainingSessionResponse.from_orm_model` includes `start_time`/`end_time`
+    - Test: Existing session creation still works (backward compatibility — no `set_type`, no `start_time`)
+    - Property test (Hypothesis): For any valid `SetEntry`, serializing to dict and back produces identical object
+    - Run: `pytest tests/test_training_log_redesign_properties.py -v`
+    - _Risk_: Test DB (SQLite) may not support DateTime the same as PostgreSQL. _Mitigation_: SQLite handles datetime as text; the conftest patches handle this.
+    - _Rollback_: Delete test file.
+    - _Requirements: 6.5, 10.4, 1.8_
+
+- [x] 2. **CHECKPOINT: Backend schema extension verified**
+  - Run: `pytest tests/ -v` — ALL tests must pass (existing + new from 1.9)
+  - Run: `pytest tests/test_training_properties.py -v` — existing training tests still green (backward compat)
+  - Verify: `POST /api/v1/training/sessions` with old payload format (no `set_type`, no `start_time`) still returns 201
+  - Verify: `POST /api/v1/training/sessions` with new payload format (with `set_type`, `start_time`, `end_time`) returns 201
+  - **Gate**: Do not proceed to Step 3 until all checks pass.
+  - _Rollback_: If tests fail, revert all changes from Step 1 via `git revert`. Run `alembic downgrade -1` to undo migration.
+
+- [x] 3. Backend: Batch previous performance endpoint
+  - [x] 3.1 Create batch request/response schemas
+    - Add to `src/modules/training/schemas.py`: `BatchPreviousPerformanceRequest` (exercise_names: list[str], min 1, max 20), `PreviousPerformanceSetData` (weight_kg, reps, rpe), `PreviousPerformanceResult` (exercise_name, session_date, sets: list), `BatchPreviousPerformanceResponse` (results: dict[str, Result | None])
+    - _Risk_: Schema naming collision with existing `PreviousPerformance` in analytics_schemas. _Mitigation_: Use distinct names with `Batch` prefix.
+    - _Rollback_: Revert schema additions.
+  - [x] 3.2 Implement `BatchPreviousPerformanceResolver` class
+    - Add to `src/modules/training/previous_performance.py` (same file as existing resolver)
+    - Method: `get_batch_previous_performance(user_id, exercise_names: list[str])` → `dict[str, PreviousPerformanceResult | None]`
+    - Implementation: Query sessions once (ordered by date DESC, LIMIT 50 for performance), iterate to find most recent occurrence of each requested exercise, return ALL sets (not just last set) for each exercise
+    - _Risk_: Full table scan for users with 500+ sessions. _Mitigation_: Add `LIMIT 50` to the query — most users' recent exercises appear within last 50 sessions. Document as known limitation for v1.
+    - _Rollback_: Revert file changes.
+  - [x] 3.3 Add `POST /api/v1/training/previous-performance/batch` route
+    - Add to `src/modules/training/router.py`
+    - Requires auth (`get_current_user`)
+    - Wire to `BatchPreviousPerformanceResolver`
+    - _Rollback_: Revert router changes.
+  - [x] 3.4 Add `GET /api/v1/training/sessions/{session_id}` route
+    - Add `get_session_by_id(user_id, session_id)` method to `TrainingService` in `src/modules/training/service.py` — reuse `_get_or_404`, return `TrainingSessionResponse.from_orm_model(session)`
+    - Add route to `src/modules/training/router.py` — `@router.get("/sessions/{session_id}")` with auth
+    - **IMPORTANT**: This route MUST be registered BEFORE the existing `GET /sessions` route in the router file, or FastAPI will match `{session_id}` as a query parameter. Actually, since the existing route is `GET /sessions` (no path param) and this is `GET /sessions/{session_id}`, FastAPI handles this correctly. But verify with a test.
+    - _Risk_: Route ordering conflict. _Mitigation_: FastAPI matches most-specific first for path params. Test with both routes active.
+    - _Rollback_: Revert router and service changes.
+  - [x] 3.5 Write tests for batch previous performance and single session fetch
+    - Create `tests/test_batch_previous_performance.py`
+    - Test: Batch with 3 exercises, 2 have history, 1 doesn't → results dict has 2 non-null, 1 null
+    - Test: Batch with empty list → 422
+    - Test: Batch with 21 exercises → 422
+    - Test: Batch returns ALL sets for each exercise (not just last set)
+    - Test: Single session fetch with valid ID → 200 with full session data
+    - Test: Single session fetch with non-existent ID → 404
+    - Test: Single session fetch with another user's session → 404 (no data leak)
+    - Test: Single session fetch with soft-deleted session → 404
+    - Run: `pytest tests/test_batch_previous_performance.py -v`
+    - _Risk_: Test setup requires creating sessions with exercises. _Mitigation_: Use the existing `TrainingService.create_session` in test setup.
+    - _Rollback_: Delete test file.
+    - _Requirements: 3.1, 3.5, 8.1_
+
+- [x] 4. Backend: User-created templates CRUD
+  - [x] 4.1 Create `WorkoutTemplate` database model
+    - Add to `src/modules/training/models.py` (same file as TrainingSession)
+    - Class: `WorkoutTemplate(SoftDeleteMixin, AuditLogMixin, Base)` with `__tablename__ = "workout_templates"`
+    - Columns: `user_id` (UUID, ForeignKey users.id, indexed), `name` (String 200), `description` (Text, nullable), `exercises` (JSONB), `metadata_` (JSONB, nullable, column name "metadata"), `sort_order` (Integer, default 0)
+    - Indexes: `ix_workout_templates_user_id` on user_id, composite `(user_id, sort_order)` for ordered listing
+    - Follow exact same pattern as `TrainingSession` for mixins and column definitions
+    - _Risk_: ForeignKey to users.id requires the users table to exist. _Mitigation_: It does — `src/modules/auth/models.py` defines the User model.
+    - _Rollback_: Revert model file, downgrade migration.
+  - [x] 4.2 Generate and apply Alembic migration for `workout_templates` table
+    - Run: `alembic revision --autogenerate -m "create_workout_templates_table"`
+    - Review migration: should CREATE TABLE with all columns and indexes
+    - Run: `alembic upgrade head`
+    - _Risk_: Autogenerate may miss indexes or pick up unrelated changes. _Mitigation_: Review diff carefully.
+    - _Rollback_: `alembic downgrade -1`
+  - [x] 4.3 Create template schemas
+    - Add to `src/modules/training/schemas.py`: `WorkoutTemplateCreate` (name min 1 max 200, description optional, exercises min 1, metadata optional), `WorkoutTemplateUpdate` (all optional), `UserWorkoutTemplateResponse` (id UUID, user_id UUID, name, description, exercises, metadata, is_system=False, created_at, updated_at, with `from_orm_model` classmethod)
+    - **Note**: The existing `WorkoutTemplateResponse` is for static templates (id is string). The new `UserWorkoutTemplateResponse` has UUID id. Consider renaming or unifying. Simplest: add `is_system: bool = False` to existing response and make `id` accept both str and UUID via `str` type.
+    - _Rollback_: Revert schema additions.
+  - [x] 4.4 Create `TemplateService` with CRUD operations
+    - Create `src/modules/training/template_service.py`
+    - Methods: `create_template(user_id, data)`, `list_user_templates(user_id)` (ordered by sort_order ASC, created_at DESC), `update_template(user_id, template_id, data)`, `soft_delete_template(user_id, template_id)`
+    - Follow same patterns as `TrainingService`: constructor takes `AsyncSession`, use `_get_or_404` pattern, write audit trail on update/delete
+    - _Risk_: Audit trail entity_type must match `__tablename__`. _Mitigation_: `AuditLogMixin.write_audit` uses `cls.__tablename__` automatically.
+    - _Rollback_: Delete service file.
+  - [x] 4.5 Add template CRUD routes
+    - Add to `src/modules/training/router.py`:
+    - `POST /templates` (auth required) → `TemplateService.create_template` → 201
+    - `GET /templates/user` (auth required) → `TemplateService.list_user_templates` → 200
+    - `PUT /templates/{template_id}` (auth required) → `TemplateService.update_template` → 200
+    - `DELETE /templates/{template_id}` (auth required) → `TemplateService.soft_delete_template` → 204
+    - **IMPORTANT**: The new `POST /templates` route must NOT conflict with existing `GET /templates` (static list) and `GET /templates/{template_id}` (static get). Since POST vs GET are different methods, no conflict. But `PUT /templates/{template_id}` and `DELETE /templates/{template_id}` could conflict with the existing `GET /templates/{template_id}` for static templates. Solution: user template routes use UUID path params; static template IDs are strings like "push", "pull". FastAPI will try UUID parse first — if it fails (string ID), fall through. **Actually, this is a problem**: `PUT /templates/push` would try to parse "push" as UUID and fail with 422. Fix: prefix user template routes with `/templates/user/` or use a different path like `/user-templates/`. Simplest: `POST /user-templates`, `GET /user-templates`, `PUT /user-templates/{id}`, `DELETE /user-templates/{id}`.
+    - _Risk_: Route conflict with static template endpoints. _Mitigation_: Use `/user-templates/` prefix for all user template CRUD routes.
+    - _Rollback_: Revert router changes.
+  - [x] 4.6 Register `WorkoutTemplate` model import in `tests/conftest.py`
+    - Add `import src.modules.training.models  # noqa: F401` — already present, but verify the new model class is picked up by Base.metadata since it's in the same file.
+    - _Risk_: If model is in a new file, conftest won't import it. _Mitigation_: Keep model in existing `models.py` file.
+    - _Rollback_: Revert conftest if changed.
+  - [x] 4.7 Write tests for template CRUD
+    - Create `tests/test_user_templates.py`
+    - Test: Create template → 201, response has correct name/exercises
+    - Test: Create template with empty name → 422
+    - Test: Create template with no exercises → 422
+    - Test: List user templates → returns only current user's templates, ordered by sort_order
+    - Test: List user templates when none exist → empty list
+    - Test: Update template name → 200, name changed
+    - Test: Update template exercises → 200, exercises changed
+    - Test: Update non-existent template → 404
+    - Test: Update another user's template → 404
+    - Test: Delete template → 204
+    - Test: Delete already-deleted template → 404
+    - Test: Deleted template doesn't appear in list
+    - Test: Static templates still accessible via `GET /templates`
+    - Run: `pytest tests/test_user_templates.py -v`
+    - _Rollback_: Delete test file.
+    - _Requirements: 11.2, 11.4, 11.6_
+
+- [x] 5. **CHECKPOINT: All backend work complete**
+  - Run: `pytest tests/ -v` — ALL tests must pass
+  - Run: `alembic current` — should show latest migration as head
+  - Verify endpoints manually or via test client:
+    - `POST /training/sessions` with old format → 201 (backward compat)
+    - `POST /training/sessions` with new format (set_type, start_time, end_time) → 201
+    - `POST /training/previous-performance/batch` with 3 exercise names → 200
+    - `GET /training/sessions/{valid_id}` → 200
+    - `POST /training/user-templates` → 201
+    - `GET /training/user-templates` → 200
+    - `PUT /training/user-templates/{id}` → 200
+    - `DELETE /training/user-templates/{id}` → 204
+  - **Gate**: Do not proceed to frontend work until all backend endpoints are tested and green.
+  - _Rollback_: If any backend step fails, revert to last green commit. Run `alembic downgrade` to matching revision.
+
+- [x] 6. Frontend: TypeScript interfaces and shared types
+  - [x] 6.1 Create `app/types/training.ts` with all shared TypeScript interfaces
+    - Define: `ActiveWorkoutState`, `ActiveExercise`, `ActiveSet`, `SetType`, `SupersetGroup`, `PreviousPerformanceData`, `ActiveWorkoutActions`, `ActiveWorkoutPayload`
+    - Define: `TrainingSessionResponse` (frontend mirror of backend response), `PersonalRecordResponse`, `BatchPreviousPerformanceResponse`
+    - Define: `WorkoutTemplateResponse` (with `is_system` flag), `WorkoutTemplateCreate`
+    - Define: `ActiveWorkoutScreenParams` (route params)
+    - These types are consumed by ALL subsequent frontend tasks. They MUST be defined first.
+    - _Risk_: Type drift between frontend and backend. _Mitigation_: Types mirror Pydantic schemas exactly. Add a comment referencing the backend schema file.
+    - _Rollback_: Delete file. No other files depend on it yet.
+    - _Requirements: All_
+
+- [x] 7. Frontend: Pure utility functions (no React, no store dependencies)
+  - [x] 7.1 Create `app/utils/durationFormat.ts`
+    - `formatDuration(elapsedSeconds: number): string` → "HH:MM:SS" (pad with zeros)
+    - `formatRestTimer(remainingSeconds: number): string` → "M:SS" (no leading zero on minutes)
+    - Handle edge cases: negative input → "0:00", NaN → "0:00"
+    - _Requirements: 1.2, 4.3_
+    - _Rollback_: Delete file.
+  - [x] 7.2 Create `app/utils/volumeCalculation.ts`
+    - `calculateWorkingVolume(exercises: ActiveExercise[]): number` — sum of (weight × reps) for completed sets where setType !== 'warm-up'
+    - Import `ActiveExercise` from `../types/training`
+    - _Requirements: 6.3, 8.2_
+    - _Rollback_: Delete file.
+  - [x] 7.3 Create `app/utils/previousPerformanceFormat.ts`
+    - `formatPreviousPerformance(data: PreviousPerformanceData | null, setIndex: number, unitSystem: UnitSystem): string` → "80kg × 8" or "176.4lbs × 8" or "—"
+    - Uses `convertWeight` from existing `unitConversion.ts` for unit conversion
+    - If `data` is null or `setIndex >= data.sets.length`, return "—"
+    - _Requirements: 3.2, 3.3_
+    - _Rollback_: Delete file.
+  - [x] 7.4 Create `app/utils/restDurationV2.ts`
+    - `getRestDurationV2(exerciseName: string, exerciseDb: Exercise[], preferences?: { compound_seconds?: number; isolation_seconds?: number }): number`
+    - Look up exercise in DB by name → check `category` field → compound=180s default, isolation=90s default, override with preferences if provided
+    - `getTimerColor(remainingSeconds: number): string` → green (>10s), yellow (5-10s), red (≤5s)
+    - Import `Exercise` type from existing `../types/exercise`
+    - _Requirements: 4.1, 4.4, 4.10_
+    - _Rollback_: Delete file.
+  - [x] 7.5 Create `app/utils/setCompletionLogic.ts`
+    - `canCompleteSet(set: ActiveSet): { valid: boolean; errors: string[] }` — weight and reps must be non-empty and parse to positive numbers
+    - `hasUnsavedData(exercises: ActiveExercise[]): boolean` — true if any exercise has a name OR any set has weight/reps filled
+    - `copyPreviousToSet(previous: PreviousPerformanceData, setIndex: number, unitSystem: UnitSystem): { weight: string; reps: string }` — converts weight from kg to user unit, returns as strings for TextInput
+    - _Requirements: 2.2, 2.3, 1.7, 3.4_
+    - _Rollback_: Delete file.
+  - [x] 7.6 Create `app/utils/supersetLogic.ts`
+    - `shouldStartRestTimer(supersetGroups: SupersetGroup[], exerciseLocalId: string): boolean` — true only if exercise is the LAST in its superset group, or not in any superset
+    - `createSupersetGroup(exerciseLocalIds: string[]): SupersetGroup | null` — returns null if < 2 IDs
+    - `removeSupersetGroup(groups: SupersetGroup[], groupId: string): SupersetGroup[]`
+    - `getNextSupersetExercise(supersetGroups: SupersetGroup[], currentExerciseLocalId: string): string | null` — returns next exercise ID in superset, or null if last/not in superset
+    - _Requirements: 13.1, 13.3, 13.4, 13.5_
+    - _Rollback_: Delete file.
+  - [x] 7.7 Create `app/utils/sessionEditConversion.ts`
+    - `sessionResponseToActiveExercises(session: TrainingSessionResponse, unitSystem: UnitSystem): ActiveExercise[]` — maps backend response to frontend state, converts weights from kg to user unit
+    - `activeExercisesToPayload(exercises: ActiveExercise[], unitSystem: UnitSystem): ExercisePayload[]` — maps frontend state to backend payload, converts weights from user unit to kg
+    - `sessionHasPR(session: TrainingSessionResponse): boolean` — checks if `personal_records` array is non-empty
+    - `formatPRBanner(pr: PersonalRecordResponse, unitSystem: UnitSystem): { type: string; exerciseName: string; value: string }` — formats PR for display
+    - _Requirements: 9.1, 9.4, 7.3, 7.6_
+    - _Rollback_: Delete file.
+  - [x] 7.8 Create `app/utils/templateConversion.ts`
+    - `templateToActiveExercises(template: WorkoutTemplateResponse, unitSystem: UnitSystem): ActiveExercise[]` — maps template exercises to active workout state
+    - `activeExercisesToTemplate(exercises: ActiveExercise[], name: string, description?: string): WorkoutTemplateCreate` — maps current workout to template create payload
+    - `orderTemplates(userTemplates: WorkoutTemplateResponse[], systemTemplates: WorkoutTemplateResponse[]): WorkoutTemplateResponse[]` — user first, then system
+    - _Requirements: 11.2, 11.3, 11.4_
+    - _Rollback_: Delete file.
+  - [x] 7.9 Create `app/utils/pagination.ts`
+    - `hasMorePages(totalCount: number, currentPage: number, pageSize: number): boolean`
+    - _Requirements: 12.1, 12.4_
+    - _Rollback_: Delete file.
+  - [x] 7.10 Create `app/utils/sessionGrouping.ts`
+    - `groupSessionsByDate(sessions: TrainingSessionResponse[]): Array<{ date: string; sessions: TrainingSessionResponse[] }>` — sorted descending by date
+    - _Requirements: 12.5_
+    - _Rollback_: Delete file.
+  - [x] 7.11 Create `app/utils/dateValidation.ts`
+    - `isValidSessionDate(dateStr: string): boolean` — rejects future dates, accepts today and past
+    - _Requirements: 10.4_
+    - _Rollback_: Delete file.
+
+- [x] 8. Frontend: Property tests for ALL utility functions
+  - [x] 8.1 Write property tests for duration formatting (`app/__tests__/utils/durationFormat.test.ts`)
+    - Property: For any non-negative integer seconds, `formatDuration` returns string matching /^\d{2}:\d{2}:\d{2}$/
+    - Property: For any non-negative integer seconds, `formatRestTimer` returns string matching /^\d+:\d{2}$/
+    - Property: `formatDuration(3661)` === "01:01:01" (example test)
+    - _Requirements: 1.2, 4.3_
+  - [x] 8.2 Write property tests for volume calculation (`app/__tests__/utils/volumeCalculation.test.ts`)
+    - Property: Working volume excludes warm-up sets — generate exercises with mixed set types, verify warm-up sets don't contribute
+    - Property: Working volume only counts completed sets
+    - Property: Volume is always ≥ 0
+    - _Requirements: 6.3, 8.2_
+  - [x] 8.3 Write property tests for previous performance formatting (`app/__tests__/utils/previousPerformanceFormat.test.ts`)
+    - Property: Null data returns "—"
+    - Property: Valid data with metric unit returns string containing "kg"
+    - Property: Valid data with imperial unit returns string containing "lbs"
+    - _Requirements: 3.2, 3.3_
+  - [x] 8.4 Write property tests for rest duration and timer color (`app/__tests__/utils/restDurationV2.test.ts`)
+    - Property: Rest duration is always > 0
+    - Property: Timer color is "green" for >10s, "yellow" for 5-10s, "red" for ≤5s
+    - _Requirements: 4.1, 4.4, 4.10_
+  - [x] 8.5 Write property tests for set completion logic (`app/__tests__/utils/setCompletionLogic.test.ts`)
+    - Property: Set with empty weight → valid=false
+    - Property: Set with empty reps → valid=false
+    - Property: Set with valid weight and reps → valid=true
+    - Property: `hasUnsavedData` returns false for empty exercises array
+    - Property: `copyPreviousToSet` round-trip — copy then parse back to kg within 0.1kg
+    - _Requirements: 2.2, 2.3, 1.7, 3.4_
+  - [x] 8.6 Write property tests for superset logic (`app/__tests__/utils/supersetLogic.test.ts`)
+    - Property: `createSupersetGroup` with < 2 IDs returns null
+    - Property: `createSupersetGroup` with ≥ 2 IDs returns group with those IDs
+    - Property: `shouldStartRestTimer` returns true for last exercise in superset
+    - Property: `shouldStartRestTimer` returns false for non-last exercise in superset
+    - _Requirements: 13.1, 13.3, 13.4, 13.5_
+  - [x] 8.7 Write property tests for session edit conversion (`app/__tests__/utils/sessionEditConversion.test.ts`)
+    - Property: Round-trip — `sessionResponseToActiveExercises` then `activeExercisesToPayload` produces weights within 0.1kg of original
+    - Property: `sessionHasPR` returns true when personal_records is non-empty
+    - Property: `formatPRBanner` returns object with non-empty exerciseName and value
+    - _Requirements: 9.1, 9.4, 7.3, 7.6_
+  - [x] 8.8 Write property tests for template conversion (`app/__tests__/utils/templateConversion.test.ts`)
+    - Property: `orderTemplates` puts user templates before system templates
+    - Property: Round-trip — `templateToActiveExercises` then `activeExercisesToTemplate` preserves exercise names and set counts
+    - _Requirements: 11.2, 11.3, 11.4_
+  - [x] 8.9 Write property tests for pagination, session grouping, date validation (`app/__tests__/utils/paginationAndGrouping.test.ts`)
+    - Property: `hasMorePages` returns false when currentPage * pageSize >= totalCount
+    - Property: `groupSessionsByDate` returns groups sorted descending
+    - Property: `isValidSessionDate` rejects tomorrow, accepts today
+    - _Requirements: 12.1, 12.5, 10.4_
+
+- [x] 9. **CHECKPOINT: All utility functions and their tests complete**
+  - Run: `npx jest app/__tests__/utils/ --verbose` from `app/` — ALL utility tests must pass
+  - Run: `npx jest` from `app/` — full frontend suite must pass (no regressions)
+  - Verify: No TypeScript errors — `npx tsc --noEmit` from `app/`
+  - **Gate**: Do not proceed to Zustand slice or UI components until all utility tests are green.
+  - _Rollback_: Revert all files from steps 6-8. No store or UI changes to undo.
+
+- [x] 10. Frontend: Zustand `activeWorkout` slice with AsyncStorage persistence
+  - [x] 10.1 Create `app/store/activeWorkoutSlice.ts` as a SEPARATE Zustand store (not merged into main store)
+    - Use `create<ActiveWorkoutState & ActiveWorkoutActions>()(persist(...))` pattern
+    - Import `persist, createJSONStorage` from `zustand/middleware`
+    - Import `AsyncStorage` from `@react-native-async-storage/async-storage`
+    - Storage key: `active-workout-v1`
+    - Implement all state fields from `ActiveWorkoutState` interface (from `types/training.ts`)
+    - Implement all actions from `ActiveWorkoutActions` interface
+    - `startWorkout`: sets workoutId=uuid, startedAt=now, isActive=true, mode, sessionDate
+    - `discardWorkout`: resets ALL state to defaults, isActive=false
+    - `addExercise(name)`: appends new ActiveExercise with 1 empty set (setType='normal')
+    - `removeExercise(localId)`: filters out exercise, also removes from any superset groups
+    - `addSet(exerciseLocalId)`: copies weight/reps from last set in that exercise (if exists), setType='normal'
+    - `removeSet(exerciseLocalId, setLocalId)`: removes set, ensures at least 1 set remains
+    - `updateSetField(exId, setId, field, value)`: updates weight/reps/rpe string
+    - `updateSetType(exId, setId, setType)`: updates set type
+    - `toggleSetCompleted(exId, setId)`: validates via `canCompleteSet`, returns `{ completed, validationError }`, sets completedAt timestamp
+    - `createSuperset(exerciseLocalIds)`: delegates to `createSupersetGroup` utility
+    - `removeSuperset(supersetId)`: delegates to `removeSupersetGroup` utility
+    - `setPreviousPerformance(data)`: merges into cache
+    - `copyPreviousToSet(exId, setId)`: delegates to `copyPreviousToSet` utility, uses store's unitSystem
+    - `setSessionDate(date)`: validates via `isValidSessionDate`
+    - `setNotes(notes)`: sets notes string
+    - `finishWorkout()`: builds `ActiveWorkoutPayload` using `activeExercisesToPayload`, includes startedAt, now() as end_time, notes, superset_groups
+    - **IMPORTANT**: This store must NOT import from the main `useStore` — it reads `unitSystem` via a parameter passed by the screen component, not by importing the main store. This avoids circular dependencies.
+    - _Risk_: AsyncStorage persist may cause performance issues if state is large. _Mitigation_: Workout state is ~10KB max. AsyncStorage handles this fine.
+    - _Risk_: Zustand persist rehydration is async — component may render before state is loaded. _Mitigation_: Use `onRehydrateStorage` callback to set a `rehydrated` flag. Screen checks this before rendering.
+    - _Rollback_: Delete file. No other files depend on it yet.
+    - _Requirements: 1.9, 2.2, 2.3, 2.4, 6.1, 13.1_
+  - [x] 10.2 Write unit tests for activeWorkout slice (`app/__tests__/store/activeWorkoutSlice.test.ts`)
+    - Test: `startWorkout` sets isActive=true, workoutId is non-empty, startedAt is ISO string
+    - Test: `discardWorkout` resets isActive=false, exercises=[]
+    - Test: `addExercise` adds exercise with 1 set, setType='normal'
+    - Test: `addSet` copies last set's weight/reps
+    - Test: `toggleSetCompleted` with valid data → completed=true
+    - Test: `toggleSetCompleted` with empty weight → validationError is non-null
+    - Test: `removeExercise` also removes exercise from superset groups
+    - Test: `finishWorkout` returns payload with weight_kg (converted from user unit)
+    - Test: `createSuperset` with 1 exercise → returns null
+    - Test: `setSessionDate` with future date → date not changed (or error)
+    - Run: `npx jest app/__tests__/store/activeWorkoutSlice.test.ts`
+    - _Risk_: AsyncStorage mock needed for tests. _Mitigation_: Jest runs in node env — mock AsyncStorage with a simple in-memory implementation.
+    - _Rollback_: Delete test file.
+    - _Requirements: 1.9, 2.2, 2.3, 6.1_
+
+- [x] 11. **CHECKPOINT: Zustand slice complete**
+  - Run: `npx jest app/__tests__/store/ --verbose` — slice tests must pass
+  - Run: `npx jest` from `app/` — full suite must pass
+  - Run: `npx tsc --noEmit` — no TypeScript errors
+  - **Gate**: Do not proceed to UI components until slice tests are green.
+  - _Rollback_: Delete `activeWorkoutSlice.ts` and its test file.
+
+- [x] 12. Frontend: Leaf UI components (no screen dependencies, no navigation)
+  - [x] 12.1 Create `DurationTimer` component (`app/components/training/DurationTimer.tsx`)
+    - Props: `startedAt: string` (ISO timestamp)
+    - Uses `setInterval(1000)` + `Date.now() - new Date(startedAt).getTime()` for elapsed
+    - Renders `formatDuration(elapsed)` from `durationFormat.ts`
+    - Monospace font via `fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace'`
+    - Cleanup interval on unmount
+    - _Risk_: Timer drift over long sessions. _Mitigation_: Recalculates from timestamp each tick, not accumulated state. Drift is ≤1s.
+    - _Rollback_: Delete file.
+    - _Requirements: 1.2, 1.3_
+  - [x] 12.2 Create `RestTimerV2` component (`app/components/training/RestTimerV2.tsx`)
+    - Props: `durationSeconds`, `visible`, `onDismiss`, `onComplete`
+    - SVG progress ring: `<Svg><Circle>` with `strokeDasharray` and animated `strokeDashoffset`
+    - State machine: IDLE → RUNNING → PAUSED → COMPLETED
+    - Buttons: Pause/Resume toggle, Skip, +15s, -15s
+    - Color: `getTimerColor(remaining)` from `restDurationV2.ts`
+    - Sound: `expo-av` Audio.Sound on completion (try/catch for silent fallback)
+    - `M:SS` format via `formatRestTimer` from `durationFormat.ts`
+    - Renders as Modal overlay (same as current RestTimer)
+    - _Risk_: SVG animation performance on low-end Android. _Mitigation_: Use `Animated.timing` with `useNativeDriver: false` (SVG doesn't support native driver). Test on low-end device.
+    - _Rollback_: Delete file. Old `RestTimer.tsx` still exists as fallback.
+    - _Requirements: 4.1-4.10_
+  - [x] 12.3 Create `PRBanner` component (`app/components/training/PRBanner.tsx`)
+    - Props: `prs: Array<{ type, exerciseName, value }>`, `visible`, `onDismiss`
+    - Animated.spring scale 0→1 (springDamping: 0.6, duration ~300ms)
+    - Auto-dismiss via `setTimeout(3000)` — clear on unmount
+    - Tap anywhere → `onDismiss()`
+    - Layout: trophy Icon + PR type badge text + exercise name + value
+    - Multiple PRs: show each in a row within the banner
+    - _Risk_: Multiple PRs in rapid succession (e.g., 2 sets completed fast). _Mitigation_: Queue PRs and show combined banner. The `prs` array prop handles this.
+    - _Rollback_: Delete file.
+    - _Requirements: 7.1-7.4_
+  - [x] 12.4 Create `SetTypeSelector` component (`app/components/training/SetTypeSelector.tsx`)
+    - Props: `value: SetType`, `onChange: (type: SetType) => void`
+    - Renders as a small tappable pill/badge showing current type abbreviation (N, W, D, A)
+    - On tap: shows ActionSheet (or inline picker) with 4 options
+    - Visual styling: muted for warm-up, accent for AMRAP, default for normal, warning for drop-set
+    - _Risk_: ActionSheet not available on web. _Mitigation_: Use a simple dropdown/modal fallback for web.
+    - _Rollback_: Delete file.
+    - _Requirements: 6.1-6.4_
+  - [x] 12.5 Create `TemplatePicker` component (`app/components/training/TemplatePicker.tsx`)
+    - Props: `onSelectTemplate(templateId, isSystem)`, `onCopyLast()`, `onStartEmpty()`
+    - Fetches user templates from `GET /training/user-templates` and system templates from `GET /training/templates`
+    - Renders "My Templates" section (if any) above "System Templates"
+    - "Copy Last Workout" button at top
+    - "Start Empty Workout" button
+    - Long-press on user template → ActionSheet with Edit / Delete
+    - Template cards: name, description, exercise count badge
+    - Loading skeleton while fetching
+    - _Risk_: Two API calls on mount. _Mitigation_: `Promise.allSettled` for parallel fetch. Show skeleton until both resolve.
+    - _Rollback_: Delete file.
+    - _Requirements: 11.3-11.5_
+  - [x] 12.6 Write unit tests for leaf components (`app/__tests__/components/trainingComponents.test.ts`)
+    - Since Jest runs in node env (no React Native renderer), test the logic functions these components depend on:
+    - Test: `formatDuration` edge cases (0, 3599, 3600, 86399)
+    - Test: `getTimerColor` boundary values (0, 5, 6, 10, 11)
+    - Test: `SetType` abbreviation mapping (N/W/D/A)
+    - Test: `orderTemplates` with mixed user/system templates
+    - _Rollback_: Delete test file.
+
+- [x] 13. **CHECKPOINT: All leaf components complete**
+  - Run: `npx jest` from `app/` — full suite must pass
+  - Run: `npx tsc --noEmit` — no TypeScript errors
+  - Manually verify (or ask user): DurationTimer, RestTimerV2, PRBanner, SetTypeSelector, TemplatePicker render without crashes in Expo Go
+  - **Gate**: Do not proceed to screen-level work until components are verified.
+  - _Rollback_: Delete all new component files from step 12. Leaf components have no dependents yet.
+
+- [x] 14. Frontend: Navigation wiring (BEFORE screens, because screens need route params)
+  - [x] 14.1 Add `ActiveWorkoutScreen` and `SessionDetailView` to `LogsStack` in `BottomTabNavigator.tsx`
+    - Add to `LogsStackParamList`: `ActiveWorkout: ActiveWorkoutScreenParams`, `SessionDetail: { sessionId: string }`
+    - Add placeholder screen components (empty View with "Coming soon" text) — real implementations come in steps 15-16
+    - Register both screens in `LogsStack.Navigator` with `headerShown: false`
+    - **IMPORTANT**: `ActiveWorkoutScreen` should be in the LogsStack (not a root modal) so it gets the tab bar hidden behavior and proper back navigation
+    - _Risk_: ExercisePicker callback pattern breaks. Currently uses route params with `onSelect` callback. With Zustand slice, the picker should update the slice directly instead. _Mitigation_: Update ExercisePicker to check if `activeWorkout.isActive` and call `addExercise` on the slice instead of the callback. Keep backward compat for old modal flow during feature flag transition.
+    - _Rollback_: Revert BottomTabNavigator changes.
+    - _Requirements: 1.1, 8.1_
+  - [x] 14.2 Update `ExercisePickerScreen` to support Zustand-based exercise selection
+    - Add a new route param option: `target: 'modal' | 'activeWorkout'` (default 'modal' for backward compat)
+    - When `target === 'activeWorkout'`: on exercise select, call `useActiveWorkoutStore.getState().addExercise(name)` instead of `onSelect` callback
+    - When `target === 'modal'`: use existing `onSelect` callback (backward compat for old AddTrainingModal during flag transition)
+    - _Risk_: Breaking existing ExercisePicker usage. _Mitigation_: Default to 'modal' mode. Only ActiveWorkoutScreen passes 'activeWorkout'.
+    - _Rollback_: Revert ExercisePickerScreen changes.
+  - [x] 14.3 Verify navigation works with placeholder screens
+    - Manually test: LogsScreen FAB → navigates to ActiveWorkout placeholder
+    - Manually test: Back button from ActiveWorkout → returns to LogsScreen
+    - _Rollback_: Revert navigation changes.
+
+- [x] 15. Frontend: `SessionDetailView` screen
+  - [x] 15.1 Create `app/screens/training/SessionDetailView.tsx`
+    - Fetches session from `GET /training/sessions/{sessionId}` on mount
+    - Loading state: skeleton placeholders
+    - Error state: "Session not found" with back button (for 404)
+    - Displays: session date (formatted), duration (if start_time/end_time present — `formatDuration(diff)`, hidden for legacy), total working volume (`calculateWorkingVolume`)
+    - Exercise list: each exercise name as header, set table below with columns: #, weight (user's unit via `convertWeight`), reps, RPE (or "—"), set_type tag (via SetTypeSelector in read-only mode or just a colored badge), PR badge (trophy icon if set is in `personal_records` array)
+    - Notes section: if `metadata.notes` present, show in a muted card
+    - "Edit" button at bottom → `navigation.push('ActiveWorkout', { mode: 'edit', sessionId })`
+    - _Risk_: Legacy sessions have no `start_time`/`end_time`/`set_type`. _Mitigation_: Conditionally render duration (hide if null). Default set_type to "normal" display.
+    - _Rollback_: Delete file, revert navigation registration to placeholder.
+    - _Requirements: 8.1-8.7, 5.5, 6.6_
+  - [x] 15.2 Write unit tests for SessionDetailView logic (`app/__tests__/screens/SessionDetailView.test.ts`)
+    - Test: `calculateWorkingVolume` with mixed set types returns correct volume
+    - Test: Duration calculation from start_time/end_time
+    - Test: PR badge logic — set appears in personal_records array
+    - Test: Legacy session (no start_time) → duration hidden
+    - _Rollback_: Delete test file.
+
+- [x] 16. Frontend: `ActiveWorkoutScreen` — core logging flow (the big one)
+  - [x] 16.1 Create `app/screens/training/ActiveWorkoutScreen.tsx` — basic structure
+    - Replace placeholder from step 14.1
+    - Read route params: `mode`, `sessionId`, `templateId`, `sessionDate`
+    - On mount based on mode:
+      - `'new'`: call `startWorkout({ mode: 'new', sessionDate: params.sessionDate || today })`
+      - `'edit'`: fetch session by ID via `GET /training/sessions/{sessionId}`, convert via `sessionResponseToActiveExercises`, call `startWorkout({ mode: 'edit', editSessionId, templateExercises })`
+      - `'template'`: fetch template, convert via `templateToActiveExercises`, call `startWorkout({ mode: 'new', templateExercises })`
+      - `'copy-last'`: fetch last session via `GET /training/sessions?limit=1`, convert, call `startWorkout`
+    - Layout: SafeAreaView → ScrollView with:
+      - Top bar: DurationTimer (left), date picker (center, tappable), Discard button (right)
+      - Exercise cards list
+      - "+ Add Exercise" button → navigate to ExercisePicker with `target: 'activeWorkout'`
+      - Notes TextInput
+      - "Finish Workout" / "Save Changes" button (sticky bottom)
+    - Read state from `useActiveWorkoutStore`
+    - Read `unitSystem` from main `useStore`
+    - _Risk_: This is the largest single component (~400 lines). _Mitigation_: Extract exercise card and set row as sub-components within the file (not separate files) to keep the PR reviewable.
+    - _Rollback_: Revert to placeholder screen.
+    - _Requirements: 1.1, 1.4, 1.5, 1.6, 10.1-10.4_
+  - [x] 16.2 Implement exercise card with set rows
+    - Each exercise card: exercise name (tappable → ExercisePicker for rename), remove button
+    - Set header row: #, Previous, Weight ({unit}), Reps, RPE, Type, ✓
+    - Each set row:
+      - Set number (1-indexed)
+      - Previous column: `formatPreviousPerformance(previousPerformance[exerciseName], setIndex, unitSystem)` — tappable to copy
+      - Weight TextInput (numeric keyboard)
+      - Reps TextInput (numeric keyboard)
+      - RPE TextInput (numeric keyboard, placeholder "—")
+      - SetTypeSelector component
+      - Completion checkmark (TouchableOpacity)
+    - "+ Add Set" button below sets
+    - On mount with exercises: batch fetch previous performance via `POST /training/previous-performance/batch`
+    - _Risk_: Re-renders on every keystroke in TextInput. _Mitigation_: Zustand's selector pattern + `useShallow` prevents unnecessary re-renders. Each set row only subscribes to its own set data.
+    - _Rollback_: Revert to basic structure from 16.1.
+    - _Requirements: 2.1, 3.1-3.6, 5.1-5.3_
+  - [x] 16.3 Implement set completion flow
+    - On checkmark tap: call `toggleSetCompleted(exId, setId)`
+    - If `validationError` returned: highlight missing fields with red border, show error text
+    - If `completed: true`:
+      - Trigger haptic: `Haptics.impactAsync(ImpactFeedbackStyle.Light)` (import from expo-haptics)
+      - Row background color transition (use Animated.timing, 0.2s)
+      - Check for PR: compare completed set against `previousPerformance` cache — if weight > previous best at same reps, show PRBanner
+      - Start RestTimerV2: check `shouldStartRestTimer(supersetGroups, exerciseLocalId)` — if true, show timer with `getRestDurationV2(exerciseName, exerciseDb, preferences)`
+    - If `completed: false` (un-completing): revert row styling, no timer
+    - _Risk_: PR detection is client-side comparison against cached previous data. May miss PRs if cache is stale. _Mitigation_: Acceptable for v1. Final PR detection happens server-side on session save. Client-side is for celebration UX only.
+    - _Rollback_: Revert completion logic. Sets still log but without haptic/PR/timer.
+    - _Requirements: 2.2-2.6, 7.1-7.4, 4.1_
+  - [x] 16.4 Implement finish/discard flow
+    - "Finish Workout" button:
+      - Validate: at least 1 completed set exists. If not → error toast.
+      - Call `finishWorkout()` on slice → returns payload
+      - If mode === 'new': `POST /training/sessions` with payload
+      - If mode === 'edit': `PUT /training/sessions/{editSessionId}` with payload
+      - On success: show finish summary (Alert or modal with duration, volume, exercise count, PR count from response)
+      - Optional: if mode === 'new' and not from template → prompt "Save as Template?" → if yes, show name/description dialog → `POST /training/user-templates`
+      - Call `discardWorkout()` to clear state
+      - Navigate back to LogsScreen
+    - "Discard" button:
+      - If `hasUnsavedData(exercises)`: show confirmation Alert with "Keep Workout" / "Discard"
+      - On confirm: call `discardWorkout()`, navigate back
+    - Back navigation interception:
+      - Use `navigation.addListener('beforeRemove')` — if `hasUnsavedData`, prevent default and show confirmation
+    - _Risk_: Double-tap on Finish sends two POST requests. _Mitigation_: Set `saving` boolean state, disable button while true.
+    - _Rollback_: Revert finish flow. Users can still log via old modal (feature flag).
+    - _Requirements: 1.4-1.7, 9.2-9.5, 11.1-11.2_
+  - [x] 16.5 Implement superset grouping UI
+    - Long-press on exercise card → enters multi-select mode (checkbox appears on each exercise)
+    - "Group as Superset" button appears when 2+ exercises selected
+    - On group: call `createSuperset(selectedIds)` on slice
+    - Visual: colored left border bar connecting superset exercises, superset label header
+    - "Ungroup" button on superset header → call `removeSuperset(groupId)`
+    - Rest timer behavior: when completing a set in a superset exercise that is NOT the last in the group, scroll to next exercise instead of showing timer. When completing last exercise in group, show timer normally.
+    - _Risk_: Complex UI state (multi-select mode + normal mode). _Mitigation_: Use a local `isSelectMode` boolean. Exit select mode after grouping or on cancel.
+    - _Rollback_: Remove superset UI. Core logging still works without it.
+    - _Requirements: 13.1-13.7_
+  - [x] 16.6 Implement crash recovery
+    - In `App.tsx` or a top-level component: on app mount, check `useActiveWorkoutStore.getState().isActive`
+    - If true: show Alert "Resume workout?" with workout summary (exercise count, duration since startedAt)
+    - "Resume" → navigate to ActiveWorkoutScreen (state is already in Zustand, persisted)
+    - "Discard" → call `discardWorkout()`
+    - _Risk_: Zustand rehydration from AsyncStorage is async. _Mitigation_: Use `useActiveWorkoutStore.persist.onFinishHydration` to wait for rehydration before checking.
+    - _Rollback_: Remove crash recovery check. Stale state in AsyncStorage is harmless (cleared on next workout start).
+    - _Requirements: 1.9_
+
+- [x] 17. **CHECKPOINT: ActiveWorkoutScreen complete**
+  - Run: `npx jest` from `app/` — full suite must pass
+  - Run: `npx tsc --noEmit` — no TypeScript errors
+  - Manual testing (or ask user to verify):
+    - Start empty workout → add exercise → log 3 sets with checkmarks → rest timer appears → finish → session appears in logs
+    - Start from template → exercises pre-populated → log sets → finish
+    - Copy last workout → exercises pre-populated → finish
+    - Edit existing session → modify weight → save → changes reflected
+    - Past date logging → select yesterday → finish → session date is yesterday
+    - Crash recovery → start workout → kill app → reopen → "Resume?" prompt
+    - Superset → group 2 exercises → complete set in first → scrolls to second (no timer) → complete set in second → timer appears
+    - PR detection → log heavier weight than previous → PR banner appears
+  - **Gate**: Do not proceed to LogsScreen redesign until ActiveWorkoutScreen is manually verified.
+  - _Rollback_: Revert ActiveWorkoutScreen to placeholder. Feature flag keeps old modal active.
+
+- [x] 18. Frontend: LogsScreen redesign (training tab only)
+  - [x] 18.1 Update LogsScreen training tab with infinite scroll pagination
+    - Replace hardcoded 7-day fetch with paginated `GET /training/sessions?page=N&limit=20` (no date range filter)
+    - Use FlatList with `onEndReached` callback to fetch next page
+    - `onEndReachedThreshold={0.5}` for pre-fetching
+    - Loading indicator (ActivityIndicator) at list bottom while fetching next page
+    - Stop fetching when `hasMorePages(totalCount, currentPage, 20)` returns false
+    - Pull-to-refresh resets to page 1
+    - Group sessions by date using `groupSessionsByDate` utility
+    - Client-side dedup by session ID (page-based pagination can cause duplicates on insert)
+    - _Risk_: Existing nutrition tab fetch is interleaved with training fetch. _Mitigation_: Only change the training data fetch. Nutrition fetch remains unchanged (7-day window).
+    - _Rollback_: Revert to 7-day fetch. Data display is less but functional.
+    - _Requirements: 12.1-12.6_
+  - [x] 18.2 Make training session cards tappable → SessionDetailView
+    - Wrap each training card in `TouchableOpacity` with `onPress={() => navigation.push('SessionDetail', { sessionId: session.id })}`
+    - _Risk_: Conflict with swipe-to-delete gesture. _Mitigation_: SwipeableRow already handles this — tap fires onPress, swipe fires onDelete.
+    - _Rollback_: Remove onPress. Cards become non-tappable again.
+    - _Requirements: 8.1_
+  - [x] 18.3 Add PR indicator to training session cards
+    - Check `sessionHasPR(session)` from `sessionEditConversion.ts`
+    - If true: render small trophy Icon in the card header
+    - _Risk_: `personal_records` may not be in the paginated list response. _Mitigation_: Check the backend — `TrainingSessionResponse` includes `personal_records` field. However, `get_sessions` currently doesn't run PR detection on list. **This is a gap**: the list endpoint returns empty `personal_records` because PRs are only detected on create. Fix: store PRs in session metadata on create, or add a `has_prs` boolean column. Simplest for v1: check if `session.personal_records.length > 0` — this works for newly created sessions (post-redesign) but not for legacy sessions. Acceptable for v1.
+    - _Rollback_: Remove trophy icon. Cards look the same as before.
+    - _Requirements: 7.6_
+  - [x] 18.4 Wire FAB to ActiveWorkoutScreen (behind feature flag)
+    - Read `training_log_v2` feature flag from user context (or a local config for now)
+    - If flag enabled: FAB tap → `navigation.push('ActiveWorkout', { mode: 'new' })`
+    - If flag disabled: FAB tap → open `AddTrainingModal` (current behavior)
+    - **Keep AddTrainingModal import and component in the file** — it's the fallback. Remove it only after 100% rollout.
+    - _Risk_: Feature flag check adds latency to FAB tap. _Mitigation_: Cache flag value in Zustand on app load. Check is synchronous.
+    - _Rollback_: Set feature flag to disabled. FAB reverts to old modal.
+    - _Requirements: 1.1_
+  - [x] 18.5 Write unit tests for LogsScreen changes (`app/__tests__/screens/LogsScreen.test.ts`)
+    - Test: `hasMorePages` integration — page 1 of 3 → true, page 3 of 3 → false
+    - Test: `groupSessionsByDate` with real session data
+    - Test: `sessionHasPR` returns true for session with personal_records
+    - Test: Feature flag disabled → AddTrainingModal is used (mock the flag)
+    - _Rollback_: Delete test file.
+
+- [x] 19. **CHECKPOINT: Full feature integration**
+  - Run: `pytest tests/ -v` — ALL backend tests pass
+  - Run: `npx jest` from `app/` — ALL frontend tests pass
+  - Run: `npx tsc --noEmit` from `app/` — no TypeScript errors
+  - Manual end-to-end flow (with feature flag enabled):
+    1. Open LogsScreen → training tab shows paginated history
+    2. Scroll down → more sessions load
+    3. Tap session card → SessionDetailView shows full details with PR badges
+    4. Tap "Edit" → ActiveWorkoutScreen in edit mode → modify weight → "Save Changes" → back to detail view with updated data
+    5. Tap FAB → ActiveWorkoutScreen (new) → add exercises → log sets with checkmarks → PR banner on PR → rest timer between sets → "Finish" → summary → back to LogsScreen → new session appears
+    6. Start workout → kill app → reopen → "Resume?" → resume → finish
+    7. Save as template → template appears in TemplatePicker next time
+  - Manual end-to-end flow (with feature flag disabled):
+    1. FAB → old AddTrainingModal opens (backward compat verified)
+  - **Gate**: Do not proceed to launch until all checks pass.
+  - _Rollback_: Set `training_log_v2` flag to disabled. All users revert to old flow instantly.
+
+- [ ] 20. Launch preparation
+  - [x] 20.1 Create seed script for `training_log_v2` feature flag in production
+    - Script or migration that creates the flag with `is_enabled=False, conditions={"user_ids": ["<team-member-ids>"]}` for internal dogfood
+    - _Rollback_: Delete flag row.
+  - [ ] 20.2 Enable flag for team accounts (internal dogfood — 1 week)
+    - Update flag conditions to include team member user IDs
+    - Monitor: crash rate, completion rate, error rate for 1 week
+    - _Rollback_: Set flag to disabled.
+  - [ ] 20.3 Staged rollout: 10% → 25% → 50% → 100%
+    - Update flag conditions to use percentage-based rollout (add `percentage` condition to FeatureFlagService if not already supported, OR use user_id hash modulo)
+    - Monitor at each stage for 3-5 days:
+      - Workout completion rate ≥ 70% (kill switch threshold)
+      - Crash rate < 1%
+      - No increase in session create error rate
+    - _Rollback_: Reduce percentage or disable flag entirely.
+  - [ ] 20.4 Remove old AddTrainingModal (post-100% rollout, after 4-week holdback)
+    - Delete `app/components/modals/AddTrainingModal.tsx`
+    - Remove import from `LogsScreen.tsx`
+    - Remove feature flag check from FAB handler
+    - _Rollback_: `git revert` the cleanup commit. Re-enable flag fallback.
+
+## Dependency Graph
+
+```
+0 (flag + deps) → 1 (schema extension) → 2 (CHECKPOINT)
+2 → 3 (batch endpoint) → 4 (templates CRUD) → 5 (CHECKPOINT: backend)
+5 → 6 (TS types) → 7 (utilities) → 8 (utility tests) → 9 (CHECKPOINT: utilities)
+9 → 10 (Zustand slice) → 11 (CHECKPOINT: slice)
+11 → 12 (leaf components) → 13 (CHECKPOINT: components)
+13 → 14 (navigation wiring)
+14 → 15 (SessionDetailView) ─┐
+14 → 16 (ActiveWorkoutScreen) ┤→ 17 (CHECKPOINT: screens)
+17 → 18 (LogsScreen redesign) → 19 (CHECKPOINT: integration)
+19 → 20 (launch)
+```
+
+No circular dependencies. Steps 3 and 4 (backend) are independent of each other but both depend on step 1. Steps 15 and 16 are independent of each other but both depend on step 14.
+
+## Notes
+
+- Every step has an explicit rollback plan
+- Every new code path has corresponding tests (steps 1.9, 3.5, 4.7, 8.1-8.9, 10.2, 12.6, 15.2, 18.5)
+- 6 checkpoints gate progress (steps 2, 5, 9, 11, 13, 17, 19)
+- Feature flag `training_log_v2` provides instant rollback without code deployment
+- Old `AddTrainingModal` is preserved until post-launch cleanup (step 20.4)
+- Backend tests use pytest + Hypothesis; frontend tests use Jest + fast-check
+- All Alembic migrations are reversible via `alembic downgrade`
+- The plan is strictly sequential — no step references artifacts from a later step

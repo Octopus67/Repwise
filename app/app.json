@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "HypertrophyOS",
+    "slug": "hypertrophy-os",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0B0F14"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.hypertrophyos.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0B0F14"
+      },
+      "package": "com.hypertrophyos.app"
+    },
+    "scheme": "hypertrophyos"
+  }
+}

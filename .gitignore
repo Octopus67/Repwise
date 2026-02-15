@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+*.egg
+
+# Node
+node_modules/
+.expo/
+dist/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.DS_Store
+*.swp
+*.swo
+
+# Hypothesis
+.hypothesis/
+
+# Test artifacts
+.pytest_cache/
+coverage/
+.coverage
+htmlcov/
+
+# Build
+build/
+*.tsbuildinfo
+
+# Large data files
+data/
+dev.db
+*.db
