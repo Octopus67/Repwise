@@ -60,8 +60,14 @@ export function RecoveryCheckinModal({ visible, onClose, onSuccess }: Props) {
       });
       onSuccess();
       onClose();
-    } catch {
-      // Silent fail — dashboard will show stale data
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? 'Failed to save check-in. Please try again.';
+      console.warn('Recovery checkin failed:', err?.response?.status, msg);
+      // Show error to user via Alert if available
+      try {
+        const { Alert } = require('react-native');
+        Alert.alert('Error', msg);
+      } catch {}
     } finally {
       setSubmitting(false);
     }

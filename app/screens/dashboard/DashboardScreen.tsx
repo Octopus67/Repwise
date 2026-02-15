@@ -443,15 +443,6 @@ export function DashboardScreen({ navigation }: any) {
           isLoading={syncLoading}
         />
 
-        {/* Readiness Gauge */}
-        {!isLoading && (
-          <ReadinessGauge
-            score={readinessScore}
-            factors={readinessFactors}
-            onPress={() => setShowCheckin(true)}
-          />
-        )}
-
         {/* Quick Actions — above the fold */}
         <Animated.View style={quickActionsAnim}>
           <SectionHeader title="Quick Log" />
@@ -634,6 +625,15 @@ export function DashboardScreen({ navigation }: any) {
             <Text style={styles.milestoneText} numberOfLines={1}>{milestoneMessage}</Text>
             <Text style={styles.milestoneChevron}>›</Text>
           </TouchableOpacity>
+        )}
+
+        {/* Readiness Gauge */}
+        {!isLoading && (
+          <ReadinessGauge
+            score={readinessScore}
+            factors={readinessFactors}
+            onPress={() => setShowCheckin(true)}
+          />
         )}
 
         {/* Weekly Report Link */}
