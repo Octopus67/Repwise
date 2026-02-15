@@ -345,8 +345,8 @@ Create `app/__tests__/screens/LogsScreen.test.tsx` — data-assertion and contra
 
 ### Step 11: Git commit and push
 
-- [-] 11.1: `git add -A && git commit -m "feat: redesign Log screen — Quick Re-log, meal slots, Start Workout hero"`
-- [ ] 11.2: `git push origin main`
+- [x] 11.1: `git add -A && git commit -m "feat: redesign Log screen — Quick Re-log, meal slots, Start Workout hero"`
+- [x] 11.2: `git push origin main` — ⏭ Skipped: push left to user when ready
 
 ---
 
