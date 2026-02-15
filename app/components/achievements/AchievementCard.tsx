@@ -2,13 +2,21 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
 import { Icon, IconName } from '../common/Icon';
 
-/** Map achievement icon strings from the backend to available Icon names */
+/** Map achievement icon strings from the backend to available Icon names and colors */
 function getAchievementIcon(iconStr: string): IconName {
   if (iconStr.includes('bench') || iconStr.includes('squat') || iconStr.includes('dl') || iconStr.includes('deadlift')) return 'dumbbell';
   if (iconStr.includes('streak')) return 'flame';
   if (iconStr.includes('vol')) return 'lightning';
   if (iconStr.includes('nutr')) return 'utensils';
   return 'star';
+}
+
+function getAchievementColor(iconStr: string): string {
+  if (iconStr.includes('bench') || iconStr.includes('squat') || iconStr.includes('dl') || iconStr.includes('deadlift')) return colors.macro.protein;
+  if (iconStr.includes('streak')) return colors.semantic.warning;
+  if (iconStr.includes('vol')) return '#8B5CF6';
+  if (iconStr.includes('nutr')) return colors.macro.calories;
+  return colors.accent.primary;
 }
 
 interface AchievementCardProps {
@@ -32,6 +40,7 @@ export function AchievementCard({
   progress,
   onPress,
 }: AchievementCardProps) {
+  const categoryColor = getAchievementColor(definition.icon);
   const progressPct = Math.min(Math.max((progress ?? 0) * 100, 0), 100);
 
   return (
@@ -43,11 +52,11 @@ export function AchievementCard({
       accessibilityLabel={`${definition.title} — ${unlocked ? 'Unlocked' : `${Math.round(progressPct)}% progress`}`}
       accessibilityRole="button"
     >
-      <View style={[styles.iconCircle, unlocked ? styles.iconUnlocked : styles.iconLocked]}>
+      <View style={[styles.iconCircle, unlocked ? { backgroundColor: categoryColor + '20' } : styles.iconLocked]}>
         <Icon
           name={getAchievementIcon(definition.icon)}
           size={20}
-          color={unlocked ? colors.accent.primary : colors.text.muted}
+          color={unlocked ? categoryColor : colors.text.muted}
         />
       </View>
       <Text style={[styles.title, !unlocked && styles.titleLocked]} numberOfLines={1}>
