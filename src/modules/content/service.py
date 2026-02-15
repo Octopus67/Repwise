@@ -35,6 +35,7 @@ class ContentService:
         self,
         pagination: Optional[PaginationParams] = None,
         module_id: Optional[uuid.UUID] = None,
+        category: Optional[str] = None,
         tag: Optional[str] = None,
         status: Optional[str] = None,
     ) -> PaginatedResult[ContentArticle]:
@@ -49,6 +50,10 @@ class ContentService:
 
         if module_id is not None:
             base = base.where(ContentArticle.module_id == module_id)
+        if category is not None:
+            base = base.join(ContentModule, ContentArticle.module_id == ContentModule.id).where(
+                func.lower(ContentModule.name) == func.lower(category)
+            )
         if status is not None:
             base = base.where(ContentArticle.status == status)
         if tag is not None:

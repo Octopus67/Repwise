@@ -39,6 +39,7 @@ async def get_articles(
     user: User = Depends(get_current_user),
     service: ContentService = Depends(_get_service),
     module_id: Optional[uuid.UUID] = Query(default=None),
+    category: Optional[str] = Query(default=None),
     tag: Optional[str] = Query(default=None),
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
@@ -48,6 +49,7 @@ async def get_articles(
     result = await service.get_articles(
         pagination=pagination,
         module_id=module_id,
+        category=category,
         tag=tag,
         status="published",
     )

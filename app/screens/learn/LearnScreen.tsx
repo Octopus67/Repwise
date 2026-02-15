@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -16,10 +16,9 @@ import { colors, radius, spacing, typography } from '../../theme/tokens';
 import { Card } from '../../components/common/Card';
 import { FilterPill } from '../../components/common/FilterPill';
 import { EmptyState } from '../../components/common/EmptyState';
-import { PremiumBadge } from '../../components/premium/PremiumBadge';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { ProfileStackParamList } from '../../navigation/BottomTabNavigator';
-import { Icon } from '../../components/common/Icon';
+import { Icon, IconName } from '../../components/common/Icon';
 import api from '../../services/api';
 import { stripMarkdown } from '../../utils/textHelpers';
 
@@ -34,14 +33,67 @@ interface Article {
   published_at: string;
 }
 
-const CATEGORIES = ['All', '★ Favorites', 'Nutrition', 'Training', 'Recovery', 'Mindset'];
+const CATEGORIES = ['All', '★ Favorites', 'Hypertrophy', 'Nutrition', 'Programming', 'Recovery', 'Recomp', 'Supplements'];
+
+const CATEGORY_TO_MODULE: Record<string, string> = {
+  Hypertrophy: 'Hypertrophy Science',
+  Nutrition: 'Nutrition & Protein',
+  Programming: 'Strength & Programming',
+  Recovery: 'Recovery & Lifestyle',
+  Recomp: 'Body Recomposition',
+  Supplements: 'Supplements',
+};
 
 const CATEGORY_COLORS: Record<string, string> = {
+  Hypertrophy: colors.accent.primary,
   Nutrition: colors.macro.calories,
-  Training: colors.macro.protein,
+  Programming: colors.macro.protein,
   Recovery: colors.macro.carbs,
-  Mindset: colors.macro.fat,
+  Recomp: colors.macro.fat,
+  Supplements: '#8B5CF6',
 };
+
+const CATEGORY_ICONS: Record<string, IconName> = {
+  Hypertrophy: 'muscle',
+  Nutrition: 'utensils',
+  Programming: 'dumbbell',
+  Recovery: 'moon',
+  Recomp: 'scale',
+  Supplements: 'droplet',
+};
+
+/**
+ * Extract a meaningful preview from article markdown.
+ * Skips the title heading and "The Study" section, preferring
+ * "What They Found" or the first substantive paragraph.
+ */
+function getArticlePreview(markdown: string | undefined | null): string {
+  if (!markdown) return '';
+
+  // Try to find "What They Found" section content
+  const whatTheyFoundMatch = markdown.match(
+    /#{1,3}\s*What They Found[\s\S]*?\n([\s\S]*?)(?=\n#{1,3}\s|\n---|\n\*\*\*|$)/i,
+  );
+  if (whatTheyFoundMatch?.[1]?.trim()) {
+    return stripMarkdown(whatTheyFoundMatch[1].trim(), 200);
+  }
+
+  // Otherwise skip the first ~120 chars (usually the title + intro) and show the rest
+  const stripped = stripMarkdown(markdown, 400);
+  if (stripped.length > 120) {
+    // Find the first sentence boundary after char 80 to get a clean cut
+    const cutPoint = stripped.indexOf('. ', 80);
+    if (cutPoint > 0 && cutPoint < 200) {
+      const preview = stripped.slice(cutPoint + 2).trim();
+      return preview.length > 200 ? preview.slice(0, 200) + '...' : preview;
+    }
+    // Fallback: just skip first 100 chars
+    const preview = stripped.slice(100).trim();
+    return preview.length > 200 ? preview.slice(0, 200) + '...' : preview;
+  }
+
+  return stripMarkdown(markdown, 200);
+}
 
 function AnimatedArticleCard({
   item,
@@ -57,16 +109,38 @@ function AnimatedArticleCard({
   onToggleFavorite: () => void;
 }) {
   const animatedStyle = useStaggeredEntrance(index, 40);
-  const categoryColor = CATEGORY_COLORS[item.module_name ?? ''] ?? colors.accent.primary;
+  // Reverse-map full module name to short category key for color/icon lookup
+  const MODULE_TO_CATEGORY: Record<string, string> = Object.fromEntries(
+    Object.entries(CATEGORY_TO_MODULE).map(([k, v]) => [v, k]),
+  );
+  const categoryKey = MODULE_TO_CATEGORY[item.module_name ?? ''] ?? (item.module_name ?? '');
+  const categoryColor = CATEGORY_COLORS[categoryKey] ?? colors.accent.primary;
+  const categoryIcon = CATEGORY_ICONS[categoryKey];
+  const preview = getArticlePreview(item.content_markdown);
 
   return (
     <Animated.View style={animatedStyle}>
       <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
-        <Card style={[styles.articleCard, { borderLeftWidth: 4, borderLeftColor: categoryColor }]}>
+        <Card style={styles.articleCard}>
+          {/* Colored header strip */}
+          <View style={[styles.gradientStrip, { backgroundColor: categoryColor }]} />
+
           <View style={styles.articleHeader}>
             <View style={styles.articleMeta}>
-              {item.module_name && <Text style={styles.categoryPill}>{item.module_name}</Text>}
-              <Text style={styles.readTime}>{item.estimated_read_time_min} min read</Text>
+              {item.module_name && (
+                <View style={[styles.categoryPillContainer, { backgroundColor: categoryColor + '18' }]}>
+                  {categoryIcon && (
+                    <Icon name={categoryIcon} size={12} color={categoryColor} />
+                  )}
+                  <Text style={[styles.categoryPillText, { color: categoryColor }]}>
+                    {item.module_name}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.readTimePill}>
+                <Text style={styles.readTimeIcon}>◷</Text>
+                <Text style={styles.readTimeText}>{item.estimated_read_time_min} min</Text>
+              </View>
             </View>
             {item.is_premium && (
               <View style={styles.lockBadge}>
@@ -74,23 +148,29 @@ function AnimatedArticleCard({
               </View>
             )}
           </View>
+
           <Text style={styles.articleTitle}>{item.title}</Text>
-          {item.content_markdown && (
+
+          {preview ? (
             <Text style={styles.articlePreview} numberOfLines={2}>
-              {stripMarkdown(item.content_markdown)}
+              {preview}
             </Text>
-          )}
+          ) : null}
+
           <View style={styles.articleFooter}>
             <View style={styles.tags}>
               {item.tags?.slice(0, 3).map((tag) => (
                 <Text key={tag} style={styles.tag}>{tag}</Text>
               ))}
             </View>
-            <TouchableOpacity onPress={onToggleFavorite} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Text style={[styles.favIcon, isFavorite && styles.favActive]}>
-                {isFavorite ? <Icon name="star" /> : <Icon name="star-outline" />}
-              </Text>
-            </TouchableOpacity>
+            <View style={styles.footerRight}>
+              <Text style={styles.readIndicator}>Read →</Text>
+              <TouchableOpacity onPress={onToggleFavorite} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={[styles.favIcon, isFavorite && styles.favActive]}>
+                  {isFavorite ? <Icon name="star" /> : <Icon name="star-outline" />}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </Card>
       </TouchableOpacity>
@@ -110,7 +190,9 @@ export function LearnScreen() {
   const loadArticles = useCallback(async () => {
     try {
       const params: Record<string, string> = { limit: '50', status: 'published' };
-      if (category !== 'All' && category !== '★ Favorites') params.category = category;
+      if (category !== 'All' && category !== '★ Favorites') {
+        params.category = CATEGORY_TO_MODULE[category] ?? category;
+      }
       if (searchQuery.trim()) params.q = searchQuery.trim();
       const { data } = await api.get('content/articles', { params });
       setArticles(data.items ?? []);
@@ -257,20 +339,59 @@ const styles = StyleSheet.create({
     marginBottom: spacing[3],
   },
   listContent: { padding: spacing[4], paddingTop: 0, paddingBottom: spacing[12] },
-  articleCard: { marginBottom: spacing[3] },
-  articleHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[2] },
+  articleCard: {
+    marginBottom: spacing[3],
+    overflow: 'hidden',
+    paddingTop: spacing[4] + 3, // account for gradient strip
+  },
+  gradientStrip: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    borderTopLeftRadius: radius.md,
+    borderTopRightRadius: radius.md,
+  },
+  articleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing[2],
+  },
   articleMeta: { flexDirection: 'row', alignItems: 'center', gap: spacing[2] },
-  categoryPill: {
-    color: colors.accent.primary,
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.medium,
-    backgroundColor: colors.accent.primaryMuted,
+  categoryPillContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[1],
     paddingHorizontal: spacing[2],
     paddingVertical: spacing[1],
     borderRadius: radius.sm,
-    overflow: 'hidden',
   },
-  readTime: { color: colors.text.muted, fontSize: typography.size.xs },
+  categoryPillText: {
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.semibold,
+  },
+  readTimePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: colors.bg.surfaceRaised,
+    borderWidth: 1,
+    borderColor: colors.border.subtle,
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[1],
+    borderRadius: radius.full,
+  },
+  readTimeIcon: {
+    fontSize: 10,
+    color: colors.text.muted,
+  },
+  readTimeText: {
+    color: colors.text.secondary,
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.medium,
+  },
   lockBadge: {
     backgroundColor: colors.premium.goldSubtle,
     borderRadius: radius.full,
@@ -279,12 +400,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  lockIcon: { fontSize: 12 },
   articleTitle: {
     color: colors.text.primary,
-    fontSize: typography.size.md,
-    fontWeight: typography.weight.semibold,
-    lineHeight: typography.size.md * typography.lineHeight.normal,
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.bold,
+    lineHeight: typography.size.lg * typography.lineHeight.tight,
   },
   articlePreview: {
     color: colors.text.secondary,
@@ -298,7 +418,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing[3],
   },
-  tags: { flexDirection: 'row', gap: spacing[1] },
+  tags: { flexDirection: 'row', gap: spacing[1], flexShrink: 1 },
   tag: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
@@ -306,7 +426,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[2],
     paddingVertical: spacing[1],
     borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border.subtle,
     overflow: 'hidden',
+  },
+  footerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
+  },
+  readIndicator: {
+    color: colors.accent.primary,
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.semibold,
+    opacity: 0.7,
   },
   favIcon: { fontSize: typography.size.xl, color: colors.text.muted },
   favActive: { color: colors.semantic.warning },

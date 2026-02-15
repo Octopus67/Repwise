@@ -56,6 +56,8 @@ There was a clear, statistically significant dose-response relationship between 
 
 However, the relationship was not linear. The first few sets produced the largest gains, with each subsequent set contributing progressively less. Going from 1 to 5 sets per week produced a much larger jump in growth than going from 10 to 15 sets.
 
+<!-- chart:volume-dose-response -->
+
 ## Why It Matters
 
 This is one of the most important findings in hypertrophy research because it tells us that volume is the primary driver of muscle growth that we can manipulate in our training programs. But it also tells us that more is not always better — there are diminishing returns.
@@ -94,6 +96,8 @@ The researchers analyzed 10 studies comparing different training frequencies whi
 Training a muscle group at least twice per week produced significantly greater hypertrophy than training it once per week (effect size: 0.49 vs 0.30, p = 0.002). The advantage held even when total weekly volume was equated between groups.
 
 There was a trend toward even greater growth with three times per week, but the data was insufficient to draw firm conclusions at that frequency.
+
+<!-- chart:frequency-comparison -->
 
 ## Why It Matters
 
@@ -217,6 +221,8 @@ The breakpoint analysis identified 1.62 g/kg/day as the point beyond which addit
 
 Protein supplementation was effective regardless of source (whey, soy, other), timing, or whether participants were trained or untrained.
 
+<!-- chart:protein-threshold -->
+
 ## Why It Matters
 
 This study settled one of the longest-running debates in sports nutrition. You need adequate protein to maximize muscle growth, but there is a ceiling. Eating 3-4 g/kg/day of protein — as some bodybuilders do — provides no additional muscle-building benefit over 1.6 g/kg/day.
@@ -297,6 +303,8 @@ The researchers systematically reviewed studies comparing short rest intervals (
 Longer rest intervals (2-3+ minutes) produced greater increases in both muscle hypertrophy and maximal strength compared to shorter rest intervals (60 seconds or less). The advantage was consistent across studies and training populations.
 
 The likely mechanism is straightforward: longer rest allows better recovery between sets, which means you can maintain higher force output, complete more reps, and accumulate more total volume — all of which drive greater muscle growth.
+
+<!-- chart:rest-intervals -->
 
 ## Why It Matters
 
@@ -382,6 +390,8 @@ Massage was the most effective technique for reducing DOMS and perceived fatigue
 Stretching and electrical stimulation showed minimal benefits for recovery.
 
 The effect sizes ranged from small to large depending on the technique and outcome measure, with massage consistently producing the largest effects.
+
+<!-- chart:recovery-methods -->
 
 ## Why It Matters
 

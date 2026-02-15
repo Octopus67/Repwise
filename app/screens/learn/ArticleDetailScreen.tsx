@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Markdown from 'react-native-markdown-display';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
 import { Icon } from '../../components/common/Icon';
+import { ArticleChart } from '../../components/learn/ArticleChart';
 import api from '../../services/api';
 
 interface ArticleDetail {
@@ -37,7 +38,6 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
   const [article, setArticle] = useState<ArticleDetail | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -60,7 +60,6 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
     const maxScroll = contentSize.height - layoutMeasurement.height;
     if (maxScroll > 0) {
       const progress = Math.min(contentOffset.y / maxScroll, 1);
-      setScrollProgress(progress);
       Animated.timing(progressAnim, {
         toValue: progress,
         duration: 50,
@@ -79,6 +78,28 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
       setIsFavorite(!isFavorite);
     } catch { /* ignore */ }
   };
+
+  /** Split markdown at <!-- chart:ID --> markers into alternating text/chart segments */
+  const contentSections = useMemo(() => {
+    if (!article) return [];
+    const md = article.content_markdown;
+    const chartPattern = /<!--\s*chart:([\w-]+)\s*-->/g;
+    const sections: { type: 'markdown' | 'chart'; content: string }[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = chartPattern.exec(md)) !== null) {
+      const before = md.slice(lastIndex, match.index).trim();
+      if (before) sections.push({ type: 'markdown', content: before });
+      sections.push({ type: 'chart', content: match[1] });
+      lastIndex = match.index + match[0].length;
+    }
+
+    const remaining = md.slice(lastIndex).trim();
+    if (remaining) sections.push({ type: 'markdown', content: remaining });
+
+    return sections.length > 0 ? sections : [{ type: 'markdown' as const, content: md }];
+  }, [article]);
 
   if (!article) {
     return (
@@ -154,8 +175,14 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
           </TouchableOpacity>
         ))}
 
-        {/* Markdown content */}
-        <Markdown style={markdownStyles}>{article.content_markdown}</Markdown>
+        {/* Markdown content with inline charts */}
+        {contentSections.map((section, idx) =>
+          section.type === 'chart' ? (
+            <ArticleChart key={`chart-${idx}`} chartId={section.content} />
+          ) : (
+            <Markdown key={`md-${idx}`} style={markdownStyles}>{section.content}</Markdown>
+          ),
+        )}
 
         {/* Tags */}
         <View style={styles.tags}>
