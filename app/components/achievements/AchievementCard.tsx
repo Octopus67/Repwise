@@ -1,6 +1,15 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
-import { Icon } from '../common/Icon';
+import { Icon, IconName } from '../common/Icon';
+
+/** Map achievement icon strings from the backend to available Icon names */
+function getAchievementIcon(iconStr: string): IconName {
+  if (iconStr.includes('bench') || iconStr.includes('squat') || iconStr.includes('dl') || iconStr.includes('deadlift')) return 'dumbbell';
+  if (iconStr.includes('streak')) return 'flame';
+  if (iconStr.includes('vol')) return 'lightning';
+  if (iconStr.includes('nutr')) return 'utensils';
+  return 'star';
+}
 
 interface AchievementCardProps {
   definition: {
@@ -36,7 +45,7 @@ export function AchievementCard({
     >
       <View style={[styles.iconCircle, unlocked ? styles.iconUnlocked : styles.iconLocked]}>
         <Icon
-          name="trophy"
+          name={getAchievementIcon(definition.icon)}
           size={20}
           color={unlocked ? colors.accent.primary : colors.text.muted}
         />
