@@ -118,45 +118,6 @@ This supports upper/lower splits, push/pull/legs rotations, or full-body program
     },
     {
         "module_slug": "hypertrophy-science",
-        "title": "Light Weights Build as Much Muscle as Heavy Weights (If You Go to Failure)",
-        "tags": ["load", "intensity", "failure", "meta-analysis"],
-        "estimated_read_time_min": 5,
-        "is_premium": False,
-        "content_markdown": """# Light Weights Build as Much Muscle as Heavy Weights (If You Go to Failure)
-
-## The Study
-
-**Lopez P, Radaelli R, Taaffe DR, et al.** Resistance Training Load Effects on Muscle Hypertrophy and Strength Gain: Systematic Review and Network Meta-analysis. *Med Sci Sports Exerc.* 2021;53(6):1206-1216. **PMID: 33433148**
-
-## What They Did
-
-This network meta-analysis included 28 studies with 747 participants. The researchers compared the effects of low-load (>15 RM), moderate-load (9-15 RM), and high-load (≤8 RM) resistance training on both muscle hypertrophy and strength, with all groups training to volitional failure.
-
-## What They Found
-
-For muscle hypertrophy, there were no significant differences between any of the loading conditions (p = 0.113-0.469). Low loads, moderate loads, and heavy loads all produced similar muscle growth when sets were taken to failure.
-
-However, for maximal strength (1RM), high loads were clearly superior. This makes intuitive sense — strength is a skill that requires practice with heavy weights.
-
-## Why It Matters
-
-This finding is liberating. It means you don't need to lift maximally heavy weights to build muscle. What matters is that you take your sets close to failure, regardless of the rep range. The muscle fibers don't know how much weight is on the bar — they only know how hard they're working.
-
-This has practical implications for people with joint issues, those training at home with limited equipment, or anyone who simply prefers higher-rep training. You can build just as much muscle with 15-rep sets as with 5-rep sets, as long as you push hard enough.
-
----
-
-## 🎯 Practical Takeaway
-
-**For hypertrophy, any rep range from 5-30 works — as long as you train close to failure.** Use heavier loads (3-6 reps) for compound lifts where you also want strength gains. Use moderate loads (8-15 reps) as your bread and butter. Use lighter loads (15-30 reps) for isolation exercises, joint-friendly alternatives, or variety. The key variable is effort, not load.
-
----
-
-*Citation: Lopez P, Radaelli R, Taaffe DR, et al. Med Sci Sports Exerc. 2021;53(6):1206-1216. doi:10.1249/MSS.0000000000002585. PMID: 33433148*
-""",
-    },
-    {
-        "module_slug": "hypertrophy-science",
         "title": "How Close to Failure Do You Actually Need to Train?",
         "tags": ["proximity-to-failure", "RIR", "effort", "meta-analysis"],
         "estimated_read_time_min": 5,
@@ -176,6 +137,8 @@ The researchers pooled data from multiple studies comparing resistance training 
 Training to failure produced a small but statistically significant advantage for hypertrophy compared to stopping short (effect size = 0.19, p = 0.045). However, the practical magnitude of this difference was trivial.
 
 For strength, there was no significant difference between training to failure and stopping short.
+
+<!-- chart:failure-proximity -->
 
 ## Why It Matters
 
@@ -262,6 +225,8 @@ When the analysis controlled for total daily protein intake, protein timing had 
 
 In other words, the studies that showed a benefit of post-workout protein shakes were really just showing the benefit of eating more total protein — not the benefit of timing.
 
+<!-- chart:protein-timing -->
+
 ## Why It Matters
 
 For years, the fitness industry promoted the idea that you had a 30-60 minute "anabolic window" after training where you needed to consume protein or your workout was wasted. This meta-analysis showed that the window is much wider than previously thought — essentially the entire day.
@@ -345,6 +310,8 @@ Both periodization models were superior to non-periodized training for strength 
 
 The key finding was that having any structured periodization plan was better than no periodization at all.
 
+<!-- chart:periodization-comparison -->
+
 ## Why It Matters
 
 People spend enormous amounts of time debating whether linear or undulating periodization is "better." This meta-analysis suggests the debate is largely academic — both work well, and the differences between them are small.
@@ -365,49 +332,6 @@ What matters more is that you have a structured plan that progressively challeng
     # ═══════════════════════════════════════════════════════════════════
     # MODULE: Recovery & Lifestyle
     # ═══════════════════════════════════════════════════════════════════
-    {
-        "module_slug": "recovery-lifestyle",
-        "title": "Massage Is the Best Recovery Tool (According to Science)",
-        "tags": ["recovery", "massage", "DOMS", "meta-analysis"],
-        "estimated_read_time_min": 4,
-        "is_premium": False,
-        "content_markdown": """# Massage Is the Best Recovery Tool (According to Science)
-
-## The Study
-
-**Dupuy O, Douzi W, Theurot D, et al.** An Evidence-Based Approach for Choosing Post-exercise Recovery Techniques to Reduce Markers of Muscle Damage, Soreness, Fatigue, and Inflammation: A Systematic Review With Meta-Analysis. *Front Physiol.* 2018;9:403. **PMID: 29755363**
-
-## What They Did
-
-The researchers conducted a comprehensive meta-analysis of 99 studies examining the effectiveness of various recovery techniques on delayed-onset muscle soreness (DOMS), perceived fatigue, muscle damage markers, and inflammatory markers.
-
-Recovery techniques analyzed included: massage, compression garments, cold water immersion, contrast water therapy, cryotherapy, active recovery, stretching, and electrical stimulation.
-
-## What They Found
-
-Massage was the most effective technique for reducing DOMS and perceived fatigue. Compression garments and cold water immersion also showed significant benefits. Active recovery (light exercise) was moderately effective.
-
-Stretching and electrical stimulation showed minimal benefits for recovery.
-
-The effect sizes ranged from small to large depending on the technique and outcome measure, with massage consistently producing the largest effects.
-
-<!-- chart:recovery-methods -->
-
-## Why It Matters
-
-Recovery is often the most neglected aspect of training. This meta-analysis provides a clear hierarchy of what actually works. If you can only do one recovery intervention, massage (even self-massage with a foam roller or massage gun) gives you the most bang for your buck.
-
----
-
-## 🎯 Practical Takeaway
-
-**Prioritize massage and self-myofascial release** (foam rolling, massage gun) after hard training sessions. Wear compression garments during or after training if convenient. Cold water immersion (10-15°C for 10-15 minutes) can help after very intense sessions, but avoid it immediately after hypertrophy-focused training as it may blunt the muscle growth response. Skip static stretching as a recovery tool — it doesn't reduce soreness.
-
----
-
-*Citation: Dupuy O, Douzi W, Theurot D, et al. Front Physiol. 2018;9:403. doi:10.3389/fphys.2018.00403. PMID: 29755363*
-""",
-    },
     # ═══════════════════════════════════════════════════════════════════
     # MODULE: Body Recomposition
     # ═══════════════════════════════════════════════════════════════════
@@ -438,6 +362,8 @@ Body recomposition is possible under specific conditions, even in trained indivi
 5. **Slower rate of weight loss** (0.5-1% of bodyweight per week maximum)
 
 The populations most likely to achieve recomposition include: beginners, those returning after a layoff, individuals with higher body fat percentages, and those who were previously under-eating protein.
+
+<!-- chart:recomp-factors -->
 
 ## Why It Matters
 
@@ -485,6 +411,8 @@ Creatine supplementation produced significant improvements in:
 - **Total training volume**: Ability to perform more reps and sets at a given load
 
 The effects were consistent across age groups, training status, and sex. Side effects were minimal — the only consistent finding was a small increase in body water (1-2 kg), which is expected and harmless.
+
+<!-- chart:creatine-effects -->
 
 ## Why It Matters
 

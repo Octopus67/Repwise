@@ -94,16 +94,77 @@ const CHART_REGISTRY: Record<string, ChartConfig> = {
     ] as ComparisonDatum[],
   },
 
-  'recovery-methods': {
-    type: 'bar',
-    title: 'Recovery Methods Ranked',
-    subtitle: 'Effectiveness for reducing DOMS (effect size)',
+  'failure-proximity': {
+    type: 'comparison',
+    title: 'Training to Failure vs Stopping Short',
+    subtitle: 'Effect size difference for hypertrophy and strength',
     data: [
-      { label: 'Massage', value: 0.80, color: colors.semantic.positive },
-      { label: 'Compression', value: 0.62, color: colors.accent.primary },
-      { label: 'Cold Water', value: 0.55, color: colors.accent.primary },
-      { label: 'Active Recovery', value: 0.34, color: colors.semantic.warning },
-      { label: 'Stretching', value: 0.15, color: colors.text.muted },
+      {
+        label: 'Hypertrophy',
+        values: [
+          { name: 'To Failure', value: 0.19, color: colors.semantic.positive },
+          { name: 'Not to Failure', value: 0.00, color: colors.text.muted },
+        ],
+      },
+      {
+        label: 'Strength',
+        values: [
+          { name: 'To Failure', value: 0.12, color: colors.accent.primary },
+          { name: 'Not to Failure', value: 0.11, color: colors.text.muted },
+        ],
+      },
+    ] as ComparisonDatum[],
+  },
+
+  'protein-timing': {
+    type: 'comparison',
+    title: 'Protein Timing: Does It Matter?',
+    subtitle: 'Effect size on hypertrophy with vs without peri-workout timing',
+    data: [
+      {
+        label: 'Hypertrophy',
+        values: [
+          { name: 'Peri-workout', value: 0.28, color: colors.accent.primary },
+          { name: 'Any time', value: 0.24, color: colors.text.muted },
+        ],
+      },
+    ] as ComparisonDatum[],
+  },
+
+  'periodization-comparison': {
+    type: 'bar',
+    title: 'Periodization Models vs No Plan',
+    subtitle: 'Effect size for strength gains',
+    data: [
+      { label: 'No Plan', value: 0.54, color: colors.text.muted },
+      { label: 'Linear', value: 0.78, color: colors.accent.primary },
+      { label: 'Undulating', value: 0.82, color: colors.semantic.positive },
+    ] as BarDatum[],
+  },
+
+  'recomp-factors': {
+    type: 'bar',
+    title: 'Key Factors for Body Recomposition',
+    subtitle: 'Relative importance for successful recomp',
+    suffix: '%',
+    data: [
+      { label: 'Protein 2.0+ g/kg', value: 95, color: colors.semantic.positive },
+      { label: 'Moderate deficit', value: 90, color: colors.semantic.positive },
+      { label: 'Resistance training', value: 85, color: colors.accent.primary },
+      { label: 'Sleep 7-9h', value: 75, color: colors.semantic.warning },
+      { label: 'Slow loss rate', value: 70, color: colors.semantic.warning },
+    ] as BarDatum[],
+  },
+
+  'creatine-effects': {
+    type: 'bar',
+    title: 'Creatine Supplementation Effects',
+    subtitle: 'Measured improvements with creatine monohydrate',
+    data: [
+      { label: 'Lean mass', value: 1.4, color: colors.semantic.positive },
+      { label: 'Strength', value: 8, color: colors.semantic.positive },
+      { label: 'Sprint', value: 5, color: colors.accent.primary },
+      { label: 'Volume', value: 14, color: colors.semantic.positive },
     ] as BarDatum[],
   },
 };
