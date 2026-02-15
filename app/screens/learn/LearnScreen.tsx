@@ -280,33 +280,6 @@ export function LearnScreen() {
     <SafeAreaView style={styles.safe} edges={['top']} testID="learn-screen">
       <Text style={styles.title}>Learn</Text>
 
-      <TextInput
-        style={styles.searchInput}
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        placeholder="Search articles..."
-        placeholderTextColor={colors.text.muted}
-        testID="learn-search-input"
-      />
-
-      {/* Category filter pills — horizontal FlatList with FilterPill components */}
-      <FlatList
-        testID="learn-filter-pills"
-        horizontal
-        data={CATEGORIES}
-        keyExtractor={(c) => c}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterRow}
-        style={{ flexGrow: 0 }}
-        renderItem={({ item: cat }) => (
-          <FilterPill
-            label={cat}
-            active={category === cat}
-            onPress={() => setCategory(cat)}
-          />
-        )}
-      />
-
       <FlatList
         testID="learn-article-list"
         data={displayArticles}
