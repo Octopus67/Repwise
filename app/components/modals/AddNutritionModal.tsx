@@ -440,6 +440,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
     setServingMultiplier('1');
     setSearchResults([]);
     setSearchQuery(item.name);
+    setNotes(item.name);
 
     // Build serving options from food data
     const rawOptions: ServingOption[] | undefined =
