@@ -455,15 +455,6 @@ export function DashboardScreen({ navigation }: any) {
                   onPress={() => handleQuickAction(() => setShowMealBuilder(true))}
                 />
               </View>
-              <View style={styles.quickItem}>
-                <QuickActionButton
-                  icon="lightning"
-                  label="Quick Add"
-                  accentColor={colors.semantic.warning}
-                  completed={false}
-                  onPress={() => handleQuickAction(() => setShowQuickAdd(true))}
-                />
-              </View>
               <View style={styles.quickItem} testID="dashboard-log-training-button">
                 <QuickActionButton
                   icon="dumbbell"
