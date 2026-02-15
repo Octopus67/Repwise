@@ -57,7 +57,7 @@ export function AddBodyweightModal({ visible, onClose, onSuccess }: Props) {
     }
     setLoading(true);
     try {
-      await api.post('user/bodyweight', {
+      await api.post('users/bodyweight', {
         recorded_date: selectedDate,
         weight_kg: parseWeightToKg(numVal, unit),
       });

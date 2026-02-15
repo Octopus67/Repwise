@@ -121,7 +121,7 @@ export function AnalyticsScreen() {
       const start = new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0];
 
       const [bwRes, nutritionRes, adaptiveRes] = await Promise.allSettled([
-        api.get('user/bodyweight/history', { params: { limit: 90 } }),
+        api.get('users/bodyweight/history', { params: { limit: 90 } }),
         api.get('nutrition/entries', { params: { start_date: start, end_date: end, limit: 500 } }),
         api.get('adaptive/snapshots', { params: { limit: 1 } }),
       ]);

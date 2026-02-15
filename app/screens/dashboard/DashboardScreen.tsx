@@ -176,7 +176,7 @@ export function DashboardScreen({ navigation }: any) {
         api.get('adaptive/snapshots', { params: { limit: 1 } }),
         api.get('training/sessions', { params: { start_date: targetDate, end_date: targetDate, limit: 10 } }),
         api.get('content/articles', { params: { limit: 5, status: 'published' } }),
-        api.get('user/bodyweight/history', { params: { limit: 90 } }),
+        api.get('users/bodyweight/history', { params: { limit: 90 } }),
         api.get('training/day-classification', { params: { date: targetDate } }),
         api.get('achievements/streak'),
       ]);

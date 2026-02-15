@@ -559,7 +559,7 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
         onSettingsChange={async (compound, isolation) => {
           const existingPrefs = profile?.preferences ?? {};
           try {
-            await api.put('user/profile', {
+            await api.put('users/profile', {
               preferences: {
                 ...existingPrefs,
                 rest_timer: { compound_seconds: compound, isolation_seconds: isolation },
