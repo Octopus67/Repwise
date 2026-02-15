@@ -7,7 +7,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated from 'react-native-reanimated';
 import { colors, spacing, typography } from '../../theme/tokens';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
-import { getGreeting } from '../../utils/greeting';
 import { calculateStreak } from '../../utils/calculateStreak';
 import { MacroRingsRow } from '../../components/dashboard/MacroRingsRow';
 import { TodaySummaryRow } from '../../components/dashboard/TodaySummaryRow';
@@ -66,7 +65,6 @@ interface NutritionEntryRaw {
 export function DashboardScreen({ navigation }: any) {
   const store = useStore();
   const premium = isPremium(store);
-  const profileName = useStore((s) => s.profile?.displayName);
   const onboardingSkipped = useStore((s) => s.onboardingSkipped);
   const setNeedsOnboarding = useStore((s) => s.setNeedsOnboarding);
   const setOnboardingSkipped = useStore((s) => s.setOnboardingSkipped);
@@ -406,21 +404,9 @@ export function DashboardScreen({ navigation }: any) {
         {/* Section 1: Header */}
         <Animated.View style={headerAnim}>
           <View style={styles.header} testID="dashboard-greeting">
-            <View>
-              <Text style={styles.greeting}>{getGreeting(profileName)}</Text>
-              <Text style={styles.date}>
-                {new Date().toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </Text>
-            </View>
             {premium && <PremiumBadge size="md" />}
           </View>
         </Animated.View>
-
-        {!premium && <UpgradeBanner onPress={() => setShowUpgrade(true)} />}
 
         {onboardingSkipped && (
           <SetupBanner
@@ -730,6 +716,8 @@ export function DashboardScreen({ navigation }: any) {
             </TouchableOpacity>
           </Animated.View>
         )}
+
+        {!premium && <UpgradeBanner onPress={() => setShowUpgrade(true)} />}
       </ScrollView>
 
       <UpgradeModal visible={showUpgrade} onClose={() => setShowUpgrade(false)} />
@@ -786,16 +774,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing[4],
-  },
-  greeting: {
-    color: colors.text.primary,
-    fontSize: typography.size.xl,
-    fontWeight: typography.weight.semibold,
-  },
-  date: {
-    color: colors.text.muted,
-    fontSize: typography.size.sm,
-    marginTop: spacing[1],
   },
   summarySection: {
     marginTop: spacing[6],
