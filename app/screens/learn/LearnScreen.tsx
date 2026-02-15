@@ -273,6 +273,7 @@ export function LearnScreen() {
         keyExtractor={(c) => c}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.filterRow}
+        style={{ flexGrow: 0 }}
         renderItem={({ item: cat }) => (
           <FilterPill
             label={cat}
@@ -325,7 +326,7 @@ const styles = StyleSheet.create({
     padding: spacing[4],
     paddingBottom: spacing[2],
   },
-  filterRow: { paddingHorizontal: spacing[4], gap: spacing[2], marginBottom: spacing[3] },
+  filterRow: { paddingHorizontal: spacing[4], gap: spacing[2], marginBottom: spacing[3], height: 40 },
   searchInput: {
     backgroundColor: colors.bg.surfaceRaised,
     borderRadius: radius.md,
@@ -338,7 +339,7 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing[4],
     marginBottom: spacing[3],
   },
-  listContent: { padding: spacing[4], paddingTop: 0, paddingBottom: spacing[12] },
+  listContent: { padding: spacing[4], paddingTop: spacing[2], paddingBottom: spacing[12] },
   articleCard: {
     marginBottom: spacing[3],
     overflow: 'hidden',

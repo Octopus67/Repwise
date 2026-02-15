@@ -29,6 +29,15 @@ def _get_service(db: AsyncSession = Depends(get_db)) -> ContentService:
     return ContentService(db)
 
 
+def _article_to_response(article: object) -> ArticleResponse:
+    """Convert a ContentArticle ORM object to an ArticleResponse, including module_name."""
+    resp = ArticleResponse.model_validate(article)
+    module = getattr(article, 'module', None)
+    if module and not resp.module_name:
+        resp.module_name = module.name
+    return resp
+
+
 # ------------------------------------------------------------------
 # Public / authenticated endpoints
 # ------------------------------------------------------------------
@@ -54,7 +63,7 @@ async def get_articles(
         status="published",
     )
     return PaginatedResult[ArticleResponse](
-        items=[ArticleResponse.model_validate(a) for a in result.items],
+        items=[_article_to_response(a) for a in result.items],
         total_count=result.total_count,
         page=result.page,
         limit=result.limit,
@@ -74,7 +83,7 @@ async def get_article(
         user_role=user.role,
         has_premium=has_premium,
     )
-    return ArticleResponse.model_validate(article)
+    return _article_to_response(article)
 
 
 # ------------------------------------------------------------------
@@ -90,7 +99,7 @@ async def create_article(
 ) -> ArticleResponse:
     """Create a new article (admin only). Requirement 21.1."""
     article = await service.create_article(data=data)
-    return ArticleResponse.model_validate(article)
+    return _article_to_response(article)
 
 
 @router.put("/articles/{article_id}", response_model=ArticleResponse)
@@ -106,7 +115,7 @@ async def update_article(
         data=data,
         admin_user_id=user.id,
     )
-    return ArticleResponse.model_validate(article)
+    return _article_to_response(article)
 
 
 @router.post("/articles/{article_id}/publish", response_model=ArticleResponse)
@@ -120,7 +129,7 @@ async def publish_article(
         article_id=article_id,
         admin_user_id=user.id,
     )
-    return ArticleResponse.model_validate(article)
+    return _article_to_response(article)
 
 
 # ------------------------------------------------------------------
@@ -166,7 +175,7 @@ async def get_favorites(
         user_id=user.id, pagination=pagination
     )
     return PaginatedResult[ArticleResponse](
-        items=[ArticleResponse.model_validate(a) for a in result.items],
+        items=[_article_to_response(a) for a in result.items],
         total_count=result.total_count,
         page=result.page,
         limit=result.limit,

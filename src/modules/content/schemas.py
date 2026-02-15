@@ -52,6 +52,7 @@ class ArticleResponse(BaseModel):
 
     id: uuid.UUID
     module_id: uuid.UUID
+    module_name: Optional[str] = None
     title: str
     content_markdown: str
     status: str
