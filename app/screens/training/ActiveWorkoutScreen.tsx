@@ -506,6 +506,15 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
           completedSetCounts={volumeSetCounts}
         />
 
+        {/* Quick guide for new users */}
+        {store.exercises.length > 0 && (
+          <View style={styles.infoHint}>
+            <Text style={styles.infoHintText}>
+              💡 RPE = how hard the set felt (6 easy → 10 max effort) · Type = Normal, Warm-up, Drop-set, or AMRAP · Tap Previous to copy last session's values
+            </Text>
+          </View>
+        )}
+
         {/* Exercise Cards */}
         {store.exercises.map((exercise, exIdx) => {
           const supersetGroup = getSupersetGroupForExercise(exercise.localId);
@@ -561,6 +570,8 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
                   <Text style={[styles.setHeaderCell, styles.prevCol]}>Previous</Text>
                   <Text style={[styles.setHeaderCell, styles.weightCol]}>{unitLabel}</Text>
                   <Text style={[styles.setHeaderCell, styles.repsCol]}>Reps</Text>
+                  <Text style={[styles.setHeaderCell, styles.rpeCol]}>RPE ⓘ</Text>
+                  <Text style={[styles.setHeaderCell, styles.typeCol]}>Type</Text>
                   <Text style={[styles.setHeaderCell, styles.checkCol]}>✓</Text>
                 </View>
 
@@ -735,7 +746,31 @@ function SetRow({
         placeholderTextColor={colors.text.muted}
       />
 
-      {/* RPE and Type hidden for simplified v1 UX — re-enable for advanced mode */}
+      <TouchableOpacity
+        style={[styles.setInput, styles.rpeCol, { justifyContent: 'center' }]}
+        onPress={() => setRpePickerVisible(true)}
+      >
+        <Text style={[styles.rpeTapText, !rpeDisplayText && styles.rpePlaceholder]}>
+          {rpeDisplayText || '—'}
+        </Text>
+      </TouchableOpacity>
+
+      <RPEPicker
+        visible={rpePickerVisible}
+        mode={rpeMode}
+        onSelect={(value) => {
+          onUpdateField(exerciseLocalId, set.localId, 'rpe', value);
+          setRpePickerVisible(false);
+        }}
+        onDismiss={() => setRpePickerVisible(false)}
+      />
+
+      <View style={styles.typeCol}>
+        <SetTypeSelector
+          value={set.setType}
+          onChange={(type) => onUpdateType(exerciseLocalId, set.localId, type)}
+        />
+      </View>
 
       <TouchableOpacity
         style={[styles.checkCol, styles.checkBtn, set.completed && styles.checkBtnCompleted]}
@@ -743,6 +778,17 @@ function SetRow({
       >
         <Text style={[styles.checkText, set.completed && styles.checkTextCompleted]}>✓</Text>
       </TouchableOpacity>
+
+      {/* Remove set — long press on set number */}
+      {!set.completed && (
+        <TouchableOpacity
+          style={styles.removeSetBtn}
+          onPress={() => onRemoveSet(exerciseLocalId, set.localId)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Text style={styles.removeSetText}>✕</Text>
+        </TouchableOpacity>
+      )}
     </Animated.View>
   );
 }
@@ -953,6 +999,43 @@ const styles = StyleSheet.create({
     color: colors.accent.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+  },
+
+  // Remove set (per-row delete button)
+  removeSetBtn: {
+    position: 'absolute' as const,
+    right: -6,
+    top: -6,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.semantic.negative,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    zIndex: 10,
+  },
+  removeSetText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: typography.weight.bold,
+    lineHeight: 12,
+  },
+
+  // Info hint for new users
+  infoHint: {
+    backgroundColor: colors.bg.surface,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+    marginHorizontal: spacing[4],
+    marginBottom: spacing[3],
+    borderLeftWidth: 3,
+    borderLeftColor: colors.accent.primary,
+  },
+  infoHintText: {
+    color: colors.text.muted,
+    fontSize: typography.size.xs,
+    lineHeight: typography.size.xs * 1.5,
   },
 
   // Add exercise
