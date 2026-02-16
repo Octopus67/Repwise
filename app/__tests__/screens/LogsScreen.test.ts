@@ -139,23 +139,23 @@ describe('LogsScreen logic', () => {
 
   describe('Feature flag: training_log_v2', () => {
     afterEach(() => {
-      setTrainingLogV2Flag(false);
-    });
-
-    test('flag disabled by default → AddTrainingModal is used', () => {
-      expect(isTrainingLogV2Enabled()).toBe(false);
-    });
-
-    test('flag can be enabled', () => {
       setTrainingLogV2Flag(true);
+    });
+
+    test('flag enabled by default → ActiveWorkoutScreen is used', () => {
       expect(isTrainingLogV2Enabled()).toBe(true);
     });
 
-    test('flag can be toggled back to disabled', () => {
-      setTrainingLogV2Flag(true);
-      expect(isTrainingLogV2Enabled()).toBe(true);
+    test('flag can be disabled', () => {
       setTrainingLogV2Flag(false);
       expect(isTrainingLogV2Enabled()).toBe(false);
+    });
+
+    test('flag can be toggled back to enabled', () => {
+      setTrainingLogV2Flag(false);
+      expect(isTrainingLogV2Enabled()).toBe(false);
+      setTrainingLogV2Flag(true);
+      expect(isTrainingLogV2Enabled()).toBe(true);
     });
   });
 });

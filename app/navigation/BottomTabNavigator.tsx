@@ -32,6 +32,7 @@ import type { ActiveWorkoutScreenParams } from '../types/training';
 export type DashboardStackParamList = {
   DashboardHome: undefined;
   ExercisePicker: { target?: 'modal' | 'activeWorkout' };
+  ActiveWorkout: ActiveWorkoutScreenParams;
   WeeklyReport: undefined;
   ArticleDetail: { articleId: string };
   Learn: undefined;
@@ -139,6 +140,7 @@ function DashboardStackScreen() {
     <DashboardStack.Navigator screenOptions={stackScreenOptions}>
       <DashboardStack.Screen name="DashboardHome" component={DashboardScreen} />
       <DashboardStack.Screen name="ExercisePicker" component={ExercisePickerScreen} />
+      <DashboardStack.Screen name="ActiveWorkout" component={ActiveWorkoutScreen} options={{ headerShown: false }} />
       <DashboardStack.Screen name="WeeklyReport" component={WeeklyReportScreen} />
       <DashboardStack.Screen name="ArticleDetail">
         {({ route, navigation }: any) => (
