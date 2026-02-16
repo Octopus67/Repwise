@@ -6,7 +6,7 @@
  * For now, this provides a synchronous check that can be toggled at runtime.
  */
 
-let _trainingLogV2Enabled = false;
+let _trainingLogV2Enabled = true;
 
 /**
  * Set the training_log_v2 feature flag value.

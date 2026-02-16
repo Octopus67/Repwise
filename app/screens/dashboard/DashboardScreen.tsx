@@ -42,6 +42,7 @@ import { Icon } from '../../components/common/Icon';
 import { useDailyTargets } from '../../hooks/useDailyTargets';
 import { useHealthData } from '../../hooks/useHealthData';
 import api from '../../services/api';
+import { isTrainingLogV2Enabled } from '../../utils/featureFlags';
 
 interface Article {
   id: string;
@@ -461,7 +462,13 @@ export function DashboardScreen({ navigation }: any) {
                   label="Training"
                   accentColor={colors.macro.protein}
                   completed={trainingLogged}
-                  onPress={() => handleQuickAction(() => setShowTraining(true))}
+                  onPress={() => handleQuickAction(() => {
+                    if (isTrainingLogV2Enabled()) {
+                      navigation?.push?.('ActiveWorkout', { mode: 'new' }) ?? navigation?.navigate?.('Logs', { screen: 'ActiveWorkout', params: { mode: 'new' } });
+                    } else {
+                      setShowTraining(true);
+                    }
+                  })}
                 />
               </View>
               <View style={styles.quickItem} testID="dashboard-log-bodyweight-button">
@@ -704,11 +711,13 @@ export function DashboardScreen({ navigation }: any) {
         onSuccess={() => loadDashboardData(selectedDate)}
         prefilledMealName={prefilledMealName}
       />
-      <AddTrainingModal
-        visible={showTraining}
-        onClose={() => setShowTraining(false)}
-        onSuccess={() => loadDashboardData(selectedDate)}
-      />
+      {!isTrainingLogV2Enabled() && (
+        <AddTrainingModal
+          visible={showTraining}
+          onClose={() => setShowTraining(false)}
+          onSuccess={() => loadDashboardData(selectedDate)}
+        />
+      )}
       <AddBodyweightModal
         visible={showBodyweight}
         onClose={() => setShowBodyweight(false)}

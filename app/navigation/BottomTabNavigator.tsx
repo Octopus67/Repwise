@@ -31,7 +31,7 @@ import type { ActiveWorkoutScreenParams } from '../types/training';
 
 export type DashboardStackParamList = {
   DashboardHome: undefined;
-  ExercisePicker: { onSelect: (exerciseName: string) => void };
+  ExercisePicker: { target?: 'modal' | 'activeWorkout' };
   WeeklyReport: undefined;
   ArticleDetail: { articleId: string };
   Learn: undefined;
@@ -39,7 +39,7 @@ export type DashboardStackParamList = {
 
 export type LogsStackParamList = {
   LogsHome: undefined;
-  ExercisePicker: { onSelect: (exerciseName: string) => void; target?: 'modal' | 'activeWorkout' };
+  ExercisePicker: { target?: 'modal' | 'activeWorkout' };
   ActiveWorkout: ActiveWorkoutScreenParams;
   SessionDetail: { sessionId: string };
 };

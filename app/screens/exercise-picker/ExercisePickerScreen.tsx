@@ -25,7 +25,7 @@ import { ExerciseDetailSheet } from '../../components/training/ExerciseDetailShe
 import { CustomExerciseForm } from '../../components/exercise-picker/CustomExerciseForm';
 
 type ExercisePickerParams = {
-  ExercisePicker: { onSelect?: (exerciseName: string) => void; onCancel?: () => void; target?: 'modal' | 'activeWorkout' };
+  ExercisePicker: { target?: 'modal' | 'activeWorkout' };
 };
 
 type Props = StackScreenProps<ExercisePickerParams, 'ExercisePicker'>;
@@ -34,7 +34,7 @@ const EQUIPMENT_FILTERS = ['All', 'Barbell', 'Dumbbell', 'Cable', 'Machine', 'Bo
 export { EQUIPMENT_FILTERS };
 
 export function ExercisePickerScreen({ route, navigation }: Props) {
-  const { onSelect, onCancel, target = 'modal' } = route.params ?? {};
+  const { target = 'activeWorkout' } = route.params ?? {};
 
   const didSelectRef = useRef(false);
 
@@ -108,13 +108,9 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
 
   const handleExercisePress = useCallback((exercise: Exercise) => {
     didSelectRef.current = true;
-    if (target === 'activeWorkout') {
-      useActiveWorkoutStore.getState().addExercise(exercise.name);
-    } else {
-      onSelect?.(exercise.name);
-    }
+    useActiveWorkoutStore.getState().addExercise(exercise.name);
     navigation.goBack();
-  }, [onSelect, navigation, target]);
+  }, [navigation]);
 
   const handleExerciseLongPress = useCallback((exercise: Exercise) => {
     setDetailExercise(exercise);
@@ -124,13 +120,9 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
   const handleCustomExerciseCreated = useCallback((exercise: { id: string; name: string }) => {
     setShowCustomForm(false);
     didSelectRef.current = true;
-    if (target === 'activeWorkout') {
-      useActiveWorkoutStore.getState().addExercise(exercise.name);
-    } else {
-      onSelect?.(exercise.name);
-    }
+    useActiveWorkoutStore.getState().addExercise(exercise.name);
     navigation.goBack();
-  }, [onSelect, navigation, target]);
+  }, [navigation]);
 
   // ─── Render ──────────────────────────────────────────────────────────────
 
@@ -375,11 +367,14 @@ const styles = StyleSheet.create({
   },
   chipScroll: {
     flexGrow: 0,
+    flexShrink: 0,
+    maxHeight: 44,
   },
   chipRow: {
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[2],
     gap: spacing[2],
+    marginBottom: spacing[2],
   },
   chip: {
     paddingHorizontal: spacing[3],

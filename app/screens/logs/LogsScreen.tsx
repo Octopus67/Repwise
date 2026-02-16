@@ -522,7 +522,7 @@ export function LogsScreen() {
                 title="No training sessions yet"
                 description="Tap Start Workout above or the + button to log your first workout"
                 actionLabel="Log Training"
-                onAction={() => setShowTrainingModal(true)}
+                onAction={handleStartEmpty}
               />
             </View>
           </ScrollView>
@@ -557,11 +557,13 @@ export function LogsScreen() {
         onSuccess={loadData}
         prefilledMealName={prefilledMealName}
       />
-      <AddTrainingModal
-        visible={showTrainingModal}
-        onClose={() => setShowTrainingModal(false)}
-        onSuccess={loadData}
-      />
+      {!isTrainingLogV2Enabled() && (
+        <AddTrainingModal
+          visible={showTrainingModal}
+          onClose={() => setShowTrainingModal(false)}
+          onSuccess={loadData}
+        />
+      )}
     </SafeAreaView>
   );
 }
