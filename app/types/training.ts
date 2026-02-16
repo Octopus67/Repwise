@@ -30,6 +30,8 @@ export interface ActiveExercise {
   localId: string;
   exerciseName: string;
   sets: ActiveSet[];
+  notes?: string;
+  skipped?: boolean;
 }
 
 export interface SupersetGroup {
@@ -105,6 +107,12 @@ export interface ActiveWorkoutActions {
   ) => void;
   copyPreviousToSet: (exerciseLocalId: string, setLocalId: string) => void;
 
+  // Exercise actions
+  swapExercise: (localId: string, newExerciseName: string) => void;
+  toggleExerciseSkip: (localId: string) => void;
+  setExerciseNotes: (localId: string, notes: string) => void;
+  insertWarmUpSets: (localId: string, warmUpSets: import('../utils/warmUpGenerator').WarmUpSet[]) => void;
+
   // Metadata
   setSessionDate: (date: string) => void;
   setNotes: (notes: string) => void;
@@ -132,6 +140,8 @@ export interface ActiveWorkoutPayload {
       id: string;
       exercise_names: string[];
     }>;
+    exercise_notes?: Record<string, string>;
+    skipped_exercises?: string[];
   } | null;
 }
 

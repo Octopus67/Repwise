@@ -30,6 +30,8 @@ import {
 } from '../utils/supersetLogic';
 import { activeExercisesToPayload } from '../utils/sessionEditConversion';
 import { isValidSessionDate } from '../utils/dateValidation';
+import { swapExerciseName } from '../utils/exerciseSwapLogic';
+import type { WarmUpSet } from '../utils/warmUpGenerator';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -112,6 +114,19 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
           }),
         }));
 
+        // Build exercise_notes map: exerciseName → notes (only for exercises with notes)
+        const exerciseNotes: Record<string, string> = {};
+        for (const ex of state.exercises) {
+          if (ex.notes && ex.notes.trim()) {
+            exerciseNotes[ex.exerciseName] = ex.notes;
+          }
+        }
+
+        // Build skipped_exercises array: names of exercises where skipped === true
+        const skippedExercises: string[] = state.exercises
+          .filter((ex) => ex.skipped === true)
+          .map((ex) => ex.exerciseName);
+
         const payload: ActiveWorkoutPayload = {
           session_date: state.sessionDate,
           exercises: exercisePayload,
@@ -121,6 +136,12 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
             ...(state.notes ? { notes: state.notes } : {}),
             ...(supersetGroupsPayload.length > 0
               ? { superset_groups: supersetGroupsPayload }
+              : {}),
+            ...(Object.keys(exerciseNotes).length > 0
+              ? { exercise_notes: exerciseNotes }
+              : {}),
+            ...(skippedExercises.length > 0
+              ? { skipped_exercises: skippedExercises }
               : {}),
           },
         };
@@ -348,6 +369,58 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
             };
           }),
         });
+      },
+
+      // ── Exercise Actions (UX Polish) ─────────────────────────────────────
+
+      swapExercise: (localId: string, newExerciseName: string) => {
+        set((state) => ({
+          exercises: state.exercises.map((ex) => {
+            if (ex.localId !== localId) return ex;
+            return swapExerciseName(ex, newExerciseName);
+          }),
+        }));
+      },
+
+      toggleExerciseSkip: (localId: string) => {
+        set((state) => ({
+          exercises: state.exercises.map((ex) => {
+            if (ex.localId !== localId) return ex;
+            return { ...ex, skipped: !ex.skipped };
+          }),
+        }));
+      },
+
+      setExerciseNotes: (localId: string, notes: string) => {
+        set((state) => ({
+          exercises: state.exercises.map((ex) => {
+            if (ex.localId !== localId) return ex;
+            return { ...ex, notes };
+          }),
+        }));
+      },
+
+      insertWarmUpSets: (localId: string, warmUpSets: WarmUpSet[]) => {
+        set((state) => ({
+          exercises: state.exercises.map((ex) => {
+            if (ex.localId !== localId) return ex;
+            const newWarmUpActiveSets: ActiveSet[] = warmUpSets.map((ws) => ({
+              localId: generateId(),
+              setNumber: 0, // will be renumbered below
+              weight: String(ws.weightKg),
+              reps: String(ws.reps),
+              rpe: '',
+              setType: ws.setType,
+              completed: false,
+              completedAt: null,
+            }));
+            const allSets = [...newWarmUpActiveSets, ...ex.sets].map((s, i) => ({
+              ...s,
+              setNumber: i + 1,
+            }));
+            return { ...ex, sets: allSets };
+          }),
+        }));
       },
 
       // ── Metadata ─────────────────────────────────────────────────────────

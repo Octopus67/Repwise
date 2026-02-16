@@ -6,10 +6,10 @@
  * set completion with haptics + PR detection + rest timer, finish/discard
  * flow, superset grouping, and crash recovery support.
  *
- * Tasks: 16.1–16.5
+ * Tasks: 16.1–16.5, 7.1–7.4, 8.1–8.3
  */
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, memo } from 'react';
 import {
   View,
   Text,
@@ -20,24 +20,34 @@ import {
   Alert,
   Platform,
   Animated,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 
 import { useActiveWorkoutStore } from '../../store/activeWorkoutSlice';
 import { useStore } from '../../store';
+import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
 import api from '../../services/api';
-import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { colors, spacing, typography, radius, shadows } from '../../theme/tokens';
 
 // Components
 import { DurationTimer } from '../../components/training/DurationTimer';
 import { RestTimerOverlay } from '../../components/training/RestTimerOverlay';
+import { RestTimerBar } from '../../components/training/RestTimerBar';
 import { PRBanner } from '../../components/training/PRBanner';
 import { SetTypeSelector } from '../../components/training/SetTypeSelector';
 import { RPEPicker } from '../../components/training/RPEPicker';
+import { RPEBadge } from '../../components/training/RPEBadge';
+import { TypeBadge } from '../../components/training/TypeBadge';
+import { Tooltip } from '../../components/common/Tooltip';
 import { OverloadSuggestionBadge } from '../../components/training/OverloadSuggestionBadge';
 import { VolumeIndicatorPill } from '../../components/training/VolumeIndicatorPill';
 import { ExerciseDetailSheet } from '../../components/training/ExerciseDetailSheet';
+import { FinishBar } from '../../components/training/FinishBar';
+import { ConfirmationSheet } from '../../components/training/ConfirmationSheet';
+import { ExerciseContextMenu } from '../../components/training/ExerciseContextMenu';
+import { WarmUpSuggestion } from '../../components/training/WarmUpSuggestion';
 import { getDisplayValue } from '../../utils/rpeConversion';
 
 // Utilities
@@ -51,10 +61,31 @@ import { sessionResponseToActiveExercises } from '../../utils/sessionEditConvers
 import { templateToActiveExercises } from '../../utils/templateConversion';
 import { activeExercisesToPayload } from '../../utils/sessionEditConversion';
 import { convertWeight } from '../../utils/unitConversion';
+import { calculateSetProgress } from '../../utils/setProgressCalculator';
+import { shouldShowTypeBadge } from '../../utils/rpeBadgeColor';
+import { getNextField, FieldName } from '../../utils/keyboardAdvanceLogic';
 
 // Types
 import type { ActiveExercise, ActiveSet, SetType, PreviousPerformanceData } from '../../types/training';
 import type { Exercise } from '../../types/exercise';
+
+// ─── Rest Timer State Type ───────────────────────────────────────────────────
+
+interface RestTimerState {
+  active: boolean;
+  remaining: number;
+  paused: boolean;
+  completed: boolean;
+  duration: number;
+}
+
+const INITIAL_REST_TIMER_STATE: RestTimerState = {
+  active: false,
+  remaining: 0,
+  paused: false,
+  completed: false,
+  duration: 0,
+};
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
@@ -67,16 +98,26 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   const rpeMode = useStore((s) => s.rpeMode);
   const profile = useStore((s) => s.profile);
   const unitLabel = unitSystem === 'metric' ? 'kg' : 'lbs';
+  const showRpeColumn = useWorkoutPreferencesStore((s) => s.showRpeColumn);
 
   // Local UI state
   const [saving, setSaving] = useState(false);
-  const [restTimerVisible, setRestTimerVisible] = useState(false);
-  const [restDuration, setRestDuration] = useState(180);
   const [prBannerVisible, setPrBannerVisible] = useState(false);
   const [prBannerData, setPrBannerData] = useState<Array<{ type: 'weight' | 'reps' | 'volume' | 'e1rm'; exerciseName: string; value: string }>>([]);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   const initialized = useRef(false);
+
+  // Rest timer state (8.1 — floating bar instead of overlay)
+  const [restTimerState, setRestTimerState] = useState<RestTimerState>(INITIAL_REST_TIMER_STATE);
+  const [expandedTimerVisible, setExpandedTimerVisible] = useState(false);
+  const restTimerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Confirmation sheet state (8.2)
+  const [confirmationVisible, setConfirmationVisible] = useState(false);
+
+  // Overflow menu state (8.3)
+  const [overflowMenuVisible, setOverflowMenuVisible] = useState(false);
 
   // Intelligence layer state (4.7)
   const [muscleGroupMap, setMuscleGroupMap] = useState<Record<string, string>>({});
@@ -86,6 +127,71 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   const [exerciseCache, setExerciseCache] = useState<Record<string, Exercise>>({});
   const [detailSheetExercise, setDetailSheetExercise] = useState<Exercise | null>(null);
   const [detailSheetVisible, setDetailSheetVisible] = useState(false);
+
+  // Elapsed time for FinishBar
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  // Exercise context menu state (10.1)
+  const [contextMenuExerciseId, setContextMenuExerciseId] = useState<string | null>(null);
+
+  // Per-exercise notes visibility (10.4)
+  const [notesVisibleMap, setNotesVisibleMap] = useState<Record<string, boolean>>({});
+
+  // ScrollView ref for auto-scroll (11.3)
+  const scrollViewRef = useRef<ScrollView>(null);
+  const setRowPositions = useRef<Record<string, number>>({});
+
+  // Keyboard auto-advance refs (10.5)
+  const inputRefs = useRef<Record<string, Record<string, TextInput | null>>>({});
+
+  // ── Elapsed time ticker for FinishBar ────────────────────────────────────
+
+  useEffect(() => {
+    if (!store.startedAt) return;
+    const tick = () => {
+      setElapsedSeconds(Math.floor((Date.now() - new Date(store.startedAt!).getTime()) / 1000));
+    };
+    tick();
+    const id = setInterval(tick, 10000); // update every 10s is enough for "X min"
+    return () => clearInterval(id);
+  }, [store.startedAt]);
+
+  // ── Rest timer countdown (8.1) ──────────────────────────────────────────
+
+  useEffect(() => {
+    if (!restTimerState.active || restTimerState.paused || restTimerState.completed) {
+      if (restTimerIntervalRef.current) {
+        clearInterval(restTimerIntervalRef.current);
+        restTimerIntervalRef.current = null;
+      }
+      return;
+    }
+
+    restTimerIntervalRef.current = setInterval(() => {
+      setRestTimerState((prev) => {
+        if (prev.remaining <= 1) {
+          return { ...prev, remaining: 0, completed: true };
+        }
+        return { ...prev, remaining: prev.remaining - 1 };
+      });
+    }, 1000);
+
+    return () => {
+      if (restTimerIntervalRef.current) {
+        clearInterval(restTimerIntervalRef.current);
+        restTimerIntervalRef.current = null;
+      }
+    };
+  }, [restTimerState.active, restTimerState.paused, restTimerState.completed]);
+
+  // Auto-dismiss rest timer bar 3s after completion
+  useEffect(() => {
+    if (!restTimerState.completed) return;
+    const timeout = setTimeout(() => {
+      setRestTimerState(INITIAL_REST_TIMER_STATE);
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, [restTimerState.completed]);
 
   // ── Mount: initialize workout based on mode ──────────────────────────────
 
@@ -126,7 +232,6 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
             const lastSession = data.items?.[0];
             if (lastSession) {
               const exercises = sessionResponseToActiveExercises(lastSession, unitSystem);
-              // Mark all sets as incomplete for the copy
               exercises.forEach(ex => ex.sets.forEach(s => { s.completed = false; s.completedAt = null; }));
               store.startWorkout({ mode: 'new', templateExercises: exercises, sessionDate: sessionDate || undefined });
             } else {
@@ -136,7 +241,6 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
             store.startWorkout({ mode: 'new', sessionDate: sessionDate || undefined });
           }
         } else {
-          // mode === 'new' (default)
           if (!store.isActive) {
             store.startWorkout({ mode: 'new', sessionDate: sessionDate || undefined });
           }
@@ -184,6 +288,19 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   }, [store.exercises.length]);
 
   // ── Back navigation interception ─────────────────────────────────────────
+
+  // ── Handle exercise swap result from ExercisePicker (10.1) ───────────────
+
+  useEffect(() => {
+    const swappedName = route.params?.swappedExerciseName;
+    const swapTargetId = route.params?.swapTargetLocalId;
+    if (swappedName && swapTargetId) {
+      store.swapExercise(swapTargetId, swappedName);
+      try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {}); } catch {}
+      // Clear the params to prevent re-triggering
+      navigation.setParams({ swappedExerciseName: undefined, swapTargetLocalId: undefined });
+    }
+  }, [route.params?.swappedExerciseName, route.params?.swapTargetLocalId]);
 
   // ── Fetch muscle group mappings for volume indicators (4.7) ──────────────
 
@@ -259,7 +376,6 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   // ── Date picker ──────────────────────────────────────────────────────────
 
   const handleDatePress = useCallback(() => {
-    // Simple prompt for date — in production use a DatePicker component
     Alert.prompt?.(
       'Session Date',
       'Enter date (YYYY-MM-DD):',
@@ -269,7 +385,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
     );
   }, [store.sessionDate]);
 
-  // ── Set completion handler (16.3) ────────────────────────────────────────
+  // ── Set completion handler (16.3) — updated for rest timer bar (8.1) ─────
 
   const handleToggleSet = useCallback((exerciseLocalId: string, setLocalId: string, exerciseName: string) => {
     const result = store.toggleSetCompleted(exerciseLocalId, setLocalId);
@@ -300,12 +416,17 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
         }
       }
 
-      // Rest timer — check superset logic
+      // Rest timer — floating bar instead of overlay (8.1)
       if (shouldStartRestTimer(store.supersetGroups, exerciseLocalId)) {
         const restPrefs = profile?.preferences?.rest_timer;
         const dur = getRestDurationV2(exerciseName, [], restPrefs);
-        setRestDuration(dur);
-        setRestTimerVisible(true);
+        setRestTimerState({
+          active: true,
+          remaining: dur,
+          paused: false,
+          completed: false,
+          duration: dur,
+        });
       }
 
       // Increment volume count for muscle group (4.7)
@@ -313,22 +434,66 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
       if (mg) {
         setVolumeSetCounts((prev) => ({ ...prev, [mg]: (prev[mg] ?? 0) + 1 }));
       }
+
+      // Auto-scroll to next uncompleted set (11.3)
+      setTimeout(() => {
+        const allSets = store.exercises.flatMap(e => e.sets);
+        const nextUncompleted = allSets.find(s => !s.completed && s.localId !== setLocalId);
+        if (nextUncompleted) {
+          const targetY = setRowPositions.current[nextUncompleted.localId];
+          if (targetY != null && scrollViewRef.current) {
+            scrollViewRef.current.scrollTo({ y: Math.max(0, targetY - 100), animated: true });
+          }
+        }
+      }, 100);
     }
   }, [store, unitSystem, unitLabel, profile, muscleGroupMap]);
 
-  // ── Finish workout (16.4) ────────────────────────────────────────────────
+  // ── Rest timer bar handlers (8.1) ────────────────────────────────────────
 
-  const handleFinish = useCallback(async () => {
+  const handleRestTimerSkip = useCallback(() => {
+    setRestTimerState(INITIAL_REST_TIMER_STATE);
+  }, []);
+
+  const handleRestTimerExpand = useCallback(() => {
+    setExpandedTimerVisible(true);
+  }, []);
+
+  const handleExpandedTimerDismiss = useCallback(() => {
+    setExpandedTimerVisible(false);
+    setRestTimerState(INITIAL_REST_TIMER_STATE);
+  }, []);
+
+  // ── Finish workout (8.2 — via ConfirmationSheet) ─────────────────────────
+
+  const handleFinishTap = useCallback(() => {
     const completedSets = store.exercises.flatMap(e => e.sets).filter(s => s.completed);
     if (completedSets.length === 0) {
       Alert.alert('No Completed Sets', 'Complete at least one set to save.');
       return;
     }
+    // Clear rest timer before showing confirmation
+    setRestTimerState(INITIAL_REST_TIMER_STATE);
+    setConfirmationVisible(true);
+  }, [store]);
 
+  const handleConfirm = useCallback(async (saveAsTemplate: boolean) => {
     setSaving(true);
     try {
-      // Build payload with correct unit conversion
       const exercisePayload = activeExercisesToPayload(store.exercises, unitSystem);
+
+      // Build exercise_notes and skipped_exercises metadata
+      const exerciseNotes: Record<string, string> = {};
+      const skippedExercises: string[] = [];
+      for (const ex of store.exercises) {
+        if (ex.notes && ex.notes.trim()) {
+          exerciseNotes[ex.exerciseName] = ex.notes;
+        }
+        if (ex.skipped) {
+          skippedExercises.push(ex.exerciseName);
+        }
+      }
+
       const payload = {
         session_date: store.sessionDate,
         exercises: exercisePayload,
@@ -345,36 +510,58 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
               }),
             })),
           } : {}),
+          ...(Object.keys(exerciseNotes).length > 0 ? { exercise_notes: exerciseNotes } : {}),
+          ...(skippedExercises.length > 0 ? { skipped_exercises: skippedExercises } : {}),
         },
       };
 
-      let response;
       if (store.mode === 'edit' && store.editSessionId) {
-        response = await api.put(`training/sessions/${store.editSessionId}`, payload);
+        await api.put(`training/sessions/${store.editSessionId}`, payload);
       } else {
-        response = await api.post('training/sessions', payload);
+        await api.post('training/sessions', payload);
       }
 
-      // Show summary and navigate back
-      const elapsed = store.startedAt
-        ? Math.floor((Date.now() - new Date(store.startedAt).getTime()) / 1000)
-        : 0;
-      const volume = calculateWorkingVolume(store.exercises);
-      const prCount = response.data?.personal_records?.length ?? 0;
+      // Save as template if requested (exclude warm-up sets and skipped exercises)
+      if (saveAsTemplate) {
+        const templateExercises = store.exercises
+          .filter(ex => !ex.skipped)
+          .map(ex => ({
+            exercise_name: ex.exerciseName,
+            sets: ex.sets
+              .filter(s => s.setType !== 'warm-up')
+              .map(s => ({
+                reps: parseInt(s.reps, 10) || 0,
+                weight_kg: parseFloat(s.weight) || 0,
+                rpe: s.rpe ? parseFloat(s.rpe) : null,
+                set_type: s.setType,
+              })),
+          }));
+        const templateName = `Workout - ${store.sessionDate || new Date().toISOString().slice(0, 10)}`;
+        try {
+          await api.post('training/user-templates', { name: templateName, exercises: templateExercises });
+        } catch {
+          // template save is best-effort
+        }
+      }
 
-      // Clean up and go back immediately — don't rely on Alert callbacks (broken on web)
       store.discardWorkout();
       navigation.goBack();
     } catch (err: any) {
       Alert.alert('Save Failed', 'Could not save workout. Please try again.');
     } finally {
       setSaving(false);
+      setConfirmationVisible(false);
     }
-  }, [store, unitSystem, unitLabel, navigation]);
+  }, [store, unitSystem, navigation]);
 
-  // ── Discard workout (16.4) ───────────────────────────────────────────────
+  const handleConfirmCancel = useCallback(() => {
+    setConfirmationVisible(false);
+  }, []);
+
+  // ── Discard workout (8.3 — via overflow menu) ────────────────────────────
 
   const handleDiscard = useCallback(() => {
+    setOverflowMenuVisible(false);
     if (hasUnsavedData(store.exercises)) {
       Alert.alert('Discard Workout?', 'All progress will be lost.', [
         { text: 'Keep Workout', style: 'cancel' },
@@ -391,6 +578,72 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   const handleAddExercise = useCallback(() => {
     navigation.push('ExercisePicker', { target: 'activeWorkout' });
   }, [navigation]);
+
+  // ── Copy from specific date (11.1) ───────────────────────────────────────
+
+  const handleCopyFromDate = useCallback(() => {
+    setOverflowMenuVisible(false);
+    Alert.prompt?.(
+      'Copy from Date',
+      'Enter date (YYYY-MM-DD):',
+      async (dateText) => {
+        if (!dateText || !/^\d{4}-\d{2}-\d{2}$/.test(dateText.trim())) {
+          Alert.alert('Invalid Date', 'Please enter a date in YYYY-MM-DD format.');
+          return;
+        }
+        try {
+          const { data } = await api.get('training/sessions', { params: { date: dateText.trim(), limit: 10 } });
+          const sessions = data.items ?? data ?? [];
+          if (!Array.isArray(sessions) || sessions.length === 0) {
+            Alert.alert('No Sessions', 'No sessions found for this date.');
+            return;
+          }
+          // Use the first session found
+          const session = sessions[0];
+          Alert.alert(
+            'Replace Current Exercises?',
+            'This will replace your current workout with exercises from the selected session.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Replace',
+                onPress: () => {
+                  const exercises = sessionResponseToActiveExercises(session, unitSystem);
+                  exercises.forEach(ex => ex.sets.forEach(s => { s.completed = false; s.completedAt = null; }));
+                  // Replace current exercises
+                  store.discardWorkout();
+                  store.startWorkout({ mode: 'new', templateExercises: exercises, sessionDate: store.sessionDate });
+                },
+              },
+            ],
+          );
+        } catch {
+          Alert.alert('Error', 'Could not fetch sessions. Please try again.');
+        }
+      },
+      'plain-text',
+      '',
+    );
+  }, [store, unitSystem]);
+
+  // ── Exercise context menu handlers (10.1, 10.2, 10.4, 11.2) ─────────────
+
+  const handleSwapExercise = useCallback((exerciseLocalId: string, exerciseName: string) => {
+    const mg = muscleGroupMap[exerciseName.toLowerCase()] ?? undefined;
+    navigation.push('ExercisePicker', {
+      target: 'swapExercise',
+      currentExerciseLocalId: exerciseLocalId,
+      muscleGroup: mg,
+    });
+  }, [navigation, muscleGroupMap]);
+
+  const handleToggleNotes = useCallback((exerciseLocalId: string) => {
+    setNotesVisibleMap(prev => ({ ...prev, [exerciseLocalId]: !prev[exerciseLocalId] }));
+  }, []);
+
+  const handleWarmUpGenerate = useCallback((exerciseLocalId: string, sets: any[]) => {
+    store.insertWarmUpSets(exerciseLocalId, sets);
+  }, [store]);
 
   // ── Superset grouping (16.5) ─────────────────────────────────────────────
 
@@ -429,21 +682,38 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
     ? new Date(store.sessionDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
     : 'Today';
 
+  // Compute completed set count for FinishBar
+  const completedSetCount = store.exercises.flatMap(e => e.sets).filter(s => s.completed).length;
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* Top Bar */}
+      {/* Top Bar (8.3 — overflow menu replaces discard button) */}
       <View style={styles.topBar}>
-        {/* Duration timer hidden — date and discard only */}
         <View />
         <TouchableOpacity onPress={handleDatePress}>
           <Text style={styles.dateText}>{formattedDate}</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleDiscard}>
-          <Text style={styles.discardText}>Discard</Text>
+        <TouchableOpacity onPress={() => setOverflowMenuVisible(!overflowMenuVisible)}>
+          <Text style={styles.overflowBtn}>•••</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      {/* Overflow menu (8.3, 11.1) */}
+      {overflowMenuVisible && (
+        <>
+          <Pressable style={styles.overflowBackdrop} onPress={() => setOverflowMenuVisible(false)} />
+          <View style={styles.overflowMenu}>
+            <TouchableOpacity style={styles.overflowMenuItem} onPress={handleCopyFromDate}>
+              <Text style={styles.overflowMenuItemText}>Copy from Date</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.overflowMenuItem} onPress={handleDiscard}>
+              <Text style={styles.overflowMenuItemTextDanger}>Discard Workout</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+
+      <ScrollView ref={scrollViewRef} style={styles.scroll} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {/* Superset select mode bar */}
         {selectMode && (
           <View style={styles.selectBar}>
@@ -467,19 +737,16 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
           completedSetCounts={volumeSetCounts}
         />
 
-        {/* Quick guide for new users */}
-        {store.exercises.length > 0 && (
-          <View style={styles.infoHint}>
-            <Text style={styles.infoHintText}>
-              💡 RPE = how hard the set felt (6 easy → 10 max effort) · Type = Normal, Warm-up, Drop-set, or AMRAP · Tap Previous to copy last session's values
-            </Text>
-          </View>
-        )}
+        {/* 7.1 — Info banner REMOVED. Tooltips added to RPE header and first set row instead. */}
 
         {/* Exercise Cards */}
         {store.exercises.map((exercise, exIdx) => {
           const supersetGroup = getSupersetGroupForExercise(exercise.localId);
           const prevData = store.previousPerformance[exercise.exerciseName.toLowerCase()] ?? null;
+          const setProgress = calculateSetProgress(exercise.sets);
+          const isSkipped = exercise.skipped === true;
+          const hasExistingWarmUp = exercise.sets.some(s => s.setType === 'warm-up');
+          const workingWeight = prevData ? Math.max(...prevData.sets.map(s => s.weightKg), 0) : 0;
 
           return (
             <View key={exercise.localId}>
@@ -494,9 +761,16 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
                 </View>
               )}
 
-              <View style={[styles.exerciseCard, supersetGroup && styles.exerciseCardSuperset]}>
-                {/* Exercise header */}
+              <View style={[
+                styles.exerciseCard,
+                supersetGroup && styles.exerciseCardSuperset,
+                isSkipped && styles.exerciseCardSkipped,
+              ]}>
+                {/* Exercise header (7.3, 7.4, 10.1, 10.2, 11.5) */}
                 <View style={styles.exerciseHeader}>
+                  {/* Drag handle (11.5) */}
+                  <Text style={styles.dragHandle}>≡</Text>
+
                   {selectMode && (
                     <TouchableOpacity
                       style={[styles.selectCheckbox, selectedExercises.includes(exercise.localId) && styles.selectCheckboxActive]}
@@ -512,12 +786,79 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
                     onPress={() => handleOpenExerciseDetail(exercise.exerciseName)}
                     onLongPress={() => { setSelectMode(true); toggleExerciseSelect(exercise.localId); }}
                   >
-                    <Text style={styles.exerciseName}>{exercise.exerciseName}</Text>
+                    <View style={styles.exerciseNameRow}>
+                      <Text style={[
+                        styles.exerciseName,
+                        isSkipped && styles.exerciseNameSkipped,
+                      ]}>{exercise.exerciseName}</Text>
+                      {/* 7.3 — Set progress indicator */}
+                      <Text style={[
+                        styles.setProgressText,
+                        setProgress.allComplete && styles.setProgressComplete,
+                      ]}>
+                        {setProgress.completed}/{setProgress.total} sets
+                      </Text>
+                    </View>
                   </TouchableOpacity>
+
+                  {/* Notes icon (10.4) */}
+                  <TouchableOpacity
+                    onPress={() => handleToggleNotes(exercise.localId)}
+                    style={styles.notesIconBtn}
+                  >
+                    <Text style={[
+                      styles.notesIcon,
+                      (exercise.notes && exercise.notes.trim()) && styles.notesIconActive,
+                    ]}>📝</Text>
+                  </TouchableOpacity>
+
+                  {/* Context menu trigger (10.1) */}
+                  <TouchableOpacity
+                    onPress={() => setContextMenuExerciseId(
+                      contextMenuExerciseId === exercise.localId ? null : exercise.localId
+                    )}
+                    style={styles.contextMenuBtn}
+                  >
+                    <Text style={styles.contextMenuDots}>•••</Text>
+                  </TouchableOpacity>
+
                   <TouchableOpacity onPress={() => store.removeExercise(exercise.localId)}>
                     <Text style={styles.removeBtn}>✕</Text>
                   </TouchableOpacity>
                 </View>
+
+                {/* Exercise Context Menu (10.1, 10.2, 10.4, 11.2) */}
+                {contextMenuExerciseId === exercise.localId && (
+                  <View style={styles.contextMenuContainer}>
+                    <ExerciseContextMenu
+                      visible={true}
+                      isSkipped={isSkipped}
+                      hasNotes={!!(exercise.notes && exercise.notes.trim())}
+                      hasPreviousPerformance={!!prevData && !hasExistingWarmUp}
+                      onSwap={() => handleSwapExercise(exercise.localId, exercise.exerciseName)}
+                      onSkip={() => store.toggleExerciseSkip(exercise.localId)}
+                      onUnskip={() => store.toggleExerciseSkip(exercise.localId)}
+                      onAddNote={() => handleToggleNotes(exercise.localId)}
+                      onGenerateWarmUp={() => {
+                        if (prevData) {
+                          const { generateWarmUpSets } = require('../../utils/warmUpGenerator');
+                          const sets = generateWarmUpSets(workingWeight);
+                          handleWarmUpGenerate(exercise.localId, sets);
+                        }
+                      }}
+                      onDismiss={() => setContextMenuExerciseId(null)}
+                    />
+                  </View>
+                )}
+
+                {/* Warm-Up Suggestion (11.2) */}
+                {prevData && !hasExistingWarmUp && workingWeight > 20 && (
+                  <WarmUpSuggestion
+                    workingWeightKg={workingWeight}
+                    barWeightKg={20}
+                    onGenerate={(sets) => handleWarmUpGenerate(exercise.localId, sets)}
+                  />
+                )}
 
                 {/* Overload Suggestion Badge (4.7) */}
                 <OverloadSuggestionBadge
@@ -525,40 +866,93 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
                   unitSystem={unitSystem}
                 />
 
-                {/* Set header row */}
+                {/* Set header row (7.1, 7.2) */}
                 <View style={styles.setHeaderRow}>
                   <Text style={[styles.setHeaderCell, styles.setNumCol]}>#</Text>
                   <Text style={[styles.setHeaderCell, styles.prevCol]}>Previous</Text>
                   <Text style={[styles.setHeaderCell, styles.weightCol]}>{unitLabel}</Text>
                   <Text style={[styles.setHeaderCell, styles.repsCol]}>Reps</Text>
-                  <Text style={[styles.setHeaderCell, styles.rpeCol]}>RPE ⓘ</Text>
-                  <Text style={[styles.setHeaderCell, styles.typeCol]}>Type</Text>
+                  {showRpeColumn && (
+                    <Tooltip tooltipId="rpe-intro" text="RPE measures how hard a set felt (6=easy, 10=max)">
+                      <Text style={[styles.setHeaderCell, styles.rpeCol]}>RPE</Text>
+                    </Tooltip>
+                  )}
                   <Text style={[styles.setHeaderCell, styles.checkCol]}>✓</Text>
                 </View>
 
-                {/* Set rows */}
-                {exercise.sets.map((set, setIdx) => (
-                  <SetRow
-                    key={set.localId}
-                    set={set}
-                    setIndex={setIdx}
-                    exerciseLocalId={exercise.localId}
-                    exerciseName={exercise.exerciseName}
-                    prevData={prevData}
-                    unitSystem={unitSystem}
-                    rpeMode={rpeMode}
-                    onUpdateField={store.updateSetField}
-                    onUpdateType={store.updateSetType}
-                    onToggleComplete={handleToggleSet}
-                    onCopyPrevious={handleCopyPrevious}
-                    onRemoveSet={store.removeSet}
-                  />
-                ))}
+                {/* Set rows (7.1, 7.2, 10.5) */}
+                {exercise.sets.map((set, setIdx) => {
+                  // Compute next row's weight ref key for keyboard advance (10.5)
+                  const nextSet = exercise.sets[setIdx + 1];
+                  const nextRowWeightRefKey = nextSet ? `${exercise.localId}-${nextSet.localId}-weight` : null;
+                  // If last set in this exercise, try first set of next exercise
+                  let crossExerciseNextRefKey: string | null = null;
+                  if (!nextSet && exIdx < store.exercises.length - 1) {
+                    const nextEx = store.exercises[exIdx + 1];
+                    if (nextEx.sets.length > 0) {
+                      crossExerciseNextRefKey = `${nextEx.localId}-${nextEx.sets[0].localId}-weight`;
+                    }
+                  }
+                  const effectiveNextWeightRef = nextRowWeightRefKey || crossExerciseNextRefKey;
+
+                  const setRow = (
+                    <SetRow
+                      key={set.localId}
+                      set={set}
+                      setIndex={setIdx}
+                      exerciseLocalId={exercise.localId}
+                      exerciseName={exercise.exerciseName}
+                      prevData={prevData}
+                      unitSystem={unitSystem}
+                      rpeMode={rpeMode}
+                      showRpeColumn={showRpeColumn}
+                      onUpdateField={store.updateSetField}
+                      onUpdateType={store.updateSetType}
+                      onToggleComplete={handleToggleSet}
+                      onCopyPrevious={handleCopyPrevious}
+                      onRemoveSet={store.removeSet}
+                      inputRefs={inputRefs}
+                      nextRowWeightRefKey={effectiveNextWeightRef}
+                      onLayoutCapture={(y) => {
+                        setRowPositions.current[set.localId] = y;
+                      }}
+                    />
+                  );
+
+                  // 7.1 — Wrap first set row of first exercise in type tooltip
+                  if (exIdx === 0 && setIdx === 0) {
+                    return (
+                      <Tooltip
+                        key={`tooltip-${set.localId}`}
+                        tooltipId="type-intro"
+                        text="Long-press a set row to change type (warm-up, drop, AMRAP)"
+                      >
+                        {setRow}
+                      </Tooltip>
+                    );
+                  }
+                  return setRow;
+                })}
 
                 {/* Add Set button */}
                 <TouchableOpacity style={styles.addSetBtn} onPress={() => store.addSet(exercise.localId)}>
                   <Text style={styles.addSetText}>+ Add Set</Text>
                 </TouchableOpacity>
+
+                {/* Per-exercise notes (10.4) */}
+                {notesVisibleMap[exercise.localId] && (
+                  <View style={styles.exerciseNotesContainer}>
+                    <TextInput
+                      style={styles.exerciseNotesInput}
+                      value={exercise.notes || ''}
+                      onChangeText={(text) => store.setExerciseNotes(exercise.localId, text)}
+                      placeholder="Exercise notes (cues, pain notes, technique)..."
+                      placeholderTextColor={colors.text.muted}
+                      multiline
+                      maxLength={500}
+                    />
+                  </View>
+                )}
               </View>
             </View>
           );
@@ -582,30 +976,49 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
           />
         </View>
 
-        {/* Spacer for bottom button */}
-        <View style={{ height: 80 }} />
+        {/* Spacer for bottom bars */}
+        <View style={{ height: 140 }} />
       </ScrollView>
 
-      {/* Finish button (sticky bottom) */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity
-          style={[styles.finishBtn, saving && styles.finishBtnDisabled]}
-          onPress={handleFinish}
-          disabled={saving}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.finishBtnText}>
-            {saving ? 'Saving...' : isEditMode ? 'Save Changes' : 'Finish Workout'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* Rest Timer Bar (8.1 — floating above FinishBar) */}
+      {restTimerState.active && (
+        <RestTimerBar
+          durationSeconds={restTimerState.duration}
+          remainingSeconds={restTimerState.remaining}
+          paused={restTimerState.paused}
+          completed={restTimerState.completed}
+          onSkip={handleRestTimerSkip}
+          onExpand={handleRestTimerExpand}
+        />
+      )}
 
-      {/* Rest Timer overlay */}
+      {/* FinishBar (8.2 — sticky bottom, replaces old bottomBar) */}
+      <FinishBar
+        exerciseCount={store.exercises.length}
+        completedSetCount={completedSetCount}
+        elapsedSeconds={elapsedSeconds}
+        saving={saving}
+        isEditMode={isEditMode}
+        onFinish={handleFinishTap}
+      />
+
+      {/* ConfirmationSheet (8.2) */}
+      <ConfirmationSheet
+        visible={confirmationVisible}
+        exercises={store.exercises}
+        startedAt={store.startedAt || ''}
+        notes={store.notes}
+        unitSystem={unitSystem}
+        onConfirm={handleConfirm}
+        onCancel={handleConfirmCancel}
+      />
+
+      {/* Rest Timer overlay — expanded view (8.1) */}
       <RestTimerOverlay
-        durationSeconds={restDuration}
-        visible={restTimerVisible}
-        onDismiss={() => setRestTimerVisible(false)}
-        onComplete={() => setRestTimerVisible(false)}
+        durationSeconds={restTimerState.duration || 180}
+        visible={expandedTimerVisible}
+        onDismiss={handleExpandedTimerDismiss}
+        onComplete={handleExpandedTimerDismiss}
       />
 
       {/* PR Banner overlay */}
@@ -626,7 +1039,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
 }
 
 
-// ─── SetRow Sub-Component ────────────────────────────────────────────────────
+// ─── SetRow Sub-Component (7.2 — completed tint, RPE/Type badges, long-press) ─
 
 interface SetRowProps {
   set: ActiveSet;
@@ -636,14 +1049,18 @@ interface SetRowProps {
   prevData: PreviousPerformanceData | null;
   unitSystem: 'metric' | 'imperial';
   rpeMode: 'rpe' | 'rir';
+  showRpeColumn: boolean;
   onUpdateField: (exId: string, setId: string, field: 'weight' | 'reps' | 'rpe', value: string) => void;
   onUpdateType: (exId: string, setId: string, type: SetType) => void;
   onToggleComplete: (exId: string, setId: string, name: string) => void;
   onCopyPrevious: (exId: string, setId: string) => void;
   onRemoveSet: (exId: string, setId: string) => void;
+  inputRefs: React.MutableRefObject<Record<string, Record<string, TextInput | null>>>;
+  nextRowWeightRefKey: string | null;
+  onLayoutCapture: (y: number) => void;
 }
 
-function SetRow({
+const SetRow = memo(function SetRow({
   set,
   setIndex,
   exerciseLocalId,
@@ -651,14 +1068,19 @@ function SetRow({
   prevData,
   unitSystem,
   rpeMode,
+  showRpeColumn,
   onUpdateField,
   onUpdateType,
   onToggleComplete,
   onCopyPrevious,
   onRemoveSet,
+  inputRefs,
+  nextRowWeightRefKey,
+  onLayoutCapture,
 }: SetRowProps) {
   const bgAnim = useRef(new Animated.Value(set.completed ? 1 : 0)).current;
   const [rpePickerVisible, setRpePickerVisible] = useState(false);
+  const [typePickerVisible, setTypePickerVisible] = useState(false);
 
   useEffect(() => {
     Animated.timing(bgAnim, {
@@ -668,17 +1090,53 @@ function SetRow({
     }).start();
   }, [set.completed]);
 
+  // 7.2 — Use positiveSubtle for completed rows
   const rowBg = bgAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['transparent', 'rgba(34,197,94,0.08)'],
+    outputRange: ['transparent', colors.semantic.positiveSubtle],
   });
 
   const prevText = formatPreviousPerformance(prevData, setIndex, unitSystem);
-
   const rpeDisplayText = getDisplayValue(set.rpe, rpeMode);
+  const rpeNumeric = parseFloat(set.rpe) || 0;
+
+  // Keyboard auto-advance refs (10.5)
+  const weightRefKey = `${exerciseLocalId}-${set.localId}-weight`;
+  const repsRefKey = `${exerciseLocalId}-${set.localId}-reps`;
+  const rpeRefKey = `${exerciseLocalId}-${set.localId}-rpe`;
+
+  const registerRef = useCallback((key: string, ref: TextInput | null) => {
+    if (!inputRefs.current[exerciseLocalId]) inputRefs.current[exerciseLocalId] = {};
+    inputRefs.current[exerciseLocalId][key] = ref;
+  }, [exerciseLocalId, inputRefs]);
+
+  const handleSubmitEditing = useCallback((currentField: FieldName) => {
+    const result = getNextField(currentField, showRpeColumn, {
+      weight: set.weight,
+      reps: set.reps,
+      rpe: set.rpe,
+    });
+
+    if (result === 'weight' || result === 'reps' || result === 'rpe') {
+      const refKey = `${exerciseLocalId}-${set.localId}-${result}`;
+      const ref = inputRefs.current[exerciseLocalId]?.[refKey];
+      ref?.focus();
+    } else if (result === 'next-row' && nextRowWeightRefKey) {
+      // Find the ref across all exercises
+      for (const exRefs of Object.values(inputRefs.current)) {
+        if (exRefs[nextRowWeightRefKey]) {
+          exRefs[nextRowWeightRefKey]?.focus();
+          return;
+        }
+      }
+    }
+  }, [exerciseLocalId, set.localId, set.weight, set.reps, set.rpe, showRpeColumn, nextRowWeightRefKey, inputRefs]);
 
   return (
-    <Animated.View style={[styles.setRow, { backgroundColor: rowBg }]}>
+    <Animated.View
+      style={[styles.setRow, { backgroundColor: rowBg }]}
+      onLayout={(e) => onLayoutCapture(e.nativeEvent.layout.y)}
+    >
       <Text style={[styles.setCell, styles.setNumCol]}>{set.setNumber}</Text>
 
       <TouchableOpacity
@@ -689,53 +1147,85 @@ function SetRow({
         <Text style={styles.prevText}>{prevText}</Text>
       </TouchableOpacity>
 
+      {/* 7.4 — Weight with accent color + keyboard advance (10.5) */}
       <TextInput
-        style={[styles.setInput, styles.weightCol]}
+        ref={(ref) => registerRef(weightRefKey, ref)}
+        style={[styles.setInput, styles.weightCol, styles.weightInput]}
         value={set.weight}
         onChangeText={(v) => onUpdateField(exerciseLocalId, set.localId, 'weight', v)}
         keyboardType="numeric"
         placeholder="0"
         placeholderTextColor={colors.text.muted}
+        returnKeyType="next"
+        onSubmitEditing={() => handleSubmitEditing('weight')}
       />
 
+      {/* 7.4 — Reps with secondary color + keyboard advance (10.5) */}
       <TextInput
-        style={[styles.setInput, styles.repsCol]}
+        ref={(ref) => registerRef(repsRefKey, ref)}
+        style={[styles.setInput, styles.repsCol, styles.repsInput]}
         value={set.reps}
         onChangeText={(v) => onUpdateField(exerciseLocalId, set.localId, 'reps', v)}
         keyboardType="numeric"
         placeholder="0"
         placeholderTextColor={colors.text.muted}
+        returnKeyType={showRpeColumn ? 'next' : 'done'}
+        onSubmitEditing={() => handleSubmitEditing('reps')}
       />
 
-      <TouchableOpacity
-        style={[styles.setInput, styles.rpeCol, { justifyContent: 'center' }]}
-        onPress={() => setRpePickerVisible(true)}
-      >
-        <Text style={[styles.rpeTapText, !rpeDisplayText && styles.rpePlaceholder]}>
-          {rpeDisplayText || '—'}
-        </Text>
-      </TouchableOpacity>
+      {/* 7.2 — RPE: show RPEBadge when column enabled */}
+      {showRpeColumn && (
+        <TouchableOpacity
+          style={[styles.rpeCol, { justifyContent: 'center', alignItems: 'center' }]}
+          onPress={() => setRpePickerVisible(true)}
+        >
+          {rpeNumeric > 0 ? (
+            <RPEBadge rpeValue={rpeNumeric} mode={rpeMode} />
+          ) : (
+            <Text style={[styles.rpeTapText, styles.rpePlaceholder]}>—</Text>
+          )}
+        </TouchableOpacity>
+      )}
 
-      <RPEPicker
-        visible={rpePickerVisible}
-        mode={rpeMode}
-        onSelect={(value) => {
-          onUpdateField(exerciseLocalId, set.localId, 'rpe', value);
-          setRpePickerVisible(false);
-        }}
-        onDismiss={() => setRpePickerVisible(false)}
-      />
-
-      <View style={styles.typeCol}>
-        <SetTypeSelector
-          value={set.setType}
-          onChange={(type) => onUpdateType(exerciseLocalId, set.localId, type)}
+      {showRpeColumn && (
+        <RPEPicker
+          visible={rpePickerVisible}
+          mode={rpeMode}
+          onSelect={(value) => {
+            onUpdateField(exerciseLocalId, set.localId, 'rpe', value);
+            setRpePickerVisible(false);
+          }}
+          onDismiss={() => setRpePickerVisible(false)}
         />
-      </View>
+      )}
+
+      {/* 7.2 — Type: hidden by default, show TypeBadge for non-normal, long-press to change */}
+      {shouldShowTypeBadge(set.setType) && (
+        <TouchableOpacity
+          style={styles.typeBadgeCol}
+          onPress={() => setTypePickerVisible(true)}
+        >
+          <TypeBadge setType={set.setType} />
+        </TouchableOpacity>
+      )}
+
+      {/* Long-press on the row area to reveal SetTypeSelector */}
+      {typePickerVisible && (
+        <View style={styles.typePickerOverlay}>
+          <SetTypeSelector
+            value={set.setType}
+            onChange={(type) => {
+              onUpdateType(exerciseLocalId, set.localId, type);
+              setTypePickerVisible(false);
+            }}
+          />
+        </View>
+      )}
 
       <TouchableOpacity
         style={[styles.checkCol, styles.checkBtn, set.completed && styles.checkBtnCompleted]}
         onPress={() => onToggleComplete(exerciseLocalId, set.localId, exerciseName)}
+        onLongPress={() => setTypePickerVisible(true)}
       >
         <Text style={[styles.checkText, set.completed && styles.checkTextCompleted]}>✓</Text>
       </TouchableOpacity>
@@ -752,7 +1242,7 @@ function SetRow({
       )}
     </Animated.View>
   );
-}
+});
 
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
@@ -760,7 +1250,7 @@ function SetRow({
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg.base },
 
-  // Top bar
+  // Top bar (8.3 — overflow menu replaces discard text)
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -775,7 +1265,40 @@ const styles = StyleSheet.create({
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },
-  discardText: {
+  overflowBtn: {
+    color: colors.text.secondary,
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.bold,
+    paddingHorizontal: spacing[2],
+    letterSpacing: 2,
+  },
+
+  // Overflow menu (8.3)
+  overflowBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 99,
+  },
+  overflowMenu: {
+    position: 'absolute',
+    top: 56,
+    right: spacing[4],
+    backgroundColor: colors.bg.surfaceRaised,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    zIndex: 100,
+    ...shadows.md,
+    minWidth: 180,
+  },
+  overflowMenuItem: {
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[4],
+  },
+  overflowMenuItemTextDanger: {
     color: colors.semantic.negative,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
@@ -828,12 +1351,12 @@ const styles = StyleSheet.create({
   },
   ungroupText: { color: colors.text.muted, fontSize: typography.size.xs },
 
-  // Exercise card
+  // Exercise card (7.4 — increased marginBottom)
   exerciseCard: {
     backgroundColor: colors.bg.surface,
     borderRadius: radius.md,
     padding: spacing[3],
-    marginBottom: spacing[3],
+    marginBottom: spacing[4],
   },
   exerciseCardSuperset: {
     borderLeftWidth: 3,
@@ -844,10 +1367,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing[2],
   },
+  // 7.3 — Exercise name + progress in a row
+  exerciseNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+  },
+  // 7.4 — Exercise name: lg + bold
   exerciseName: {
     color: colors.text.primary,
-    fontSize: typography.size.md,
-    fontWeight: typography.weight.semibold,
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.bold,
+  },
+  // 7.3 — Set progress text
+  setProgressText: {
+    color: colors.text.muted,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.medium,
+  },
+  setProgressComplete: {
+    color: colors.semantic.positive,
   },
   removeBtn: {
     color: colors.text.muted,
@@ -894,7 +1433,6 @@ const styles = StyleSheet.create({
   weightCol: { flex: 1, paddingHorizontal: 2 },
   repsCol: { width: 44, paddingHorizontal: 2 },
   rpeCol: { width: 36, paddingHorizontal: 2 },
-  typeCol: { width: 32, alignItems: 'center', justifyContent: 'center' },
   checkCol: { width: 32, alignItems: 'center', justifyContent: 'center' },
 
   // Set row
@@ -923,6 +1461,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     minHeight: 28,
   },
+  // 7.4 — Weight values: accent primary + semibold
+  weightInput: {
+    color: colors.accent.primary,
+    fontWeight: typography.weight.semibold,
+  },
+  // 7.4 — Rep values: secondary text color
+  repsInput: {
+    color: colors.text.secondary,
+  },
 
   // RPE tappable field
   rpeTapText: {
@@ -932,6 +1479,25 @@ const styles = StyleSheet.create({
   },
   rpePlaceholder: {
     color: colors.text.muted,
+  },
+
+  // 7.2 — Type badge column
+  typeBadgeCol: {
+    marginLeft: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // 7.2 — Type picker overlay for long-press
+  typePickerOverlay: {
+    position: 'absolute',
+    right: 40,
+    top: 0,
+    zIndex: 50,
+    backgroundColor: colors.bg.surfaceRaised,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    ...shadows.sm,
   },
 
   // Checkmark
@@ -982,23 +1548,6 @@ const styles = StyleSheet.create({
     lineHeight: 12,
   },
 
-  // Info hint for new users
-  infoHint: {
-    backgroundColor: colors.bg.surface,
-    borderRadius: radius.sm,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[2],
-    marginHorizontal: spacing[4],
-    marginBottom: spacing[3],
-    borderLeftWidth: 3,
-    borderLeftColor: colors.accent.primary,
-  },
-  infoHintText: {
-    color: colors.text.muted,
-    fontSize: typography.size.xs,
-    lineHeight: typography.size.xs * 1.5,
-  },
-
   // Add exercise
   addExerciseBtn: {
     backgroundColor: colors.bg.surface,
@@ -1034,24 +1583,70 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
 
-  // Bottom bar
-  bottomBar: {
-    padding: spacing[4],
-    paddingBottom: spacing[6],
+  // Overflow menu item text (non-danger)
+  overflowMenuItemText: {
+    color: colors.text.primary,
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.medium,
+  },
+
+  // Exercise card skipped state (10.2)
+  exerciseCardSkipped: {
+    opacity: 0.4,
+  },
+  exerciseNameSkipped: {
+    textDecorationLine: 'line-through' as const,
+  },
+
+  // Drag handle (11.5)
+  dragHandle: {
+    color: colors.text.muted,
+    fontSize: typography.size.lg,
+    paddingRight: spacing[2],
+    lineHeight: 20,
+  },
+
+  // Notes icon (10.4)
+  notesIconBtn: {
+    paddingHorizontal: spacing[1],
+  },
+  notesIcon: {
+    fontSize: 14,
+    opacity: 0.5,
+  },
+  notesIconActive: {
+    opacity: 1,
+  },
+
+  // Context menu trigger (10.1)
+  contextMenuBtn: {
+    paddingHorizontal: spacing[1],
+  },
+  contextMenuDots: {
+    color: colors.text.muted,
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.bold,
+    letterSpacing: 1,
+  },
+  contextMenuContainer: {
+    position: 'relative' as const,
+    zIndex: 100,
+  },
+
+  // Per-exercise notes (10.4)
+  exerciseNotesContainer: {
+    marginTop: spacing[2],
+    paddingTop: spacing[2],
     borderTopWidth: 1,
     borderTopColor: colors.border.subtle,
-    backgroundColor: colors.bg.base,
   },
-  finishBtn: {
-    backgroundColor: colors.accent.primary,
+  exerciseNotesInput: {
+    backgroundColor: colors.bg.surfaceRaised,
     borderRadius: radius.sm,
-    paddingVertical: spacing[4],
-    alignItems: 'center',
-  },
-  finishBtnDisabled: { opacity: 0.5 },
-  finishBtnText: {
-    color: colors.text.inverse,
-    fontSize: typography.size.md,
-    fontWeight: typography.weight.bold,
+    padding: spacing[2],
+    color: colors.text.primary,
+    fontSize: typography.size.sm,
+    minHeight: 40,
+    textAlignVertical: 'top',
   },
 });

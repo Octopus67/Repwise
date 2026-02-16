@@ -25,7 +25,11 @@ import { ExerciseDetailSheet } from '../../components/training/ExerciseDetailShe
 import { CustomExerciseForm } from '../../components/exercise-picker/CustomExerciseForm';
 
 type ExercisePickerParams = {
-  ExercisePicker: { target?: 'modal' | 'activeWorkout' };
+  ExercisePicker: {
+    target?: 'modal' | 'activeWorkout' | 'swapExercise';
+    currentExerciseLocalId?: string;
+    muscleGroup?: string;
+  };
 };
 
 type Props = StackScreenProps<ExercisePickerParams, 'ExercisePicker'>;
@@ -35,6 +39,8 @@ export { EQUIPMENT_FILTERS };
 
 export function ExercisePickerScreen({ route, navigation }: Props) {
   const { target = 'activeWorkout' } = route.params ?? {};
+  const currentExerciseLocalId = (route.params as any)?.currentExerciseLocalId;
+  const initialMuscleGroup = (route.params as any)?.muscleGroup;
 
   const didSelectRef = useRef(false);
 
@@ -42,7 +48,7 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
   const [recentExercises, setRecentExercises] = useState<Exercise[]>([]);
   const [searchText, setSearchText] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
+  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(initialMuscleGroup ?? null);
   const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -108,9 +114,17 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
 
   const handleExercisePress = useCallback((exercise: Exercise) => {
     didSelectRef.current = true;
-    useActiveWorkoutStore.getState().addExercise(exercise.name);
-    navigation.goBack();
-  }, [navigation]);
+    if (target === 'swapExercise' && currentExerciseLocalId) {
+      navigation.navigate({
+        name: 'ActiveWorkout' as any,
+        params: { swappedExerciseName: exercise.name, swapTargetLocalId: currentExerciseLocalId },
+        merge: true,
+      } as any);
+    } else {
+      useActiveWorkoutStore.getState().addExercise(exercise.name);
+      navigation.goBack();
+    }
+  }, [navigation, target, currentExerciseLocalId]);
 
   const handleExerciseLongPress = useCallback((exercise: Exercise) => {
     setDetailExercise(exercise);
@@ -120,9 +134,17 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
   const handleCustomExerciseCreated = useCallback((exercise: { id: string; name: string }) => {
     setShowCustomForm(false);
     didSelectRef.current = true;
-    useActiveWorkoutStore.getState().addExercise(exercise.name);
-    navigation.goBack();
-  }, [navigation]);
+    if (target === 'swapExercise' && currentExerciseLocalId) {
+      navigation.navigate({
+        name: 'ActiveWorkout' as any,
+        params: { swappedExerciseName: exercise.name, swapTargetLocalId: currentExerciseLocalId },
+        merge: true,
+      } as any);
+    } else {
+      useActiveWorkoutStore.getState().addExercise(exercise.name);
+      navigation.goBack();
+    }
+  }, [navigation, target, currentExerciseLocalId]);
 
   // ─── Render ──────────────────────────────────────────────────────────────
 
