@@ -50,7 +50,7 @@ export function VolumeIndicatorPill({ muscleGroups, completedSetCounts }: Volume
     let cancelled = false;
     (async () => {
       try {
-        const { data } = await api.get('analytics/muscle-volume');
+        const { data } = await api.get('training/analytics/muscle-volume');
         if (!cancelled && data) {
           const mapped: Record<string, MuscleVolumeData> = {};
           for (const item of data) {

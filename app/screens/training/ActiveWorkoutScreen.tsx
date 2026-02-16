@@ -194,7 +194,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
 
     (async () => {
       try {
-        const { data } = await api.get('exercises');
+        const { data } = await api.get('training/exercises');
         if (data) {
           const mapped: Record<string, string> = { ...muscleGroupMap };
           for (const ex of data) {
@@ -472,7 +472,8 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Top Bar */}
       <View style={styles.topBar}>
-        {store.startedAt ? <DurationTimer startedAt={store.startedAt} /> : <View />}
+        {/* Duration timer hidden — date and discard only */}
+        <View />
         <TouchableOpacity onPress={handleDatePress}>
           <Text style={styles.dateText}>{formattedDate}</Text>
         </TouchableOpacity>

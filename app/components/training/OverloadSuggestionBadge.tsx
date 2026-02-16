@@ -32,7 +32,7 @@ export function OverloadSuggestionBadge({ exerciseName, unitSystem }: OverloadSu
     (async () => {
       try {
         const encoded = encodeURIComponent(exerciseName);
-        const { data, status } = await api.get(`exercises/${encoded}/overload-suggestion`);
+        const { data, status } = await api.get(`training/exercises/${encoded}/overload-suggestion`);
         if (!cancelled && status === 200 && data) {
           setSuggestion(data);
         }

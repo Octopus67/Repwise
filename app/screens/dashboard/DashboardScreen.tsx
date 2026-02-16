@@ -363,7 +363,7 @@ export function DashboardScreen({ navigation }: any) {
   };
 
   const handleQuickAction = (action: () => void) => {
-    try { Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle.Light); } catch {}
+    try { Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle.Light)?.catch?.(() => {}); } catch {}
     action();
   };
 
