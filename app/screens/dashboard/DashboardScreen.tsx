@@ -464,7 +464,7 @@ export function DashboardScreen({ navigation }: any) {
                   completed={trainingLogged}
                   onPress={() => handleQuickAction(() => {
                     if (isTrainingLogV2Enabled()) {
-                      navigation?.push?.('ActiveWorkout', { mode: 'new' }) ?? navigation?.navigate?.('Logs', { screen: 'ActiveWorkout', params: { mode: 'new' } });
+                      navigation.push('ActiveWorkout', { mode: 'new' });
                     } else {
                       setShowTraining(true);
                     }

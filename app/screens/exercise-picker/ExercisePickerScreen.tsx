@@ -91,13 +91,13 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Handle hardware back / swipe-back so onCancel fires
+  // Handle hardware back / swipe-back
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', () => {
-      if (!didSelectRef.current && onCancel) onCancel();
+      // No-op — exercise picker simply goes back without callback
     });
     return unsubscribe;
-  }, [navigation, onCancel]);
+  }, [navigation]);
 
   const filteredExercises = useMemo(
     () => filterExercises(exercises, debouncedSearch, selectedMuscleGroup, selectedEquipment),
