@@ -9,9 +9,14 @@ function makeExercise(overrides: Partial<Exercise> & { name: string; muscle_grou
     id: overrides.id ?? overrides.name.toLowerCase().replace(/\s+/g, '-'),
     name: overrides.name,
     muscle_group: overrides.muscle_group,
+    secondary_muscles: overrides.secondary_muscles ?? [],
     equipment: overrides.equipment ?? 'barbell',
     category: overrides.category ?? 'compound',
     image_url: overrides.image_url ?? null,
+    animation_url: overrides.animation_url ?? null,
+    description: overrides.description ?? null,
+    instructions: overrides.instructions ?? null,
+    tips: overrides.tips ?? null,
   };
 }
 

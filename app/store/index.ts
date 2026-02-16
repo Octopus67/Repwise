@@ -73,6 +73,9 @@ interface AppState {
   // Unit system
   unitSystem: 'metric' | 'imperial';
 
+  // RPE/RIR mode preference
+  rpeMode: 'rpe' | 'rir';
+
   // Date navigation
   selectedDate: string;
 
@@ -144,6 +147,9 @@ interface AppActions {
   // Unit system
   setUnitSystem: (system: 'metric' | 'imperial') => void;
 
+  // RPE/RIR mode
+  setRpeMode: (mode: 'rpe' | 'rir') => void;
+
   // Date navigation
   setSelectedDate: (date: string) => void;
 
@@ -191,6 +197,9 @@ export const useStore = create<AppStore>((set) => ({
   // Unit system state
   unitSystem: 'metric',
 
+  // RPE/RIR mode state
+  rpeMode: 'rpe',
+
   // Date navigation state
   selectedDate: new Date().toISOString().split('T')[0],
 
@@ -220,6 +229,7 @@ export const useStore = create<AppStore>((set) => ({
       needsOnboarding: null,
       onboardingSkipped: false,
       unitSystem: 'metric',
+      rpeMode: 'rpe',
       coachingMode: 'coached',
       weeklyCheckin: null,
       goals: null,
@@ -244,6 +254,9 @@ export const useStore = create<AppStore>((set) => ({
 
   // Unit system actions
   setUnitSystem: (system) => set({ unitSystem: system }),
+
+  // RPE/RIR mode actions
+  setRpeMode: (mode) => set({ rpeMode: mode }),
 
   // Date navigation actions
   setSelectedDate: (date) => set({ selectedDate: date }),

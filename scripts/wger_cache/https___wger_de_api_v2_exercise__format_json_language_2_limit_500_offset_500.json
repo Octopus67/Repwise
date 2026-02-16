@@ -1,0 +1,5417 @@
+{
+  "count": 832,
+  "next": null,
+  "previous": "https://wger.de/api/v2/exercise/?format=json&language=2&limit=500",
+  "results": [
+    {
+      "id": 1252,
+      "uuid": "b61dff58-6e47-4671-853b-208e7cd0ced4",
+      "created": "2024-03-07T20:42:31.952533+01:00",
+      "last_update": "2024-03-07T20:42:31.952553+01:00",
+      "category": 10,
+      "muscles": [
+        1,
+        12,
+        6
+      ],
+      "muscles_secondary": [
+        2
+      ],
+      "equipment": [
+        6
+      ],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 1085,
+      "uuid": "927b0e58-c57c-4234-8079-2548f8e35687",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:47.272337+01:00",
+      "category": 13,
+      "muscles": [
+        2,
+        1,
+        12,
+        3,
+        9,
+        5
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "philip"
+    },
+    {
+      "id": 1138,
+      "uuid": "4e941b0d-4b2f-4393-89cf-6a5e9b69252e",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:52.285214+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Franpol"
+    },
+    {
+      "id": 239,
+      "uuid": "55d0a5ec-b147-40c3-aa77-314e61c93689",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:27:32.276122+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": 9,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1353,
+      "uuid": "587af8f1-516b-44c3-8660-70f262e1bef8",
+      "created": "2024-07-23T13:38:58.433046+02:00",
+      "last_update": "2024-07-23T13:38:58.433131+02:00",
+      "category": 11,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Anastasious"
+    },
+    {
+      "id": 1651,
+      "uuid": "75e34967-b0ec-40d5-811e-b474b234a7a9",
+      "created": "2025-09-27T11:31:29.393531+02:00",
+      "last_update": "2025-09-27T11:31:29.393546+02:00",
+      "category": 9,
+      "muscles": [
+        8,
+        10
+      ],
+      "muscles_secondary": [
+        15
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "AlucardEvil40"
+    },
+    {
+      "id": 188,
+      "uuid": "b99c91be-8805-4e15-9cb6-486b55b81ae1",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:27:27.755137+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        2
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": 8,
+      "license_author": "aszc"
+    },
+    {
+      "id": 1438,
+      "uuid": "a8f76beb-b6d8-430b-8e45-cc03d4959043",
+      "created": "2025-01-24T19:03:52.258430+01:00",
+      "last_update": "2025-01-24T19:03:52.258447+01:00",
+      "category": 9,
+      "muscles": [
+        8,
+        10
+      ],
+      "muscles_secondary": [
+        11,
+        12,
+        6
+      ],
+      "equipment": [
+        1
+      ],
+      "variations": null,
+      "license_author": "M9"
+    },
+    {
+      "id": 1407,
+      "uuid": "96a899ee-16a4-457d-8f66-efdd39fd38a0",
+      "created": "2024-12-28T19:16:08.985177+01:00",
+      "last_update": "2024-12-28T19:16:08.985196+01:00",
+      "category": 9,
+      "muscles": [
+        8,
+        10
+      ],
+      "muscles_secondary": [
+        7,
+        6
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 1688,
+      "uuid": "107ea68a-d976-49ed-be75-3b0cf253c36a",
+      "created": "2025-11-01T18:37:49.640664+01:00",
+      "last_update": "2025-11-01T18:37:50.047972+01:00",
+      "category": 9,
+      "muscles": [
+        11
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        1
+      ],
+      "variations": 205,
+      "license_author": "eriktrinkle"
+    },
+    {
+      "id": 1467,
+      "uuid": "fca05168-7212-42ec-8927-efb1e8dd0971",
+      "created": "2025-02-24T22:28:24.243466+01:00",
+      "last_update": "2025-02-24T22:28:24.243484+01:00",
+      "category": 8,
+      "muscles": [
+        5
+      ],
+      "muscles_secondary": [
+        2,
+        4
+      ],
+      "equipment": [
+        1
+      ],
+      "variations": null,
+      "license_author": "Expenses7000"
+    },
+    {
+      "id": 525,
+      "uuid": "d9e306b6-d6ff-4e61-b283-4b085d8edaaf",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:34:36.068441+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [
+        2,
+        1
+      ],
+      "equipment": [
+        1
+      ],
+      "variations": 1,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1322,
+      "uuid": "5edf07a8-cca2-4199-96a5-9988369be985",
+      "created": "2024-07-04T09:39:09.709006+02:00",
+      "last_update": "2024-07-04T09:39:09.709030+02:00",
+      "category": 10,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        10
+      ],
+      "variations": null,
+      "license_author": "Pete"
+    },
+    {
+      "id": 1670,
+      "uuid": "1fae7d45-0731-4640-8809-94c76b836571",
+      "created": "2025-10-08T21:18:11.569267+02:00",
+      "last_update": "2025-10-08T21:18:11.569286+02:00",
+      "category": 9,
+      "muscles": [
+        11
+      ],
+      "muscles_secondary": [
+        8,
+        10
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "Jhonatan"
+    },
+    {
+      "id": 650,
+      "uuid": "51420ded-5c17-4ce0-b005-89f1b67b7c65",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2025-10-29T20:00:05.336020+01:00",
+      "category": 9,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [
+        9
+      ],
+      "equipment": [
+        1
+      ],
+      "variations": 202,
+      "license_author": "BeLikeWater"
+    },
+    {
+      "id": 291,
+      "uuid": "1d610575-eed0-42cf-8737-29788a372af6",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:28:15.152813+01:00",
+      "category": 9,
+      "muscles": [
+        10
+      ],
+      "muscles_secondary": [
+        8
+      ],
+      "equipment": [],
+      "variations": 12,
+      "license_author": "Vilhelmo"
+    },
+    {
+      "id": 1771,
+      "uuid": "f6471f4a-0290-4a71-9580-bf3d046fdb9d",
+      "created": "2025-12-23T03:12:59.277400+01:00",
+      "last_update": "2025-12-23T03:12:59.277414+01:00",
+      "category": 8,
+      "muscles": [],
+      "muscles_secondary": [
+        1
+      ],
+      "equipment": [],
+      "variations": 42,
+      "license_author": "eufvksruh"
+    },
+    {
+      "id": 48,
+      "uuid": "67c26c9b-32f3-4b8b-b13a-4d8be4803975",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:28.457117+01:00",
+      "category": 8,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        1,
+        8
+      ],
+      "variations": 42,
+      "license_author": "burenl"
+    },
+    {
+      "id": 1016,
+      "uuid": "00ecb956-9483-4d08-a9b1-6a236d4d8ff3",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:21.271958+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": 53,
+      "license_author": null
+    },
+    {
+      "id": 1361,
+      "uuid": "a030a4e9-970c-4442-b0b3-e49b42143de0",
+      "created": "2024-08-17T09:06:51.924274+02:00",
+      "last_update": "2024-08-17T09:06:51.924322+02:00",
+      "category": 9,
+      "muscles": [
+        8,
+        10
+      ],
+      "muscles_secondary": [
+        11,
+        7,
+        6
+      ],
+      "equipment": [
+        10
+      ],
+      "variations": null,
+      "license_author": "m4k3r"
+    },
+    {
+      "id": 81,
+      "uuid": "94a5c406-7bcd-47f3-9687-bdf92a763932",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:23:05.835999+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        8,
+        3
+      ],
+      "variations": 1,
+      "license_author": "sebk"
+    },
+    {
+      "id": 1684,
+      "uuid": "ae6a522e-db10-45ba-9642-987468d8a4de",
+      "created": "2025-10-29T20:00:05.210756+01:00",
+      "last_update": "2025-10-29T20:00:05.350346+01:00",
+      "category": 9,
+      "muscles": [
+        11,
+        8,
+        10
+      ],
+      "muscles_secondary": [
+        2
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": 202,
+      "license_author": "meldun"
+    },
+    {
+      "id": 1015,
+      "uuid": "b50a3d3e-cf75-42de-8729-80e163748fb1",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:21.189415+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": 53,
+      "license_author": null
+    },
+    {
+      "id": 1192,
+      "uuid": "94238bef-15ee-42b6-8035-79854b3c6e65",
+      "created": "2023-08-11T06:31:15.492941+02:00",
+      "last_update": "2024-01-17T11:39:53.545801+01:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Franpol"
+    },
+    {
+      "id": 1661,
+      "uuid": "5aee8ae1-2752-4868-af62-e3c79954d811",
+      "created": "2025-09-28T01:53:28.150751+02:00",
+      "last_update": "2025-09-28T01:53:28.150768+02:00",
+      "category": 8,
+      "muscles": [
+        5
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Shiladree"
+    },
+    {
+      "id": 1088,
+      "uuid": "0c30c543-e2cc-499b-bc31-8c28db445ed2",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:47.776947+01:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "philip"
+    },
+    {
+      "id": 1124,
+      "uuid": "62350da8-b589-4022-a94a-3341f79295a4",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:51.619950+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Franpol"
+    },
+    {
+      "id": 691,
+      "uuid": "738137c0-5387-4215-b457-ea7af113b3ba",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:44.765039+01:00",
+      "category": 13,
+      "muscles": [
+        2,
+        9
+      ],
+      "muscles_secondary": [
+        1
+      ],
+      "equipment": [],
+      "variations": 46,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 468,
+      "uuid": "9cb69afc-7a44-4a22-b9a9-7bde8aca5b11",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:32:00.419301+01:00",
+      "category": 12,
+      "muscles": [
+        9
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "donaddon"
+    },
+    {
+      "id": 1218,
+      "uuid": "2b61df61-f71e-4b8f-9f95-6a565238a8ae",
+      "created": "2024-01-29T23:01:25.296720+01:00",
+      "last_update": "2024-01-29T23:01:25.296752+01:00",
+      "category": 8,
+      "muscles": [
+        2,
+        4
+      ],
+      "muscles_secondary": [
+        3,
+        5
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "PaukOne"
+    },
+    {
+      "id": 1717,
+      "uuid": "d27a93fa-7066-477c-a475-c6b6170831db",
+      "created": "2025-11-11T21:05:29.566837+01:00",
+      "last_update": "2025-11-11T21:05:29.566852+01:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        2
+      ],
+      "variations": null,
+      "license_author": "polloperro"
+    },
+    {
+      "id": 1639,
+      "uuid": "51ab6376-eb3e-42dc-ad48-46166c94adac",
+      "created": "2025-09-27T08:57:28.900284+02:00",
+      "last_update": "2025-09-27T08:57:28.900301+02:00",
+      "category": 12,
+      "muscles": [
+        2,
+        12
+      ],
+      "muscles_secondary": [
+        9
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "AlucardEvil40"
+    },
+    {
+      "id": 1738,
+      "uuid": "15fda45b-108b-4b28-bfe5-d0e55a0914bf",
+      "created": "2025-12-10T09:47:36.038701+01:00",
+      "last_update": "2025-12-10T09:47:36.038719+01:00",
+      "category": 8,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [
+        1
+      ],
+      "equipment": [
+        6
+      ],
+      "variations": null,
+      "license_author": "54str"
+    },
+    {
+      "id": 1725,
+      "uuid": "9bcc7b4f-4172-4db7-be95-d7b659c486f5",
+      "created": "2025-11-24T20:06:34.952729+01:00",
+      "last_update": "2025-11-24T20:06:34.952746+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [
+        2,
+        9
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "barry"
+    },
+    {
+      "id": 1243,
+      "uuid": "58ca3e51-ea64-4771-a74a-a74d29f5c40c",
+      "created": "2024-02-28T19:46:47.790779+01:00",
+      "last_update": "2024-02-28T19:46:47.790799+01:00",
+      "category": 9,
+      "muscles": [
+        7,
+        15
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "erikocobra"
+    },
+    {
+      "id": 1100,
+      "uuid": "f20ab712-f953-4705-8710-9681392ddd07",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:50.219350+01:00",
+      "category": 9,
+      "muscles": [
+        2,
+        8,
+        10
+      ],
+      "muscles_secondary": [
+        1,
+        4,
+        6,
+        9
+      ],
+      "equipment": [
+        5
+      ],
+      "variations": null,
+      "license_author": "philip"
+    },
+    {
+      "id": 204,
+      "uuid": "43e85cb8-51d0-4892-b1bf-80a3cb111ff6",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:27:37.040072+01:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [
+        13
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": 16,
+      "license_author": "ExRx"
+    },
+    {
+      "id": 1021,
+      "uuid": "04ba9a37-4725-43f0-a0b6-767cdab9a79e",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:22.381748+01:00",
+      "category": 14,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": 6,
+      "license_author": null
+    },
+    {
+      "id": 1270,
+      "uuid": "d5116fbd-bf14-492a-86b3-140035cb48b2",
+      "created": "2024-04-04T15:05:34.520686+02:00",
+      "last_update": "2024-04-04T15:05:34.520714+02:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        2
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "FEFFO"
+    },
+    {
+      "id": 1436,
+      "uuid": "abd2854b-114a-4584-8746-30bd40127863",
+      "created": "2025-01-24T18:41:31.595312+01:00",
+      "last_update": "2025-01-24T18:41:31.595329+01:00",
+      "category": 11,
+      "muscles": [
+        4,
+        5
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        1
+      ],
+      "variations": null,
+      "license_author": "M9"
+    },
+    {
+      "id": 960,
+      "uuid": "d813ef7c-b10a-4c5c-ba55-6b9518e7ff4c",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:18.221783+01:00",
+      "category": 10,
+      "muscles": [
+        2,
+        8
+      ],
+      "muscles_secondary": [
+        10,
+        6,
+        9
+      ],
+      "equipment": [
+        10
+      ],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 171,
+      "uuid": "7de7b8a8-313d-465f-bb22-8527ae45110a",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:42.588378+01:00",
+      "category": 10,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        9
+      ],
+      "variations": 10,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1591,
+      "uuid": "fae44c34-2e85-4d22-8fb8-7b14faf14719",
+      "created": "2025-08-01T23:34:09.071564+02:00",
+      "last_update": "2025-08-01T23:34:09.071614+02:00",
+      "category": 11,
+      "muscles": [
+        14,
+        6
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "MrAlfaRobot"
+    },
+    {
+      "id": 456,
+      "uuid": "fe04cf35-1af5-4b51-89d4-c38d7eaa0db1",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:32:06.619037+01:00",
+      "category": 9,
+      "muscles": [
+        11,
+        8
+      ],
+      "muscles_secondary": [
+        2,
+        1,
+        13
+      ],
+      "equipment": [],
+      "variations": 12,
+      "license_author": "minifigmaster125"
+    },
+    {
+      "id": 1516,
+      "uuid": "35008ce6-74ca-40db-b965-44a1eccfa061",
+      "created": "2025-05-06T14:17:22.932235+02:00",
+      "last_update": "2025-05-06T14:17:22.932258+02:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Fittness69"
+    },
+    {
+      "id": 1729,
+      "uuid": "b283cd47-9a1c-4004-9bf5-220560ef0a16",
+      "created": "2025-11-24T20:41:17.283425+01:00",
+      "last_update": "2025-11-24T20:41:17.283441+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "barry"
+    },
+    {
+      "id": 1608,
+      "uuid": "a94623fc-518f-4a74-947b-febd086264bf",
+      "created": "2025-08-20T13:47:43.036933+02:00",
+      "last_update": "2025-08-20T13:47:43.036981+02:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "tenebrizz"
+    },
+    {
+      "id": 397,
+      "uuid": "183e7279-f052-4c70-8381-bbbda3bb9afe",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:30:02.312782+01:00",
+      "category": 9,
+      "muscles": [
+        8,
+        10
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        1
+      ],
+      "variations": 12,
+      "license_author": "taylorbarbell"
+    },
+    {
+      "id": 604,
+      "uuid": "b1051c3e-78a9-4b73-899c-c700098cf1a8",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:34:57.967752+01:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 3,
+      "license_author": "MrSteele"
+    },
+    {
+      "id": 427,
+      "uuid": "cbc5fbc9-9bca-4766-941d-4b6903d4a521",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:29:42.161185+01:00",
+      "category": 10,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 10,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1429,
+      "uuid": "5a9f4fa4-6b71-4bc7-a284-e76e43e3106a",
+      "created": "2025-01-23T03:56:45.378148+01:00",
+      "last_update": "2025-01-23T03:56:45.378164+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "hpmbala@gmail.com"
+    },
+    {
+      "id": 283,
+      "uuid": "9b993e99-8701-43f0-84d6-689123183880",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:28:00.504522+01:00",
+      "category": 10,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        6
+      ],
+      "variations": 11,
+      "license_author": "robhoyt"
+    },
+    {
+      "id": 1409,
+      "uuid": "f5ad82a8-adf8-4795-9874-1f6d183c56ed",
+      "created": "2024-12-28T19:35:23.063243+01:00",
+      "last_update": "2024-12-28T19:35:23.063261+01:00",
+      "category": 10,
+      "muscles": [
+        14,
+        6
+      ],
+      "muscles_secondary": [
+        2,
+        8,
+        12,
+        5
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 624,
+      "uuid": "4d5decb3-5fbe-45c1-9ad5-ff715e53cb34",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:35:49.938297+01:00",
+      "category": 15,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "intelman"
+    },
+    {
+      "id": 562,
+      "uuid": "169896b2-90e3-4497-9d73-56bee4a34697",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:34:57.710318+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 1,
+      "license_author": "cal.zabel"
+    },
+    {
+      "id": 1455,
+      "uuid": "f44cf553-067e-4f3a-b35b-e16549c1d055",
+      "created": "2025-02-09T21:41:27.305462+01:00",
+      "last_update": "2025-02-09T21:41:27.305481+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [
+        2
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Yderkone"
+    },
+    {
+      "id": 636,
+      "uuid": "66c90ca7-23d8-47b1-820f-dc0c8140603b",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:31.603406+01:00",
+      "category": 12,
+      "muscles": [
+        8,
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        4
+      ],
+      "variations": null,
+      "license_author": "baldurmen"
+    },
+    {
+      "id": 297,
+      "uuid": "d059c63d-0a81-48a3-912a-44070c0def2e",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:28:48.780605+01:00",
+      "category": 10,
+      "muscles": [
+        14,
+        6
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        4,
+        7
+      ],
+      "variations": null,
+      "license_author": "Behrooz"
+    },
+    {
+      "id": 1228,
+      "uuid": "428112f3-3918-45ba-870a-dc58cf3959cf",
+      "created": "2024-02-18T18:09:26.271753+01:00",
+      "last_update": "2024-02-18T18:09:26.271774+01:00",
+      "category": 8,
+      "muscles": [
+        4,
+        5
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Lynn_McIntyre"
+    },
+    {
+      "id": 1658,
+      "uuid": "7cd76565-8a8f-4658-98f1-253af9d8bb39",
+      "created": "2025-09-28T00:49:04.150309+02:00",
+      "last_update": "2025-09-28T00:49:04.150327+02:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Shiladree"
+    },
+    {
+      "id": 1652,
+      "uuid": "65d12ecf-54b8-466d-a412-e55c396cad69",
+      "created": "2025-09-27T11:38:44.466988+02:00",
+      "last_update": "2025-12-07T11:53:51.154429+01:00",
+      "category": 9,
+      "muscles": [
+        11,
+        8
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": 206,
+      "license_author": "AlucardEvil40"
+    },
+    {
+      "id": 1261,
+      "uuid": "f9329ed4-8185-49a6-a0bb-e0f21c6cc3d8",
+      "created": "2024-03-25T13:45:05.579969+01:00",
+      "last_update": "2024-03-25T13:45:05.579988+01:00",
+      "category": 8,
+      "muscles": [
+        13
+      ],
+      "muscles_secondary": [
+        1
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "cynomops"
+    },
+    {
+      "id": 1387,
+      "uuid": "66aef559-02e8-4f35-91f6-600f103e9cbf",
+      "created": "2024-11-23T15:39:08.322200+01:00",
+      "last_update": "2024-11-23T15:39:08.322218+01:00",
+      "category": 9,
+      "muscles": [
+        11
+      ],
+      "muscles_secondary": [
+        8
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "captive0592"
+    },
+    {
+      "id": 1508,
+      "uuid": "ecba2395-f364-4e5f-a34c-04f178c8b822",
+      "created": "2025-04-12T21:51:01.277197+02:00",
+      "last_update": "2025-04-12T21:51:01.277213+02:00",
+      "category": 11,
+      "muscles": [
+        2,
+        4,
+        5
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Expenses7000"
+    },
+    {
+      "id": 974,
+      "uuid": "3de523ee-d359-4044-a792-6de22eef0495",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:37.449264+01:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        10
+      ],
+      "variations": null,
+      "license_author": null
+    },
+    {
+      "id": 829,
+      "uuid": "dc400220-b483-4b60-8f52-c36c70a782b5",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:48.855843+01:00",
+      "category": 13,
+      "muscles": [
+        2,
+        9
+      ],
+      "muscles_secondary": [
+        12
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "cshep442"
+    },
+    {
+      "id": 1406,
+      "uuid": "e75629ed-4991-4a48-984c-b297f3f9fb58",
+      "created": "2024-12-28T17:07:38.662526+01:00",
+      "last_update": "2024-12-28T17:07:38.662545+01:00",
+      "category": 10,
+      "muscles": [
+        2,
+        6,
+        5
+      ],
+      "muscles_secondary": [
+        14,
+        4
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 804,
+      "uuid": "9f9edad8-7da0-448c-bfcb-ec61f2d28162",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:19.274378+01:00",
+      "category": 8,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "marcelbader"
+    },
+    {
+      "id": 1741,
+      "uuid": "547217ec-cb9e-4713-8bab-2d8bfb160667",
+      "created": "2025-12-10T14:11:12.128170+01:00",
+      "last_update": "2025-12-10T14:11:12.128190+01:00",
+      "category": 8,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "Happy"
+    },
+    {
+      "id": 445,
+      "uuid": "6441ff9e-037e-48d9-8800-67b430dc8e37",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:30:27.617611+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        5
+      ],
+      "equipment": [
+        1,
+        8
+      ],
+      "variations": 7,
+      "license_author": "Mens Fitness"
+    },
+    {
+      "id": 537,
+      "uuid": "57e17672-52b9-43cf-8d0d-4b3f06a0c0d0",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:59.412795+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        2,
+        5
+      ],
+      "equipment": [
+        3,
+        9
+      ],
+      "variations": 7,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1542,
+      "uuid": "b2340417-dcd5-485a-9707-04dd9168b801",
+      "created": "2025-06-22T22:22:37.313523+02:00",
+      "last_update": "2025-06-22T22:22:37.313539+02:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        6
+      ],
+      "variations": null,
+      "license_author": "Antsy6277"
+    },
+    {
+      "id": 1370,
+      "uuid": "b199baca-7353-4dee-bbcf-620f96dba5b4",
+      "created": "2024-08-17T20:21:08.839636+02:00",
+      "last_update": "2024-08-17T20:21:08.839660+02:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Anastasious"
+    },
+    {
+      "id": 1487,
+      "uuid": "ebe7d74b-78a8-4757-9310-6fb22b23aa58",
+      "created": "2025-03-06T10:30:01.802902+01:00",
+      "last_update": "2025-03-06T10:30:01.802920+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Moffi"
+    },
+    {
+      "id": 1115,
+      "uuid": "7c2a70bc-ed97-440c-afd6-ed27daf63f25",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:51.286971+01:00",
+      "category": 15,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "philip"
+    },
+    {
+      "id": 991,
+      "uuid": "80d83f98-efe5-4d87-a403-c0feadc8650f",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:44.170213+01:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": 48,
+      "license_author": null
+    },
+    {
+      "id": 373,
+      "uuid": "5f0b757c-0d6a-430b-9d5e-3bfba202878e",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:30:05.685198+01:00",
+      "category": 9,
+      "muscles": [
+        10
+      ],
+      "muscles_secondary": [
+        8
+      ],
+      "equipment": [],
+      "variations": 15,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1391,
+      "uuid": "34cce09a-edb3-4140-892a-1cf70da8d98b",
+      "created": "2024-11-23T16:32:52.804089+01:00",
+      "last_update": "2024-11-23T16:32:52.804105+01:00",
+      "category": 9,
+      "muscles": [
+        11
+      ],
+      "muscles_secondary": [
+        7
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "captive0592"
+    },
+    {
+      "id": 1724,
+      "uuid": "93b9b84c-7b72-4712-a7c2-0e14a5fab32a",
+      "created": "2025-11-24T18:45:38.556767+01:00",
+      "last_update": "2025-11-24T18:45:38.556784+01:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "barry"
+    },
+    {
+      "id": 31,
+      "uuid": "f2733700-aa5d-4df7-bc52-1876ab4fb479",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:01.706493+01:00",
+      "category": 8,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "GrosseHund"
+    },
+    {
+      "id": 1746,
+      "uuid": "47ee9fc4-d226-44c8-926b-f52c675b79e2",
+      "created": "2025-12-11T06:35:28.732869+01:00",
+      "last_update": "2025-12-11T06:35:28.732894+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        5
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "54str"
+    },
+    {
+      "id": 1316,
+      "uuid": "0a73ac01-7a00-43fe-aadc-2a185cc9aae8",
+      "created": "2024-07-01T09:37:19.177449+02:00",
+      "last_update": "2024-07-01T09:37:19.177473+02:00",
+      "category": 15,
+      "muscles": [
+        7,
+        10
+      ],
+      "muscles_secondary": [
+        8,
+        14,
+        6
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "hektkaso"
+    },
+    {
+      "id": 723,
+      "uuid": "55b9d286-c4cc-4a29-97ad-58cb13c2bb7e",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:34.885996+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 2,
+      "license_author": "tuckerm"
+    },
+    {
+      "id": 1636,
+      "uuid": "505b2027-2f65-4cef-851b-f5e634921f1a",
+      "created": "2025-09-23T15:06:23.310369+02:00",
+      "last_update": "2025-09-23T15:06:23.310383+02:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        9
+      ],
+      "variations": null,
+      "license_author": "Rottekongen"
+    },
+    {
+      "id": 1086,
+      "uuid": "44cfa56c-d8c2-4f2c-8b5a-f29810fd60e7",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:47.665752+01:00",
+      "category": 11,
+      "muscles": [
+        13,
+        12,
+        4,
+        9
+      ],
+      "muscles_secondary": [
+        2,
+        1,
+        5
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "philip"
+    },
+    {
+      "id": 1513,
+      "uuid": "f2e17c8d-7285-4fd5-bfe8-26f407802850",
+      "created": "2025-04-22T18:13:44.605389+02:00",
+      "last_update": "2025-04-22T18:13:44.605405+02:00",
+      "category": 8,
+      "muscles": [
+        5
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Expenses7000"
+    },
+    {
+      "id": 722,
+      "uuid": "591992cb-48ee-4b39-b790-e05b4a2c11e3",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:45.076313+01:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "jigglychipmunk"
+    },
+    {
+      "id": 1286,
+      "uuid": "73dbe7a5-e8f3-48fd-814e-bc3378c15be2",
+      "created": "2024-05-02T22:51:38.301218+02:00",
+      "last_update": "2024-05-02T22:51:38.301238+02:00",
+      "category": 10,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [
+        14
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "painDpice"
+    },
+    {
+      "id": 1529,
+      "uuid": "42d09639-a5a6-4aa6-b115-e4c96b1d3735",
+      "created": "2025-05-17T22:07:31.685619+02:00",
+      "last_update": "2025-05-17T22:07:31.685636+02:00",
+      "category": 10,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        6
+      ],
+      "variations": null,
+      "license_author": "florian.bussmann"
+    },
+    {
+      "id": 1757,
+      "uuid": "2491eceb-d19e-4da4-a8c5-4d80fea56562",
+      "created": "2025-12-19T10:14:22.324637+01:00",
+      "last_update": "2025-12-19T10:14:22.324658+01:00",
+      "category": 11,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": ""
+    },
+    {
+      "id": 1137,
+      "uuid": "e87b76b8-2960-4225-9146-47f78bf8c630",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:52.211684+01:00",
+      "category": 12,
+      "muscles": [
+        12,
+        3
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Franpol"
+    },
+    {
+      "id": 1714,
+      "uuid": "e237611c-2730-4d0c-891b-bb29d3d15297",
+      "created": "2025-11-11T15:10:11.133490+01:00",
+      "last_update": "2025-11-11T15:10:11.133508+01:00",
+      "category": 13,
+      "muscles": [
+        2,
+        12,
+        4,
+        9
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Croak6728"
+    },
+    {
+      "id": 369,
+      "uuid": "62170477-90ec-463c-907e-9e523abc0a15",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:56.006578+01:00",
+      "category": 9,
+      "muscles": [
+        10
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "BFad07"
+    },
+    {
+      "id": 1374,
+      "uuid": "849f2fa6-42f9-4c59-90f6-275c8ada6725",
+      "created": "2024-09-11T15:26:45.612427+02:00",
+      "last_update": "2024-09-11T15:26:45.612448+02:00",
+      "category": 10,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "6LXBO"
+    },
+    {
+      "id": 441,
+      "uuid": "bc45125b-58da-4ee9-8895-16a7b930b789",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:58.025418+01:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 12,
+      "license_author": "geraldbaeck"
+    },
+    {
+      "id": 1511,
+      "uuid": "329d2adc-4b2c-4bb2-95d7-f5f6fedb9b96",
+      "created": "2025-04-14T13:33:29.540828+02:00",
+      "last_update": "2025-04-14T13:33:29.540847+02:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Moffi"
+    },
+    {
+      "id": 1744,
+      "uuid": "dc87b735-016c-410b-915c-e3521fea4be7",
+      "created": "2025-12-10T17:43:52.505395+01:00",
+      "last_update": "2025-12-10T17:43:52.505414+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Tierrasverdes"
+    },
+    {
+      "id": 902,
+      "uuid": "50edc0f5-e9d0-471c-9fd7-fd691162b447",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:29:25.646107+01:00",
+      "category": 9,
+      "muscles": [
+        8
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        1
+      ],
+      "variations": null,
+      "license_author": "enros7500"
+    },
+    {
+      "id": 591,
+      "uuid": "f38e9c23-031d-44d0-ac27-7f1026212c73",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:34:58.751787+01:00",
+      "category": 10,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 10,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1695,
+      "uuid": "be4eb0b6-2c39-4ff5-b57d-419f1687c90f",
+      "created": "2025-11-02T00:11:20.655741+01:00",
+      "last_update": "2025-11-02T00:11:20.655755+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "daiben"
+    },
+    {
+      "id": 1083,
+      "uuid": "981b07b6-e76e-438c-bad4-388441b7ff33",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:47.085058+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "tinman"
+    },
+    {
+      "id": 301,
+      "uuid": "37f6bd56-815a-4975-99af-05e749fae4b2",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:28:09.029035+01:00",
+      "category": 12,
+      "muscles": [
+        9
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1011,
+      "uuid": "dcbfa3f0-ba88-4633-a30d-c188dccc5d3f",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:48.989288+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": null
+    },
+    {
+      "id": 1675,
+      "uuid": "c50695b2-44f0-4a16-927d-238fe2e16049",
+      "created": "2025-10-12T23:57:01.355511+02:00",
+      "last_update": "2025-10-12T23:57:01.581461+02:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        2,
+        6,
+        3,
+        5
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": 200,
+      "license_author": "FoyrhzMarin789"
+    },
+    {
+      "id": 1768,
+      "uuid": "f263ddc9-2418-4bb3-a22c-f79abea18d00",
+      "created": "2025-12-22T13:40:58.356788+01:00",
+      "last_update": "2025-12-22T13:40:58.356802+01:00",
+      "category": 8,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": null
+    },
+    {
+      "id": 827,
+      "uuid": "d3b21677-7311-40f8-a321-0ad4f7dfc3a9",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:28:50.573049+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "cshep442"
+    },
+    {
+      "id": 254,
+      "uuid": "68e0dbba-2d1e-4a56-8378-8824c1de3342",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:27:59.942045+01:00",
+      "category": 13,
+      "muscles": [
+        2,
+        9
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 4,
+      "license_author": "Marius"
+    },
+    {
+      "id": 377,
+      "uuid": "9e34bc01-9cec-4ee2-a9bb-9c937a471c24",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:29:48.432272+01:00",
+      "category": 10,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [
+        3
+      ],
+      "equipment": [
+        4
+      ],
+      "variations": 11,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1360,
+      "uuid": "fe249e2f-5856-420f-8a34-1b02c7fde141",
+      "created": "2024-08-17T09:00:43.647384+02:00",
+      "last_update": "2024-08-17T09:00:43.647406+02:00",
+      "category": 8,
+      "muscles": [
+        2,
+        1,
+        13,
+        10,
+        9,
+        5
+      ],
+      "muscles_secondary": [
+        11,
+        8,
+        12,
+        6
+      ],
+      "equipment": [
+        10
+      ],
+      "variations": null,
+      "license_author": "m4k3r"
+    },
+    {
+      "id": 1497,
+      "uuid": "7b40813b-80a3-42cc-8938-0c5199ef7620",
+      "created": "2025-04-06T21:36:50.210841+02:00",
+      "last_update": "2025-04-06T21:36:50.210858+02:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        2
+      ],
+      "equipment": [
+        8,
+        3
+      ],
+      "variations": null,
+      "license_author": "JohnPreston"
+    },
+    {
+      "id": 1618,
+      "uuid": "5da3d393-0c4e-4ac8-96b4-aab51f6ab3d1",
+      "created": "2025-08-27T13:27:05.809400+02:00",
+      "last_update": "2025-08-27T13:27:05.809420+02:00",
+      "category": 15,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "Tierrasverdes"
+    },
+    {
+      "id": 1451,
+      "uuid": "1e9b886f-0dbe-4434-829e-7159bcc40692",
+      "created": "2025-01-31T17:45:06.380260+01:00",
+      "last_update": "2025-01-31T17:45:06.380279+01:00",
+      "category": 11,
+      "muscles": [
+        14
+      ],
+      "muscles_secondary": [
+        4
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "hpmbala@gmail.com"
+    },
+    {
+      "id": 994,
+      "uuid": "9d9c4c9f-045f-4af5-adf2-8bb07c3516dc",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:49.251354+01:00",
+      "category": 8,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": 49,
+      "license_author": null
+    },
+    {
+      "id": 987,
+      "uuid": "fa9838ed-84e8-476c-8157-1774a9c90aff",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:38.359750+01:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": 48,
+      "license_author": null
+    },
+    {
+      "id": 1399,
+      "uuid": "d5ee3b1f-2879-406f-97a9-51a8b0817cd4",
+      "created": "2024-11-23T16:50:40.739559+01:00",
+      "last_update": "2024-11-23T16:50:40.739576+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [
+        11
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "captive0592"
+    },
+    {
+      "id": 1099,
+      "uuid": "45d89ca5-f5c7-4e56-9833-fd160cd2666d",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:50.183930+01:00",
+      "category": 10,
+      "muscles": [
+        14
+      ],
+      "muscles_secondary": [
+        6
+      ],
+      "equipment": [
+        10
+      ],
+      "variations": null,
+      "license_author": "philip"
+    },
+    {
+      "id": 1582,
+      "uuid": "d9c1f78c-7bf6-4e6a-92e4-7bf4ed4a0a67",
+      "created": "2025-07-29T17:11:49.023908+02:00",
+      "last_update": "2025-07-29T17:11:49.023924+02:00",
+      "category": 13,
+      "muscles": [
+        9
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        1,
+        8,
+        3
+      ],
+      "variations": null,
+      "license_author": "CptnFatbeard"
+    },
+    {
+      "id": 986,
+      "uuid": "9801e20b-69c3-43d0-9066-450a68230c42",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:37.586178+01:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": 48,
+      "license_author": null
+    },
+    {
+      "id": 1763,
+      "uuid": "96ae70d6-7d77-4729-84b4-40f2a423f3d1",
+      "created": "2025-12-19T10:56:47.765785+01:00",
+      "last_update": "2025-12-19T10:56:47.765801+01:00",
+      "category": 11,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": null
+    },
+    {
+      "id": 1214,
+      "uuid": "e79616cb-f5fb-4b10-b99d-09d43774e142",
+      "created": "2023-12-27T15:44:38.963631+01:00",
+      "last_update": "2024-01-17T11:40:26.606180+01:00",
+      "category": 12,
+      "muscles": [
+        2,
+        1,
+        12
+      ],
+      "muscles_secondary": [
+        5
+      ],
+      "equipment": [
+        6
+      ],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 621,
+      "uuid": "eb61c7a1-e1c9-4c44-a8ce-2bbe98a39857",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:23.265998+01:00",
+      "category": 8,
+      "muscles": [
+        1,
+        13
+      ],
+      "muscles_secondary": [
+        13
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": 16,
+      "license_author": "BFad07"
+    },
+    {
+      "id": 20,
+      "uuid": "f24cb758-9c0d-42d4-ad9e-6025c527dd13",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:19.366287+01:00",
+      "category": 13,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": 5,
+      "license_author": "trzr23"
+    },
+    {
+      "id": 1394,
+      "uuid": "5a5e8883-b185-40ff-b292-9e433d13b5e7",
+      "created": "2024-11-23T16:43:33.213573+01:00",
+      "last_update": "2024-11-23T16:43:33.213590+01:00",
+      "category": 12,
+      "muscles": [
+        11
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        4
+      ],
+      "variations": null,
+      "license_author": "captive0592"
+    },
+    {
+      "id": 1246,
+      "uuid": "069711c7-565a-4abb-90a7-614f66dd9dc3",
+      "created": "2024-03-01T04:26:18.179048+01:00",
+      "last_update": "2024-03-01T04:26:18.179069+01:00",
+      "category": 10,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [
+        14,
+        3
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "cynomops"
+    },
+    {
+      "id": 319,
+      "uuid": "eeeb42ae-6a41-4127-b2ec-72376119531b",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:29:40.552284+01:00",
+      "category": 15,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Papazit"
+    },
+    {
+      "id": 76,
+      "uuid": "3db63138-a047-4a4d-b616-1a0b7dfca105",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:07.100003+01:00",
+      "category": 8,
+      "muscles": [
+        5
+      ],
+      "muscles_secondary": [
+        2,
+        4
+      ],
+      "equipment": [
+        1,
+        8
+      ],
+      "variations": 7,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1206,
+      "uuid": "6f0d5766-05ac-41b5-a592-7036ac99ee49",
+      "created": "2023-11-25T18:30:41.009817+01:00",
+      "last_update": "2024-01-17T11:39:54.528149+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": null
+    },
+    {
+      "id": 1852,
+      "uuid": "16202754-f567-4d23-a866-2c9cc8eba71d",
+      "created": "2026-02-12T14:25:16.326813+01:00",
+      "last_update": "2026-02-12T14:25:16.421904+01:00",
+      "category": 10,
+      "muscles": [
+        12,
+        4,
+        6
+      ],
+      "muscles_secondary": [
+        10,
+        5
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": 215,
+      "license_author": "Croak6728"
+    },
+    {
+      "id": 962,
+      "uuid": "95a300de-2ad8-492e-9364-13766d9e7618",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2026-01-14T03:02:45.210532+01:00",
+      "category": 15,
+      "muscles": [
+        8,
+        10,
+        9
+      ],
+      "muscles_secondary": [
+        1,
+        6,
+        5
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 1200,
+      "uuid": "f5252fbe-1e00-4b8d-8781-2e56d6a5250f",
+      "created": "2023-11-13T16:51:51.614252+01:00",
+      "last_update": "2024-01-17T11:39:54.277214+01:00",
+      "category": 14,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "cynomops"
+    },
+    {
+      "id": 1010,
+      "uuid": "b646e62d-c616-4460-b4d1-23cc6a6ddb51",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:18.913303+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": null
+    },
+    {
+      "id": 1111,
+      "uuid": "4aa7e2a7-86ad-4322-978f-ff8b391f556c",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:51.122727+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        5
+      ],
+      "equipment": [
+        8,
+        9
+      ],
+      "variations": null,
+      "license_author": "anon1337"
+    },
+    {
+      "id": 178,
+      "uuid": "d4db2355-4c99-4d80-a179-6aeced7c7fed",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:26:44.539124+01:00",
+      "category": 10,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Metin"
+    },
+    {
+      "id": 1082,
+      "uuid": "f3f4e9c5-9bf6-43f6-a2cf-798507a50293",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:47.055852+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "tinman"
+    },
+    {
+      "id": 1392,
+      "uuid": "77a56810-d050-4083-9501-d648f773376a",
+      "created": "2024-11-23T16:40:21.912604+01:00",
+      "last_update": "2024-11-23T16:40:21.912630+01:00",
+      "category": 9,
+      "muscles": [
+        11
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "captive0592"
+    },
+    {
+      "id": 129,
+      "uuid": "5c414175-fe72-455a-ba8f-a0575cf792bd",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:26:37.407454+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 203,
+      "uuid": "b7c6a444-90ea-4f5b-9fea-748311606eaa",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:27:18.204540+01:00",
+      "category": 9,
+      "muscles": [
+        10
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": 12,
+      "license_author": "ataraxie67"
+    },
+    {
+      "id": 1690,
+      "uuid": "b16a28c4-40bf-42d4-94b3-bf3f56fab743",
+      "created": "2025-11-01T22:42:15.807139+01:00",
+      "last_update": "2025-11-01T22:42:15.807181+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "daiben"
+    },
+    {
+      "id": 1775,
+      "uuid": "e797ca42-f9fc-480a-8f48-7f6905978c72",
+      "created": "2026-01-05T19:40:25.954404+01:00",
+      "last_update": "2026-01-05T19:40:26.076508+01:00",
+      "category": 13,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 209,
+      "license_author": "eufvksruh"
+    },
+    {
+      "id": 908,
+      "uuid": "89c3d614-e841-4c04-bee8-6761567e4b7c",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:17.801534+01:00",
+      "category": 15,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "karly"
+    },
+    {
+      "id": 1838,
+      "uuid": "4c317795-c301-4081-9f96-6036682f80c1",
+      "created": "2026-02-12T12:52:43.429990+01:00",
+      "last_update": "2026-02-12T12:52:43.430008+01:00",
+      "category": 13,
+      "muscles": [
+        2,
+        4,
+        9
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        11
+      ],
+      "variations": null,
+      "license_author": "Croak6728"
+    },
+    {
+      "id": 1556,
+      "uuid": "bb9b994e-426f-4693-9d16-3f8d5a9c72b8",
+      "created": "2025-07-07T15:16:45.420239+02:00",
+      "last_update": "2025-07-07T15:16:45.420254+02:00",
+      "category": 13,
+      "muscles": [
+        2,
+        8,
+        4
+      ],
+      "muscles_secondary": [
+        11,
+        12,
+        14,
+        5
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Settebello"
+    },
+    {
+      "id": 346,
+      "uuid": "91c47c8b-6290-4885-8921-df9aa7958c00",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:29:39.567587+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [
+        4,
+        5
+      ],
+      "equipment": [
+        1
+      ],
+      "variations": null,
+      "license_author": "Torsten Linnecke"
+    },
+    {
+      "id": 71,
+      "uuid": "046fce45-69f2-46f7-a5b6-79a25a485af1",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:15.870045+01:00",
+      "category": 9,
+      "muscles": [
+        10
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 25,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 684,
+      "uuid": "76965848-9776-4be5-b879-e3c97033b80f",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:36.615116+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [
+        1
+      ],
+      "equipment": [],
+      "variations": 2,
+      "license_author": "tuckerm"
+    },
+    {
+      "id": 1630,
+      "uuid": "24f988e7-51eb-44f5-92f2-d4e0199c2269",
+      "created": "2025-09-20T06:26:51.063939+02:00",
+      "last_update": "2025-09-20T06:26:51.063956+02:00",
+      "category": 15,
+      "muscles": [
+        2,
+        8,
+        4,
+        10
+      ],
+      "muscles_secondary": [
+        1,
+        11,
+        12,
+        6
+      ],
+      "equipment": [
+        8,
+        3,
+        10,
+        7
+      ],
+      "variations": null,
+      "license_author": "ricwheatley"
+    },
+    {
+      "id": 1693,
+      "uuid": "88afb956-8d4a-45b3-8c7c-c23719316bfe",
+      "created": "2025-11-01T23:51:36.598866+01:00",
+      "last_update": "2025-11-01T23:51:36.598882+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "daiben"
+    },
+    {
+      "id": 1592,
+      "uuid": "7f942691-2a01-4675-9e3a-409105d5f2bf",
+      "created": "2025-08-01T23:36:19.425837+02:00",
+      "last_update": "2025-08-01T23:36:19.425866+02:00",
+      "category": 15,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "MrAlfaRobot"
+    },
+    {
+      "id": 713,
+      "uuid": "51a80676-92d8-4f91-b51a-4666888e40db",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:44.453799+01:00",
+      "category": 8,
+      "muscles": [
+        2,
+        4,
+        5
+      ],
+      "muscles_secondary": [
+        8,
+        6,
+        3,
+        9
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": 8,
+      "license_author": "Dexter"
+    },
+    {
+      "id": 1002,
+      "uuid": "6e1af72c-f9f5-490d-8977-564df4f24b6f",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:58.062615+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": null
+    },
+    {
+      "id": 1491,
+      "uuid": "dd0d5504-6204-4775-86f2-84b7c69fff5f",
+      "created": "2025-03-13T13:45:14.040196+01:00",
+      "last_update": "2025-03-13T13:45:14.040214+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        6
+      ],
+      "variations": null,
+      "license_author": "technofer"
+    },
+    {
+      "id": 1205,
+      "uuid": "2cc92db8-b245-44b8-b1d6-bf91c78c2ab9",
+      "created": "2023-11-25T16:14:05.325823+01:00",
+      "last_update": "2024-01-17T11:39:54.475336+01:00",
+      "category": 8,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "wakanda90"
+    },
+    {
+      "id": 448,
+      "uuid": "748e9635-7958-4a41-b1ed-93de74c7ef72",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:30:26.611296+01:00",
+      "category": 12,
+      "muscles": [
+        12,
+        9
+      ],
+      "muscles_secondary": [
+        1,
+        5
+      ],
+      "equipment": [
+        1
+      ],
+      "variations": 1,
+      "license_author": "Nallitnas"
+    },
+    {
+      "id": 146,
+      "uuid": "0d79f259-3b28-4258-8a08-cffec062a710",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:26.154622+01:00",
+      "category": 14,
+      "muscles": [
+        7,
+        15
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 6,
+      "license_author": "nate303303"
+    },
+    {
+      "id": 1395,
+      "uuid": "bb948d34-8948-4995-9e59-003d7b6fc1b2",
+      "created": "2024-11-23T16:46:02.116918+01:00",
+      "last_update": "2024-11-23T16:46:02.116939+01:00",
+      "category": 9,
+      "muscles": [
+        11
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "captive0592"
+    },
+    {
+      "id": 1208,
+      "uuid": "f9866335-e489-404b-84b5-248fb8512702",
+      "created": "2023-11-25T19:14:03.957632+01:00",
+      "last_update": "2024-01-17T11:39:54.598167+01:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "lxmx"
+    },
+    {
+      "id": 1092,
+      "uuid": "d301d901-a2c6-4916-b09e-07ab7a3c8519",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:40:25.532528+01:00",
+      "category": 15,
+      "muscles": [
+        2,
+        4,
+        9
+      ],
+      "muscles_secondary": [
+        1,
+        11,
+        7,
+        12,
+        14,
+        6
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 1472,
+      "uuid": "05853a58-4426-450c-9b06-bfa461a767bf",
+      "created": "2025-02-25T21:29:07.544099+01:00",
+      "last_update": "2025-02-25T21:29:07.544116+01:00",
+      "category": 13,
+      "muscles": [
+        9
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Expenses7000"
+    },
+    {
+      "id": 132,
+      "uuid": "48ee1385-47c5-4821-8b6a-57fac6130776",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:38.364016+01:00",
+      "category": 11,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "er0355"
+    },
+    {
+      "id": 1660,
+      "uuid": "e22c4320-7753-49c6-b7f7-4be21b025fb6",
+      "created": "2025-09-28T01:24:25.871322+02:00",
+      "last_update": "2025-09-28T01:24:25.871337+02:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        5
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Shiladree"
+    },
+    {
+      "id": 1414,
+      "uuid": "f462df26-3264-48c2-b5aa-2374d0670c24",
+      "created": "2025-01-10T03:05:21.881170+01:00",
+      "last_update": "2025-01-10T03:05:21.881186+01:00",
+      "category": 9,
+      "muscles": [
+        10
+      ],
+      "muscles_secondary": [
+        11,
+        7,
+        8
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "hpmbala@gmail.com"
+    },
+    {
+      "id": 1095,
+      "uuid": "acbe9416-c717-40f4-a30e-9375b1f3e797",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:49.807015+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        2,
+        5
+      ],
+      "equipment": [
+        8
+      ],
+      "variations": null,
+      "license_author": "colundrum"
+    },
+    {
+      "id": 1676,
+      "uuid": "0fed3cd1-f6ef-4306-8c63-28246a931bf0",
+      "created": "2025-10-13T16:07:52.534102+02:00",
+      "last_update": "2025-10-13T16:07:52.534117+02:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        2,
+        5
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Jhonatan"
+    },
+    {
+      "id": 1234,
+      "uuid": "7cc24acf-3fc9-4d14-a461-cd00d1d18f0e",
+      "created": "2024-02-21T10:32:37.057112+01:00",
+      "last_update": "2024-02-21T10:32:37.057133+01:00",
+      "category": 9,
+      "muscles": [
+        8
+      ],
+      "muscles_secondary": [
+        11,
+        10
+      ],
+      "equipment": [
+        1
+      ],
+      "variations": null,
+      "license_author": "carlos3c"
+    },
+    {
+      "id": 1333,
+      "uuid": "17947bd2-db2d-4ba6-998c-1bbf31cf228a",
+      "created": "2024-07-22T22:07:35.727576+02:00",
+      "last_update": "2024-07-22T22:07:35.727600+02:00",
+      "category": 8,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Anastasious"
+    },
+    {
+      "id": 237,
+      "uuid": "07c5b9f4-2be5-4a3d-b6d2-16235da1ae3a",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:27:28.567725+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 9,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 916,
+      "uuid": "cbf4cf16-f188-4a60-a223-aa50b163f4b7",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:29:25.707823+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        9
+      ],
+      "variations": null,
+      "license_author": "novadani"
+    },
+    {
+      "id": 1471,
+      "uuid": "84b38ac6-9628-4f80-8940-204047fa2544",
+      "created": "2025-02-25T21:23:50.141777+01:00",
+      "last_update": "2025-02-25T21:23:50.141794+01:00",
+      "category": 12,
+      "muscles": [
+        12,
+        9
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Expenses7000"
+    },
+    {
+      "id": 1466,
+      "uuid": "efeccb1b-73c0-4303-8542-bb4f45ef831a",
+      "created": "2025-02-24T22:21:59.739235+01:00",
+      "last_update": "2025-02-24T22:21:59.739262+01:00",
+      "category": 9,
+      "muscles": [
+        7,
+        15
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Expenses7000"
+    },
+    {
+      "id": 323,
+      "uuid": "b16e3e5d-8401-4d2b-919c-15b536f9ec5e",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:29:39.675753+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        2
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 348,
+      "uuid": "63375f5b-2d81-471c-bea4-fc3d207e96cb",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:29:05.370176+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": 4,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1689,
+      "uuid": "5b4fb3ec-53a1-4525-a58a-c070798ea86e",
+      "created": "2025-11-01T22:38:27.729090+01:00",
+      "last_update": "2025-11-01T22:38:27.729105+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "daiben"
+    },
+    {
+      "id": 1634,
+      "uuid": "148f2ffc-05e2-486b-874f-2a401337a1c6",
+      "created": "2025-09-23T14:58:42.849929+02:00",
+      "last_update": "2025-09-23T14:58:42.849944+02:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        9
+      ],
+      "variations": null,
+      "license_author": "Rottekongen"
+    },
+    {
+      "id": 1363,
+      "uuid": "1fe103e2-1def-41de-8eab-e2e11296446d",
+      "created": "2024-08-17T13:28:05.517505+02:00",
+      "last_update": "2024-08-17T13:28:05.517527+02:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Anastasious"
+    },
+    {
+      "id": 1106,
+      "uuid": "3a8a9588-3d19-4042-84e5-2ff49a842c67",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:50.625367+01:00",
+      "category": 10,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [
+        14
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "utkb"
+    },
+    {
+      "id": 1504,
+      "uuid": "82f19d1c-f12b-49f0-bfdd-24239f93eabc",
+      "created": "2025-04-06T22:16:50.863451+02:00",
+      "last_update": "2025-04-06T22:16:50.863467+02:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "JohnPreston"
+    },
+    {
+      "id": 238,
+      "uuid": "95d226ad-3bf7-4cd6-aa64-2f26b526d8b6",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:27:32.819490+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": 9,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 112,
+      "uuid": "d551f24d-44fe-4761-9448-edf14d627827",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:23:05.552445+01:00",
+      "category": 8,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "cal.zabel"
+    },
+    {
+      "id": 1699,
+      "uuid": "3c2b5e2d-bd9d-43e8-8b5f-e6363331faa1",
+      "created": "2025-11-02T00:33:49.723017+01:00",
+      "last_update": "2025-11-02T00:33:49.723033+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        1
+      ],
+      "variations": null,
+      "license_author": "daiben"
+    },
+    {
+      "id": 289,
+      "uuid": "b526b17b-408d-4da2-8940-ceaf9dae9d93",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:28:47.300549+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [
+        8
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Mahoney"
+    },
+    {
+      "id": 268,
+      "uuid": "fb928a58-9e24-4e7b-b714-71a5f759e8d6",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:28:49.369375+01:00",
+      "category": 9,
+      "muscles": [
+        11
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1745,
+      "uuid": "6e03ecb3-6bfe-4b34-be9d-e5c33e820cc6",
+      "created": "2025-12-10T18:09:07.350035+01:00",
+      "last_update": "2025-12-10T18:09:07.350051+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Tierrasverdes"
+    },
+    {
+      "id": 583,
+      "uuid": "9374fdaf-411f-4ae6-8f0c-21cc2d3dc667",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:35:21.941279+01:00",
+      "category": 11,
+      "muscles": [
+        2,
+        14,
+        4,
+        5
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 8,
+      "license_author": "nate303303"
+    },
+    {
+      "id": 569,
+      "uuid": "141bc870-56be-4749-a3b9-e56d5d5618b4",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:34:58.030567+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 5,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1202,
+      "uuid": "7212cc74-656e-47ce-8292-d211676f2ee1",
+      "created": "2023-11-20T19:26:54.203837+01:00",
+      "last_update": "2024-01-17T11:39:54.357894+01:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "wakanda90"
+    },
+    {
+      "id": 124,
+      "uuid": "8c6428f3-d41d-4ffc-8444-bb9b823bc42b",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:25.385166+01:00",
+      "category": 9,
+      "muscles": [
+        10
+      ],
+      "muscles_secondary": [
+        8
+      ],
+      "equipment": [],
+      "variations": 12,
+      "license_author": "sevae"
+    },
+    {
+      "id": 615,
+      "uuid": "a2f5b6ef-b780-49c0-8d96-fdaff23e27ce",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:36:00.729726+01:00",
+      "category": 9,
+      "muscles": [
+        10
+      ],
+      "muscles_secondary": [
+        8
+      ],
+      "equipment": [
+        1
+      ],
+      "variations": 12,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 693,
+      "uuid": "5d40c67d-be59-4092-9c9c-301ca5310e2b",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:41.576050+01:00",
+      "category": 13,
+      "muscles": [
+        2,
+        9
+      ],
+      "muscles_secondary": [
+        1
+      ],
+      "equipment": [
+        2
+      ],
+      "variations": 46,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1545,
+      "uuid": "56808c52-050e-4c24-9f27-2657f0462499",
+      "created": "2025-06-22T22:28:55.929353+02:00",
+      "last_update": "2025-06-22T22:28:55.929369+02:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [
+        1,
+        9
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Antsy6277"
+    },
+    {
+      "id": 1400,
+      "uuid": "4f38cc2e-5904-4ef5-b811-e729105cfd3b",
+      "created": "2024-11-23T16:51:37.951377+01:00",
+      "last_update": "2024-11-23T16:51:37.951395+01:00",
+      "category": 9,
+      "muscles": [
+        11
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "captive0592"
+    },
+    {
+      "id": 1482,
+      "uuid": "31a58615-d3ae-4233-9c50-9143c899ce8c",
+      "created": "2025-03-03T11:26:57.334267+01:00",
+      "last_update": "2025-03-03T11:26:57.334287+01:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Moffi"
+    },
+    {
+      "id": 1488,
+      "uuid": "c395ad8d-164c-4031-9136-b4116d354451",
+      "created": "2025-03-06T10:54:49.804295+01:00",
+      "last_update": "2025-03-06T10:54:49.804315+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Moffi"
+    },
+    {
+      "id": 1581,
+      "uuid": "41b9f5a5-73de-414d-b08a-54025eccedc6",
+      "created": "2025-07-29T16:58:13.128728+02:00",
+      "last_update": "2025-07-29T16:58:13.128747+02:00",
+      "category": 13,
+      "muscles": [
+        9
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        1,
+        8,
+        3
+      ],
+      "variations": null,
+      "license_author": "CptnFatbeard"
+    },
+    {
+      "id": 1657,
+      "uuid": "4baa4962-64bd-434f-b2ed-0c3c88099841",
+      "created": "2025-09-28T00:47:16.349770+02:00",
+      "last_update": "2025-09-28T00:47:16.349785+02:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Shiladree"
+    },
+    {
+      "id": 988,
+      "uuid": "7ce489d2-1948-46de-aa80-277b2ca737aa",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:39.253498+01:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": 48,
+      "license_author": null
+    },
+    {
+      "id": 1462,
+      "uuid": "adf81065-407c-4dd7-8ec5-920cc5944d58",
+      "created": "2025-02-23T19:47:15.703299+01:00",
+      "last_update": "2025-02-23T19:47:15.703317+01:00",
+      "category": 8,
+      "muscles": [
+        2,
+        5
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "lh1701"
+    },
+    {
+      "id": 527,
+      "uuid": "a48295d8-21da-4625-8a85-331d7ced8d8b",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:34:56.366087+01:00",
+      "category": 15,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 44,
+      "license_author": "BeLikeWater"
+    },
+    {
+      "id": 490,
+      "uuid": "2b6c09f7-dbf1-45ea-baf6-9a12e0b12396",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:34:29.216455+01:00",
+      "category": 12,
+      "muscles": [
+        12,
+        9
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": 1,
+      "license_author": "fletchgraham"
+    },
+    {
+      "id": 235,
+      "uuid": "fdc550b6-ec58-4023-ba62-b54045e9a10d",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:26:45.794328+01:00",
+      "category": 10,
+      "muscles": [
+        14,
+        6
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 11,
+      "license_author": "nate303303"
+    },
+    {
+      "id": 1132,
+      "uuid": "ab872d04-ca20-4341-b3c9-76763b25ef42",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:52.061411+01:00",
+      "category": 9,
+      "muscles": [
+        8
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Franpol"
+    },
+    {
+      "id": 590,
+      "uuid": "6e46833d-fd83-4c1a-90af-eb3f3a917199",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:35:18.339777+01:00",
+      "category": 14,
+      "muscles": [
+        15
+      ],
+      "muscles_secondary": [
+        7
+      ],
+      "equipment": [],
+      "variations": 6,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 82,
+      "uuid": "6f79b381-98a4-40d5-8a45-3bb0558be6fe",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:23:19.837819+01:00",
+      "category": 13,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        8,
+        3
+      ],
+      "variations": 4,
+      "license_author": "apeschel"
+    },
+    {
+      "id": 627,
+      "uuid": "22c59ede-970b-43e1-bb51-ac1c2be0b0e0",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:35:51.952451+01:00",
+      "category": 9,
+      "muscles": [
+        11
+      ],
+      "muscles_secondary": [
+        8
+      ],
+      "equipment": [
+        1
+      ],
+      "variations": 3,
+      "license_author": "tuckerm"
+    },
+    {
+      "id": 376,
+      "uuid": "c2078aac-e4e2-4103-a845-6252a3eb795e",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:29:52.305708+01:00",
+      "category": 9,
+      "muscles": [
+        14,
+        6
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 11,
+      "license_author": "BFad07"
+    },
+    {
+      "id": 1809,
+      "uuid": "682ea312-af02-450a-9880-fea7bf8e854a",
+      "created": "2026-01-20T17:55:58.504647+01:00",
+      "last_update": "2026-01-20T17:55:58.504662+01:00",
+      "category": 9,
+      "muscles": [
+        11,
+        8
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        8
+      ],
+      "variations": null,
+      "license_author": "Croak6728"
+    },
+    {
+      "id": 990,
+      "uuid": "6ddea666-5a57-4ac0-926f-01f8cfdaa4fd",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:43.618769+01:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": null
+    },
+    {
+      "id": 1396,
+      "uuid": "af59f161-147a-49ba-85c8-6c9f4e5ffe63",
+      "created": "2024-11-23T16:46:56.725512+01:00",
+      "last_update": "2024-11-23T16:46:56.725529+01:00",
+      "category": 9,
+      "muscles": [
+        11
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "captive0592"
+    },
+    {
+      "id": 1834,
+      "uuid": "62f90b5c-7451-4fd0-91ae-4dd93c51aa41",
+      "created": "2026-02-12T12:32:22.157764+01:00",
+      "last_update": "2026-02-12T12:32:22.157782+01:00",
+      "category": 12,
+      "muscles": [
+        9
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "Croak6728"
+    },
+    {
+      "id": 202,
+      "uuid": "46e0f60c-fdc0-489a-82e4-a5b7476a5c21",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:40:26.727006+01:00",
+      "category": 8,
+      "muscles": [
+        13
+      ],
+      "muscles_secondary": [
+        1
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": 16,
+      "license_author": "http://www.exrx.net/WeightExercises/Brachialis/DBC"
+    },
+    {
+      "id": 79,
+      "uuid": "01271ea0-088c-4e2b-95ad-876af7127057",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:16.451988+01:00",
+      "category": 13,
+      "muscles": [
+        9
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "lakerbeezel"
+    },
+    {
+      "id": 1470,
+      "uuid": "a8a4ea81-9531-48e1-b6dc-f7621c7b9283",
+      "created": "2025-02-25T21:00:07.513308+01:00",
+      "last_update": "2025-02-25T21:00:07.513327+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Expenses7000"
+    },
+    {
+      "id": 1425,
+      "uuid": "33728393-2b84-4d39-8b68-462222e004e3",
+      "created": "2025-01-15T03:47:11.890721+01:00",
+      "last_update": "2025-01-15T03:47:11.890736+01:00",
+      "category": 10,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "hpmbala@gmail.com"
+    },
+    {
+      "id": 989,
+      "uuid": "44afe80f-1ab2-4149-adbf-d8e0ece990ce",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:41.451030+01:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": 48,
+      "license_author": null
+    },
+    {
+      "id": 1390,
+      "uuid": "a51de8df-4101-45cb-8da5-de230d9bac1d",
+      "created": "2024-11-23T16:30:46.550838+01:00",
+      "last_update": "2024-11-23T16:30:46.550856+01:00",
+      "category": 9,
+      "muscles": [
+        11,
+        8
+      ],
+      "muscles_secondary": [
+        7
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "captive0592"
+    },
+    {
+      "id": 510,
+      "uuid": "88dbcc74-0304-4fcf-8a47-92d14a484b0a",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:34:35.670824+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 1,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1527,
+      "uuid": "ffdb4806-d64e-474b-8ce5-8df9a57fb9c7",
+      "created": "2025-05-15T10:00:42.721444+02:00",
+      "last_update": "2025-05-15T10:00:42.721460+02:00",
+      "category": 9,
+      "muscles": [
+        10
+      ],
+      "muscles_secondary": [
+        11,
+        8
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "schweezer"
+    },
+    {
+      "id": 1260,
+      "uuid": "f36a9fd0-7bd2-42a4-85fa-902b7cf3be45",
+      "created": "2024-03-25T13:17:58.059605+01:00",
+      "last_update": "2024-03-25T13:17:58.059626+01:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "cynomops"
+    },
+    {
+      "id": 1448,
+      "uuid": "ecc46519-94b8-4ecc-b5b8-973e753e98a6",
+      "created": "2025-01-24T20:57:02.236702+01:00",
+      "last_update": "2025-01-24T20:57:02.236722+01:00",
+      "category": 8,
+      "muscles": [
+        1,
+        13
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        8,
+        3
+      ],
+      "variations": null,
+      "license_author": "M9"
+    },
+    {
+      "id": 1186,
+      "uuid": "6b6c69bc-0b1e-4b2f-ab61-4945eb18047e",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:53.041940+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "anto.kreegyr"
+    },
+    {
+      "id": 310,
+      "uuid": "27eb3d4a-8677-4c1f-bf34-251e2b4741cb",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:28:49.919934+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [
+        12
+      ],
+      "equipment": [
+        3,
+        9
+      ],
+      "variations": 1,
+      "license_author": "cal.zabel"
+    },
+    {
+      "id": 1116,
+      "uuid": "3393db0b-98b7-4d53-a0d4-985f97875295",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:51.331255+01:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "philip"
+    },
+    {
+      "id": 1290,
+      "uuid": "dd6e8753-a574-476e-900a-b794eb592e7b",
+      "created": "2024-05-05T17:30:49.446402+02:00",
+      "last_update": "2024-05-05T17:30:49.446422+02:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [
+        13
+      ],
+      "equipment": [
+        1
+      ],
+      "variations": null,
+      "license_author": "sTiKyt"
+    },
+    {
+      "id": 1796,
+      "uuid": "1656164c-3ccd-477d-865b-69698640b067",
+      "created": "2026-01-08T13:40:01.466402+01:00",
+      "last_update": "2026-01-08T13:40:01.466417+01:00",
+      "category": 11,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": null
+    },
+    {
+      "id": 1089,
+      "uuid": "66c7eb38-77b5-4d2f-810f-cddd8d97d5a3",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:47.843705+01:00",
+      "category": 10,
+      "muscles": [
+        14,
+        6
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        5
+      ],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 907,
+      "uuid": "ed00a43f-f761-41f2-94d4-056120bc5f6d",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:17.691584+01:00",
+      "category": 13,
+      "muscles": [
+        2,
+        5
+      ],
+      "muscles_secondary": [
+        4
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "karly"
+    },
+    {
+      "id": 1380,
+      "uuid": "f18eb684-9a9b-4566-9771-e22a87d536b1",
+      "created": "2024-10-07T10:45:20.418196+02:00",
+      "last_update": "2024-10-07T10:45:20.418213+02:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "schwolfar"
+    },
+    {
+      "id": 1766,
+      "uuid": "12418067-6cb5-44db-8973-b5be25c0146b",
+      "created": "2025-12-21T07:59:57.801945+01:00",
+      "last_update": "2025-12-21T07:59:57.801959+01:00",
+      "category": 10,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": ""
+    },
+    {
+      "id": 1656,
+      "uuid": "b2865908-b93e-4507-ada4-a5bb9317566c",
+      "created": "2025-09-28T00:30:48.212845+02:00",
+      "last_update": "2025-09-28T00:30:48.212863+02:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        5
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Shiladree"
+    },
+    {
+      "id": 1001,
+      "uuid": "b2b40a54-e42b-49ec-97da-4c929ae41d42",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:57.367357+01:00",
+      "category": 11,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": 45,
+      "license_author": null
+    },
+    {
+      "id": 584,
+      "uuid": "c85e6137-2577-4e28-82c2-427407d534eb",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:35:18.000435+01:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": 16,
+      "license_author": "tuckerm"
+    },
+    {
+      "id": 1469,
+      "uuid": "7ef2e00e-067c-48e0-9b42-3d622e0df8a4",
+      "created": "2025-02-24T22:43:36.165114+01:00",
+      "last_update": "2025-02-24T22:43:36.165132+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Expenses7000"
+    },
+    {
+      "id": 997,
+      "uuid": "18d277a0-7222-46e7-b2bf-47c8ed169c30",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:53.279974+01:00",
+      "category": 11,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": null
+    },
+    {
+      "id": 917,
+      "uuid": "ca16aa3c-9b43-4d81-ae60-1e225163b767",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:29:47.108656+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        2
+      ],
+      "variations": null,
+      "license_author": "novadani"
+    },
+    {
+      "id": 1280,
+      "uuid": "8bb42000-834f-48ab-af5c-0c31d94e0181",
+      "created": "2024-04-21T04:01:07.756128+02:00",
+      "last_update": "2024-04-21T04:01:07.756152+02:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [
+        2,
+        12
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "daniel.escada"
+    },
+    {
+      "id": 1029,
+      "uuid": "da588c5e-ab8b-42a7-a52c-1e680a484334",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:46.729807+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "tinman"
+    },
+    {
+      "id": 1605,
+      "uuid": "dbed4613-e1d5-483f-90ae-6db5d593911e",
+      "created": "2025-08-19T10:26:33.071488+02:00",
+      "last_update": "2025-08-19T10:26:33.071504+02:00",
+      "category": 9,
+      "muscles": [
+        8,
+        10
+      ],
+      "muscles_secondary": [
+        14,
+        3,
+        9
+      ],
+      "equipment": [
+        8
+      ],
+      "variations": null,
+      "license_author": "RiccaBaro"
+    },
+    {
+      "id": 1764,
+      "uuid": "097c7bf8-7804-42e9-850a-1545ffeeb2fb",
+      "created": "2025-12-19T11:00:38.216126+01:00",
+      "last_update": "2025-12-19T11:00:38.216142+01:00",
+      "category": 8,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": null
+    },
+    {
+      "id": 1298,
+      "uuid": "4ef75e13-c058-4410-91c0-2f2d2df98130",
+      "created": "2024-05-18T16:42:47.901202+02:00",
+      "last_update": "2024-05-18T16:42:47.901221+02:00",
+      "category": 8,
+      "muscles": [
+        5
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "JackSparrow"
+    },
+    {
+      "id": 1000,
+      "uuid": "cf79d9fb-ffce-4648-a64f-27e4274e4c20",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:55.826063+01:00",
+      "category": 8,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": null
+    },
+    {
+      "id": 1245,
+      "uuid": "f41ac754-45a0-443b-afe5-e624e215229f",
+      "created": "2024-02-29T16:26:56.557245+01:00",
+      "last_update": "2024-02-29T16:26:56.557273+01:00",
+      "category": 10,
+      "muscles": [
+        12,
+        6
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 616,
+      "uuid": "30ac081b-fb79-4253-9457-8efc07568790",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:35:50.892632+01:00",
+      "category": 9,
+      "muscles": [
+        8,
+        10,
+        6,
+        15
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": 12,
+      "license_author": "BFad07"
+    },
+    {
+      "id": 1443,
+      "uuid": "c146fa3c-35a4-4e6e-9000-e12a9ee19cbd",
+      "created": "2025-01-24T20:03:16.902965+01:00",
+      "last_update": "2025-01-24T20:03:16.902983+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "M9"
+    },
+    {
+      "id": 1211,
+      "uuid": "a3125129-203f-4195-8f8a-a460ff9e9481",
+      "created": "2023-11-28T21:53:22.076596+01:00",
+      "last_update": "2024-01-17T11:39:54.692007+01:00",
+      "category": 9,
+      "muscles": [
+        11
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3,
+        10
+      ],
+      "variations": null,
+      "license_author": "wakanda90"
+    },
+    {
+      "id": 1393,
+      "uuid": "45cd73d7-98ac-4451-849a-a645fcfe9bee",
+      "created": "2024-11-23T16:41:14.684256+01:00",
+      "last_update": "2024-11-23T16:41:14.684283+01:00",
+      "category": 9,
+      "muscles": [
+        11
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "captive0592"
+    },
+    {
+      "id": 83,
+      "uuid": "4af6dbd9-8991-484b-9810-68f117c21edf",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:22:17.897437+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [
+        2,
+        1
+      ],
+      "equipment": [
+        1
+      ],
+      "variations": 1,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1230,
+      "uuid": "aa72741d-17ae-410e-b49a-1df7aaf0afe1",
+      "created": "2024-02-18T19:57:18.447777+01:00",
+      "last_update": "2024-02-18T19:57:18.447797+01:00",
+      "category": 8,
+      "muscles": [
+        5
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "Lynn_McIntyre"
+    },
+    {
+      "id": 571,
+      "uuid": "270e108d-3cd2-45a9-807b-c357317eb15c",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:35:23.193843+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        1
+      ],
+      "variations": 38,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1496,
+      "uuid": "4b23738a-67a8-41af-996d-abc53a7c3f97",
+      "created": "2025-04-06T21:31:31.402803+02:00",
+      "last_update": "2025-04-06T21:31:31.402819+02:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        2
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "JohnPreston"
+    },
+    {
+      "id": 516,
+      "uuid": "58416166-7a3a-470d-b493-27332799dcdf",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:34:35.397295+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Konsumopfer"
+    },
+    {
+      "id": 1446,
+      "uuid": "8c509754-c86f-4c1b-bfa9-29c906ffc409",
+      "created": "2025-01-24T20:22:19.718351+01:00",
+      "last_update": "2025-01-24T20:22:19.718367+01:00",
+      "category": 13,
+      "muscles": [
+        2,
+        11,
+        8,
+        10
+      ],
+      "muscles_secondary": [
+        12,
+        6,
+        9,
+        5
+      ],
+      "equipment": [
+        1
+      ],
+      "variations": null,
+      "license_author": "M9"
+    },
+    {
+      "id": 395,
+      "uuid": "77c98954-b50d-46f0-9912-3981f856d5a6",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:29:41.837284+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [
+        1,
+        13
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 174,
+      "uuid": "b7ff64bc-7a7c-4dbc-af6f-fabc20425f5f",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:26:35.527034+01:00",
+      "category": 10,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [
+        14
+      ],
+      "equipment": [],
+      "variations": 10,
+      "license_author": "krisbbb"
+    },
+    {
+      "id": 1294,
+      "uuid": "caccd791-ff30-452a-816e-790edadb78cd",
+      "created": "2024-05-14T11:01:56.933363+02:00",
+      "last_update": "2024-05-14T11:01:56.933384+02:00",
+      "category": 12,
+      "muscles": [
+        8,
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 958,
+      "uuid": "596b9d2d-0f01-41a0-97e1-1839ffdb824d",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:18.037100+01:00",
+      "category": 10,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 1655,
+      "uuid": "c4aca20e-9591-425f-85a8-0ab04cd1515d",
+      "created": "2025-09-27T19:07:24.198769+02:00",
+      "last_update": "2025-09-27T19:07:24.198793+02:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        5
+      ],
+      "equipment": [
+        4
+      ],
+      "variations": null,
+      "license_author": "roneydya"
+    },
+    {
+      "id": 694,
+      "uuid": "01976085-6701-45ea-b152-5c46ba60550d",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:36.834265+01:00",
+      "category": 13,
+      "muscles": [
+        2,
+        9
+      ],
+      "muscles_secondary": [
+        1
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": 46,
+      "license_author": "koreyhinton"
+    },
+    {
+      "id": 1730,
+      "uuid": "dba57084-d148-4b22-bb90-2fdd3a845ca4",
+      "created": "2025-11-24T20:42:42.191837+01:00",
+      "last_update": "2025-11-24T20:42:42.191853+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "barry"
+    },
+    {
+      "id": 1114,
+      "uuid": "af5a3520-25eb-4dd7-b802-a7382b8ce3ef",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:51.256055+01:00",
+      "category": 8,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "philip"
+    },
+    {
+      "id": 1430,
+      "uuid": "493fb1ac-c45a-4b18-bcbb-58b809881e6f",
+      "created": "2025-01-23T04:09:23.197726+01:00",
+      "last_update": "2025-01-23T04:09:23.197743+01:00",
+      "category": 8,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "hpmbala@gmail.com"
+    },
+    {
+      "id": 1297,
+      "uuid": "31df980c-a493-418f-ab49-a986c3c23bc4",
+      "created": "2024-05-18T14:58:08.499139+02:00",
+      "last_update": "2024-05-18T14:58:08.499166+02:00",
+      "category": 8,
+      "muscles": [
+        5
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        2
+      ],
+      "variations": null,
+      "license_author": "JackSparrow"
+    },
+    {
+      "id": 1304,
+      "uuid": "28b65190-cae2-4d15-8f4e-dde0d9cc4d4b",
+      "created": "2024-06-05T11:41:37.161084+02:00",
+      "last_update": "2024-06-05T11:41:37.161108+02:00",
+      "category": 12,
+      "muscles": [
+        12,
+        9
+      ],
+      "muscles_secondary": [
+        1,
+        6
+      ],
+      "equipment": [
+        1
+      ],
+      "variations": null,
+      "license_author": "carlos3c"
+    },
+    {
+      "id": 1590,
+      "uuid": "b48cd640-dd9f-4557-a4db-8cd33d5655a6",
+      "created": "2025-08-01T23:31:14.032959+02:00",
+      "last_update": "2025-08-01T23:31:14.032977+02:00",
+      "category": 10,
+      "muscles": [
+        2,
+        9,
+        5
+      ],
+      "muscles_secondary": [
+        12,
+        3
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "MrAlfaRobot"
+    },
+    {
+      "id": 918,
+      "uuid": "6d010eae-2e36-4ec6-b191-c0373f237bb4",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:32:20.148860+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "novadani"
+    },
+    {
+      "id": 801,
+      "uuid": "68e5eae7-7fd0-4d69-9b50-d0df15feac91",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:22.483187+01:00",
+      "category": 11,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": 8,
+      "license_author": null
+    },
+    {
+      "id": 1241,
+      "uuid": "29a361d5-1300-4fb4-90d6-d6350bec9cb9",
+      "created": "2024-02-28T19:15:16.272209+01:00",
+      "last_update": "2024-02-28T19:15:16.272241+01:00",
+      "category": 9,
+      "muscles": [
+        15
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "erikocobra"
+    },
+    {
+      "id": 1302,
+      "uuid": "67c2fe41-f1e9-4f75-b2cb-72d1f2e092f7",
+      "created": "2024-06-04T11:50:14.981453+02:00",
+      "last_update": "2024-06-04T11:50:14.981474+02:00",
+      "category": 8,
+      "muscles": [
+        5
+      ],
+      "muscles_secondary": [
+        1,
+        4
+      ],
+      "equipment": [
+        1
+      ],
+      "variations": null,
+      "license_author": "Epiphany8424"
+    },
+    {
+      "id": 1103,
+      "uuid": "f636ae1c-f678-48fe-96b3-1a9ae81f43ce",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:50.395570+01:00",
+      "category": 10,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [
+        2,
+        1,
+        8,
+        12
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 1293,
+      "uuid": "8911c37d-8907-4077-b883-86a7c5fcb606",
+      "created": "2024-05-11T11:14:05.416164+02:00",
+      "last_update": "2024-05-11T11:14:05.416182+02:00",
+      "category": 10,
+      "muscles": [
+        4,
+        5
+      ],
+      "muscles_secondary": [
+        2,
+        6
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 1577,
+      "uuid": "a94c635d-096c-45a8-a68c-64941d0b6ba4",
+      "created": "2025-07-23T19:11:20.176683+02:00",
+      "last_update": "2025-07-23T19:11:20.176700+02:00",
+      "category": 12,
+      "muscles": [
+        8
+      ],
+      "muscles_secondary": [
+        11,
+        12,
+        4
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "mountain.potato"
+    },
+    {
+      "id": 1244,
+      "uuid": "8ca01d32-2e86-49a1-a130-b99219432e42",
+      "created": "2024-02-29T12:48:33.325303+01:00",
+      "last_update": "2024-02-29T12:48:33.325332+01:00",
+      "category": 12,
+      "muscles": [
+        2,
+        12,
+        9
+      ],
+      "muscles_secondary": [
+        14,
+        6
+      ],
+      "equipment": [
+        4
+      ],
+      "variations": null,
+      "license_author": "damnlost"
+    },
+    {
+      "id": 975,
+      "uuid": "d7d4fc16-08cd-4568-87e7-d9e4e2f77393",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:18.558956+01:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        10
+      ],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 1802,
+      "uuid": "a2ecad5f-b39d-49a4-a91c-1f849dc8ccb7",
+      "created": "2026-01-14T16:14:05.655798+01:00",
+      "last_update": "2026-01-14T16:14:21.368987+01:00",
+      "category": 10,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": null
+    },
+    {
+      "id": 1512,
+      "uuid": "15ee508d-fbd7-4acf-ab44-e35525582693",
+      "created": "2025-04-14T13:45:55.921701+02:00",
+      "last_update": "2025-04-14T13:45:55.921720+02:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Moffi"
+    },
+    {
+      "id": 1303,
+      "uuid": "e781dae5-90b8-4105-8aa6-82d278ac5ff5",
+      "created": "2024-06-04T13:27:19.741232+02:00",
+      "last_update": "2024-06-04T13:27:19.741254+02:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [
+        9
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "carlos3c"
+    },
+    {
+      "id": 1013,
+      "uuid": "7f8997d2-e21f-492f-a470-b9f0c5e54f1d",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:21.070963+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": 52,
+      "license_author": null
+    },
+    {
+      "id": 1292,
+      "uuid": "2acb5ba1-caa3-4204-9903-ff0095b032ba",
+      "created": "2024-05-08T13:59:29.428204+02:00",
+      "last_update": "2024-05-08T13:59:29.428230+02:00",
+      "category": 10,
+      "muscles": [
+        1,
+        12
+      ],
+      "muscles_secondary": [
+        6
+      ],
+      "equipment": [
+        6
+      ],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 688,
+      "uuid": "6fc4815a-8852-4e89-a10b-bd36a9029dbb",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:45.293793+01:00",
+      "category": 11,
+      "muscles": [
+        14
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        6
+      ],
+      "variations": null,
+      "license_author": "http://www.carinatum.com/"
+    },
+    {
+      "id": 158,
+      "uuid": "63fbb8e5-6ebc-4def-8844-3e65e097213b",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:23.380394+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 2,
+      "license_author": "tuckerm"
+    },
+    {
+      "id": 1288,
+      "uuid": "81c6b9ef-7cb7-4328-8cb4-47ae8ecc42be",
+      "created": "2024-05-02T23:27:51.346718+02:00",
+      "last_update": "2024-05-02T23:27:51.346740+02:00",
+      "category": 10,
+      "muscles": [
+        14
+      ],
+      "muscles_secondary": [
+        6
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "painDpice"
+    },
+    {
+      "id": 1207,
+      "uuid": "89651d40-9abf-49b5-9ee5-7b0ecb25fd03",
+      "created": "2023-11-25T19:08:11.599727+01:00",
+      "last_update": "2024-01-17T11:39:54.564223+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "lxmx"
+    },
+    {
+      "id": 1703,
+      "uuid": "17dd0986-5248-410d-89a4-9268282d103b",
+      "created": "2025-11-06T04:37:05.568675+01:00",
+      "last_update": "2025-11-06T04:37:05.568691+01:00",
+      "category": 8,
+      "muscles": [
+        5
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        8,
+        3
+      ],
+      "variations": null,
+      "license_author": "Mariano_O"
+    },
+    {
+      "id": 265,
+      "uuid": "ceb0c2d0-06ac-4a49-89e7-8d7b1c1e5672",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2025-10-29T20:47:20.312957+01:00",
+      "category": 9,
+      "muscles": [
+        8
+      ],
+      "muscles_secondary": [
+        11
+      ],
+      "equipment": [],
+      "variations": 203,
+      "license_author": "tdprice12"
+    },
+    {
+      "id": 915,
+      "uuid": "3d85bdce-e1a9-48a2-b14d-8032820ebf25",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:28:19.305841+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "novadani"
+    },
+    {
+      "id": 1839,
+      "uuid": "33a55e1a-ff83-4c34-b056-887a121b0978",
+      "created": "2026-02-12T12:56:19.129523+01:00",
+      "last_update": "2026-02-12T12:56:19.129541+01:00",
+      "category": 9,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "Croak6728"
+    },
+    {
+      "id": 1093,
+      "uuid": "f6d8e157-c233-4a22-9c1a-83cb8f613ea5",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:49.394965+01:00",
+      "category": 15,
+      "muscles": [
+        2,
+        1,
+        11,
+        13,
+        7,
+        8,
+        12,
+        14,
+        10,
+        6,
+        3,
+        15,
+        9
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "Boertie"
+    },
+    {
+      "id": 1530,
+      "uuid": "861f7396-f34e-486c-a903-3c326086f920",
+      "created": "2025-05-22T14:02:22.610543+02:00",
+      "last_update": "2025-05-22T14:02:22.610558+02:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        8,
+        3
+      ],
+      "variations": null,
+      "license_author": "Moffi"
+    },
+    {
+      "id": 851,
+      "uuid": "0b84816e-3d11-47f0-a043-2a3f20504a48",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:40:25.706797+01:00",
+      "category": 9,
+      "muscles": [
+        10
+      ],
+      "muscles_secondary": [
+        11
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "enros7500"
+    },
+    {
+      "id": 1709,
+      "uuid": "440cf10c-effb-4b63-a6e0-182fe47376f6",
+      "created": "2025-11-11T14:49:52.336355+01:00",
+      "last_update": "2025-11-11T14:49:52.336371+01:00",
+      "category": 13,
+      "muscles": [
+        2,
+        9
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        11
+      ],
+      "variations": null,
+      "license_author": "Croak6728"
+    },
+    {
+      "id": 979,
+      "uuid": "b2025776-2397-4de7-a49e-296321169481",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:48.955072+01:00",
+      "category": 10,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [
+        14,
+        10
+      ],
+      "equipment": [
+        6
+      ],
+      "variations": null,
+      "license_author": "clafal"
+    },
+    {
+      "id": 1659,
+      "uuid": "5a096571-4eae-472e-8849-fe5647035e2c",
+      "created": "2025-09-28T01:22:25.434118+02:00",
+      "last_update": "2025-09-28T01:22:25.434134+02:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Shiladree"
+    },
+    {
+      "id": 1318,
+      "uuid": "32942c8c-0572-4d8b-9aec-48cb026fda1f",
+      "created": "2024-07-01T10:21:02.136111+02:00",
+      "last_update": "2024-07-01T10:21:02.136132+02:00",
+      "category": 15,
+      "muscles": [
+        14,
+        6
+      ],
+      "muscles_secondary": [
+        1,
+        8,
+        10,
+        5
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "hektkaso"
+    },
+    {
+      "id": 993,
+      "uuid": "cd51aa2a-52b3-43df-8011-0c8ef4b7ed11",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:46.750620+01:00",
+      "category": 15,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": null
+    },
+    {
+      "id": 371,
+      "uuid": "66a42396-c207-44da-bc75-758a89d32404",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:30:10.120200+01:00",
+      "category": 9,
+      "muscles": [
+        11,
+        7,
+        8,
+        10
+      ],
+      "muscles_secondary": [
+        7,
+        8
+      ],
+      "equipment": [],
+      "variations": 15,
+      "license_author": "BFad07"
+    },
+    {
+      "id": 805,
+      "uuid": "ea63d85c-8579-4dda-b99f-c4c8930f9af6",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:03.018786+01:00",
+      "category": 8,
+      "muscles": [
+        5
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "cshep442"
+    },
+    {
+      "id": 1410,
+      "uuid": "94f2dea6-b336-41b2-a438-3ab7b13adbf7",
+      "created": "2025-01-03T02:24:29.443123+01:00",
+      "last_update": "2025-01-03T02:24:29.443147+01:00",
+      "category": 9,
+      "muscles": [
+        8
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "hpmbala@gmail.com"
+    },
+    {
+      "id": 1822,
+      "uuid": "164b83aa-195e-4eed-b820-b81df950d9bb",
+      "created": "2026-01-24T17:14:26.823464+01:00",
+      "last_update": "2026-01-24T17:14:26.823480+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "teus_ergaster"
+    },
+    {
+      "id": 655,
+      "uuid": "5915fabe-c941-4dac-b196-bc4e8c7ce57b",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:23.657191+01:00",
+      "category": 8,
+      "muscles": [
+        5
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "http://www.bodybuilding.com/"
+    },
+    {
+      "id": 1442,
+      "uuid": "b4e78b5a-6141-4fc9-a6f7-cba13ce6559b",
+      "created": "2025-01-24T19:55:07.517357+01:00",
+      "last_update": "2025-01-24T19:55:07.517372+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [
+        1,
+        4,
+        6,
+        5
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "M9"
+    },
+    {
+      "id": 365,
+      "uuid": "3bc8b411-a28d-4e1c-a6d1-769e18fe9881",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:28:50.656846+01:00",
+      "category": 9,
+      "muscles": [
+        11
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 14,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1680,
+      "uuid": "73144238-414e-438f-8b0c-832a6591aa2f",
+      "created": "2025-10-28T04:58:00.250276+01:00",
+      "last_update": "2025-10-28T04:58:00.250292+01:00",
+      "category": 9,
+      "muscles": [
+        8
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        8
+      ],
+      "variations": null,
+      "license_author": "ricardodavidrd"
+    },
+    {
+      "id": 1450,
+      "uuid": "d8d1b919-94e1-4e91-b37e-29bb8a479740",
+      "created": "2025-01-31T17:39:48.657289+01:00",
+      "last_update": "2025-01-31T17:39:48.657306+01:00",
+      "category": 12,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [
+        4
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "hpmbala@gmail.com"
+    },
+    {
+      "id": 308,
+      "uuid": "55ff32e6-24ab-4303-9b50-176d60d48796",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:29:28.884263+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3,
+        9
+      ],
+      "variations": 9,
+      "license_author": "tuckerm"
+    },
+    {
+      "id": 1225,
+      "uuid": "fd38d854-a244-4646-842b-ef1e0fbfede8",
+      "created": "2024-02-18T17:26:16.656201+01:00",
+      "last_update": "2024-02-18T17:26:16.656223+01:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Lynn_McIntyre"
+    },
+    {
+      "id": 1223,
+      "uuid": "ecf9c0e2-a1d0-4e6e-90e9-5c029e98f2c9",
+      "created": "2024-02-18T17:13:30.325022+01:00",
+      "last_update": "2024-02-18T17:13:30.325044+01:00",
+      "category": 8,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "Lynn_McIntyre"
+    },
+    {
+      "id": 925,
+      "uuid": "ef2df6a2-41df-4a25-b2e0-4808dc2c3305",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:23.290380+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "novadani"
+    },
+    {
+      "id": 313,
+      "uuid": "312017c4-c431-46b2-86dd-b9f480617d6f",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:29:27.730321+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        11
+      ],
+      "equipment": [],
+      "variations": 8,
+      "license_author": "kwrindy"
+    },
+    {
+      "id": 1080,
+      "uuid": "476c1d96-6590-4f86-98f0-3f12808fab53",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:46.975742+01:00",
+      "category": 13,
+      "muscles": [
+        2,
+        4
+      ],
+      "muscles_secondary": [
+        5
+      ],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Imobard"
+    },
+    {
+      "id": 137,
+      "uuid": "80ff0a3a-ae45-497d-8c27-2b12e3b6e1b8",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:32.907801+01:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 41,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 208,
+      "uuid": "fe328b2b-cc6d-4f12-a2c6-85ce374217c7",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:27:59.793588+01:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 1731,
+      "uuid": "be9dfe16-9fc3-463d-a9cd-7aade27ef571",
+      "created": "2025-11-24T20:43:27.418752+01:00",
+      "last_update": "2025-11-24T20:43:27.418767+01:00",
+      "category": 13,
+      "muscles": [
+        2
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "barry"
+    },
+    {
+      "id": 614,
+      "uuid": "5c0824dc-f2fb-4d19-a1e5-7c33219ad51d",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:35:59.751943+01:00",
+      "category": 9,
+      "muscles": [
+        10
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 12,
+      "license_author": "OGhTebfCxhexZXuf35mUxV9C--A"
+    },
+    {
+      "id": 1607,
+      "uuid": "075bff87-f676-4d9d-92b4-39d557453fc7",
+      "created": "2025-08-20T13:39:46.043731+02:00",
+      "last_update": "2025-08-20T13:39:46.043751+02:00",
+      "category": 12,
+      "muscles": [
+        1,
+        12
+      ],
+      "muscles_secondary": [
+        9
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "tenebrizz"
+    },
+    {
+      "id": 1498,
+      "uuid": "732a9a7f-fb45-41ea-94a3-6a7246a699f6",
+      "created": "2025-04-06T21:39:30.592393+02:00",
+      "last_update": "2025-04-06T21:39:30.592409+02:00",
+      "category": 8,
+      "muscles": [
+        5
+      ],
+      "muscles_secondary": [
+        4
+      ],
+      "equipment": [
+        8,
+        3
+      ],
+      "variations": null,
+      "license_author": "JohnPreston"
+    },
+    {
+      "id": 94,
+      "uuid": "42227131-9b1e-4220-b082-c523f0651057",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:23:12.790300+01:00",
+      "category": 8,
+      "muscles": [
+        1
+      ],
+      "muscles_secondary": [
+        13
+      ],
+      "equipment": [
+        2
+      ],
+      "variations": 16,
+      "license_author": "wger.de"
+    },
+    {
+      "id": 570,
+      "uuid": "f956977e-cc05-4db2-a387-ba6140b1ef34",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:35:29.855985+01:00",
+      "category": 13,
+      "muscles": [
+        9
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": 38,
+      "license_author": "BFad07"
+    },
+    {
+      "id": 923,
+      "uuid": "dab7400b-e86e-4224-bcea-4a915dc928e0",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:17.916872+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "novadani"
+    },
+    {
+      "id": 1188,
+      "uuid": "d36fdd3c-9a35-4643-a3fd-57db78c866d6",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:53.144793+01:00",
+      "category": 10,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": 141,
+      "license_author": null
+    },
+    {
+      "id": 995,
+      "uuid": "69b3da17-11cc-41fe-bbc1-ee6c45ced41c",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:21:50.068221+01:00",
+      "category": 8,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": 49,
+      "license_author": null
+    },
+    {
+      "id": 211,
+      "uuid": "d8bddb58-91b0-4d7b-8ec1-cd742584b607",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:27:38.572463+01:00",
+      "category": 8,
+      "muscles": [
+        5
+      ],
+      "muscles_secondary": [
+        2,
+        4
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": 17,
+      "license_author": "tuninx"
+    },
+    {
+      "id": 1500,
+      "uuid": "5efffab3-53dd-4c2a-9558-31e3b5cebbcc",
+      "created": "2025-04-06T21:51:14.674613+02:00",
+      "last_update": "2025-04-06T21:51:14.674630+02:00",
+      "category": 11,
+      "muscles": [
+        4
+      ],
+      "muscles_secondary": [
+        2
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "JohnPreston"
+    },
+    {
+      "id": 1515,
+      "uuid": "0cc9c8ed-57f1-42c3-a4c4-6e57e6a1b878",
+      "created": "2025-05-04T13:04:01.041795+02:00",
+      "last_update": "2025-05-04T13:04:01.041824+02:00",
+      "category": 9,
+      "muscles": [
+        7
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Expenses7000"
+    },
+    {
+      "id": 1736,
+      "uuid": "a630de17-9170-434c-b486-96a6b8705506",
+      "created": "2025-12-07T11:53:51.065652+01:00",
+      "last_update": "2025-12-07T11:53:51.166933+01:00",
+      "category": 9,
+      "muscles": [
+        11,
+        8
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        3
+      ],
+      "variations": 206,
+      "license_author": "Tierrasverdes"
+    },
+    {
+      "id": 1320,
+      "uuid": "fbeb1fd5-d259-4a85-a993-03569d8146dc",
+      "created": "2024-07-01T10:59:19.323637+02:00",
+      "last_update": "2024-07-01T10:59:19.323659+02:00",
+      "category": 8,
+      "muscles": [
+        1,
+        13,
+        5
+      ],
+      "muscles_secondary": [
+        2,
+        4,
+        15,
+        9
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": null,
+      "license_author": "hektkaso"
+    },
+    {
+      "id": 901,
+      "uuid": "7b6460b2-49d2-40b0-a4f6-4780c79f7e25",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:28:19.227427+01:00",
+      "category": 9,
+      "muscles": [
+        8
+      ],
+      "muscles_secondary": [],
+      "equipment": [
+        1
+      ],
+      "variations": null,
+      "license_author": "enros7500"
+    },
+    {
+      "id": 580,
+      "uuid": "e1b99153-0102-47fc-b0cd-c21509827b0b",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:35:35.020621+01:00",
+      "category": 10,
+      "muscles": [
+        6
+      ],
+      "muscles_secondary": [
+        14
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": 45,
+      "license_author": "http://www.bodybuilding.com/"
+    },
+    {
+      "id": 1014,
+      "uuid": "8374a856-9293-4b90-900e-00c3bfe21cc4",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:25:21.127376+01:00",
+      "category": 12,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [
+        7
+      ],
+      "variations": 52,
+      "license_author": null
+    },
+    {
+      "id": 1131,
+      "uuid": "19a9f67b-60f5-4367-9134-b805f3e73956",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:52.021703+01:00",
+      "category": 9,
+      "muscles": [
+        8
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Franpol"
+    },
+    {
+      "id": 1125,
+      "uuid": "d33f3b19-436f-48a2-aff6-946582c94bdb",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:51.694538+01:00",
+      "category": 12,
+      "muscles": [
+        12
+      ],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": null,
+      "license_author": "Franpol"
+    },
+    {
+      "id": 530,
+      "uuid": "654793c2-e0e3-41fd-a549-0ece0f4378e8",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:39:58.157545+01:00",
+      "category": 15,
+      "muscles": [],
+      "muscles_secondary": [],
+      "equipment": [],
+      "variations": 44,
+      "license_author": "foguinho.peruca"
+    },
+    {
+      "id": 465,
+      "uuid": "dd52fb99-9426-4a78-b446-20a8e3e4ec47",
+      "created": "2023-08-06T10:17:17.422900+02:00",
+      "last_update": "2024-01-17T11:30:27.738360+01:00",
+      "category": 8,
+      "muscles": [
+        13
+      ],
+      "muscles_secondary": [
+        13
+      ],
+      "equipment": [
+        2
+      ],
+      "variations": 16,
+      "license_author": "cgoob883"
+    },
+    {
+      "id": 1715,
+      "uuid": "2eead109-098e-4c59-bdef-f580a6a82748",
+      "created": "2025-11-11T15:13:10.358027+01:00",
+      "last_update": "2025-11-11T15:13:10.358046+01:00",
+      "category": 13,
+      "muscles": [
+        2,
+        13
+      ],
+      "muscles_secondary": [
+        9
+      ],
+      "equipment": [
+        3
+      ],
+      "variations": null,
+      "license_author": "Croak6728"
+    },
+    {
+      "id": 1853,
+      "uuid": "a092afaf-aa5a-4384-b407-a6b52cf1c008",
+      "created": "2026-02-12T14:27:00.967350+01:00",
+      "last_update": "2026-02-12T14:27:00.967372+01:00",
+      "category": 10,
+      "muscles": [
+        12,
+        4,
+        6,
+        3
+      ],
+      "muscles_secondary": [
+        10,
+        5
+      ],
+      "equipment": [
+        7
+      ],
+      "variations": 215,
+      "license_author": "Croak6728"
+    }
+  ]
+}

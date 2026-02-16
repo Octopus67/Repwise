@@ -4,7 +4,7 @@ import uuid
 from datetime import date, datetime
 from typing import Any, Optional
 
-from sqlalchemy import Date, Index, text
+from sqlalchemy import Date, ForeignKey, Index, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -101,4 +101,35 @@ class WorkoutTemplate(SoftDeleteMixin, AuditLogMixin, Base):
             "sort_order",
         ),
     )
+
+
+class CustomExercise(SoftDeleteMixin, Base):
+    """User-created custom exercises.
+
+    Stores user-specific exercises that appear alongside system exercises
+    in the exercise picker and search results (Requirement 13).
+    """
+
+    __tablename__ = "custom_exercises"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    muscle_group: Mapped[str] = mapped_column(String(50), nullable=False)
+    secondary_muscles: Mapped[list] = mapped_column(
+        JSONB,
+        nullable=False,
+        server_default=text("'[]'::jsonb"),
+    )
+    equipment: Mapped[str] = mapped_column(String(50), nullable=False)
+    category: Mapped[str] = mapped_column(String(20), nullable=False, default="compound")
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    __table_args__ = (
+        Index(
+            "ix_custom_exercises_not_deleted",
+            "deleted_at",
+            postgresql_where=text("deleted_at IS NULL"),
+        ),
+    )
+
 

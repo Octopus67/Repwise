@@ -1,3 +1,13 @@
+/**
+ * SessionDetailScreen — Read-only session detail view
+ *
+ * Displays: session date, workout duration, total working volume,
+ * exercises with sets (weight, reps, RPE/RIR, set type), PR badges,
+ * session notes, and exercise image thumbnails.
+ *
+ * Edit button navigates to ActiveWorkoutScreen in edit mode.
+ */
+
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -16,13 +26,18 @@ import { Icon } from '../../components/common/Icon';
 import { useStore } from '../../store';
 import { convertWeight } from '../../utils/unitConversion';
 import { formatDuration } from '../../utils/durationFormat';
-import { bestE1RMForExercise } from '../../utils/e1rmCalculator';
-import { calculateSessionWorkingVolume } from './sessionDetailHelpers';
+import {
+  shouldShowDuration,
+  calculateWorkingVolume,
+  formatSessionDate,
+  isPRSet,
+  calculateDurationSeconds,
+} from '../../utils/sessionDetailLogic';
 import api from '../../services/api';
 import type { TrainingSessionResponse } from '../../types/training';
 import type { Exercise } from '../../types/exercise';
 
-interface SessionDetailViewProps {
+interface SessionDetailScreenProps {
   route: { params: { sessionId: string } };
   navigation: {
     goBack: () => void;
@@ -30,7 +45,7 @@ interface SessionDetailViewProps {
   };
 }
 
-export function SessionDetailView({ route, navigation }: SessionDetailViewProps) {
+export function SessionDetailScreen({ route, navigation }: SessionDetailScreenProps) {
   const { sessionId } = route.params;
   const unitSystem = useStore((s) => s.unitSystem);
 
@@ -83,26 +98,16 @@ export function SessionDetailView({ route, navigation }: SessionDetailViewProps)
 
   const unitLabel = unitSystem === 'metric' ? 'kg' : 'lbs';
 
-  // Duration calculation
-  const durationSeconds = session?.start_time && session?.end_time
-    ? Math.floor(
-        (new Date(session.end_time).getTime() - new Date(session.start_time).getTime()) / 1000,
-      )
+  // Duration
+  const durationSeconds = session
+    ? calculateDurationSeconds(session.start_time, session.end_time)
     : null;
+  const showDuration = session
+    ? shouldShowDuration(session.start_time, session.end_time)
+    : false;
 
   // Working volume
-  const workingVolume = session ? calculateSessionWorkingVolume(session, unitSystem) : 0;
-
-  // PR lookup helper
-  const isPRSet = (exerciseName: string, setIndex: number, weightKg: number, reps: number): boolean => {
-    if (!session?.personal_records?.length) return false;
-    return session.personal_records.some(
-      (pr) =>
-        pr.exercise_name === exerciseName &&
-        pr.reps === reps &&
-        Math.abs(pr.new_weight_kg - weightKg) < 0.01,
-    );
-  };
+  const workingVolume = session ? calculateWorkingVolume(session.exercises, unitSystem) : 0;
 
   // Notes
   const notes = session?.metadata && typeof session.metadata === 'object'
@@ -123,8 +128,6 @@ export function SessionDetailView({ route, navigation }: SessionDetailViewProps)
           <Skeleton width="60%" height={24} borderRadius={8} />
           <View style={{ height: spacing[3] }} />
           <Skeleton width="100%" height={80} borderRadius={12} />
-          <View style={{ height: spacing[3] }} />
-          <Skeleton width="100%" height={120} borderRadius={12} />
           <View style={{ height: spacing[3] }} />
           <Skeleton width="100%" height={120} borderRadius={12} />
         </View>
@@ -153,15 +156,10 @@ export function SessionDetailView({ route, navigation }: SessionDetailViewProps)
     );
   }
 
-  const formattedDate = new Date(session.session_date + 'T12:00:00').toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  const formattedDate = formatSessionDate(session.session_date);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={styles.safe} edges={['top']} testID="session-detail-screen">
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Icon name="chevron-left" />
@@ -171,12 +169,13 @@ export function SessionDetailView({ route, navigation }: SessionDetailViewProps)
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-        {/* Session summary */}
-        <Text style={styles.dateText}>{formattedDate}</Text>
+        {/* Session date */}
+        <Text style={styles.dateText} testID="session-date">{formattedDate}</Text>
 
+        {/* Summary row */}
         <View style={styles.summaryRow}>
-          {durationSeconds != null && durationSeconds > 0 && (
-            <View style={styles.summaryItem}>
+          {showDuration && durationSeconds != null && (
+            <View style={styles.summaryItem} testID="session-duration">
               <Text style={styles.summaryLabel}>Duration</Text>
               <Text style={styles.summaryValue}>{formatDuration(durationSeconds)}</Text>
             </View>
@@ -197,78 +196,73 @@ export function SessionDetailView({ route, navigation }: SessionDetailViewProps)
         {session.exercises.map((exercise, exIdx) => {
           const imageUrl = exerciseImages[exercise.exercise_name];
           return (
-          <Card key={exIdx} style={styles.exerciseCard}>
-            <View style={styles.exerciseHeader}>
-              <View style={styles.exerciseNameRow}>
-                {imageUrl ? (
-                  <Image
-                    source={{ uri: imageUrl }}
-                    style={styles.exerciseThumb}
-                    accessibilityLabel={`${exercise.exercise_name} image`}
-                  />
-                ) : (
-                  <View style={styles.exerciseThumbPlaceholder}>
-                    <Icon name="dumbbell" size={16} color={colors.text.muted} />
-                  </View>
-                )}
-                <Text style={styles.exerciseName}>{exercise.exercise_name}</Text>
-              </View>
-              {(() => {
-                const e1rm = bestE1RMForExercise(exercise.sets);
-                if (e1rm == null) return null;
-                const display = convertWeight(e1rm, unitSystem);
-                const suffix = unitSystem === 'metric' ? 'kg' : 'lbs';
-                return (
-                  <Text style={styles.e1rmBadge}>
-                    Est. 1RM: {display} {suffix}
-                  </Text>
-                );
-              })()}
-            </View>
-
-            {/* Set table header */}
-            <View style={styles.setHeaderRow}>
-              <Text style={[styles.setHeaderCell, styles.setNumCol]}>#</Text>
-              <Text style={[styles.setHeaderCell, styles.weightCol]}>{unitLabel}</Text>
-              <Text style={[styles.setHeaderCell, styles.repsCol]}>Reps</Text>
-              <Text style={[styles.setHeaderCell, styles.rpeCol]}>RPE</Text>
-              <Text style={[styles.setHeaderCell, styles.typeCol]}>Type</Text>
-              <Text style={[styles.setHeaderCell, styles.prCol]} />
-            </View>
-
-            {/* Set rows */}
-            {exercise.sets.map((set, setIdx) => {
-              const setType = set.set_type || 'normal';
-              const hasPR = isPRSet(exercise.exercise_name, setIdx, set.weight_kg, set.reps);
-              const displayWeight = convertWeight(set.weight_kg, unitSystem);
-
-              return (
-                <View
-                  key={setIdx}
-                  style={[
-                    styles.setRow,
-                    setType === 'warm-up' && styles.setRowWarmup,
-                    setType === 'amrap' && styles.setRowAmrap,
-                  ]}
-                >
-                  <Text style={[styles.setCell, styles.setNumCol]}>{setIdx + 1}</Text>
-                  <Text style={[styles.setCell, styles.weightCol]}>{displayWeight}</Text>
-                  <Text style={[styles.setCell, styles.repsCol]}>{set.reps}</Text>
-                  <Text style={[styles.setCell, styles.rpeCol]}>
-                    {set.rpe != null ? set.rpe : '—'}
-                  </Text>
-                  <View style={styles.typeCol}>
-                    <SetTypeBadge type={setType} />
-                  </View>
-                  <View style={styles.prCol}>
-                    {hasPR && (
-                      <Text style={styles.prBadge}>🏆</Text>
-                    )}
-                  </View>
+            <Card key={exIdx} style={styles.exerciseCard}>
+              <View style={styles.exerciseHeader}>
+                <View style={styles.exerciseNameRow}>
+                  {imageUrl ? (
+                    <Image
+                      source={{ uri: imageUrl }}
+                      style={styles.exerciseThumb}
+                      testID={`exercise-image-${exIdx}`}
+                      accessibilityLabel={`${exercise.exercise_name} image`}
+                    />
+                  ) : (
+                    <View style={styles.exerciseThumbPlaceholder}>
+                      <Icon name="dumbbell" size={16} color={colors.text.muted} />
+                    </View>
+                  )}
+                  <Text style={styles.exerciseName}>{exercise.exercise_name}</Text>
                 </View>
-              );
-            })}
-          </Card>
+              </View>
+
+              {/* Set table header */}
+              <View style={styles.setHeaderRow}>
+                <Text style={[styles.setHeaderCell, styles.setNumCol]}>#</Text>
+                <Text style={[styles.setHeaderCell, styles.weightCol]}>{unitLabel}</Text>
+                <Text style={[styles.setHeaderCell, styles.repsCol]}>Reps</Text>
+                <Text style={[styles.setHeaderCell, styles.rpeCol]}>RPE</Text>
+                <Text style={[styles.setHeaderCell, styles.typeCol]}>Type</Text>
+                <Text style={[styles.setHeaderCell, styles.prCol]} />
+              </View>
+
+              {/* Set rows */}
+              {exercise.sets.map((set, setIdx) => {
+                const setType = set.set_type || 'normal';
+                const hasPR = isPRSet(
+                  session.personal_records,
+                  exercise.exercise_name,
+                  set.weight_kg,
+                  set.reps,
+                );
+                const displayWeight = convertWeight(set.weight_kg, unitSystem);
+
+                return (
+                  <View
+                    key={setIdx}
+                    style={[
+                      styles.setRow,
+                      setType === 'warm-up' && styles.setRowWarmup,
+                      setType === 'amrap' && styles.setRowAmrap,
+                    ]}
+                  >
+                    <Text style={[styles.setCell, styles.setNumCol]}>{setIdx + 1}</Text>
+                    <Text style={[styles.setCell, styles.weightCol]}>{displayWeight}</Text>
+                    <Text style={[styles.setCell, styles.repsCol]}>{set.reps}</Text>
+                    <Text style={[styles.setCell, styles.rpeCol]}>
+                      {set.rpe != null ? set.rpe : '—'}
+                    </Text>
+                    <View style={styles.typeCol}>
+                      <SetTypeBadge type={setType} />
+                    </View>
+                    <View style={styles.prCol}>
+                      {hasPR && (
+                        <Text style={styles.prBadge} testID={`pr-badge-${exIdx}-${setIdx}`}>🏆</Text>
+                      )}
+                    </View>
+                  </View>
+                );
+              })}
+            </Card>
           );
         })}
 
@@ -284,6 +278,7 @@ export function SessionDetailView({ route, navigation }: SessionDetailViewProps)
         <TouchableOpacity
           style={styles.editButton}
           activeOpacity={0.8}
+          testID="edit-session-button"
           onPress={() =>
             navigation.push('ActiveWorkout', { mode: 'edit', sessionId: session.id })
           }
@@ -361,9 +356,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
   },
   headerSpacer: { width: 32 },
-  skeletonContainer: {
-    padding: spacing[4],
-  },
+  skeletonContainer: { padding: spacing[4] },
   errorContainer: {
     flex: 1,
     alignItems: 'center',
@@ -388,10 +381,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
   },
   scroll: { flex: 1 },
-  scrollContent: {
-    padding: spacing[4],
-    paddingBottom: spacing[12],
-  },
+  scrollContent: { padding: spacing[4], paddingBottom: spacing[12] },
   dateText: {
     color: colors.text.primary,
     fontSize: typography.size.lg,
@@ -422,20 +412,23 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
-  exerciseCard: {
-    marginBottom: spacing[3],
-  },
-  exerciseName: {
-    color: colors.text.primary,
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
+  exerciseCard: { marginBottom: spacing[3] },
+  exerciseHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: spacing[2],
-    flex: 1,
   },
   exerciseNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing[2],
+    flex: 1,
+  },
+  exerciseName: {
+    color: colors.text.primary,
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
     flex: 1,
   },
   exerciseThumb: {
@@ -450,17 +443,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg.surfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  exerciseHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing[2],
-  },
-  e1rmBadge: {
-    color: colors.accent.primary,
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.medium,
   },
   setHeaderRow: {
     flexDirection: 'row',
@@ -480,9 +462,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing[1],
   },
-  setRowWarmup: {
-    opacity: 0.6,
-  },
+  setRowWarmup: { opacity: 0.6 },
   setRowAmrap: {
     backgroundColor: colors.accent.primaryMuted,
     borderRadius: 4,
@@ -497,12 +477,8 @@ const styles = StyleSheet.create({
   rpeCol: { width: 36, textAlign: 'center' },
   typeCol: { width: 28, alignItems: 'center' as const },
   prCol: { width: 28, alignItems: 'center' as const },
-  prBadge: {
-    fontSize: 14,
-  },
-  notesCard: {
-    marginBottom: spacing[3],
-  },
+  prBadge: { fontSize: 14 },
+  notesCard: { marginBottom: spacing[3] },
   notesLabel: {
     color: colors.text.muted,
     fontSize: typography.size.xs,

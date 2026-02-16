@@ -235,3 +235,73 @@ class DayClassificationResponse(BaseModel):
     source: str  # "session", "template", or "none"
 
 
+class OverloadSuggestion(BaseModel):
+    """Progressive overload suggestion for an exercise."""
+
+    exercise_name: str
+    suggested_weight_kg: float
+    suggested_reps: int
+    reasoning: str
+    confidence: str  # "high", "medium", "low"
+
+
+
+
+# ─── Custom Exercises ─────────────────────────────────────────────────────────
+
+
+class CustomExerciseCreate(BaseModel):
+    """Payload for creating a user custom exercise."""
+
+    name: str = Field(min_length=1, max_length=200)
+    muscle_group: str
+    equipment: str
+    category: str = "compound"
+    secondary_muscles: list[str] = Field(default_factory=list)
+    notes: Optional[str] = None
+
+
+class CustomExerciseUpdate(BaseModel):
+    """Payload for updating a user custom exercise. All fields optional."""
+
+    name: Optional[str] = Field(default=None, min_length=1, max_length=200)
+    muscle_group: Optional[str] = None
+    equipment: Optional[str] = None
+    category: Optional[str] = None
+    secondary_muscles: Optional[list[str]] = None
+    notes: Optional[str] = None
+
+
+class CustomExerciseResponse(BaseModel):
+    """Custom exercise returned by the API."""
+
+    id: uuid.UUID
+    user_id: uuid.UUID
+    name: str
+    muscle_group: str
+    secondary_muscles: list[str]
+    equipment: str
+    category: str
+    notes: Optional[str] = None
+    is_custom: bool = True
+    image_url: None = None
+    animation_url: None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+    @classmethod
+    def from_orm_model(cls, obj: Any) -> "CustomExerciseResponse":
+        """Build a response from a SQLAlchemy CustomExercise instance."""
+        return cls(
+            id=obj.id,
+            user_id=obj.user_id,
+            name=obj.name,
+            muscle_group=obj.muscle_group,
+            secondary_muscles=obj.secondary_muscles or [],
+            equipment=obj.equipment,
+            category=obj.category,
+            notes=obj.notes,
+            created_at=obj.created_at,
+        )
+

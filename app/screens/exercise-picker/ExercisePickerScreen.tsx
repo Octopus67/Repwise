@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
   StyleSheet,
 } from 'react-native';
 import type { StackScreenProps } from '@react-navigation/stack';
@@ -20,12 +21,17 @@ import { MuscleGroupGrid } from '../../components/exercise-picker/MuscleGroupGri
 import { ExerciseCard } from '../../components/exercise-picker/ExerciseCard';
 import { RecentExercises } from '../../components/exercise-picker/RecentExercises';
 import { useActiveWorkoutStore } from '../../store/activeWorkoutSlice';
+import { ExerciseDetailSheet } from '../../components/training/ExerciseDetailSheet';
+import { CustomExerciseForm } from '../../components/exercise-picker/CustomExerciseForm';
 
 type ExercisePickerParams = {
   ExercisePicker: { onSelect?: (exerciseName: string) => void; onCancel?: () => void; target?: 'modal' | 'activeWorkout' };
 };
 
 type Props = StackScreenProps<ExercisePickerParams, 'ExercisePicker'>;
+
+const EQUIPMENT_FILTERS = ['All', 'Barbell', 'Dumbbell', 'Cable', 'Machine', 'Bodyweight', 'Band', 'Kettlebell'] as const;
+export { EQUIPMENT_FILTERS };
 
 export function ExercisePickerScreen({ route, navigation }: Props) {
   const { onSelect, onCancel, target = 'modal' } = route.params ?? {};
@@ -37,8 +43,16 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
   const [searchText, setSearchText] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<string | null>(null);
+  const [selectedEquipment, setSelectedEquipment] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  // Exercise detail sheet state (5.4)
+  const [detailExercise, setDetailExercise] = useState<Exercise | null>(null);
+  const [detailVisible, setDetailVisible] = useState(false);
+
+  // Custom exercise form state (6.7)
+  const [showCustomForm, setShowCustomForm] = useState(false);
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -86,13 +100,29 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
   }, [navigation, onCancel]);
 
   const filteredExercises = useMemo(
-    () => filterExercises(exercises, debouncedSearch, selectedMuscleGroup),
-    [exercises, debouncedSearch, selectedMuscleGroup],
+    () => filterExercises(exercises, debouncedSearch, selectedMuscleGroup, selectedEquipment),
+    [exercises, debouncedSearch, selectedMuscleGroup, selectedEquipment],
   );
 
-  const isFiltering = debouncedSearch.trim().length > 0 || selectedMuscleGroup != null;
+  const isFiltering = debouncedSearch.trim().length > 0 || selectedMuscleGroup != null || selectedEquipment != null;
 
   const handleExercisePress = useCallback((exercise: Exercise) => {
+    didSelectRef.current = true;
+    if (target === 'activeWorkout') {
+      useActiveWorkoutStore.getState().addExercise(exercise.name);
+    } else {
+      onSelect?.(exercise.name);
+    }
+    navigation.goBack();
+  }, [onSelect, navigation, target]);
+
+  const handleExerciseLongPress = useCallback((exercise: Exercise) => {
+    setDetailExercise(exercise);
+    setDetailVisible(true);
+  }, []);
+
+  const handleCustomExerciseCreated = useCallback((exercise: { id: string; name: string }) => {
+    setShowCustomForm(false);
     didSelectRef.current = true;
     if (target === 'activeWorkout') {
       useActiveWorkoutStore.getState().addExercise(exercise.name);
@@ -128,6 +158,19 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
     );
   }
 
+  // Show custom exercise form (6.7)
+  if (showCustomForm) {
+    return (
+      <SafeAreaView style={styles.screen}>
+        <CustomExerciseForm
+          initialName={searchText.trim()}
+          onCreated={handleCustomExerciseCreated}
+          onCancel={() => setShowCustomForm(false)}
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.screen}>
       {/* Header */}
@@ -152,6 +195,32 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
         resultCount={isFiltering ? filteredExercises.length : null}
       />
 
+      {/* Equipment filter chips */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipRow}
+        style={styles.chipScroll}
+      >
+        {EQUIPMENT_FILTERS.map((label) => {
+          const isAll = label === 'All';
+          const isActive = isAll ? selectedEquipment === null : selectedEquipment?.toLowerCase() === label.toLowerCase();
+          return (
+            <TouchableOpacity
+              key={label}
+              style={[styles.chip, isActive && styles.chipActive]}
+              onPress={() => setSelectedEquipment(isAll ? null : label.toLowerCase())}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`Filter by ${label}`}
+              accessibilityState={{ selected: isActive }}
+            >
+              <Text style={[styles.chipText, isActive && styles.chipTextActive]}>{label}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
       {/* Muscle group header when filtered */}
       {selectedMuscleGroup && (
         <View style={styles.filterHeader}>
@@ -169,7 +238,7 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
         filteredExercises.length > 0 ? (
           <FlatList
             data={filteredExercises}
-            renderItem={({ item }) => <ExerciseCard exercise={item} onPress={handleExercisePress} />}
+            renderItem={({ item }) => <ExerciseCard exercise={item} onPress={handleExercisePress} onLongPress={handleExerciseLongPress} />}
             keyExtractor={(item) => item.id}
             keyboardDismissMode="on-drag"
           />
@@ -179,6 +248,15 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
             {selectedMuscleGroup && (
               <Text style={styles.emptyHint}>Try clearing the muscle group filter</Text>
             )}
+            <TouchableOpacity
+              style={styles.createCustomBtn}
+              onPress={() => setShowCustomForm(true)}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Create custom exercise"
+            >
+              <Text style={styles.createCustomText}>+ Create Custom Exercise</Text>
+            </TouchableOpacity>
           </View>
         )
       ) : (
@@ -194,6 +272,13 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
           keyboardDismissMode="on-drag"
         />
       )}
+
+      {/* Exercise Detail Sheet for long-press preview (5.4) */}
+      <ExerciseDetailSheet
+        exercise={detailExercise}
+        visible={detailVisible}
+        onDismiss={() => setDetailVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -275,5 +360,45 @@ const styles = StyleSheet.create({
     color: colors.text.muted,
     fontSize: typography.size.sm,
     marginTop: spacing[2],
+  },
+  createCustomBtn: {
+    marginTop: spacing[4],
+    backgroundColor: colors.accent.primary,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing[5],
+    paddingVertical: spacing[2],
+  },
+  createCustomText: {
+    color: colors.text.primary,
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+  },
+  chipScroll: {
+    flexGrow: 0,
+  },
+  chipRow: {
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2],
+    gap: spacing[2],
+  },
+  chip: {
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[1],
+    borderRadius: radius.full,
+    backgroundColor: colors.bg.surfaceRaised,
+    borderWidth: 1,
+    borderColor: colors.border.subtle,
+  },
+  chipActive: {
+    backgroundColor: colors.accent.primaryMuted,
+    borderColor: colors.accent.primary,
+  },
+  chipText: {
+    color: colors.text.secondary,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.medium,
+  },
+  chipTextActive: {
+    color: colors.accent.primary,
   },
 });

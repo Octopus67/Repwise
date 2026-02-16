@@ -8,6 +8,7 @@ import { MuscleGroupIcon } from './MuscleGroupIcon';
 interface ExerciseCardProps {
   exercise: Exercise;
   onPress: (exercise: Exercise) => void;
+  onLongPress?: (exercise: Exercise) => void;
 }
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -17,7 +18,7 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-export function ExerciseCard({ exercise, onPress }: ExerciseCardProps) {
+export function ExerciseCard({ exercise, onPress, onLongPress }: ExerciseCardProps) {
   const config = getMuscleGroupConfig(exercise.muscle_group);
   const bgColor = config?.color ?? '#2563EB';
   const [imgError, setImgError] = useState(false);
@@ -28,6 +29,7 @@ export function ExerciseCard({ exercise, onPress }: ExerciseCardProps) {
     <TouchableOpacity
       style={styles.container}
       onPress={() => onPress(exercise)}
+      onLongPress={onLongPress ? () => onLongPress(exercise) : undefined}
       activeOpacity={0.7}
       accessibilityLabel={`${exercise.name}, ${exercise.equipment}, ${exercise.category}`}
       accessibilityRole="button"

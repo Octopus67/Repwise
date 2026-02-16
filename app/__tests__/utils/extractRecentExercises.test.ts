@@ -12,9 +12,14 @@ function makeExercise(name: string, muscleGroup = 'General'): Exercise {
     id: name.toLowerCase().replace(/\s+/g, '-'),
     name,
     muscle_group: muscleGroup,
+    secondary_muscles: [],
     equipment: 'barbell',
     category: 'compound',
     image_url: null,
+    animation_url: null,
+    description: null,
+    instructions: null,
+    tips: null,
   };
 }
 

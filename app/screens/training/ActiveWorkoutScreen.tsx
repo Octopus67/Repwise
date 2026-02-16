@@ -31,9 +31,14 @@ import { colors, spacing, typography, radius } from '../../theme/tokens';
 
 // Components
 import { DurationTimer } from '../../components/training/DurationTimer';
-import { RestTimerV2 } from '../../components/training/RestTimerV2';
+import { RestTimerOverlay } from '../../components/training/RestTimerOverlay';
 import { PRBanner } from '../../components/training/PRBanner';
 import { SetTypeSelector } from '../../components/training/SetTypeSelector';
+import { RPEPicker } from '../../components/training/RPEPicker';
+import { OverloadSuggestionBadge } from '../../components/training/OverloadSuggestionBadge';
+import { VolumeIndicatorPill } from '../../components/training/VolumeIndicatorPill';
+import { ExerciseDetailSheet } from '../../components/training/ExerciseDetailSheet';
+import { getDisplayValue } from '../../utils/rpeConversion';
 
 // Utilities
 import { formatPreviousPerformance } from '../../utils/previousPerformanceFormat';
@@ -49,6 +54,7 @@ import { convertWeight } from '../../utils/unitConversion';
 
 // Types
 import type { ActiveExercise, ActiveSet, SetType, PreviousPerformanceData } from '../../types/training';
+import type { Exercise } from '../../types/exercise';
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
@@ -58,6 +64,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   // Store state
   const store = useActiveWorkoutStore();
   const unitSystem = useStore((s) => s.unitSystem);
+  const rpeMode = useStore((s) => s.rpeMode);
   const profile = useStore((s) => s.profile);
   const unitLabel = unitSystem === 'metric' ? 'kg' : 'lbs';
 
@@ -70,6 +77,15 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   const initialized = useRef(false);
+
+  // Intelligence layer state (4.7)
+  const [muscleGroupMap, setMuscleGroupMap] = useState<Record<string, string>>({});
+  const [volumeSetCounts, setVolumeSetCounts] = useState<Record<string, number>>({});
+
+  // Exercise detail sheet state (5.3)
+  const [exerciseCache, setExerciseCache] = useState<Record<string, Exercise>>({});
+  const [detailSheetExercise, setDetailSheetExercise] = useState<Exercise | null>(null);
+  const [detailSheetVisible, setDetailSheetVisible] = useState(false);
 
   // ── Mount: initialize workout based on mode ──────────────────────────────
 
@@ -169,6 +185,65 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
 
   // ── Back navigation interception ─────────────────────────────────────────
 
+  // ── Fetch muscle group mappings for volume indicators (4.7) ──────────────
+
+  useEffect(() => {
+    const names = store.exercises.map((e) => e.exerciseName).filter(Boolean);
+    const unmapped = names.filter((n) => !(n.toLowerCase() in muscleGroupMap));
+    if (unmapped.length === 0) return;
+
+    (async () => {
+      try {
+        const { data } = await api.get('exercises');
+        if (data) {
+          const mapped: Record<string, string> = { ...muscleGroupMap };
+          for (const ex of data) {
+            if (ex.name && ex.muscle_group) {
+              mapped[ex.name.toLowerCase()] = ex.muscle_group.toLowerCase();
+            }
+          }
+          setMuscleGroupMap(mapped);
+        }
+      } catch {
+        // best-effort
+      }
+    })();
+  }, [store.exercises.length]);
+
+  // ── Compute muscle groups for current exercises ──────────────────────────
+
+  const workoutMuscleGroups = store.exercises
+    .map((e) => muscleGroupMap[e.exerciseName.toLowerCase()])
+    .filter(Boolean);
+
+  // ── Fetch exercise cache for detail sheet (5.3) ──────────────────────────
+
+  useEffect(() => {
+    if (Object.keys(exerciseCache).length > 0) return;
+    (async () => {
+      try {
+        const { data } = await api.get('training/exercises');
+        if (Array.isArray(data)) {
+          const cache: Record<string, Exercise> = {};
+          for (const ex of data) {
+            if (ex.name) cache[ex.name.toLowerCase()] = ex;
+          }
+          setExerciseCache(cache);
+        }
+      } catch {
+        // best-effort — detail sheet just won't have full data
+      }
+    })();
+  }, []);
+
+  const handleOpenExerciseDetail = useCallback((exerciseName: string) => {
+    const cached = exerciseCache[exerciseName.toLowerCase()];
+    if (cached) {
+      setDetailSheetExercise(cached);
+      setDetailSheetVisible(true);
+    }
+  }, [exerciseCache]);
+
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
       if (!hasUnsavedData(store.exercises)) return;
@@ -232,8 +307,14 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
         setRestDuration(dur);
         setRestTimerVisible(true);
       }
+
+      // Increment volume count for muscle group (4.7)
+      const mg = muscleGroupMap[exerciseName.toLowerCase()];
+      if (mg) {
+        setVolumeSetCounts((prev) => ({ ...prev, [mg]: (prev[mg] ?? 0) + 1 }));
+      }
     }
-  }, [store, unitSystem, unitLabel, profile]);
+  }, [store, unitSystem, unitLabel, profile, muscleGroupMap]);
 
   // ── Finish workout (16.4) ────────────────────────────────────────────────
 
@@ -418,6 +499,12 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
           </View>
         )}
 
+        {/* Volume Indicator Pills (4.7) */}
+        <VolumeIndicatorPill
+          muscleGroups={workoutMuscleGroups}
+          completedSetCounts={volumeSetCounts}
+        />
+
         {/* Exercise Cards */}
         {store.exercises.map((exercise, exIdx) => {
           const supersetGroup = getSupersetGroupForExercise(exercise.localId);
@@ -451,6 +538,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
                   )}
                   <TouchableOpacity
                     style={{ flex: 1 }}
+                    onPress={() => handleOpenExerciseDetail(exercise.exerciseName)}
                     onLongPress={() => { setSelectMode(true); toggleExerciseSelect(exercise.localId); }}
                   >
                     <Text style={styles.exerciseName}>{exercise.exerciseName}</Text>
@@ -459,6 +547,12 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
                     <Text style={styles.removeBtn}>✕</Text>
                   </TouchableOpacity>
                 </View>
+
+                {/* Overload Suggestion Badge (4.7) */}
+                <OverloadSuggestionBadge
+                  exerciseName={exercise.exerciseName}
+                  unitSystem={unitSystem}
+                />
 
                 {/* Set header row */}
                 <View style={styles.setHeaderRow}>
@@ -481,6 +575,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
                     exerciseName={exercise.exerciseName}
                     prevData={prevData}
                     unitSystem={unitSystem}
+                    rpeMode={rpeMode}
                     onUpdateField={store.updateSetField}
                     onUpdateType={store.updateSetType}
                     onToggleComplete={handleToggleSet}
@@ -535,7 +630,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
       </View>
 
       {/* Rest Timer overlay */}
-      <RestTimerV2
+      <RestTimerOverlay
         durationSeconds={restDuration}
         visible={restTimerVisible}
         onDismiss={() => setRestTimerVisible(false)}
@@ -547,6 +642,13 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
         prs={prBannerData}
         visible={prBannerVisible}
         onDismiss={() => setPrBannerVisible(false)}
+      />
+
+      {/* Exercise Detail Sheet (5.3) */}
+      <ExerciseDetailSheet
+        exercise={detailSheetExercise}
+        visible={detailSheetVisible}
+        onDismiss={() => setDetailSheetVisible(false)}
       />
     </SafeAreaView>
   );
@@ -562,6 +664,7 @@ interface SetRowProps {
   exerciseName: string;
   prevData: PreviousPerformanceData | null;
   unitSystem: 'metric' | 'imperial';
+  rpeMode: 'rpe' | 'rir';
   onUpdateField: (exId: string, setId: string, field: 'weight' | 'reps' | 'rpe', value: string) => void;
   onUpdateType: (exId: string, setId: string, type: SetType) => void;
   onToggleComplete: (exId: string, setId: string, name: string) => void;
@@ -576,6 +679,7 @@ function SetRow({
   exerciseName,
   prevData,
   unitSystem,
+  rpeMode,
   onUpdateField,
   onUpdateType,
   onToggleComplete,
@@ -583,6 +687,7 @@ function SetRow({
   onRemoveSet,
 }: SetRowProps) {
   const bgAnim = useRef(new Animated.Value(set.completed ? 1 : 0)).current;
+  const [rpePickerVisible, setRpePickerVisible] = useState(false);
 
   useEffect(() => {
     Animated.timing(bgAnim, {
@@ -598,6 +703,8 @@ function SetRow({
   });
 
   const prevText = formatPreviousPerformance(prevData, setIndex, unitSystem);
+
+  const rpeDisplayText = getDisplayValue(set.rpe, rpeMode);
 
   return (
     <Animated.View style={[styles.setRow, { backgroundColor: rowBg }]}>
@@ -629,13 +736,23 @@ function SetRow({
         placeholderTextColor={colors.text.muted}
       />
 
-      <TextInput
-        style={[styles.setInput, styles.rpeCol]}
-        value={set.rpe}
-        onChangeText={(v) => onUpdateField(exerciseLocalId, set.localId, 'rpe', v)}
-        keyboardType="numeric"
-        placeholder="—"
-        placeholderTextColor={colors.text.muted}
+      <TouchableOpacity
+        style={[styles.setInput, styles.rpeCol, { justifyContent: 'center' }]}
+        onPress={() => setRpePickerVisible(true)}
+      >
+        <Text style={[styles.rpeTapText, !rpeDisplayText && styles.rpePlaceholder]}>
+          {rpeDisplayText || '—'}
+        </Text>
+      </TouchableOpacity>
+
+      <RPEPicker
+        visible={rpePickerVisible}
+        mode={rpeMode}
+        onSelect={(value) => {
+          onUpdateField(exerciseLocalId, set.localId, 'rpe', value);
+          setRpePickerVisible(false);
+        }}
+        onDismiss={() => setRpePickerVisible(false)}
       />
 
       <View style={styles.typeCol}>
@@ -823,6 +940,16 @@ const styles = StyleSheet.create({
     paddingVertical: Platform.OS === 'ios' ? 4 : 2,
     paddingHorizontal: 4,
     minHeight: 28,
+  },
+
+  // RPE tappable field
+  rpeTapText: {
+    color: colors.text.primary,
+    fontSize: typography.size.sm,
+    textAlign: 'center',
+  },
+  rpePlaceholder: {
+    color: colors.text.muted,
   },
 
   // Checkmark

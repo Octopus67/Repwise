@@ -14,9 +14,14 @@ const exerciseDbArb: fc.Arbitrary<Exercise[]> = fc.array(
     id: fc.uuid(),
     name: fc.string({ minLength: 1, maxLength: 50 }),
     muscle_group: fc.string({ minLength: 1, maxLength: 30 }),
+    secondary_muscles: fc.constant([] as string[]),
     equipment: fc.string({ minLength: 1, maxLength: 30 }),
     category: fc.constantFrom('compound' as const, 'isolation' as const),
     image_url: fc.constant(null),
+    animation_url: fc.constant(null),
+    description: fc.constant(null),
+    instructions: fc.constant(null),
+    tips: fc.constant(null),
   }),
   { minLength: 0, maxLength: 10 },
 );
@@ -86,14 +91,14 @@ describe('Rest Duration V2 — specific value tests', () => {
 
   it('compound exercise defaults to 180s', () => {
     const db: Exercise[] = [
-      { id: '1', name: 'Bench Press', muscle_group: 'chest', equipment: 'barbell', category: 'compound', image_url: null },
+      { id: '1', name: 'Bench Press', muscle_group: 'chest', secondary_muscles: [], equipment: 'barbell', category: 'compound', image_url: null, animation_url: null, description: null, instructions: null, tips: null },
     ];
     expect(getRestDurationV2('Bench Press', db)).toBe(180);
   });
 
   it('isolation exercise defaults to 90s', () => {
     const db: Exercise[] = [
-      { id: '1', name: 'Bicep Curl', muscle_group: 'biceps', equipment: 'dumbbell', category: 'isolation', image_url: null },
+      { id: '1', name: 'Bicep Curl', muscle_group: 'biceps', secondary_muscles: [], equipment: 'dumbbell', category: 'isolation', image_url: null, animation_url: null, description: null, instructions: null, tips: null },
     ];
     expect(getRestDurationV2('Bicep Curl', db)).toBe(90);
   });

@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
-from src.middleware.authenticate import get_current_user
+from src.middleware.authenticate import get_current_user, get_current_user_optional
 from src.modules.auth.models import User
 from src.modules.training.exercises import (
     get_all_exercises,
@@ -21,7 +21,11 @@ from src.modules.training.day_classification import classify_day
 from src.modules.training.schemas import (
     BatchPreviousPerformanceRequest,
     BatchPreviousPerformanceResponse,
+    CustomExerciseCreate,
+    CustomExerciseResponse,
+    CustomExerciseUpdate,
     DayClassificationResponse,
+    OverloadSuggestion,
     TrainingSessionCreate,
     TrainingSessionResponse,
     TrainingSessionUpdate,
@@ -30,6 +34,7 @@ from src.modules.training.schemas import (
     WorkoutTemplateResponse,
     WorkoutTemplateUpdate,
 )
+from src.modules.training.custom_exercise_service import CustomExerciseService
 from src.modules.training.previous_performance import BatchPreviousPerformanceResolver, PreviousPerformanceResolver
 from src.modules.training.template_service import TemplateService
 from src.modules.training.analytics_service import TrainingAnalyticsService
@@ -65,6 +70,10 @@ def _get_template_service(db: AsyncSession = Depends(get_db)) -> TemplateService
     return TemplateService(db)
 
 
+def _get_custom_exercise_service(db: AsyncSession = Depends(get_db)) -> CustomExerciseService:
+    return CustomExerciseService(db)
+
+
 # ─── Exercise database (public, no auth) ─────────────────────────────────────
 
 
@@ -78,21 +87,133 @@ async def list_muscle_groups() -> List[str]:
 async def search_exercises_endpoint(
     q: str = Query(default="", min_length=1),
     muscle_group: Optional[str] = Query(default=None),
+    equipment: Optional[str] = Query(default=None),
+    category: Optional[str] = Query(default=None),
 ) -> List[dict]:
-    """Search exercises by name with optional muscle group filter."""
-    return search_exercises(query=q, muscle_group=muscle_group)
+    """Search exercises by name with optional muscle group, equipment, and category filters."""
+    return search_exercises(query=q, muscle_group=muscle_group, equipment=equipment, category=category)
+
+
+@router.get(
+    "/exercises/{exercise_name}/overload-suggestion",
+    response_model=OverloadSuggestion,
+    responses={204: {"description": "Insufficient data for suggestion"}},
+)
+async def get_overload_suggestion(
+    exercise_name: str,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> OverloadSuggestion:
+    """Return a progressive overload suggestion for the given exercise."""
+    from src.modules.training.overload_service import OverloadSuggestionService
+
+    svc = OverloadSuggestionService(db)
+    suggestion = await svc.get_suggestion(user.id, exercise_name)
+    if suggestion is None:
+        return Response(status_code=204)
+    return suggestion
 
 
 @router.get("/exercises")
 async def list_exercises(
     muscle_group: Optional[str] = Query(default=None),
+    user: Optional[User] = Depends(get_current_user_optional),
+    db: AsyncSession = Depends(get_db),
 ) -> List[dict]:
-    """Return all exercises, optionally filtered by muscle group."""
-    exercises = get_all_exercises()
+    """Return all exercises, optionally filtered by muscle group.
+
+    If the user is authenticated, their custom exercises are appended
+    to the system exercise list.
+    """
+    exercises = list(get_all_exercises())
+
+    # Merge custom exercises for authenticated users
+    if user is not None:
+        custom_svc = CustomExerciseService(db)
+        custom_dicts = await custom_svc.list_user_custom_exercises_as_dicts(user.id)
+        exercises.extend(custom_dicts)
+
     if muscle_group:
         mg = muscle_group.lower()
         exercises = [ex for ex in exercises if ex["muscle_group"] == mg]
     return exercises
+
+
+# ─── Custom Exercises (CRUD, auth required) ──────────────────────────────────
+
+
+@router.post(
+    "/exercises/custom",
+    response_model=CustomExerciseResponse,
+    status_code=201,
+)
+async def create_custom_exercise(
+    data: CustomExerciseCreate,
+    user: User = Depends(get_current_user),
+    service: CustomExerciseService = Depends(_get_custom_exercise_service),
+) -> CustomExerciseResponse:
+    """Create a new user custom exercise."""
+    exercise = await service.create_custom_exercise(
+        user_id=user.id,
+        name=data.name,
+        muscle_group=data.muscle_group,
+        equipment=data.equipment,
+        category=data.category,
+        secondary_muscles=data.secondary_muscles,
+        notes=data.notes,
+    )
+    return CustomExerciseResponse.from_orm_model(exercise)
+
+
+@router.get(
+    "/exercises/custom",
+    response_model=List[CustomExerciseResponse],
+)
+async def list_custom_exercises(
+    user: User = Depends(get_current_user),
+    service: CustomExerciseService = Depends(_get_custom_exercise_service),
+) -> list[CustomExerciseResponse]:
+    """Return all custom exercises for the authenticated user."""
+    exercises = await service.list_user_custom_exercises(user.id)
+    return [CustomExerciseResponse.from_orm_model(ex) for ex in exercises]
+
+
+@router.put(
+    "/exercises/custom/{exercise_id}",
+    response_model=CustomExerciseResponse,
+)
+async def update_custom_exercise(
+    exercise_id: uuid.UUID,
+    data: CustomExerciseUpdate,
+    user: User = Depends(get_current_user),
+    service: CustomExerciseService = Depends(_get_custom_exercise_service),
+) -> CustomExerciseResponse:
+    """Update a user custom exercise."""
+    exercise = await service.update_custom_exercise(
+        user_id=user.id,
+        exercise_id=exercise_id,
+        name=data.name,
+        muscle_group=data.muscle_group,
+        equipment=data.equipment,
+        category=data.category,
+        secondary_muscles=data.secondary_muscles,
+        notes=data.notes,
+    )
+    return CustomExerciseResponse.from_orm_model(exercise)
+
+
+@router.delete(
+    "/exercises/custom/{exercise_id}",
+    status_code=204,
+    response_model=None,
+)
+async def delete_custom_exercise(
+    exercise_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    service: CustomExerciseService = Depends(_get_custom_exercise_service),
+) -> None:
+    """Soft-delete a user custom exercise."""
+    await service.delete_custom_exercise(user_id=user.id, exercise_id=exercise_id)
 
 
 # ─── Templates ────────────────────────────────────────────────────────────────

@@ -61,3 +61,42 @@ async def get_current_user(
         raise UnauthorizedError("User not found or deactivated")
 
     return user
+
+async def get_current_user_optional(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> Optional[User]:
+    """FastAPI dependency that returns the authenticated user or None.
+
+    Unlike ``get_current_user``, this does NOT raise if the token is
+    missing or invalid — it simply returns ``None``.  Useful for
+    endpoints that behave differently for authenticated vs anonymous users.
+    """
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return None
+
+    token = auth_header[7:]
+    try:
+        payload = jwt.decode(
+            token,
+            settings.JWT_SECRET,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+    except JWTError:
+        return None
+
+    user_id_str: Optional[str] = payload.get("sub")
+    if user_id_str is None:
+        return None
+
+    try:
+        user_id = uuid.UUID(user_id_str)
+    except (ValueError, AttributeError):
+        return None
+
+    result = await db.execute(
+        select(User).where(User.id == user_id, User.deleted_at.is_(None))
+    )
+    return result.scalar_one_or_none()
+
