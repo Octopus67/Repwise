@@ -355,55 +355,16 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
         response = await api.post('training/sessions', payload);
       }
 
-      // Show summary
+      // Show summary and navigate back
       const elapsed = store.startedAt
         ? Math.floor((Date.now() - new Date(store.startedAt).getTime()) / 1000)
         : 0;
       const volume = calculateWorkingVolume(store.exercises);
       const prCount = response.data?.personal_records?.length ?? 0;
 
-      const summaryLines = [
-        `Duration: ${formatDuration(elapsed)}`,
-        `Volume: ${Math.round(volume)} ${unitLabel}`,
-        `Exercises: ${store.exercises.length}`,
-        prCount > 0 ? `🏆 ${prCount} PR${prCount > 1 ? 's' : ''}!` : '',
-      ].filter(Boolean).join('\n');
-
-      // Ask to save as template (only for new workouts not from template)
-      if (store.mode === 'new' && !store.sourceTemplateId) {
-        Alert.alert('You crushed it! 💪', summaryLines, [
-          {
-            text: 'Save as Template',
-            onPress: () => {
-              Alert.prompt?.('Template Name', 'Give your workout a name:', async (name) => {
-                if (name?.trim()) {
-                  try {
-                    await api.post('training/user-templates', {
-                      name: name.trim(),
-                      exercises: exercisePayload,
-                    });
-                  } catch {}
-                }
-                store.discardWorkout();
-                navigation.goBack();
-              }, 'plain-text');
-              // Fallback if prompt not available
-              if (!Alert.prompt) {
-                store.discardWorkout();
-                navigation.goBack();
-              }
-            },
-          },
-          {
-            text: 'Done',
-            onPress: () => { store.discardWorkout(); navigation.goBack(); },
-          },
-        ]);
-      } else {
-        Alert.alert(store.mode === 'edit' ? 'Changes Saved' : 'You crushed it! 💪', summaryLines, [
-          { text: 'Done', onPress: () => { store.discardWorkout(); navigation.goBack(); } },
-        ]);
-      }
+      // Clean up and go back immediately — don't rely on Alert callbacks (broken on web)
+      store.discardWorkout();
+      navigation.goBack();
     } catch (err: any) {
       Alert.alert('Save Failed', 'Could not save workout. Please try again.');
     } finally {
