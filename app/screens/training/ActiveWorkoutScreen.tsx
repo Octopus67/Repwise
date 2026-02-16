@@ -281,7 +281,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
 
     if (result.completed) {
       // Haptic feedback
-      try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
+      try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}); } catch {}
 
       // Client-side PR check against previous performance cache
       const exercise = store.exercises.find(e => e.localId === exerciseLocalId);
@@ -561,8 +561,6 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
                   <Text style={[styles.setHeaderCell, styles.prevCol]}>Previous</Text>
                   <Text style={[styles.setHeaderCell, styles.weightCol]}>{unitLabel}</Text>
                   <Text style={[styles.setHeaderCell, styles.repsCol]}>Reps</Text>
-                  <Text style={[styles.setHeaderCell, styles.rpeCol]}>RPE</Text>
-                  <Text style={[styles.setHeaderCell, styles.typeCol]}>Type</Text>
                   <Text style={[styles.setHeaderCell, styles.checkCol]}>✓</Text>
                 </View>
 
@@ -737,31 +735,7 @@ function SetRow({
         placeholderTextColor={colors.text.muted}
       />
 
-      <TouchableOpacity
-        style={[styles.setInput, styles.rpeCol, { justifyContent: 'center' }]}
-        onPress={() => setRpePickerVisible(true)}
-      >
-        <Text style={[styles.rpeTapText, !rpeDisplayText && styles.rpePlaceholder]}>
-          {rpeDisplayText || '—'}
-        </Text>
-      </TouchableOpacity>
-
-      <RPEPicker
-        visible={rpePickerVisible}
-        mode={rpeMode}
-        onSelect={(value) => {
-          onUpdateField(exerciseLocalId, set.localId, 'rpe', value);
-          setRpePickerVisible(false);
-        }}
-        onDismiss={() => setRpePickerVisible(false)}
-      />
-
-      <View style={styles.typeCol}>
-        <SetTypeSelector
-          value={set.setType}
-          onChange={(type) => onUpdateType(exerciseLocalId, set.localId, type)}
-        />
-      </View>
+      {/* RPE and Type hidden for simplified v1 UX — re-enable for advanced mode */}
 
       <TouchableOpacity
         style={[styles.checkCol, styles.checkBtn, set.completed && styles.checkBtnCompleted]}
