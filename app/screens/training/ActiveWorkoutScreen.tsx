@@ -869,7 +869,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
                 {/* Set header row (7.1, 7.2) */}
                 <View style={styles.setHeaderRow}>
                   <Text style={[styles.setHeaderCell, styles.setNumCol]}>#</Text>
-                  <Text style={[styles.setHeaderCell, styles.prevCol]}>Previous</Text>
+                  {!!prevData && <Text style={[styles.setHeaderCell, styles.prevCol]}>Previous</Text>}
                   <Text style={[styles.setHeaderCell, styles.weightCol]}>{unitLabel}</Text>
                   <Text style={[styles.setHeaderCell, styles.repsCol]}>Reps</Text>
                   {showRpeColumn && (
@@ -905,6 +905,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
                       prevData={prevData}
                       unitSystem={unitSystem}
                       rpeMode={rpeMode}
+                      showPrevCol={!!prevData}
                       showRpeColumn={showRpeColumn}
                       onUpdateField={store.updateSetField}
                       onUpdateType={store.updateSetType}
@@ -1049,6 +1050,7 @@ interface SetRowProps {
   prevData: PreviousPerformanceData | null;
   unitSystem: 'metric' | 'imperial';
   rpeMode: 'rpe' | 'rir';
+  showPrevCol: boolean;
   showRpeColumn: boolean;
   onUpdateField: (exId: string, setId: string, field: 'weight' | 'reps' | 'rpe', value: string) => void;
   onUpdateType: (exId: string, setId: string, type: SetType) => void;
@@ -1068,6 +1070,7 @@ const SetRow = memo(function SetRow({
   prevData,
   unitSystem,
   rpeMode,
+  showPrevCol,
   showRpeColumn,
   onUpdateField,
   onUpdateType,
@@ -1139,13 +1142,15 @@ const SetRow = memo(function SetRow({
     >
       <Text style={[styles.setCell, styles.setNumCol]}>{set.setNumber}</Text>
 
-      <TouchableOpacity
-        style={styles.prevCol}
-        onPress={() => prevData && onCopyPrevious(exerciseLocalId, set.localId)}
-        disabled={!prevData}
-      >
-        <Text style={styles.prevText}>{prevText}</Text>
-      </TouchableOpacity>
+      {showPrevCol && (
+        <TouchableOpacity
+          style={styles.prevCol}
+          onPress={() => prevData && onCopyPrevious(exerciseLocalId, set.localId)}
+          disabled={!prevData}
+        >
+          <Text style={styles.prevText}>{prevText}</Text>
+        </TouchableOpacity>
+      )}
 
       {/* 7.4 — Weight with accent color + keyboard advance (10.5) */}
       <TextInput
@@ -1266,11 +1271,11 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.medium,
   },
   overflowBtn: {
-    color: colors.text.secondary,
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
+    color: colors.text.muted,
+    fontSize: typography.size.md,
+    fontWeight: typography.weight.medium,
     paddingHorizontal: spacing[2],
-    letterSpacing: 2,
+    letterSpacing: 1,
   },
 
   // Overflow menu (8.3)
@@ -1390,8 +1395,9 @@ const styles = StyleSheet.create({
   },
   removeBtn: {
     color: colors.text.muted,
-    fontSize: typography.size.md,
-    paddingHorizontal: spacing[2],
+    fontSize: typography.size.sm,
+    paddingHorizontal: spacing[1],
+    opacity: 0.6,
   },
 
   // Select checkbox
@@ -1429,11 +1435,11 @@ const styles = StyleSheet.create({
 
   // Column widths
   setNumCol: { width: 24, textAlign: 'center' },
-  prevCol: { flex: 1.2, paddingHorizontal: 2 },
-  weightCol: { flex: 1, paddingHorizontal: 2 },
-  repsCol: { width: 44, paddingHorizontal: 2 },
+  prevCol: { flex: 0.8, paddingHorizontal: 2 },
+  weightCol: { flex: 1.2, paddingHorizontal: 2 },
+  repsCol: { flex: 0.7, paddingHorizontal: 2 },
   rpeCol: { width: 36, paddingHorizontal: 2 },
-  checkCol: { width: 32, alignItems: 'center', justifyContent: 'center' },
+  checkCol: { width: 36, alignItems: 'center', justifyContent: 'center' },
 
   // Set row
   setRow: {
@@ -1502,20 +1508,21 @@ const styles = StyleSheet.create({
 
   // Checkmark
   checkBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    borderWidth: 1.5,
-    borderColor: colors.border.default,
+    width: 36,
+    height: 28,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border.subtle,
+    backgroundColor: colors.bg.surfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkBtnCompleted: {
-    backgroundColor: colors.semantic.positive,
+    backgroundColor: colors.semantic.positiveSubtle,
     borderColor: colors.semantic.positive,
   },
-  checkText: { color: colors.text.muted, fontSize: 13, fontWeight: typography.weight.bold },
-  checkTextCompleted: { color: colors.text.inverse },
+  checkText: { color: colors.text.muted, fontSize: 11, fontWeight: typography.weight.medium },
+  checkTextCompleted: { color: colors.semantic.positive },
 
   // Add set
   addSetBtn: {
@@ -1531,21 +1538,23 @@ const styles = StyleSheet.create({
   // Remove set (per-row delete button)
   removeSetBtn: {
     position: 'absolute' as const,
-    right: -6,
-    top: -6,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: colors.semantic.negative,
+    right: -4,
+    top: -4,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: colors.bg.surfaceRaised,
+    borderWidth: 1,
+    borderColor: colors.border.default,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     zIndex: 10,
   },
   removeSetText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: typography.weight.bold,
-    lineHeight: 12,
+    color: colors.text.muted,
+    fontSize: 8,
+    fontWeight: typography.weight.semibold,
+    lineHeight: 10,
   },
 
   // Add exercise

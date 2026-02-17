@@ -122,11 +122,11 @@ Phase 0 (Baseline) → Phase 1 (Pure Utils) → CHECKPOINT A
   - Run `source .venv/bin/activate && python -m pytest tests/ -x -q` — no backend regressions.
   - **Gate:** Do NOT ship until all tests pass.
 
-- [-] 13. Final validation
+- [x] 13. Final validation
   - [x] 13.1 Run full frontend test suite: `npx jest` — all pass, no regressions from Phase 0 count.
   - [x] 13.2 Run full backend test suite: `python -m pytest tests/ -x -q` — all pass (backend unchanged, but verify no accidental modifications).
   - [x] 13.3 Run `getDiagnostics` on all modified files: `ActiveWorkoutScreen.tsx`, `activeWorkoutSlice.ts`, `RestTimerRing.tsx`, `app/types/training.ts`, `app/store/index.ts`. Zero TypeScript errors.
-  - [-] 13.4 Git commit: `git add -A && git commit -m "training-ux-polish: all 16 UX improvements"`
+  - [x] 13.4 Git commit: `git add -A && git commit -m "training-ux-polish: all 16 UX improvements"`
 
 ---
 

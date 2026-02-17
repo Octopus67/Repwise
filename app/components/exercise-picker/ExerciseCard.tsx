@@ -4,6 +4,7 @@ import { Exercise } from '../../types/exercise';
 import { getMuscleGroupConfig } from '../../config/muscleGroups';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
 import { MuscleGroupIcon } from './MuscleGroupIcon';
+import { API_BASE_URL } from '../../services/api';
 
 interface ExerciseCardProps {
   exercise: Exercise;
@@ -16,6 +17,13 @@ function hexToRgba(hex: string, alpha: number): string {
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function resolveImageUrl(url: string): string {
+  if (url.startsWith('/')) {
+    return `${API_BASE_URL}${url}`;
+  }
+  return url;
 }
 
 export function ExerciseCard({ exercise, onPress, onLongPress }: ExerciseCardProps) {
@@ -36,7 +44,7 @@ export function ExerciseCard({ exercise, onPress, onLongPress }: ExerciseCardPro
     >
       {showImage ? (
         <Image
-          source={{ uri: exercise.image_url! }}
+          source={{ uri: resolveImageUrl(exercise.image_url!) }}
           style={styles.image}
           onError={() => setImgError(true)}
         />

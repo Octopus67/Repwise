@@ -36,3 +36,6 @@ build/
 data/
 dev.db
 *.db
+
+# Downloaded exercise images (run scripts/download_exercise_images.py to fetch)
+static/exercises/

@@ -1,12 +1,14 @@
 """FastAPI application entry point."""
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError as PydanticValidationError
 
 from src.config.settings import settings
@@ -157,6 +159,10 @@ app.add_exception_handler(PydanticValidationError, pydantic_validation_exception
 async def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
+# Serve exercise images from local static directory
+_static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+if os.path.isdir(_static_dir):
+    app.mount("/static", StaticFiles(directory=_static_dir), name="static")
 
 # Router registration
 from src.modules.auth.router import router as auth_router
