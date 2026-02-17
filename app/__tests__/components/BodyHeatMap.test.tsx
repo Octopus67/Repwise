@@ -83,8 +83,8 @@ describe('BodyHeatMap', () => {
 
     test('front and back region groups are non-empty', () => {
       const { frontRegions, backRegions } = prepareHeatMapData([]);
-      expect(frontRegions.length).toBe(6);
-      expect(backRegions.length).toBe(6);
+      expect(frontRegions.length).toBe(7);
+      expect(backRegions.length).toBe(8);
     });
   });
 
@@ -97,7 +97,7 @@ describe('BodyHeatMap', () => {
     test('hasData is false when all effective_sets are 0', () => {
       const volumes: MuscleGroupVolume[] = [
         { muscle_group: 'chest', effective_sets: 0, frequency: 0, volume_status: 'untrained', mev: 10, mav: 15, mrv: 20 },
-        { muscle_group: 'back', effective_sets: 0, frequency: 0, volume_status: 'untrained', mev: 10, mav: 15, mrv: 20 },
+        { muscle_group: 'lats', effective_sets: 0, frequency: 0, volume_status: 'untrained', mev: 10, mav: 15, mrv: 20 },
       ];
       const { hasData } = prepareHeatMapData(volumes);
       expect(hasData).toBe(false);
@@ -175,10 +175,10 @@ describe('BodyHeatMap', () => {
       );
     });
 
-    test('all 12 regions produce valid muscle group identifiers', () => {
+    test('all 15 regions produce valid muscle group identifiers', () => {
       const expectedIds = [
-        'chest', 'shoulders', 'biceps', 'forearms', 'abs', 'quads',
-        'back', 'triceps', 'glutes', 'hamstrings', 'calves',
+        'chest', 'shoulders', 'biceps', 'forearms', 'abs', 'quads', 'adductors',
+        'lats', 'traps', 'erectors', 'triceps', 'glutes', 'hamstrings', 'calves',
       ];
       const receivedIds = new Set<string>();
 
@@ -212,12 +212,12 @@ describe('BodyHeatMap', () => {
     test('builds correct map from muscleVolumes array', () => {
       const volumes: MuscleGroupVolume[] = [
         { muscle_group: 'chest', effective_sets: 12, frequency: 2, volume_status: 'optimal', mev: 10, mav: 15, mrv: 20 },
-        { muscle_group: 'back', effective_sets: 15, frequency: 3, volume_status: 'optimal', mev: 10, mav: 18, mrv: 22 },
+        { muscle_group: 'lats', effective_sets: 15, frequency: 3, volume_status: 'optimal', mev: 10, mav: 18, mrv: 22 },
       ];
       const { volumeMap } = prepareHeatMapData(volumes);
       expect(volumeMap.size).toBe(2);
       expect(volumeMap.get('chest')?.effective_sets).toBe(12);
-      expect(volumeMap.get('back')?.effective_sets).toBe(15);
+      expect(volumeMap.get('lats')?.effective_sets).toBe(15);
     });
 
     test('shoulders entry maps to both front and back regions via volumeMap lookup', () => {

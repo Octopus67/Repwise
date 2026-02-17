@@ -297,7 +297,8 @@ import re
 # ---------------------------------------------------------------------------
 
 _ALL_MUSCLE_GROUPS = [
-    "chest", "back", "shoulders", "biceps", "triceps",
+    "chest", "back", "lats", "erectors", "adductors",
+    "shoulders", "biceps", "triceps",
     "quads", "hamstrings", "glutes", "calves", "abs",
     "traps", "forearms", "full_body",
 ]

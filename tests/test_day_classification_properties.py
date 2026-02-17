@@ -340,7 +340,7 @@ class TestProperty7MultipleTemplatesMergeMuscleGroups:
 
         assert result.is_training_day is True
         assert result.source == "template"
-        assert "back" in result.muscle_groups
+        assert "lats" in result.muscle_groups
         assert "chest" in result.muscle_groups
 
 

@@ -18,7 +18,8 @@ from src.shared.errors import NotFoundError
 # ---------------------------------------------------------------------------
 
 VALID_MUSCLE_GROUPS = frozenset([
-    "chest", "back", "shoulders", "biceps", "triceps",
+    "chest", "back", "lats", "erectors", "adductors",
+    "shoulders", "biceps", "triceps",
     "quads", "hamstrings", "glutes", "calves", "abs",
     "traps", "forearms", "full_body",
 ])

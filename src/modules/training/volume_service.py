@@ -26,6 +26,9 @@ logger = logging.getLogger(__name__)
 DEFAULT_LANDMARKS: dict[str, tuple[int, int, int]] = {
     "chest": (10, 16, 22),
     "back": (10, 18, 24),
+    "lats": (10, 18, 24),
+    "erectors": (6, 12, 18),
+    "adductors": (4, 10, 16),
     "shoulders": (8, 16, 22),
     "quads": (8, 16, 22),
     "hamstrings": (6, 12, 18),

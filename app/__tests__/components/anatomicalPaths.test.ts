@@ -21,24 +21,24 @@ describe('Anatomical Path Data', () => {
   });
 
   describe('MUSCLE_REGIONS', () => {
-    it('has exactly 12 entries', () => {
-      expect(MUSCLE_REGIONS).toHaveLength(12);
+    it('has exactly 15 entries', () => {
+      expect(MUSCLE_REGIONS).toHaveLength(15);
     });
 
-    it('has exactly 6 front-view regions', () => {
+    it('has exactly 7 front-view regions', () => {
       const front = MUSCLE_REGIONS.filter(r => r.view === 'front');
-      expect(front).toHaveLength(6);
+      expect(front).toHaveLength(7);
     });
 
-    it('has exactly 6 back-view regions', () => {
+    it('has exactly 8 back-view regions', () => {
       const back = MUSCLE_REGIONS.filter(r => r.view === 'back');
-      expect(back).toHaveLength(6);
+      expect(back).toHaveLength(8);
     });
 
     it('contains all expected muscle IDs', () => {
       const expectedIds = [
-        'chest', 'shoulders', 'biceps', 'forearms', 'abs', 'quads',
-        'back', 'triceps', 'glutes', 'hamstrings', 'calves',
+        'chest', 'shoulders', 'biceps', 'forearms', 'abs', 'quads', 'adductors',
+        'lats', 'traps', 'erectors', 'triceps', 'glutes', 'hamstrings', 'calves',
       ];
       const uniqueIds = [...new Set(MUSCLE_REGIONS.map(r => r.id))];
       for (const id of expectedIds) {

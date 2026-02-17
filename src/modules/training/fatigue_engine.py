@@ -76,7 +76,8 @@ class FatigueConfig:
 
 
 MRV_SETS_PER_WEEK: dict[str, int] = {
-    "chest": 22, "back": 22, "shoulders": 22, "quads": 20,
+    "chest": 22, "back": 22, "lats": 22, "erectors": 18, "adductors": 16,
+    "shoulders": 22, "quads": 20,
     "hamstrings": 16, "glutes": 16, "biceps": 20, "triceps": 18,
     "calves": 16, "abs": 20, "traps": 16, "forearms": 16,
 }

@@ -243,7 +243,7 @@ Replace the blocky stick-figure `BodyHeatMap` with anatomical SVG silhouettes. F
     - _Risk:_ Another file may have been added that imports `bodySvgPaths` between when we checked and now. _Mitigation:_ Run `grep -r "bodySvgPaths" app/` one more time before deleting.
     - _Rollback:_ `git checkout -- app/components/analytics/bodySvgPaths.ts`
 
-- [-] 7. CHECKPOINT C — Final verification
+- [x] 7. CHECKPOINT C — Final verification
   - Run full test suite: `npx jest --passWithNoTests` from `app/`
   - Compare pass/fail counts against baseline from step 0.1. No new failures allowed.
   - Run: `npx tsc --noEmit` — zero type errors

@@ -139,13 +139,13 @@ export const BODY_OUTLINES: BodyOutline[] = [
 
 
 /**
- * 12 muscle regions — 6 front, 6 back.
+ * 15 muscle regions — 7 front, 8 back.
  * Each path uses cubic bezier curves for smooth anatomical shapes.
  * Bilateral regions (arms, legs) combine left + right in one path.
  * IDs match the API `muscle_group` field exactly.
  */
 export const MUSCLE_REGIONS: AnatomicalRegion[] = [
-  // ─── Front View (6) ────────────────────────────────────────────────
+  // ─── Front View (7) ────────────────────────────────────────────────
 
   // Chest — pectorals spanning between shoulders
   {
@@ -195,14 +195,38 @@ export const MUSCLE_REGIONS: AnatomicalRegion[] = [
     labelPosition: { x: 100, y: 270 },
   },
 
-  // ─── Back View (6) ─────────────────────────────────────────────────
-
-  // Back — lats + upper/mid back combined (includes traps area)
+  // Adductors — inner thigh muscles, bilateral
   {
-    id: 'back',
+    id: 'adductors',
+    view: 'front',
+    path: 'M94,232 C96,228 98,228 100,232 C100,248 100,266 98,284 C97,292 96,298 94,302 C93,304 92,302 92,298 C91,290 92,272 92,254 C92,244 93,236 94,232 Z M100,232 C102,228 104,228 106,232 C107,236 108,244 108,254 C108,272 109,290 108,298 C108,302 107,304 106,302 C104,298 103,292 102,284 C100,266 100,248 100,232 Z',
+    labelPosition: { x: 100, y: 260 },
+  },
+
+  // ─── Back View (8) ─────────────────────────────────────────────────
+
+  // Lats — latissimus dorsi, large wing-shaped muscles on sides of back, bilateral
+  {
+    id: 'lats',
     view: 'back',
-    path: 'M68,82 C78,76 92,74 100,74 C108,74 122,76 132,82 C136,90 138,105 138,120 C138,140 134,158 128,170 C122,178 112,182 100,182 C88,182 78,178 72,170 C66,158 62,140 62,120 C62,105 64,90 68,82 Z',
-    labelPosition: { x: 100, y: 128 },
+    path: 'M62,98 C64,92 68,88 74,86 C78,84 82,86 85,90 C86,96 86,108 85,122 C84,136 82,150 80,160 C78,166 74,168 70,166 C66,162 63,152 62,140 C61,128 61,112 62,98 Z M115,90 C118,86 122,84 126,86 C132,88 136,92 138,98 C139,112 139,128 138,140 C137,152 134,162 130,166 C126,168 122,166 120,160 C118,150 116,136 115,122 C114,108 114,96 115,90 Z',
+    labelPosition: { x: 100, y: 130 },
+  },
+
+  // Traps — trapezius, diamond-shaped muscle at top of back
+  {
+    id: 'traps',
+    view: 'back',
+    path: 'M72,82 C80,76 90,73 100,72 C110,73 120,76 128,82 C132,88 132,94 128,100 C122,104 112,106 100,106 C88,106 78,104 72,100 C68,94 68,88 72,82 Z',
+    labelPosition: { x: 100, y: 85 },
+  },
+
+  // Erectors — spinal erectors, two vertical columns along the spine in lower back
+  {
+    id: 'erectors',
+    view: 'back',
+    path: 'M90,142 C92,138 95,136 98,138 C98,146 98,158 98,170 C98,178 97,184 96,188 C94,190 92,188 91,184 C90,178 90,166 90,154 C90,148 90,144 90,142 Z M102,138 C105,136 108,138 110,142 C110,144 110,148 110,154 C110,166 110,178 109,184 C108,188 106,190 104,188 C103,184 102,178 102,170 C102,158 102,146 102,138 Z',
+    labelPosition: { x: 100, y: 162 },
   },
 
   // Shoulders (back) — rear deltoids, bilateral
