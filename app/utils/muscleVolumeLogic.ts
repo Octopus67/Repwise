@@ -1,3 +1,5 @@
+import { colors } from '../theme/tokens';
+
 /**
  * Pure utility functions for muscle volume heat map feature.
  */
@@ -60,4 +62,18 @@ export function getStatusLabel(status: string): string {
     above_mrv: 'Above MRV',
   };
   return labels[status] ?? status;
+}
+
+/** 5-tier heat-map color based on effective sets relative to MEV / MRV. */
+export function getHeatMapColor(effectiveSets: number, mev: number, mrv: number): string {
+  // Guard: invalid landmarks
+  if (mev <= 0 || mrv <= 0 || mev > mrv) return colors.heatmap.untrained;
+
+  const clamped = Math.max(0, effectiveSets);
+
+  if (clamped === 0) return colors.heatmap.untrained;
+  if (clamped < mev) return colors.heatmap.belowMev;
+  if (clamped <= mrv * 0.8) return colors.heatmap.optimal;
+  if (clamped <= mrv) return colors.heatmap.nearMrv;
+  return colors.heatmap.aboveMrv;
 }

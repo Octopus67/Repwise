@@ -75,6 +75,17 @@ export const colors = {
     fat: '#F472B6',
     fatSubtle: 'rgba(244,114,182,0.10)',
   },
+
+  heatmap: {
+    untrained: '#1E293B',
+    belowMev: '#22C55E',
+    optimal: '#06B6D4',
+    nearMrv: '#F59E0B',
+    aboveMrv: '#EF4444',
+    silhouetteStroke: 'rgba(255,255,255,0.08)',
+    regionBorder: 'rgba(255,255,255,0.12)',
+    regionOpacity: 0.85,
+  },
 } as const;
 
 

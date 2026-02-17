@@ -1,9 +1,9 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Svg, { Path, G } from 'react-native-svg';
-import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { View, Text, StyleSheet } from 'react-native';
+import { colors, spacing, typography } from '../../theme/tokens';
 import { Skeleton } from '../common/Skeleton';
-import { BODY_REGIONS, VIEWBOX } from './bodySvgPaths';
-import { getStatusColor, getStatusLabel } from '../../utils/muscleVolumeLogic';
+import { MUSCLE_REGIONS, BODY_OUTLINES } from './anatomicalPaths';
+import { BodySilhouette } from './BodySilhouette';
+import { HeatMapLegend } from './HeatMapLegend';
 
 interface MuscleGroupVolume {
   muscle_group: string;
@@ -21,13 +21,6 @@ interface BodyHeatMapProps {
   isLoading?: boolean;
   error?: string | null;
 }
-
-const LEGEND_ITEMS = [
-  { status: 'below_mev', label: 'Below MEV' },
-  { status: 'optimal', label: 'Optimal' },
-  { status: 'approaching_mrv', label: 'Near MRV' },
-  { status: 'above_mrv', label: 'Above MRV' },
-];
 
 export function BodyHeatMap({ muscleVolumes, onMusclePress, isLoading, error }: BodyHeatMapProps) {
   if (isLoading) {
@@ -47,31 +40,16 @@ export function BodyHeatMap({ muscleVolumes, onMusclePress, isLoading, error }: 
     );
   }
 
-  // Guard against null/undefined muscleVolumes
   const safeVolumes = Array.isArray(muscleVolumes) ? muscleVolumes : [];
-  const volumeMap = new Map(safeVolumes.map((v) => [v.muscle_group, v]));
-  const hasData = safeVolumes.some((v) => v.effective_sets > 0);
+  const volumeMap = new Map<string, MuscleGroupVolume>(
+    safeVolumes.map((v) => [v.muscle_group, v]),
+  );
+  const hasData = safeVolumes.length > 0 && safeVolumes.some((v) => v.effective_sets > 0);
 
-  const frontRegions = BODY_REGIONS.filter((r) => r.view === 'front');
-  const backRegions = BODY_REGIONS.filter((r) => r.view === 'back');
-
-  const renderRegions = (regions: typeof BODY_REGIONS) =>
-    regions.map((region) => {
-      const vol = volumeMap.get(region.muscleGroup);
-      const fillColor = vol ? getStatusColor(vol.volume_status) : '#6B7280';
-      return (
-        <G key={`${region.view}-${region.muscleGroup}`}>
-          <Path
-            d={region.pathData}
-            fill={fillColor}
-            opacity={0.8}
-            stroke="rgba(255,255,255,0.15)"
-            strokeWidth={0.5}
-            onPress={() => onMusclePress(region.muscleGroup)}
-          />
-        </G>
-      );
-    });
+  const frontRegions = MUSCLE_REGIONS.filter((r) => r.view === 'front');
+  const backRegions = MUSCLE_REGIONS.filter((r) => r.view === 'back');
+  const frontOutline = BODY_OUTLINES.find((o) => o.view === 'front')!;
+  const backOutline = BODY_OUTLINES.find((o) => o.view === 'back')!;
 
   return (
     <View>
@@ -81,26 +59,26 @@ export function BodyHeatMap({ muscleVolumes, onMusclePress, isLoading, error }: 
       <View style={styles.diagramRow}>
         <View style={styles.diagramCol}>
           <Text style={styles.viewLabel}>Front</Text>
-          <Svg viewBox={VIEWBOX} style={styles.svg}>
-            {renderRegions(frontRegions)}
-          </Svg>
+          <BodySilhouette
+            view="front"
+            regions={frontRegions}
+            outline={frontOutline}
+            volumeMap={volumeMap}
+            onRegionPress={onMusclePress}
+          />
         </View>
         <View style={styles.diagramCol}>
           <Text style={styles.viewLabel}>Back</Text>
-          <Svg viewBox={VIEWBOX} style={styles.svg}>
-            {renderRegions(backRegions)}
-          </Svg>
+          <BodySilhouette
+            view="back"
+            regions={backRegions}
+            outline={backOutline}
+            volumeMap={volumeMap}
+            onRegionPress={onMusclePress}
+          />
         </View>
       </View>
-      {/* Legend */}
-      <View style={styles.legend}>
-        {LEGEND_ITEMS.map((item) => (
-          <View key={item.status} style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: getStatusColor(item.status) }]} />
-            <Text style={styles.legendText}>{item.label}</Text>
-          </View>
-        ))}
-      </View>
+      <HeatMapLegend />
     </View>
   );
 }
@@ -139,15 +117,4 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.medium,
     marginBottom: spacing[1],
   },
-  svg: { width: '100%', height: 250 },
-  legend: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    gap: spacing[3],
-    marginTop: spacing[3],
-  },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: spacing[1] },
-  legendDot: { width: 10, height: 10, borderRadius: 5 },
-  legendText: { color: colors.text.secondary, fontSize: typography.size.xs },
 });

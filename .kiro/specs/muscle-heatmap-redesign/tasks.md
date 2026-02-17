@@ -6,7 +6,7 @@ Replace the blocky stick-figure `BodyHeatMap` with anatomical SVG silhouettes. F
 
 ## Pre-Flight
 
-- [ ] 0. Baseline verification and environment readiness
+- [x] 0. Baseline verification and environment readiness
   - [x] 0.1 Record current test counts — run `npx jest --passWithNoTests 2>&1 | tail -5` in `app/` and capture pass/fail/skip counts. Save output to a scratch note for comparison at final checkpoint.
     - _Risk:_ Tests may already be failing. _Mitigation:_ Note pre-existing failures so they are not attributed to this work.
     - _Rollback:_ N/A — read-only step.
@@ -19,14 +19,14 @@ Replace the blocky stick-figure `BodyHeatMap` with anatomical SVG silhouettes. F
     - _Risk:_ Missing or incompatible version. _Mitigation:_ `npm install --save-dev fast-check@^4` if missing.
     - _Rollback:_ N/A — read-only step.
 
-  - [-] 0.4 Create a git checkpoint — `git add -A && git commit -m "chore: baseline before muscle-heatmap-redesign"`.
+  - [x] 0.4 Create a git checkpoint — `git add -A && git commit -m "chore: baseline before muscle-heatmap-redesign"`.
     - _Risk:_ Uncommitted work from other features. _Mitigation:_ Stash or commit unrelated changes first.
     - _Rollback:_ N/A — this IS the rollback anchor.
 
 ## Tasks
 
-- [ ] 1. Extend design tokens and add color mapping function
-  - [~] 1.1 Add `heatmap` color tokens to `app/theme/tokens.ts`
+- [x] 1. Extend design tokens and add color mapping function
+  - [x] 1.1 Add `heatmap` color tokens to `app/theme/tokens.ts`
     - Inside the `colors` object (after the `macro` block, before the closing `} as const`), add:
       ```typescript
       heatmap: {
@@ -45,7 +45,7 @@ Replace the blocky stick-figure `BodyHeatMap` with anatomical SVG silhouettes. F
     - _Risk:_ TypeScript `as const` assertion may need the new block to also be `as const`-compatible (no mutable types). _Mitigation:_ All values are literals — no issue.
     - _Rollback:_ `git checkout -- app/theme/tokens.ts`
 
-  - [~] 1.2 Add `getHeatMapColor(effectiveSets: number, mev: number, mrv: number): string` to `app/utils/muscleVolumeLogic.ts`
+  - [x] 1.2 Add `getHeatMapColor(effectiveSets: number, mev: number, mrv: number): string` to `app/utils/muscleVolumeLogic.ts`
     - Import `colors` from `../../theme/tokens` (relative path: `../theme/tokens` from utils).
     - Pure function implementing the 5-tier decision table:
       1. If `mev <= 0 || mrv <= 0 || mev > mrv` → return `colors.heatmap.untrained`
@@ -60,7 +60,7 @@ Replace the blocky stick-figure `BodyHeatMap` with anatomical SVG silhouettes. F
     - _Risk:_ Import path for tokens from utils folder. _Mitigation:_ Existing file already has no token import — verify relative path `../theme/tokens` resolves. Check with `getDiagnostics`.
     - _Rollback:_ `git checkout -- app/utils/muscleVolumeLogic.ts`
 
-  - [~] 1.3 Write property tests for `getHeatMapColor` in `app/__tests__/utils/muscleHeatmapColor.test.ts`
+  - [x] 1.3 Write property tests for `getHeatMapColor` in `app/__tests__/utils/muscleHeatmapColor.test.ts`
     - Import `{ getHeatMapColor }` from `../../utils/muscleVolumeLogic`
     - Import `fc` from `fast-check`
     - Import `{ colors }` from `../../theme/tokens`
@@ -87,7 +87,7 @@ Replace the blocky stick-figure `BodyHeatMap` with anatomical SVG silhouettes. F
     - _Risk:_ `fast-check` import resolution. _Mitigation:_ Already confirmed in `devDependencies`.
     - _Rollback:_ Delete `app/__tests__/utils/muscleHeatmapColor.test.ts`
 
-  - [~] 1.4 Write property test for `mev > mrv` edge case
+  - [x] 1.4 Write property test for `mev > mrv` edge case
     - **Property 3: mev > mrv always produces untrained color**
     - **Validates: Requirements 5.7 (extended)**
     - Generator: `fc.record({ sets: fc.integer({ min: 0, max: 100 }), mev: fc.integer({ min: 2, max: 50 }), mrv: fc.integer({ min: 1, max: 49 }) })` filtered by `mev > mrv`
@@ -95,8 +95,8 @@ Replace the blocky stick-figure `BodyHeatMap` with anatomical SVG silhouettes. F
     - Add to the same test file `app/__tests__/utils/muscleHeatmapColor.test.ts`
     - _Risk:_ None — additive test. _Rollback:_ Remove the test block.
 
-- [ ] 2. Create anatomical SVG path data module
-  - [~] 2.1 Create `app/components/analytics/anatomicalPaths.ts`
+- [x] 2. Create anatomical SVG path data module
+  - [x] 2.1 Create `app/components/analytics/anatomicalPaths.ts`
     - Export `AnatomicalRegion` interface: `{ id: string; view: 'front' | 'back'; path: string; labelPosition: { x: number; y: number } }`
     - Export `BodyOutline` interface: `{ view: 'front' | 'back'; path: string }`
     - Export `const VIEWBOX = '0 0 200 440'`
@@ -111,7 +111,7 @@ Replace the blocky stick-figure `BodyHeatMap` with anatomical SVG silhouettes. F
     - _Risk:_ SVG path authoring is the most labor-intensive step. Paths must look anatomically correct. _Mitigation:_ Use reference SVG body outlines (e.g., from open-source fitness apps or SVG editors). Test visually in the simulator before proceeding.
     - _Rollback:_ Delete `app/components/analytics/anatomicalPaths.ts`
 
-  - [~] 2.2 Write unit tests for anatomical path data in `app/__tests__/components/anatomicalPaths.test.ts`
+  - [x] 2.2 Write unit tests for anatomical path data in `app/__tests__/components/anatomicalPaths.test.ts`
     - Import `{ MUSCLE_REGIONS, BODY_OUTLINES, VIEWBOX }` from `../../components/analytics/anatomicalPaths`
     - Test: `MUSCLE_REGIONS` has exactly 12 entries
     - Test: Exactly 6 regions have `view === 'front'`
@@ -125,15 +125,15 @@ Replace the blocky stick-figure `BodyHeatMap` with anatomical SVG silhouettes. F
     - _Requirements: 2.1, 2.2_
     - _Risk:_ None — pure data validation. _Rollback:_ Delete test file.
 
-- [ ] 3. CHECKPOINT A — Tokens, color logic, and path data verified
+- [x] 3. CHECKPOINT A — Tokens, color logic, and path data verified
   - Run: `npx jest muscleHeatmapColor anatomicalPaths --passWithNoTests` from `app/`
   - Run: `npx tsc --noEmit` to verify no type errors in new/modified files
   - Gate: All property tests pass (100+ iterations each). All unit tests pass. Zero TypeScript errors.
   - If failing: Fix before proceeding. Do not start Phase 4 with broken foundations.
   - _Risk:_ Type errors from token additions. _Mitigation:_ `getDiagnostics` on `tokens.ts` and `muscleVolumeLogic.ts`.
 
-- [ ] 4. Redesign BodyHeatMap component
-  - [~] 4.1 Create `app/components/analytics/HeatMapLegend.tsx`
+- [x] 4. Redesign BodyHeatMap component
+  - [x] 4.1 Create `app/components/analytics/HeatMapLegend.tsx`
     - Import `{ View, Text, StyleSheet }` from `react-native`
     - Import `{ colors, spacing, typography }` from `../../theme/tokens`
     - Define `LEGEND_ITEMS` array:
@@ -152,7 +152,7 @@ Replace the blocky stick-figure `BodyHeatMap` with anatomical SVG silhouettes. F
     - _Requirements: 3.6, 6.2_
     - _Risk:_ None — new file, no dependencies beyond tokens. _Rollback:_ Delete file.
 
-  - [~] 4.2 Create `app/components/analytics/BodySilhouette.tsx`
+  - [x] 4.2 Create `app/components/analytics/BodySilhouette.tsx`
     - Import `{ Animated }` from `react-native`
     - Import `Svg, { Path, G }` from `react-native-svg`
     - Import `{ AnatomicalRegion, BodyOutline, VIEWBOX }` from `./anatomicalPaths`
@@ -180,7 +180,7 @@ Replace the blocky stick-figure `BodyHeatMap` with anatomical SVG silhouettes. F
     - _Risk:_ Animated opacity on individual paths may cause re-renders. _Mitigation:_ Use `useRef` for `Animated.Value` per region, not state. Keep it lightweight.
     - _Rollback:_ Delete file.
 
-  - [~] 4.3 Rewrite `app/components/analytics/BodyHeatMap.tsx`
+  - [x] 4.3 Rewrite `app/components/analytics/BodyHeatMap.tsx`
     - Keep the same exported interface: `BodyHeatMapProps { muscleVolumes: MuscleGroupVolume[]; onMusclePress: (muscleGroup: string) => void; isLoading?: boolean; error?: string | null; }`
     - Remove imports from `./bodySvgPaths` and `getStatusColor`
     - Add imports:
@@ -203,13 +203,13 @@ Replace the blocky stick-figure `BodyHeatMap` with anatomical SVG silhouettes. F
     - _Risk:_ Old `bodySvgPaths.ts` import removed but file still exists. _Mitigation:_ Cleanup in step 5.
     - _Rollback:_ `git checkout -- app/components/analytics/BodyHeatMap.tsx`
 
-  - [~] 4.4 Write unit tests for HeatMapLegend in `app/__tests__/components/HeatMapLegend.test.tsx`
+  - [x] 4.4 Write unit tests for HeatMapLegend in `app/__tests__/components/HeatMapLegend.test.tsx`
     - Import `{ render }` from `@testing-library/react-native`
     - Test: renders 5 legend items with labels "Untrained", "Below MEV", "Optimal", "Near MRV", "Above MRV"
     - _Requirements: 3.6_
     - _Risk:_ None. _Rollback:_ Delete test file.
 
-  - [~] 4.5 Write unit tests for BodyHeatMap in `app/__tests__/components/BodyHeatMap.test.tsx`
+  - [x] 4.5 Write unit tests for BodyHeatMap in `app/__tests__/components/BodyHeatMap.test.tsx`
     - Import `{ render, fireEvent }` from `@testing-library/react-native`
     - Test: renders "Front" and "Back" labels
     - Test: empty `muscleVolumes=[]` shows "No training data" text
@@ -224,7 +224,7 @@ Replace the blocky stick-figure `BodyHeatMap` with anatomical SVG silhouettes. F
     - _Risk:_ Mocking `react-native-svg` in Jest. _Mitigation:_ Use `jest.mock('react-native-svg', ...)` with simple View/Text stubs. This is a common pattern in RN testing.
     - _Rollback:_ Delete test file.
 
-- [ ] 5. CHECKPOINT B — Full component integration verified
+- [x] 5. CHECKPOINT B — Full component integration verified
   - Run: `npx jest muscleHeatmap anatomicalPaths HeatMapLegend BodyHeatMap --passWithNoTests` from `app/`
   - Run: `npx tsc --noEmit` — zero type errors
   - Visual check: Run the app in simulator, navigate to Analytics → Training tab → Muscle Volume Heat Map. Verify:
@@ -235,15 +235,15 @@ Replace the blocky stick-figure `BodyHeatMap` with anatomical SVG silhouettes. F
   - Gate: All tests pass. Visual rendering is acceptable. DrillDownModal still works.
   - If failing: Fix before proceeding to cleanup.
 
-- [ ] 6. Clean up old path data
-  - [~] 6.1 Remove `app/components/analytics/bodySvgPaths.ts`
+- [x] 6. Clean up old path data
+  - [x] 6.1 Remove `app/components/analytics/bodySvgPaths.ts`
     - Confirmed: Only `BodyHeatMap.tsx` imported from `bodySvgPaths.ts` (verified via grep). `BodyHeatMap.tsx` was rewritten in step 4.3 to import from `anatomicalPaths.ts` instead.
     - Delete the file.
     - _Requirements: 1.2_
     - _Risk:_ Another file may have been added that imports `bodySvgPaths` between when we checked and now. _Mitigation:_ Run `grep -r "bodySvgPaths" app/` one more time before deleting.
     - _Rollback:_ `git checkout -- app/components/analytics/bodySvgPaths.ts`
 
-- [ ] 7. CHECKPOINT C — Final verification
+- [-] 7. CHECKPOINT C — Final verification
   - Run full test suite: `npx jest --passWithNoTests` from `app/`
   - Compare pass/fail counts against baseline from step 0.1. No new failures allowed.
   - Run: `npx tsc --noEmit` — zero type errors
