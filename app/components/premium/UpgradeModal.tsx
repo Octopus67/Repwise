@@ -132,12 +132,14 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text.primary,
     fontSize: typography.size.xl,
+    lineHeight: typography.lineHeight.xl,
     fontWeight: typography.weight.semibold,
     textAlign: 'center',
   },
   subtitle: {
     color: colors.text.secondary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     textAlign: 'center',
     marginTop: spacing[2],
     marginBottom: spacing[6],
@@ -163,17 +165,20 @@ const styles = StyleSheet.create({
   planLabel: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
   },
   planPrice: {
     color: colors.text.primary,
     fontSize: typography.size.lg,
+    lineHeight: typography.lineHeight.lg,
     fontWeight: typography.weight.semibold,
     marginTop: spacing[1],
   },
   planSavings: {
     color: colors.semantic.positive,
     fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
     fontWeight: typography.weight.medium,
     marginTop: spacing[1],
   },
@@ -190,6 +195,7 @@ const styles = StyleSheet.create({
   featureText: {
     color: colors.text.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
   },
   cta: {
     marginBottom: spacing[3],
@@ -201,5 +207,6 @@ const styles = StyleSheet.create({
   cancelText: {
     color: colors.text.muted,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
   },
 });

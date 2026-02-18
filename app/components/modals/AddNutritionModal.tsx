@@ -1432,6 +1432,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[1],
   },
@@ -1449,6 +1450,7 @@ const styles = StyleSheet.create({
   clearBtnText: {
     color: colors.text.muted,
     fontSize: typography.size.md,
+    lineHeight: typography.lineHeight.md,
   },
   barcodeBtn: {
     marginLeft: spacing[2],
@@ -1462,11 +1464,13 @@ const styles = StyleSheet.create({
   errorText: {
     color: colors.semantic.warning,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     marginTop: spacing[1],
   },
   emptyText: {
     color: colors.text.muted,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     marginTop: spacing[1],
     textAlign: 'center' as const,
   },
@@ -1488,11 +1492,13 @@ const styles = StyleSheet.create({
   resultName: {
     color: colors.text.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.medium,
   },
   resultMeta: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
     marginTop: spacing[1],
   },
 
@@ -1511,6 +1517,7 @@ const styles = StyleSheet.create({
   multiplierHint: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
     marginTop: spacing[1],
   },
 
@@ -1533,6 +1540,7 @@ const styles = StyleSheet.create({
   servingPillText: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
   },
   servingPillTextActive: {
@@ -1560,12 +1568,14 @@ const styles = StyleSheet.create({
   favoriteChipName: {
     color: colors.text.primary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
     maxWidth: 120,
   },
   favoriteChipCal: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
     marginTop: spacing[1],
   },
 
@@ -1580,6 +1590,7 @@ const styles = StyleSheet.create({
   label: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[1],
   },
@@ -1590,6 +1601,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border.default,
     color: colors.text.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     padding: spacing[3],
   },
   inputLocked: {
@@ -1613,6 +1625,7 @@ const styles = StyleSheet.create({
   submitText: {
     color: colors.text.primary,
     fontSize: typography.size.md,
+    lineHeight: typography.lineHeight.md,
     fontWeight: typography.weight.semibold,
   },
 
@@ -1629,6 +1642,7 @@ const styles = StyleSheet.create({
   microChevron: {
     color: colors.text.muted,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
   },
   microGrid: {
     flexDirection: 'row',
@@ -1642,6 +1656,7 @@ const styles = StyleSheet.create({
   microLabel: {
     color: colors.text.secondary,
     fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[1],
   },
@@ -1659,11 +1674,13 @@ const styles = StyleSheet.create({
   successText: {
     color: colors.semantic.positive,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
   },
   saveFavLink: {
     color: colors.accent.primary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.semibold,
     textDecorationLine: 'underline',
   },
@@ -1675,6 +1692,7 @@ const styles = StyleSheet.create({
   doneBtnText: {
     color: colors.text.muted,
     fontSize: typography.size.md,
+    lineHeight: typography.lineHeight.md,
   },
 
   // ── Tabs ─────────────────────────────────────────────────────────────────
@@ -1696,6 +1714,7 @@ const styles = StyleSheet.create({
   tabText: {
     color: colors.text.muted,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
   },
   tabTextActive: {
@@ -1719,16 +1738,19 @@ const styles = StyleSheet.create({
   planCardName: {
     color: colors.text.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.medium,
     flex: 1,
   },
   planFavIcon: {
     fontSize: typography.size.md,
+    lineHeight: typography.lineHeight.md,
     marginLeft: spacing[2],
   },
   planCardMacros: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
     marginTop: spacing[1],
   },
   createPlanBtn: {
@@ -1743,6 +1765,7 @@ const styles = StyleSheet.create({
   createPlanBtnText: {
     color: colors.accent.primary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
   },
 
@@ -1767,11 +1790,13 @@ const styles = StyleSheet.create({
   planItemIndex: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
   },
   planItemRemove: {
     color: colors.semantic.negative,
     fontSize: typography.size.md,
+    lineHeight: typography.lineHeight.md,
     padding: spacing[1],
   },
   addItemBtn: {
@@ -1785,6 +1810,7 @@ const styles = StyleSheet.create({
   addItemBtnText: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
   },
   planAggregate: {
     backgroundColor: colors.accent.primaryMuted,
@@ -1795,6 +1821,7 @@ const styles = StyleSheet.create({
   planAggregateMacros: {
     color: colors.text.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.semibold,
     marginTop: spacing[1],
   },
@@ -1814,5 +1841,6 @@ const styles = StyleSheet.create({
   cancelPlanBtnText: {
     color: colors.text.muted,
     fontSize: typography.size.md,
+    lineHeight: typography.lineHeight.md,
   },
 });

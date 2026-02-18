@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Text, View, StyleSheet, Animated } from 'react-native';
+import { Text, View, StyleSheet } from 'react-native';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { colors, spacing, typography } from '../../theme/tokens';
 import { formatWeight } from '../../utils/unitConversion';
 import { useStore } from '../../store';
+import { useSkeletonPulse } from '../../hooks/useSkeletonPulse';
 import api from '../../services/api';
 
 interface PreviousPerformanceProps {
@@ -20,20 +22,11 @@ export function PreviousPerformance({ exerciseName }: PreviousPerformanceProps) 
   const unitSystem = useStore((s) => s.unitSystem);
   const [data, setData] = useState<PreviousPerformanceData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [pulseAnim] = useState(() => new Animated.Value(0.3));
+  const pulseOpacity = useSkeletonPulse();
 
-  // Pulse animation for loading skeleton
-  useEffect(() => {
-    if (!loading) return;
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 0.3, duration: 600, useNativeDriver: true }),
-      ]),
-    );
-    animation.start();
-    return () => animation.stop();
-  }, [loading, pulseAnim]);
+  const pulseStyle = useAnimatedStyle(() => ({
+    opacity: pulseOpacity.value,
+  }));
 
   // Fetch previous performance on mount / exercise change
   useEffect(() => {
@@ -62,7 +55,7 @@ export function PreviousPerformance({ exerciseName }: PreviousPerformanceProps) 
   if (loading) {
     return (
       <View style={styles.container}>
-        <Animated.Text style={[styles.skeleton, { opacity: pulseAnim }]}>
+        <Animated.Text style={[styles.skeleton, pulseStyle]}>
           Loading previous…
         </Animated.Text>
       </View>

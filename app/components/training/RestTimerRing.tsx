@@ -8,12 +8,14 @@
  * Accepts optional `size` prop for compact rendering (e.g. in RestTimerBar).
  */
 
-import { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { useEffect } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
+import Animated, { useSharedValue, useAnimatedProps, withTiming } from 'react-native-reanimated';
 import { getTimerColor } from '../../utils/restDurationV2';
 import { formatRestTimer } from '../../utils/durationFormat';
 import { colors, typography } from '../../theme/tokens';
+import { useReduceMotion } from '../../hooks/useReduceMotion';
 
 export { getTimerColor };
 
@@ -53,8 +55,9 @@ export function RestTimerRing({
   const circumference = 2 * Math.PI * r;
   const center = size / 2;
   const compact = size < 80;
+  const reduceMotion = useReduceMotion();
 
-  const animatedOffset = useRef(new Animated.Value(0)).current;
+  const animatedOffset = useSharedValue(0);
 
   // Animate the arc offset when remaining changes
   useEffect(() => {
@@ -62,12 +65,16 @@ export function RestTimerRing({
     const progress = 1 - remainingSeconds / durationSeconds;
     const target = circumference * Math.min(1, Math.max(0, progress));
 
-    Animated.timing(animatedOffset, {
-      toValue: target,
-      duration: paused ? 0 : 300,
-      useNativeDriver: false,
-    }).start();
-  }, [remainingSeconds, durationSeconds, paused, circumference]);
+    if (reduceMotion || paused) {
+      animatedOffset.value = target;
+    } else {
+      animatedOffset.value = withTiming(target, { duration: 300 });
+    }
+  }, [remainingSeconds, durationSeconds, paused, circumference, reduceMotion]);
+
+  const animatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: animatedOffset.value,
+  }));
 
   const colorName = getTimerColor(remainingSeconds);
   const ringColor =
@@ -98,7 +105,7 @@ export function RestTimerRing({
           strokeWidth={strokeWidth}
           fill="none"
           strokeDasharray={circumference}
-          strokeDashoffset={animatedOffset}
+          animatedProps={animatedProps}
           strokeLinecap="round"
           transform={`rotate(-90 ${center} ${center})`}
         />

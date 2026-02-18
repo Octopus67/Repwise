@@ -58,8 +58,8 @@ export function IntentStep({ onNext, onSkip }: Props) {
 
 const styles = StyleSheet.create({
   scroll: { paddingBottom: spacing[8] },
-  heading: { color: colors.text.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, marginBottom: spacing[2] },
-  subheading: { color: colors.text.secondary, fontSize: typography.size.base, marginBottom: spacing[6] },
+  heading: { color: colors.text.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, marginBottom: spacing[2], lineHeight: typography.lineHeight['2xl'] },
+  subheading: { color: colors.text.secondary, fontSize: typography.size.base, marginBottom: spacing[6], lineHeight: typography.lineHeight.base },
   card: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: colors.bg.surfaceRaised, borderRadius: radius.md,
@@ -69,8 +69,8 @@ const styles = StyleSheet.create({
   cardSelected: { borderColor: colors.accent.primary, backgroundColor: colors.accent.primaryMuted },
   iconWrap: { marginRight: spacing[3] },
   cardContent: { flex: 1 },
-  cardTitle: { color: colors.text.primary, fontSize: typography.size.lg, fontWeight: typography.weight.semibold },
-  cardDesc: { color: colors.text.secondary, fontSize: typography.size.sm, marginTop: 2 },
-  skipLink: { alignItems: 'center', marginTop: spacing[4] },
-  skipText: { color: colors.text.muted, fontSize: typography.size.sm },
+  cardTitle: { color: colors.text.primary, fontSize: typography.size.lg, fontWeight: typography.weight.semibold, lineHeight: typography.lineHeight.lg },
+  cardDesc: { color: colors.text.secondary, fontSize: typography.size.sm, marginTop: spacing[0.5], lineHeight: typography.lineHeight.sm },
+  skipLink: { alignItems: 'center', marginTop: spacing[4], minHeight: 44, justifyContent: 'center' },
+  skipText: { color: colors.text.muted, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm },
 });

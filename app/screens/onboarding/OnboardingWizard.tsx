@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Platform } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
-import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { colors, spacing, typography, radius, motion } from '../../theme/tokens';
 import { useOnboardingStore } from '../../store/onboardingSlice';
 
 // Step components (will be created in subsequent tasks)
@@ -31,7 +31,7 @@ export function OnboardingWizard({ onComplete, onSkip }: Props) {
   // Progress bar animation
   const progress = useSharedValue(currentStep / TOTAL_STEPS);
   useEffect(() => {
-    progress.value = withTiming(currentStep / TOTAL_STEPS, { duration: 300, easing: Easing.out(Easing.ease) });
+    progress.value = withTiming(currentStep / TOTAL_STEPS, { duration: motion.duration.slow, easing: Easing.out(Easing.ease) });
   }, [currentStep]);
 
 

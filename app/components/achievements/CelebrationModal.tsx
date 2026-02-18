@@ -4,7 +4,7 @@ import Animated, {
   FadeIn,
   ZoomIn,
 } from 'react-native-reanimated';
-import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { colors, spacing, typography, radius, letterSpacing as ls } from '../../theme/tokens';
 import { Button } from '../common/Button';
 import { Icon } from '../common/Icon';
 
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: ls.wider,
     marginBottom: spacing[2],
   },
   title: {

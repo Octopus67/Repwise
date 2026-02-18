@@ -6,18 +6,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
-  LayoutAnimation,
-  Platform,
-  UIManager,
 } from 'react-native';
+import Animated, { Layout } from 'react-native-reanimated';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
 import { Icon } from '../common/Icon';
 import { formatTimer } from '../../utils/formatTimer';
-
-// Enable LayoutAnimation on Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+import { useReduceMotion } from '../../hooks/useReduceMotion';
+import { useHaptics } from '../../hooks/useHaptics';
 
 interface RestTimerProps {
   durationSeconds: number;
@@ -79,7 +74,10 @@ export function RestTimer({
             // expo-av not available — silent fallback
           }
           // Defer onComplete to avoid setState during render
-          setTimeout(() => onCompleteRef.current(), 0);
+          setTimeout(() => {
+            hapticNotification('success');
+            onCompleteRef.current();
+          }, 0);
           return 0;
         }
         return prev - 1;
@@ -102,8 +100,10 @@ export function RestTimer({
     onDismiss();
   }, [onDismiss]);
 
+  const reduceMotion = useReduceMotion();
+  const { notification: hapticNotification } = useHaptics();
+
   const toggleSettings = useCallback(() => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setSettingsOpen((prev) => !prev);
   }, []);
 
@@ -112,7 +112,6 @@ export function RestTimer({
     const isolation = parseInt(isolationDraft, 10);
     if (isNaN(compound) || isNaN(isolation) || compound <= 0 || isolation <= 0) return;
     onSettingsChange?.(compound, isolation);
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setSettingsOpen(false);
   }, [compoundDraft, isolationDraft, onSettingsChange]);
 
@@ -153,7 +152,7 @@ export function RestTimer({
 
           {/* Inline settings panel */}
           {settingsOpen && (
-            <View style={styles.settingsPanel}>
+            <Animated.View layout={reduceMotion ? undefined : Layout} style={styles.settingsPanel}>
               <View style={styles.settingsRow}>
                 <Text style={styles.settingsLabel}>Compound rest (s)</Text>
                 <TextInput
@@ -181,7 +180,7 @@ export function RestTimer({
               >
                 <Text style={styles.settingsSaveText}>Save</Text>
               </TouchableOpacity>
-            </View>
+            </Animated.View>
           )}
 
           <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.7}>
@@ -219,6 +218,7 @@ const styles = StyleSheet.create({
   label: {
     color: colors.text.secondary,
     fontSize: typography.size.md,
+    lineHeight: typography.lineHeight.md,
     fontWeight: typography.weight.medium,
   },
   gearBtn: {
@@ -228,6 +228,7 @@ const styles = StyleSheet.create({
   countdown: {
     color: colors.accent.primary,
     fontSize: typography.size['3xl'] * 2,
+    lineHeight: typography.lineHeight['5xl'],
     fontWeight: typography.weight.bold,
     marginBottom: spacing[6],
   },
@@ -242,6 +243,7 @@ const styles = StyleSheet.create({
   skipText: {
     color: colors.text.secondary,
     fontSize: typography.size.md,
+    lineHeight: typography.lineHeight.md,
     fontWeight: typography.weight.medium,
   },
   // Settings panel
@@ -263,6 +265,7 @@ const styles = StyleSheet.create({
   settingsLabel: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     flex: 1,
   },
   settingsInput: {
@@ -287,6 +290,7 @@ const styles = StyleSheet.create({
   settingsSaveText: {
     color: colors.text.primary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.semibold,
   },
 });

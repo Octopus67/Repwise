@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, useWindowDimensions } from 'react-native';
-import { colors, spacing, typography } from '../../theme/tokens';
+import { colors, spacing, typography, letterSpacing as ls } from '../../theme/tokens';
 import { AchievementCard } from './AchievementCard';
 import { Skeleton } from '../common/Skeleton';
 import api from '../../services/api';
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[2],
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: ls.wide,
   },
   row: {
     gap: spacing[1],

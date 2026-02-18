@@ -6,7 +6,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { colors } from '../../theme/tokens';
+import { colors, motion } from '../../theme/tokens';
 
 interface SkeletonProps {
   width: number | string;
@@ -37,7 +37,7 @@ export function Skeleton({
   const opacity = useSharedValue(0.3);
 
   useEffect(() => {
-    opacity.value = withRepeat(withTiming(0.7, { duration: 600 }), -1, true);
+    opacity.value = withRepeat(withTiming(0.7, { duration: motion.duration.pulse }), -1, true);
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({

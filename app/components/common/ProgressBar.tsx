@@ -6,7 +6,7 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { colors, spacing, typography } from '../../theme/tokens';
+import { colors, spacing, typography, motion } from '../../theme/tokens';
 import { computeBarFill } from '../../utils/progressBarLogic';
 
 interface ProgressBarProps {

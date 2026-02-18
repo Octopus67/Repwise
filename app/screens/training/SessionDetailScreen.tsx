@@ -19,7 +19,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { colors, radius, spacing, typography, letterSpacing as ls } from '../../theme/tokens';
 import { Card } from '../../components/common/Card';
 import { Skeleton } from '../../components/common/Skeleton';
 import { Icon } from '../../components/common/Icon';
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[1],
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: ls.wide,
   },
   notesText: {
     color: colors.text.secondary,

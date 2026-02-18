@@ -99,6 +99,7 @@ const styles = StyleSheet.create({
   name: {
     color: colors.text.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.medium,
   },
   tagRow: {
@@ -124,10 +125,12 @@ const styles = StyleSheet.create({
   tagText: {
     color: colors.text.secondary,
     fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
   },
   chevron: {
     color: colors.text.muted,
     fontSize: typography.size.xl,
+    lineHeight: typography.lineHeight.xl,
     marginLeft: spacing[2],
   },
 });

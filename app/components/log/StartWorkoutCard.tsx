@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { colors, spacing, typography, radius, letterSpacing as ls } from '../../theme/tokens';
 import type { WorkoutTemplateResponse } from '../../types/training';
 
 // ─── 5.1: Props Interface ────────────────────────────────────────────────────
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing[2],
     marginTop: spacing[2],
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: ls.wide,
   },
   templateRow: {
     flexDirection: 'row',

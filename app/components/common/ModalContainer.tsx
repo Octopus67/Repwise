@@ -14,7 +14,7 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { colors, typography, radius, spacing } from '../../theme/tokens';
+import { colors, typography, radius, spacing, motion } from '../../theme/tokens';
 import { Icon } from './Icon';
 
 interface ModalContainerProps {
@@ -43,19 +43,19 @@ export function ModalContainer({
   useEffect(() => {
     if (visible) {
       if (isWeb) {
-        scale.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.ease) });
-        opacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.ease) });
+        scale.value = withTiming(1, { duration: motion.duration.default, easing: Easing.out(Easing.ease) });
+        opacity.value = withTiming(1, { duration: motion.duration.default, easing: Easing.out(Easing.ease) });
       } else {
-        translateY.value = withTiming(0, { duration: 250, easing: Easing.out(Easing.ease) });
-        opacity.value = withTiming(1, { duration: 250, easing: Easing.out(Easing.ease) });
+        translateY.value = withTiming(0, { duration: motion.duration.moderate, easing: Easing.out(Easing.ease) });
+        opacity.value = withTiming(1, { duration: motion.duration.moderate, easing: Easing.out(Easing.ease) });
       }
     } else {
       if (isWeb) {
-        scale.value = withTiming(0.95, { duration: 150, easing: Easing.in(Easing.ease) });
-        opacity.value = withTiming(0, { duration: 150, easing: Easing.in(Easing.ease) });
+        scale.value = withTiming(0.95, { duration: motion.duration.quick, easing: Easing.in(Easing.ease) });
+        opacity.value = withTiming(0, { duration: motion.duration.quick, easing: Easing.in(Easing.ease) });
       } else {
-        translateY.value = withTiming(300, { duration: 200, easing: Easing.in(Easing.ease) });
-        opacity.value = withTiming(0, { duration: 200, easing: Easing.in(Easing.ease) });
+        translateY.value = withTiming(300, { duration: motion.duration.default, easing: Easing.in(Easing.ease) });
+        opacity.value = withTiming(0, { duration: motion.duration.default, easing: Easing.in(Easing.ease) });
       }
     }
   }, [visible]);
@@ -120,7 +120,7 @@ export function ModalContainer({
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: colors.bg.overlay,
   },
   webOverlay: {
     flex: 1,
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing[4],
   },
   title: {
-    fontSize: 18,
+    fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
     color: colors.text.primary,
   },

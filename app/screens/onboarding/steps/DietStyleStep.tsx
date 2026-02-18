@@ -230,11 +230,13 @@ const styles = StyleSheet.create({
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.bold,
     marginBottom: spacing[2],
+    lineHeight: typography.lineHeight['2xl'],
   },
   subheading: {
     color: colors.text.secondary,
     fontSize: typography.size.base,
     marginBottom: spacing[6],
+    lineHeight: typography.lineHeight.base,
   },
 
   /* Diet style cards */
@@ -255,13 +257,15 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
-    marginBottom: 2,
+    marginBottom: spacing[0.5],
+    lineHeight: typography.lineHeight.md,
   },
   cardTitleSelected: { color: colors.accent.primary },
   cardDesc: {
     color: colors.text.muted,
     fontSize: typography.size.sm,
     marginBottom: spacing[2],
+    lineHeight: typography.lineHeight.sm,
   },
   miniBar: {
     flexDirection: 'row',
@@ -276,6 +280,7 @@ const styles = StyleSheet.create({
   miniBarLabel: {
     color: colors.text.secondary,
     fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
   },
 
   /* Protein scale */
@@ -284,6 +289,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[1],
+    lineHeight: typography.lineHeight.sm,
   },
   proteinValueDisplay: {
     color: colors.text.primary,
@@ -291,6 +297,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.bold,
     marginBottom: spacing[3],
     textAlign: 'center',
+    lineHeight: typography.lineHeight.lg,
   },
   scaleContainer: {
     height: 60,
@@ -338,12 +345,14 @@ const styles = StyleSheet.create({
   tickLabel: {
     color: colors.text.secondary,
     fontSize: typography.size.xs,
-    marginTop: 2,
+    marginTop: spacing[0.5],
+    lineHeight: typography.lineHeight.xs,
   },
   recHint: {
     color: colors.semantic.positive,
     fontSize: typography.size.xs,
     marginBottom: spacing[3],
+    lineHeight: typography.lineHeight.xs,
   },
 
   /* Protein info card */
@@ -376,12 +385,14 @@ const styles = StyleSheet.create({
   macroLabel: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
-    marginBottom: 2,
+    marginBottom: spacing[0.5],
+    lineHeight: typography.lineHeight.xs,
   },
   macroValue: {
     color: colors.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
+    lineHeight: typography.lineHeight.lg,
   },
   btn: { marginTop: spacing[2] },
 });

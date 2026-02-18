@@ -1,9 +1,10 @@
 import { useRef, useCallback } from 'react';
-import { Animated } from 'react-native';
 import Svg, { Path, G } from 'react-native-svg';
+import Animated, { useSharedValue, withTiming, withSequence, useAnimatedProps } from 'react-native-reanimated';
 import { AnatomicalRegion, BodyOutline, VIEWBOX } from './anatomicalPaths';
 import { getHeatMapColor } from '../../utils/muscleVolumeLogic';
 import { colors } from '../../theme/tokens';
+import { useReduceMotion } from '../../hooks/useReduceMotion';
 
 interface MuscleGroupVolume {
   muscle_group: string;
@@ -25,24 +26,54 @@ interface BodySilhouetteProps {
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
-export function BodySilhouette({ view, regions, outline, volumeMap, onRegionPress }: BodySilhouetteProps) {
-  const opacityRefs = useRef<Map<string, Animated.Value>>(new Map());
+/** Individual region with its own shared value for press animation */
+function AnimatedRegion({
+  region,
+  color,
+  baseOpacity,
+  onPress,
+  reduceMotion,
+}: {
+  region: AnatomicalRegion;
+  color: string;
+  baseOpacity: number;
+  onPress: (id: string) => void;
+  reduceMotion: boolean;
+}) {
+  const opacity = useSharedValue(baseOpacity);
 
-  const getOpacity = useCallback((id: string): Animated.Value => {
-    if (!opacityRefs.current.has(id)) {
-      opacityRefs.current.set(id, new Animated.Value(colors.heatmap.regionOpacity));
+  const animatedProps = useAnimatedProps(() => ({
+    opacity: opacity.value,
+  }));
+
+  const handlePress = useCallback(() => {
+    if (!reduceMotion) {
+      opacity.value = withSequence(
+        withTiming(0.5, { duration: 75 }),
+        withTiming(baseOpacity, { duration: 75 }),
+      );
     }
-    return opacityRefs.current.get(id)!;
-  }, []);
+    onPress(region.id);
+  }, [reduceMotion, baseOpacity, onPress, region.id]);
 
-  const handlePress = useCallback((regionId: string) => {
-    const opacity = getOpacity(regionId);
-    Animated.sequence([
-      Animated.timing(opacity, { toValue: 0.5, duration: 75, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: colors.heatmap.regionOpacity, duration: 75, useNativeDriver: true }),
-    ]).start();
-    onRegionPress(regionId);
-  }, [getOpacity, onRegionPress]);
+  return (
+    <>
+      <AnimatedPath
+        d={region.path}
+        fill={color}
+        animatedProps={animatedProps}
+      />
+      <Path
+        d={region.path}
+        fill="transparent"
+        onPress={handlePress}
+      />
+    </>
+  );
+}
+
+export function BodySilhouette({ view, regions, outline, volumeMap, onRegionPress }: BodySilhouetteProps) {
+  const reduceMotion = useReduceMotion();
 
   return (
     <Svg viewBox={VIEWBOX}>
@@ -54,7 +85,7 @@ export function BodySilhouette({ view, regions, outline, volumeMap, onRegionPres
         strokeWidth={1}
       />
 
-      {/* Layer 2: Muscle fills */}
+      {/* Layer 2: Muscle fills + touch targets */}
       <G>
         {regions.map((region) => {
           const vol = volumeMap.get(region.id);
@@ -64,11 +95,13 @@ export function BodySilhouette({ view, regions, outline, volumeMap, onRegionPres
             vol?.mrv ?? 0,
           );
           return (
-            <AnimatedPath
-              key={`fill-${region.id}`}
-              d={region.path}
-              fill={color}
-              opacity={getOpacity(region.id)}
+            <AnimatedRegion
+              key={region.id}
+              region={region}
+              color={color}
+              baseOpacity={colors.heatmap.regionOpacity}
+              onPress={onRegionPress}
+              reduceMotion={reduceMotion}
             />
           );
         })}
@@ -83,18 +116,6 @@ export function BodySilhouette({ view, regions, outline, volumeMap, onRegionPres
             fill="none"
             stroke={colors.heatmap.regionBorder}
             strokeWidth={0.8}
-          />
-        ))}
-      </G>
-
-      {/* Layer 4: Touch targets */}
-      <G>
-        {regions.map((region) => (
-          <Path
-            key={`touch-${region.id}`}
-            d={region.path}
-            fill="transparent"
-            onPress={() => handlePress(region.id)}
           />
         ))}
       </G>

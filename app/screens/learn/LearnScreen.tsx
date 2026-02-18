@@ -17,6 +17,7 @@ import { colors, radius, spacing, typography } from '../../theme/tokens';
 import { Card } from '../../components/common/Card';
 import { FilterPill } from '../../components/common/FilterPill';
 import { EmptyState } from '../../components/common/EmptyState';
+import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { ProfileStackParamList } from '../../navigation/BottomTabNavigator';
 import { Icon, IconName } from '../../components/common/Icon';
@@ -51,7 +52,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   Programming: colors.macro.protein,
   Recovery: colors.macro.carbs,
   Recomp: colors.macro.fat,
-  Supplements: '#8B5CF6',
+  Supplements: colors.semantic.caution,
 };
 
 const CATEGORY_ICONS: Record<string, IconName> = {
@@ -166,7 +167,7 @@ function AnimatedArticleCard({
             </View>
             <View style={styles.footerRight}>
               <Text style={styles.readIndicator}>Read →</Text>
-              <TouchableOpacity onPress={onToggleFavorite} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <TouchableOpacity onPress={onToggleFavorite} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
                 <Text style={[styles.favIcon, isFavorite && styles.favActive]}>
                   {isFavorite ? <Icon name="star" /> : <Icon name="star-outline" />}
                 </Text>
@@ -186,10 +187,12 @@ export function LearnScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadArticles = useCallback(async () => {
     try {
+      setError(null);
       const params: Record<string, string> = { limit: '50', status: 'published' };
       if (category !== 'All' && category !== '★ Favorites') {
         params.category = CATEGORY_TO_MODULE[category] ?? category;
@@ -197,7 +200,9 @@ export function LearnScreen() {
       if (searchQuery.trim()) params.q = searchQuery.trim();
       const { data } = await api.get('content/articles', { params });
       setArticles(data.items ?? []);
-    } catch { /* best-effort */ }
+    } catch {
+      setError('Unable to load articles. Check your connection.');
+    }
   }, [category, searchQuery]);
 
   const loadFavorites = useCallback(async () => {
@@ -280,6 +285,8 @@ export function LearnScreen() {
     <SafeAreaView style={styles.safe} edges={['top']} testID="learn-screen">
       <Text style={styles.title}>Learn</Text>
 
+      {error && <ErrorBanner message={error} onRetry={loadArticles} />}
+
       <FlatList
         testID="learn-article-list"
         data={displayArticles}
@@ -320,6 +327,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.size.xl * typography.lineHeight.tight,
     padding: spacing[4],
     paddingBottom: spacing[2],
   },
@@ -369,6 +377,7 @@ const styles = StyleSheet.create({
   categoryPillText: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.size.xs * typography.lineHeight.normal,
   },
   readTimePill: {
     flexDirection: 'row',
@@ -383,12 +392,14 @@ const styles = StyleSheet.create({
   },
   readTimeIcon: {
     fontSize: 10,
+    lineHeight: 10 * typography.lineHeight.normal,
     color: colors.text.muted,
   },
   readTimeText: {
     color: colors.text.secondary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.size.xs * typography.lineHeight.normal,
   },
   lockBadge: {
     backgroundColor: colors.premium.goldSubtle,
@@ -420,6 +431,7 @@ const styles = StyleSheet.create({
   tag: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
+    lineHeight: typography.size.xs * typography.lineHeight.normal,
     backgroundColor: colors.bg.surfaceRaised,
     paddingHorizontal: spacing[2],
     paddingVertical: spacing[1],
@@ -437,6 +449,7 @@ const styles = StyleSheet.create({
     color: colors.accent.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.size.xs * typography.lineHeight.normal,
     opacity: 0.7,
   },
   favIcon: { fontSize: typography.size.xl, color: colors.text.muted },

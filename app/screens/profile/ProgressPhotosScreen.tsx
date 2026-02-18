@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { colors, radius, spacing, typography, shadows, opacityScale } from '../../theme/tokens';
 import { Icon } from '../../components/common/Icon';
 import api from '../../services/api';
 import { PhotoMeta, PhotoPathMap, PoseType } from '../../utils/progressPhotoTypes';
@@ -275,12 +275,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
-  backBtn: { width: 60 },
-  backText: { color: colors.accent.primary, fontSize: typography.size.base },
+  backBtn: { width: 60, minHeight: 44, justifyContent: 'center' },
+  backText: { color: colors.accent.primary, fontSize: typography.size.base, lineHeight: typography.lineHeight.base },
   title: {
     color: colors.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.lg,
   },
   center: {
     flex: 1,
@@ -293,13 +294,14 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.xl,
     marginBottom: spacing[2],
   },
   emptySubtitle: {
     color: colors.text.secondary,
     fontSize: typography.size.base,
     textAlign: 'center',
-    lineHeight: typography.size.base * typography.lineHeight.relaxed,
+    lineHeight: typography.lineHeight.base,
   },
   fab: {
     position: 'absolute',
@@ -307,21 +309,17 @@ const styles = StyleSheet.create({
     right: spacing[4],
     width: 56,
     height: 56,
-    borderRadius: 28,
+    borderRadius: radius.full,
     backgroundColor: colors.accent.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    ...shadows.md,
   },
-  fabDisabled: { opacity: 0.6 },
+  fabDisabled: { opacity: opacityScale.muted },
   fabText: {
     color: colors.text.inverse,
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.bold,
-    marginTop: -2,
+    lineHeight: typography.lineHeight['2xl'],
   },
 });

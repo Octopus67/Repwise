@@ -4,9 +4,15 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Animated,
 } from 'react-native';
-import { colors, spacing, typography, radius } from '../../theme/tokens';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+import { colors, spacing, typography, radius, springs } from '../../theme/tokens';
+import { useReduceMotion } from '../../hooks/useReduceMotion';
+import { useHaptics } from '../../hooks/useHaptics';
 
 interface PRItem {
   type: 'weight' | 'reps' | 'volume' | 'e1rm';
@@ -28,25 +34,34 @@ const PR_TYPE_LABELS: Record<string, string> = {
 };
 
 export function PRBanner({ prs, visible, onDismiss }: PRBannerProps) {
-  const scale = useRef(new Animated.Value(0)).current;
+  const scale = useSharedValue(0);
+  const reduceMotion = useReduceMotion();
+  const { notification: hapticNotification } = useHaptics();
   const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   useEffect(() => {
     if (visible && prs.length > 0) {
-      // Animate in
-      Animated.spring(scale, {
-        toValue: 1,
-        damping: 12,
-        stiffness: 200,
-        useNativeDriver: true,
-      }).start();
+      // Haptic feedback for PR detection
+      hapticNotification('success');
+
+      if (reduceMotion) {
+        // Skip animation — show immediately at full scale
+        scale.value = 1;
+      } else {
+        scale.value = 0;
+        scale.value = withSpring(1, springs.bouncy);
+      }
 
       // Auto-dismiss after 3s
       dismissTimer.current = setTimeout(() => {
         onDismiss();
       }, 3000);
     } else {
-      scale.setValue(0);
+      scale.value = 0;
     }
 
     return () => {
@@ -55,7 +70,7 @@ export function PRBanner({ prs, visible, onDismiss }: PRBannerProps) {
         dismissTimer.current = null;
       }
     };
-  }, [visible, prs]);
+  }, [visible, prs, reduceMotion]);
 
   if (!visible || prs.length === 0) return null;
 
@@ -65,7 +80,7 @@ export function PRBanner({ prs, visible, onDismiss }: PRBannerProps) {
       activeOpacity={1}
       onPress={onDismiss}
     >
-      <Animated.View style={[styles.banner, { transform: [{ scale }] }]}>
+      <Animated.View style={[styles.banner, animatedStyle]}>
         <Text style={styles.trophy}>🏆</Text>
         <Text style={styles.title}>New Personal Record!</Text>
         {prs.map((pr, i) => (

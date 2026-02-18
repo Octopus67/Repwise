@@ -29,7 +29,7 @@ import { useActiveWorkoutStore } from '../../store/activeWorkoutSlice';
 import { useStore } from '../../store';
 import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
 import api from '../../services/api';
-import { colors, spacing, typography, radius, shadows } from '../../theme/tokens';
+import { colors, spacing, typography, radius, shadows, motion, letterSpacing as ls } from '../../theme/tokens';
 
 // Components
 import { DurationTimer } from '../../components/training/DurationTimer';
@@ -1088,7 +1088,7 @@ const SetRow = memo(function SetRow({
   useEffect(() => {
     Animated.timing(bgAnim, {
       toValue: set.completed ? 1 : 0,
-      duration: 200,
+      duration: motion.duration.default,
       useNativeDriver: false,
     }).start();
   }, [set.completed]);
@@ -1275,7 +1275,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
     paddingHorizontal: spacing[2],
-    letterSpacing: 1,
+    letterSpacing: ls.wider,
   },
 
   // Overflow menu (8.3)
@@ -1635,7 +1635,7 @@ const styles = StyleSheet.create({
     color: colors.text.muted,
     fontSize: typography.size.base,
     fontWeight: typography.weight.bold,
-    letterSpacing: 1,
+    letterSpacing: ls.wider,
   },
   contextMenuContainer: {
     position: 'relative' as const,

@@ -76,11 +76,13 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.size.lg * typography.lineHeight.tight,
     marginBottom: spacing[1],
   },
   subheading: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.size.sm * typography.lineHeight.normal,
     marginBottom: spacing[2],
   },
   option: {
@@ -88,6 +90,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: spacing[3],
+    minHeight: 44,
     borderWidth: 1,
     borderColor: colors.border.default,
     borderRadius: radius.md,
@@ -103,12 +106,14 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.size.base * typography.lineHeight.normal,
   },
   optionLabelSelected: { color: colors.accent.primary },
   optionDescription: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
-    marginTop: 2,
+    lineHeight: typography.size.xs * typography.lineHeight.normal,
+    marginTop: spacing[1],
   },
   radio: {
     width: 20,

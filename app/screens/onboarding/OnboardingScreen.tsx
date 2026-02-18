@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   SafeAreaView,
 } from 'react-native';
-import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { colors, radius, spacing, typography, letterSpacing } from '../../theme/tokens';
 import { Button } from '../../components/common/Button';
 import api from '../../services/api';
 
@@ -817,6 +817,7 @@ const infoStyles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[1],
     marginTop: spacing[2],
+    lineHeight: typography.lineHeight.sm,
   },
   sectionBody: {
     color: colors.text.secondary,
@@ -833,11 +834,13 @@ const infoStyles = StyleSheet.create({
     color: colors.text.muted,
     fontSize: typography.size.xs,
     marginRight: spacing[2],
+    lineHeight: typography.lineHeight.xs,
   },
   rangeLabelRight: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
     marginLeft: spacing[2],
+    lineHeight: typography.lineHeight.xs,
   },
   rangeTrack: {
     flex: 1,
@@ -871,7 +874,8 @@ const infoStyles = StyleSheet.create({
     color: colors.accent.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
-    marginTop: 2,
+    marginTop: spacing[0.5],
+    lineHeight: typography.lineHeight.xs,
   },
 });
 
@@ -889,8 +893,9 @@ const resultStyles = StyleSheet.create({
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: letterSpacing.wide,
     marginBottom: spacing[3],
+    lineHeight: typography.lineHeight.sm,
   },
   tdeeRow: {
     flexDirection: 'row',
@@ -903,16 +908,19 @@ const resultStyles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight['2xl'],
   },
   tdeeLabel: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
     marginTop: spacing[1],
+    lineHeight: typography.lineHeight.xs,
   },
   tdeeArrow: {
     color: colors.text.muted,
     fontSize: typography.size.xl,
     marginHorizontal: spacing[2],
+    lineHeight: typography.lineHeight.xl,
   },
   explanation: {
     color: colors.text.secondary,
@@ -925,10 +933,12 @@ const resultStyles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
     textAlign: 'center',
     marginBottom: spacing[3],
+    lineHeight: typography.lineHeight['3xl'],
   },
   calorieUnit: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.regular,
+    lineHeight: typography.lineHeight.base,
   },
   macroRow: {
     flexDirection: 'row',
@@ -950,16 +960,19 @@ const resultStyles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.md,
   },
   macroMeta: {
     color: colors.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.regular,
+    lineHeight: typography.lineHeight.sm,
   },
   macroRationale: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
-    marginTop: 2,
+    marginTop: spacing[0.5],
+    lineHeight: typography.lineHeight.sm,
   },
   calloutCard: {
     backgroundColor: colors.accent.primaryMuted,
@@ -972,7 +985,7 @@ const resultStyles = StyleSheet.create({
   calloutText: {
     color: colors.text.primary,
     fontSize: typography.size.sm,
-    lineHeight: typography.size.sm * typography.lineHeight.relaxed,
+    lineHeight: typography.lineHeight.sm,
   },
 });
 
@@ -999,6 +1012,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing[2],
     marginBottom: spacing[6],
+    lineHeight: typography.lineHeight.sm,
   },
 
   // Headings
@@ -1007,6 +1021,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.semibold,
     textAlign: 'center',
+    lineHeight: typography.lineHeight['2xl'],
   },
   subheading: {
     color: colors.text.secondary,
@@ -1014,6 +1029,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing[1],
     marginBottom: spacing[6],
+    lineHeight: typography.lineHeight.base,
   },
 
   // Goal cards
@@ -1036,8 +1052,9 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.lg,
   },
-  goalDesc: { color: colors.text.secondary, fontSize: typography.size.sm, marginTop: 2 },
+  goalDesc: { color: colors.text.secondary, fontSize: typography.size.sm, marginTop: spacing[0.5], lineHeight: typography.lineHeight.sm },
   checkmark: { color: colors.accent.primary, fontSize: 20, fontWeight: typography.weight.semibold },
 
   // Form
@@ -1047,6 +1064,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.medium,
     marginBottom: spacing[1],
     marginTop: spacing[3],
+    lineHeight: typography.lineHeight.sm,
   },
   input: {
     backgroundColor: colors.bg.surfaceRaised,
@@ -1056,12 +1074,14 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.base,
     padding: spacing[3],
+    lineHeight: typography.lineHeight.base,
   },
   inputError: { borderColor: colors.semantic.negative },
   fieldError: {
     color: colors.semantic.negative,
     fontSize: typography.size.xs,
     marginTop: spacing[1],
+    lineHeight: typography.lineHeight.xs,
   },
   error: {
     color: colors.semantic.negative,
@@ -1071,6 +1091,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.semantic.negativeSubtle,
     padding: spacing[3],
     borderRadius: radius.sm,
+    lineHeight: typography.lineHeight.sm,
   },
 
   // Toggles
@@ -1087,7 +1108,7 @@ const styles = StyleSheet.create({
     borderColor: colors.accent.primary,
     backgroundColor: colors.accent.primaryMuted,
   },
-  toggleText: { color: colors.text.secondary, fontSize: typography.size.base },
+  toggleText: { color: colors.text.secondary, fontSize: typography.size.base, lineHeight: typography.lineHeight.base },
   toggleTextActive: { color: colors.accent.primary, fontWeight: typography.weight.semibold },
 
   // Activity chips
@@ -1098,22 +1119,24 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     borderWidth: 1,
     borderColor: colors.border.default,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   activityChipActive: {
     borderColor: colors.accent.primary,
     backgroundColor: colors.accent.primaryMuted,
   },
-  activityText: { color: colors.text.secondary, fontSize: typography.size.sm },
+  activityText: { color: colors.text.secondary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm },
   activityTextActive: { color: colors.accent.primary, fontWeight: typography.weight.semibold },
 
   // Buttons & links
   mainBtn: { marginTop: spacing[6] },
-  skipLink: { alignItems: 'center', marginTop: spacing[4] },
-  skipText: { color: colors.text.muted, fontSize: typography.size.sm },
+  skipLink: { alignItems: 'center', marginTop: spacing[4], minHeight: 44, justifyContent: 'center' },
+  skipText: { color: colors.text.muted, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm },
   bottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: spacing[4],
   },
-  backText: { color: colors.accent.primary, fontSize: typography.size.base },
+  backText: { color: colors.accent.primary, fontSize: typography.size.base, lineHeight: typography.lineHeight.base },
 });

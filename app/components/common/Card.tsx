@@ -37,7 +37,7 @@ export function getCardStyles(variant: CardVariant): ViewStyle {
     case 'raised':
       base.backgroundColor = colors.bg.surfaceRaised;
       base.borderColor = colors.border.default;
-      base.borderTopColor = 'rgba(255,255,255,0.04)';
+      base.borderTopColor = colors.border.highlight;
       Object.assign(base, shadows.md);
       break;
     case 'outlined':

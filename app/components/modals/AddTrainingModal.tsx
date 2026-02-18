@@ -593,6 +593,7 @@ const styles = StyleSheet.create({
   sectionToggleText: {
     color: colors.accent.primary,
     fontSize: typography.size.md,
+    lineHeight: typography.lineHeight.md,
     fontWeight: typography.weight.medium,
   },
   templateSection: {
@@ -610,6 +611,7 @@ const styles = StyleSheet.create({
   copyLastText: {
     color: colors.text.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.medium,
   },
   templateCard: {
@@ -622,11 +624,13 @@ const styles = StyleSheet.create({
   templateName: {
     color: colors.text.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.semibold,
   },
   templateDesc: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     marginTop: spacing[1],
   },
 
@@ -665,6 +669,7 @@ const styles = StyleSheet.create({
   exerciseSearchResultText: {
     color: colors.text.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
   },
 
   // Exercise card
@@ -685,6 +690,7 @@ const styles = StyleSheet.create({
   exerciseIdx: {
     color: colors.text.muted,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.semibold,
     width: 20,
     textAlign: 'center',
@@ -701,6 +707,7 @@ const styles = StyleSheet.create({
   exerciseNameText: {
     color: colors.text.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
   },
   exerciseNamePlaceholder: {
     color: colors.text.muted,
@@ -708,6 +715,7 @@ const styles = StyleSheet.create({
   removeBtn: {
     color: colors.semantic.negative,
     fontSize: typography.size.md,
+    lineHeight: typography.lineHeight.md,
     paddingHorizontal: spacing[2],
   },
 
@@ -723,6 +731,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: colors.text.muted,
     fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
     fontWeight: typography.weight.medium,
     textAlign: 'center',
   },
@@ -735,6 +744,7 @@ const styles = StyleSheet.create({
   setNum: {
     color: colors.text.muted,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     textAlign: 'center',
   },
   setInput: {
@@ -753,6 +763,7 @@ const styles = StyleSheet.create({
   removeSetBtn: {
     color: colors.text.muted,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
   },
   addSetBtn: {
     marginTop: spacing[2],
@@ -761,6 +772,7 @@ const styles = StyleSheet.create({
   addSetText: {
     color: colors.accent.primary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
   },
 
@@ -775,6 +787,7 @@ const styles = StyleSheet.create({
   addExerciseText: {
     color: colors.accent.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.semibold,
   },
 
@@ -783,6 +796,7 @@ const styles = StyleSheet.create({
   label: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[1],
   },
@@ -810,6 +824,7 @@ const styles = StyleSheet.create({
   submitText: {
     color: colors.text.primary,
     fontSize: typography.size.md,
+    lineHeight: typography.lineHeight.md,
     fontWeight: typography.weight.semibold,
   },
 });

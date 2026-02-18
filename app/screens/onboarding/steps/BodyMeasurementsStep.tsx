@@ -165,11 +165,13 @@ const scaleStyles = StyleSheet.create({
     color: colors.text.primary,
     marginBottom: spacing[2],
     fontVariant: ['tabular-nums'],
+    lineHeight: typography.lineHeight['2xl'],
   },
   unitText: {
     fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
     color: colors.text.secondary,
+    lineHeight: typography.lineHeight.md,
   },
   rulerContainer: {
     height: 56,
@@ -220,10 +222,11 @@ const scaleStyles = StyleSheet.create({
     backgroundColor: colors.text.muted,
   },
   tickLabel: {
-    fontSize: 9,
+    fontSize: typography.size.xs,
     color: colors.text.muted,
-    marginTop: 2,
+    marginTop: spacing[0.5],
     fontVariant: ['tabular-nums'],
+    lineHeight: typography.lineHeight.xs,
   },
 });
 
@@ -371,15 +374,15 @@ export function BodyMeasurementsStep({ onNext }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingHorizontal: spacing[4], paddingBottom: spacing[10] },
-  title: { color: colors.text.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, marginBottom: spacing[1] },
-  subtitle: { color: colors.text.secondary, fontSize: typography.size.base, marginBottom: spacing[6] },
-  label: { color: colors.text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, marginBottom: spacing[2], marginTop: spacing[4] },
+  title: { color: colors.text.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, marginBottom: spacing[1], lineHeight: typography.lineHeight['2xl'] },
+  subtitle: { color: colors.text.secondary, fontSize: typography.size.base, marginBottom: spacing[6], lineHeight: typography.lineHeight.base },
+  label: { color: colors.text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, marginBottom: spacing[2], marginTop: spacing[4], lineHeight: typography.lineHeight.sm },
   fieldRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing[4], marginBottom: spacing[2] },
   unitToggle: { paddingHorizontal: spacing[3], paddingVertical: spacing[1], borderRadius: radius.full, backgroundColor: colors.accent.primaryMuted },
-  unitToggleText: { color: colors.accent.primary, fontSize: typography.size.xs, fontWeight: typography.weight.semibold },
+  unitToggleText: { color: colors.accent.primary, fontSize: typography.size.xs, fontWeight: typography.weight.semibold, lineHeight: typography.lineHeight.xs },
   bmrCard: { backgroundColor: colors.bg.surfaceRaised, borderRadius: radius.md, borderWidth: 1, borderColor: colors.accent.primaryMuted, padding: spacing[4], marginTop: spacing[6], alignItems: 'center' },
-  bmrLabel: { color: colors.text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium },
-  bmrValue: { color: colors.accent.primary, fontSize: typography.size.xl, fontWeight: typography.weight.bold, marginTop: spacing[1], fontVariant: ['tabular-nums'] },
-  bmrHint: { color: colors.text.muted, fontSize: typography.size.xs, marginTop: spacing[1] },
+  bmrLabel: { color: colors.text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.sm },
+  bmrValue: { color: colors.accent.primary, fontSize: typography.size.xl, fontWeight: typography.weight.bold, marginTop: spacing[1], fontVariant: ['tabular-nums'], lineHeight: typography.lineHeight.xl },
+  bmrHint: { color: colors.text.muted, fontSize: typography.size.xs, marginTop: spacing[1], lineHeight: typography.lineHeight.xs },
   nextBtn: { marginTop: spacing[6], width: '100%' },
 });

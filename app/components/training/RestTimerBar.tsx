@@ -6,11 +6,13 @@
  * Slides up from bottom with spring animation on mount.
  */
 
-import { useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { RestTimerRing } from './RestTimerRing';
 import { formatRestTimer } from '../../utils/durationFormat';
-import { colors, spacing, typography, shadows, radius } from '../../theme/tokens';
+import { colors, spacing, typography, shadows, radius, springs } from '../../theme/tokens';
+import { useReduceMotion } from '../../hooks/useReduceMotion';
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
@@ -33,17 +35,20 @@ export function RestTimerBar({
   onSkip,
   onExpand,
 }: RestTimerBarProps) {
-  const slideAnim = useRef(new Animated.Value(56)).current; // start off-screen (bar height)
+  const slideAnim = useSharedValue(56); // start off-screen (bar height)
+  const reduceMotion = useReduceMotion();
+
+  const animatedBarStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: slideAnim.value }],
+  }));
 
   useEffect(() => {
-    Animated.spring(slideAnim, {
-      toValue: 0,
-      useNativeDriver: true,
-      damping: 20,
-      stiffness: 200,
-      mass: 0.5,
-    }).start();
-  }, []);
+    if (reduceMotion) {
+      slideAnim.value = 0;
+    } else {
+      slideAnim.value = withSpring(0, springs.gentle);
+    }
+  }, [reduceMotion]);
 
   const timeLabel = completed
     ? 'Rest Complete'
@@ -54,7 +59,7 @@ export function RestTimerBar({
     : colors.text.primary;
 
   return (
-    <Animated.View style={[styles.bar, { transform: [{ translateY: slideAnim }] }]}>
+    <Animated.View style={[styles.bar, animatedBarStyle]}>
       <TouchableOpacity
         style={styles.content}
         activeOpacity={0.7}

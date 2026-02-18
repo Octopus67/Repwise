@@ -10,7 +10,7 @@ describe('Property 13: Comparison color coding', () => {
   const POSITIVE = '#22C55E';
   const WARNING = '#F59E0B';
   const NEGATIVE = '#EF4444';
-  const MUTED = '#64748B';
+  const MUTED = '#7B8DA1';
 
   test('target=0 → muted color', () => {
     fc.assert(

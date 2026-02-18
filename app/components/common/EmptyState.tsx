@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, typography, spacing } from '../../theme/tokens';
+import { colors, typography, spacing, letterSpacing } from '../../theme/tokens';
 import { Button } from './Button';
 
 interface EmptyStateProps {
@@ -22,7 +22,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      <View style={styles.iconWrap}>{icon}</View>
+      <View style={styles.iconWrap} accessibilityLabel={`${title} illustration`}>{icon}</View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
       {children}
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
     color: colors.text.secondary,
-    letterSpacing: -0.25,
+    letterSpacing: letterSpacing.tight,
     marginBottom: spacing[2],
     textAlign: 'center',
   },

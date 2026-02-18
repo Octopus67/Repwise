@@ -14,6 +14,7 @@ import { Button } from '../../components/common/Button';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Icon } from '../../components/common/Icon';
 import { PremiumBadge } from '../../components/premium/PremiumBadge';
+import { ErrorBanner } from '../../components/common/ErrorBanner';
 import api from '../../services/api';
 
 interface HealthReport {
@@ -37,16 +38,20 @@ export function HealthReportsScreen() {
   const [reports, setReports] = useState<HealthReport[]>([]);
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [correlations, setCorrelations] = useState<NutritionCorrelation[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadReports();
   }, []);
 
   const loadReports = async () => {
+    setError(null);
     try {
       const { data } = await api.get('health-reports');
       setReports(data.items ?? []);
-    } catch { /* ignore */ }
+    } catch {
+      setError('Unable to load health reports. Check your connection.');
+    }
   };
 
   const loadCorrelations = async (reportId: string) => {
@@ -71,8 +76,8 @@ export function HealthReportsScreen() {
     <SafeAreaView style={styles.safe} edges={['top']} testID="health-reports-screen">
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {navigation.canGoBack() && (
-          <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingVertical: spacing[2], marginBottom: spacing[2] }} activeOpacity={0.7}>
-            <Text style={{ color: colors.accent.primary, fontSize: typography.size.base, fontWeight: typography.weight.medium }}>← Back</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.7}>
+            <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
         )}
         <View style={styles.header}>
@@ -80,8 +85,12 @@ export function HealthReportsScreen() {
           <PremiumBadge size="md" />
         </View>
 
+        {error && (
+          <ErrorBanner message={error} onRetry={loadReports} onDismiss={() => setError(null)} />
+        )}
+
         <Button title="Upload New Report" onPress={() => {}} disabled={true} style={styles.uploadBtn} />
-        <Text style={{ color: colors.text.muted, fontSize: typography.size.xs, textAlign: 'center', marginBottom: spacing[2] }}>File upload coming soon</Text>
+        <Text style={styles.uploadHint}>File upload coming soon</Text>
 
         {/* Report history */}
         <Text style={styles.sectionTitle}>Report History</Text>
@@ -159,6 +168,18 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg.base },
   container: { flex: 1 },
   content: { padding: spacing[4], paddingBottom: spacing[12] },
+  backBtn: {
+    paddingVertical: spacing[2],
+    marginBottom: spacing[2],
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  backText: {
+    color: colors.accent.primary,
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.base,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -169,12 +190,21 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.xl,
   },
   uploadBtn: { marginBottom: spacing[2] },
+  uploadHint: {
+    color: colors.text.muted,
+    fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
+    textAlign: 'center',
+    marginBottom: spacing[2],
+  },
   sectionTitle: {
     color: colors.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.lg,
     marginTop: spacing[6],
     marginBottom: spacing[3],
   },
@@ -190,24 +220,26 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.base,
   },
   sampleBadge: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.xs,
     backgroundColor: colors.bg.surfaceRaised,
     paddingHorizontal: spacing[2],
-    paddingVertical: 2,
+    paddingVertical: spacing[0.5],
     borderRadius: radius.sm,
     overflow: 'hidden',
   },
   markersGrid: { gap: spacing[3] },
   markerItem: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[3] },
-  markerDot: { width: 8, height: 8, borderRadius: 4, marginTop: 5 },
-  markerName: { color: colors.text.primary, fontSize: typography.size.sm, fontWeight: typography.weight.medium },
-  markerValue: { fontSize: typography.size.sm, fontWeight: typography.weight.semibold },
-  markerRange: { color: colors.text.muted, fontSize: typography.size.xs },
-  allNormal: { color: colors.semantic.positive, fontSize: typography.size.sm },
+  markerDot: { width: 8, height: 8, borderRadius: radius.none + 4, marginTop: spacing[1] },
+  markerName: { color: colors.text.primary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.sm },
+  markerValue: { fontSize: typography.size.sm, fontWeight: typography.weight.semibold, lineHeight: typography.lineHeight.sm },
+  markerRange: { color: colors.text.muted, fontSize: typography.size.xs, lineHeight: typography.lineHeight.xs },
+  allNormal: { color: colors.semantic.positive, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm },
   corrRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -216,13 +248,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border.subtle,
   },
-  corrDot: { width: 8, height: 8, borderRadius: 4, marginTop: 5 },
+  corrDot: { width: 8, height: 8, borderRadius: radius.none + 4, marginTop: spacing[1] },
   corrContent: { flex: 1 },
-  corrMarker: { color: colors.text.primary, fontSize: typography.size.sm, fontWeight: typography.weight.medium },
-  corrDetail: { color: colors.text.secondary, fontSize: typography.size.sm, marginTop: 2 },
+  corrMarker: { color: colors.text.primary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.sm },
+  corrDetail: { color: colors.text.secondary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm, marginTop: spacing[0.5] },
   empty: {
     color: colors.text.muted,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     textAlign: 'center',
     paddingVertical: spacing[6],
   },

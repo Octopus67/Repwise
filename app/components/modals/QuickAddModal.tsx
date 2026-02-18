@@ -163,6 +163,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     color: colors.text.secondary,
     marginBottom: spacing[1],
     fontWeight: typography.weight.medium,
@@ -176,6 +177,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[2],
     color: colors.text.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
   },
   optionalRow: {
     flexDirection: 'row',
@@ -196,6 +198,7 @@ const styles = StyleSheet.create({
   },
   submitText: {
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     color: colors.text.primary,
     fontWeight: typography.weight.semibold,
   },

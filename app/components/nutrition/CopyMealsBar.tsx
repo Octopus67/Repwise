@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { colors, spacing, typography, radius, opacityScale } from '../../theme/tokens';
 import api from '../../services/api';
 
 interface CopyMealsBarProps {
@@ -130,14 +130,17 @@ const styles = StyleSheet.create({
     borderColor: colors.border.default,
     paddingVertical: spacing[2],
     alignItems: 'center',
+    minHeight: 44,
+    justifyContent: 'center',
   },
   buttonDisabled: {
-    opacity: 0.5,
+    opacity: opacityScale.disabled,
   },
   buttonText: {
     fontSize: typography.size.sm,
     color: colors.text.primary,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
   },
   dateInputRow: {
     flexDirection: 'row',
@@ -161,10 +164,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[4],
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: 44,
   },
   goButtonText: {
     fontSize: typography.size.sm,
     color: colors.text.primary,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.sm,
   },
 });

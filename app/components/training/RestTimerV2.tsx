@@ -10,7 +10,7 @@ import {
 import Svg, { Circle } from 'react-native-svg';
 import { formatRestTimer } from '../../utils/durationFormat';
 import { getTimerColor } from '../../utils/restDurationV2';
-import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { colors, spacing, typography, radius, motion } from '../../theme/tokens';
 
 type TimerState = 'IDLE' | 'RUNNING' | 'PAUSED' | 'COMPLETED';
 
@@ -62,7 +62,7 @@ export function RestTimerV2({
     const target = CIRCUMFERENCE * (1 - remaining / originalDuration);
     Animated.timing(animatedOffset, {
       toValue: target,
-      duration: 300,
+      duration: motion.duration.slow,
       useNativeDriver: false,
     }).start();
   }, [remaining, originalDuration]);

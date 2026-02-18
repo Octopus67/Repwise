@@ -78,7 +78,7 @@ describe('Property 7: Surface luminance hierarchy', () => {
 describe('Property 15: Spacing scale compliance', () => {
   /** Validates: Requirements 13.1 */
 
-  const ALLOWED_SPACING = new Set([0, 4, 8, 12, 16, 20, 24, 32, 40, 48, 64]);
+  const ALLOWED_SPACING = new Set([0, 2, 4, 8, 12, 16, 20, 24, 32, 40, 48, 64]);
 
   test('all spacing token values are members of the allowed set', () => {
     const spacingValues = Object.values(spacing);

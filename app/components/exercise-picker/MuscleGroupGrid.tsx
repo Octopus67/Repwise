@@ -84,11 +84,13 @@ const styles = StyleSheet.create({
   label: {
     color: colors.text.primary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.semibold,
   },
   count: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
     marginTop: 2,
   },
 });

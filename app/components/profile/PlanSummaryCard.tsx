@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, typography } from '../../theme/tokens';
+import { colors, spacing, typography, letterSpacing as ls } from '../../theme/tokens';
 import { Card } from '../common/Card';
 import { Icon } from '../common/Icon';
 import { Button } from '../common/Button';
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: ls.wide,
     marginBottom: spacing[3],
   },
   targetsGrid: {

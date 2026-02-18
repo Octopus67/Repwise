@@ -46,16 +46,19 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.semibold,
   },
   subtitle: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     marginTop: 2,
   },
   arrow: {
     color: colors.accent.primary,
     fontSize: typography.size.lg,
+    lineHeight: typography.lineHeight.lg,
     fontWeight: typography.weight.semibold,
   },
 });

@@ -130,6 +130,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing[2],
     borderRadius: radius.sm,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   dayCellSelected: {
     backgroundColor: colors.accent.primaryMuted,
@@ -144,7 +146,8 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xs,
     color: colors.text.muted,
     fontWeight: typography.weight.medium,
-    marginBottom: 2,
+    marginBottom: spacing[0.5],
+    lineHeight: typography.lineHeight.xs,
   },
   dayNameSelected: {
     color: colors.accent.primary,
@@ -157,6 +160,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.md,
     color: colors.text.primary,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.md,
   },
   dayNumberSelected: {
     color: colors.accent.primary,
@@ -170,7 +174,7 @@ const styles = StyleSheet.create({
     height: 5,
     borderRadius: 2.5,
     backgroundColor: colors.text.muted,
-    marginTop: 4,
+    marginTop: spacing[1],
   },
   dotSelected: {
     backgroundColor: colors.accent.primary,
@@ -180,7 +184,7 @@ const styles = StyleSheet.create({
     height: 5,
     borderRadius: 2.5,
     backgroundColor: colors.accent.primary,
-    marginTop: 4,
+    marginTop: spacing[1],
   },
   todayPill: {
     alignSelf: 'center',

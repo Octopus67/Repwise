@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Icon } from '../../components/common/Icon';
+import { ErrorBanner } from '../../components/common/ErrorBanner';
 import * as SecureStore from 'expo-secure-store';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
 import { Button } from '../../components/common/Button';
@@ -117,7 +118,7 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
         <Text style={styles.title}>HypertrophyOS</Text>
         <Text style={styles.subtitle}>Sign in to continue</Text>
 
-        {error ? <Text testID="login-error-message" style={styles.error}>{error}</Text> : null}
+        {error ? <ErrorBanner testID="login-error-message" message={error} onDismiss={() => setError('')} /> : null}
 
         <TextInput
           testID="login-email-input"
@@ -130,6 +131,8 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
           onChangeText={(text) => { setEmail(text); setEmailError(''); }}
           returnKeyType="next"
           onSubmitEditing={() => passwordRef.current?.focus()}
+          accessibilityLabel="Email address"
+          accessibilityHint="Enter your email to sign in"
         />
         {emailError ? <Text style={styles.emailError}>{emailError}</Text> : null}
         <View style={{ position: 'relative' }}>
@@ -144,11 +147,15 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
             onChangeText={setPassword}
             returnKeyType="done"
             onSubmitEditing={handleLogin}
+            accessibilityLabel="Password"
+            accessibilityHint="Enter your password"
           />
           <TouchableOpacity
             onPress={() => setShowPassword(!showPassword)}
-            style={{ position: 'absolute', right: spacing[3], top: spacing[3] }}
+            style={{ position: 'absolute', right: spacing[3], top: spacing[3], minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            accessibilityRole="button"
           >
             <Icon name={showPassword ? 'eye-off' : 'eye'} size={20} color={colors.text.muted} />
           </TouchableOpacity>
@@ -156,8 +163,8 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
         <View style={{ marginBottom: spacing[3] }} />
 
         {onNavigateForgotPassword ? (
-          <TouchableOpacity testID="forgot-password-link" onPress={onNavigateForgotPassword} style={{ alignItems: 'flex-end', marginBottom: spacing[3] }}>
-            <Text style={{ color: colors.accent.primary, fontSize: typography.size.sm }}>Forgot Password?</Text>
+          <TouchableOpacity testID="forgot-password-link" onPress={onNavigateForgotPassword} style={{ alignItems: 'flex-end', marginBottom: spacing[3], minHeight: 44, justifyContent: 'center' }}>
+            <Text style={{ color: colors.accent.primary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm }}>Forgot Password?</Text>
           </TouchableOpacity>
         ) : null}
 
@@ -187,6 +194,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.semibold,
     textAlign: 'center',
+    lineHeight: typography.lineHeight['2xl'],
   },
   subtitle: {
     color: colors.text.secondary,
@@ -194,18 +202,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing[2],
     marginBottom: spacing[8],
+    lineHeight: typography.lineHeight.base,
   },
   error: {
     color: colors.semantic.negative,
     fontSize: typography.size.sm,
     textAlign: 'center',
     marginBottom: spacing[4],
+    lineHeight: typography.lineHeight.sm,
   },
   emailError: {
     color: colors.semantic.negative,
     fontSize: typography.size.sm,
     marginBottom: spacing[2],
     marginTop: -spacing[2],
+    lineHeight: typography.lineHeight.sm,
   },
   input: {
     backgroundColor: colors.bg.surfaceRaised,
@@ -216,9 +227,10 @@ const styles = StyleSheet.create({
     fontSize: typography.size.base,
     padding: spacing[4],
     marginBottom: spacing[3],
+    lineHeight: typography.lineHeight.base,
   },
   btn: { marginTop: spacing[2] },
-  link: { alignItems: 'center', marginTop: spacing[6] },
-  linkText: { color: colors.text.secondary, fontSize: typography.size.base },
+  link: { alignItems: 'center', marginTop: spacing[6], minHeight: 44, justifyContent: 'center' },
+  linkText: { color: colors.text.secondary, fontSize: typography.size.base, lineHeight: typography.lineHeight.base },
   linkAccent: { color: colors.accent.primary, fontWeight: typography.weight.semibold },
 });

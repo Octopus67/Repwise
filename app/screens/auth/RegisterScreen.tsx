@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Icon } from '../../components/common/Icon';
+import { ErrorBanner } from '../../components/common/ErrorBanner';
 import * as SecureStore from 'expo-secure-store';
 
 async function secureSet(key: string, value: string) {
@@ -110,7 +111,7 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
         <Text style={styles.title}>Create Account</Text>
         <Text style={styles.subtitle}>Start your optimization journey</Text>
 
-        {error ? <Text testID="register-error-message" style={styles.error}>{error}</Text> : null}
+        {error ? <ErrorBanner testID="register-error-message" message={error} onDismiss={() => setError('')} /> : null}
 
         <TextInput
           testID="register-email-input"
@@ -123,6 +124,8 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
           onChangeText={(text) => { setEmail(text); setEmailError(''); }}
           returnKeyType="next"
           onSubmitEditing={() => passwordRef.current?.focus()}
+          accessibilityLabel="Email address"
+          accessibilityHint="Enter your email to create an account"
         />
         {emailError ? <Text style={styles.emailError}>{emailError}</Text> : null}
         <View style={{ position: 'relative' }}>
@@ -137,11 +140,15 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
             ref={passwordRef}
             returnKeyType="next"
             onSubmitEditing={() => confirmRef.current?.focus()}
+            accessibilityLabel="Password"
+            accessibilityHint="Create a password with at least 8 characters"
           />
           <TouchableOpacity
             onPress={() => setShowPassword(!showPassword)}
-            style={{ position: 'absolute', right: spacing[3], top: spacing[3] }}
+            style={{ position: 'absolute', right: spacing[3], top: spacing[3], minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            accessibilityRole="button"
           >
             <Icon name={showPassword ? 'eye-off' : 'eye'} size={20} color={colors.text.muted} />
           </TouchableOpacity>
@@ -158,21 +165,25 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
             ref={confirmRef}
             returnKeyType="done"
             onSubmitEditing={handleRegister}
+            accessibilityLabel="Confirm password"
+            accessibilityHint="Re-enter your password to confirm"
           />
           <TouchableOpacity
             onPress={() => setShowConfirm(!showConfirm)}
-            style={{ position: 'absolute', right: spacing[3], top: spacing[3] }}
+            style={{ position: 'absolute', right: spacing[3], top: spacing[3], minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityLabel={showConfirm ? 'Hide password confirmation' : 'Show password confirmation'}
+            accessibilityRole="button"
           >
             <Icon name={showConfirm ? 'eye-off' : 'eye'} size={20} color={colors.text.muted} />
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity onPress={() => setTosAccepted(!tosAccepted)} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing[3], gap: spacing[2] }}>
+        <TouchableOpacity onPress={() => setTosAccepted(!tosAccepted)} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing[3], gap: spacing[2], minHeight: 44 }} accessibilityRole="checkbox" accessibilityState={{ checked: tosAccepted }} accessibilityLabel="Accept Terms of Service and Privacy Policy">
           <View style={{ width: 22, height: 22, borderRadius: 4, borderWidth: 1.5, borderColor: tosAccepted ? colors.accent.primary : colors.border.default, backgroundColor: tosAccepted ? colors.accent.primary : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
-            {tosAccepted && <Text style={{ color: '#fff', fontSize: 14 }}>✓</Text>}
+            {tosAccepted && <Text style={{ color: colors.text.primary, fontSize: typography.size.base }}>✓</Text>}
           </View>
-          <Text style={{ color: colors.text.secondary, fontSize: typography.size.sm, flex: 1 }}>I agree to the Terms of Service and Privacy Policy</Text>
+          <Text style={{ color: colors.text.secondary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm, flex: 1 }}>I agree to the Terms of Service and Privacy Policy</Text>
         </TouchableOpacity>
 
         <Button testID="register-submit-button" title="Register" onPress={handleRegister} loading={loading} disabled={!tosAccepted || loading} style={styles.btn} />
@@ -199,6 +210,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.semibold,
     textAlign: 'center',
+    lineHeight: typography.lineHeight['2xl'],
   },
   subtitle: {
     color: colors.text.secondary,
@@ -206,18 +218,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing[2],
     marginBottom: spacing[8],
+    lineHeight: typography.lineHeight.base,
   },
   error: {
     color: colors.semantic.negative,
     fontSize: typography.size.sm,
     textAlign: 'center',
     marginBottom: spacing[4],
+    lineHeight: typography.lineHeight.sm,
   },
   emailError: {
     color: colors.semantic.negative,
     fontSize: typography.size.sm,
     marginBottom: spacing[2],
     marginTop: -spacing[2],
+    lineHeight: typography.lineHeight.sm,
   },
   input: {
     backgroundColor: colors.bg.surfaceRaised,
@@ -228,9 +243,10 @@ const styles = StyleSheet.create({
     fontSize: typography.size.base,
     padding: spacing[4],
     marginBottom: spacing[3],
+    lineHeight: typography.lineHeight.base,
   },
   btn: { marginTop: spacing[2] },
-  link: { alignItems: 'center', marginTop: spacing[6] },
-  linkText: { color: colors.text.secondary, fontSize: typography.size.base },
+  link: { alignItems: 'center', marginTop: spacing[6], minHeight: 44, justifyContent: 'center' },
+  linkText: { color: colors.text.secondary, fontSize: typography.size.base, lineHeight: typography.lineHeight.base },
   linkAccent: { color: colors.accent.primary, fontWeight: typography.weight.semibold },
 });

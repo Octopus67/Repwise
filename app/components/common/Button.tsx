@@ -10,9 +10,10 @@ import {
   View,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { colors, radius, spacing, typography, letterSpacing, shadows } from '../../theme/tokens';
+import { colors, radius, spacing, typography, letterSpacing, shadows, opacityScale } from '../../theme/tokens';
 import { usePressAnimation } from '../../hooks/usePressAnimation';
 import { useHoverState } from '../../hooks/useHoverState';
+import { useHaptics } from '../../hooks/useHaptics';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
@@ -68,7 +69,7 @@ export function getButtonStyles(
   }
 
   if (disabled) {
-    container.opacity = 0.4;
+    container.opacity = opacityScale.disabled;
   }
 
   return { container, text };
@@ -105,7 +106,15 @@ export function Button({
   const isDisabled = disabled || loading;
   const { animatedStyle, onPressIn, onPressOut } = usePressAnimation();
   const { isHovered, hoverProps } = useHoverState();
+  const { impact } = useHaptics();
   const computed = getButtonStyles(variant, isDisabled);
+
+  const handlePress = () => {
+    if (variant === 'primary') {
+      impact('light');
+    }
+    onPress();
+  };
 
   const hoverStyle: ViewStyle | undefined =
     isHovered && !isDisabled
@@ -117,11 +126,13 @@ export function Button({
       <TouchableOpacity
         testID={testID}
         style={[computed.container, hoverStyle, style]}
-        onPress={onPress}
+        onPress={handlePress}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         disabled={isDisabled}
         activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: isDisabled }}
         {...hoverProps}
       >
         {loading ? (

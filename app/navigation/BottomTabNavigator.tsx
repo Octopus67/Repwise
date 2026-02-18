@@ -1,9 +1,11 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator, StackCardInterpolationProps } from '@react-navigation/stack';
-import { Animated, Easing, StyleSheet, View, Text } from 'react-native';
+import { Animated, Easing, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import Svg, { Path, Circle, Rect, Line } from 'react-native-svg';
-import { colors, typography, spacing } from '../theme/tokens';
+import { colors, typography, spacing, motion } from '../theme/tokens';
+import { triggerHaptic } from '../hooks/useHaptics';
+import { ErrorBoundary } from '../components/common/ErrorBoundary';
 
 // Screen imports
 import { DashboardScreen } from '../screens/dashboard/DashboardScreen';
@@ -102,12 +104,12 @@ function slideFromRight({ current, layouts }: StackCardInterpolationProps) {
 
 const pushTransitionSpec = {
   animation: 'timing' as const,
-  config: { duration: 250, easing: Easing.out(Easing.ease) },
+  config: { duration: motion.duration.moderate, easing: Easing.out(Easing.ease) },
 };
 
 const popTransitionSpec = {
   animation: 'timing' as const,
-  config: { duration: 200, easing: Easing.inOut(Easing.ease) },
+  config: { duration: motion.duration.default, easing: Easing.inOut(Easing.ease) },
 };
 
 // ─── Placeholder screens (replaced in steps 15-16) ──────────────────────────
@@ -137,6 +139,22 @@ const stackScreenOptions = {
 
 function DashboardStackScreen() {
   return (
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        console.error('[ErrorBoundary:Home]', error.message);
+        console.error('[ErrorBoundary:Home] Stack:', error.stack);
+        console.error('[ErrorBoundary:Home] Component:', errorInfo.componentStack);
+      }}
+      fallback={(error, retry) => (
+        <View style={styles.errorFallback}>
+          <Text style={styles.errorTitle}>Dashboard unavailable</Text>
+          <Text style={styles.errorMessage}>{error.message}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={retry}>
+            <Text style={styles.retryText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    >
     <DashboardStack.Navigator screenOptions={stackScreenOptions}>
       <DashboardStack.Screen name="DashboardHome" component={DashboardScreen} />
       <DashboardStack.Screen name="ExercisePicker" component={ExercisePickerScreen} />
@@ -152,32 +170,83 @@ function DashboardStackScreen() {
       </DashboardStack.Screen>
       <DashboardStack.Screen name="Learn" component={LearnScreen} />
     </DashboardStack.Navigator>
+    </ErrorBoundary>
   );
 }
 
 function LogsStackScreen() {
   return (
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        console.error('[ErrorBoundary:Log]', error.message);
+        console.error('[ErrorBoundary:Log] Stack:', error.stack);
+        console.error('[ErrorBoundary:Log] Component:', errorInfo.componentStack);
+      }}
+      fallback={(error, retry) => (
+        <View style={styles.errorFallback}>
+          <Text style={styles.errorTitle}>Logs unavailable</Text>
+          <Text style={styles.errorMessage}>{error.message}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={retry}>
+            <Text style={styles.retryText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    >
     <LogsStack.Navigator screenOptions={stackScreenOptions}>
       <LogsStack.Screen name="LogsHome" component={LogsScreen} />
       <LogsStack.Screen name="ExercisePicker" component={ExercisePickerScreen} />
       <LogsStack.Screen name="ActiveWorkout" component={ActiveWorkoutScreen} options={{ headerShown: false }} />
       <LogsStack.Screen name="SessionDetail" component={SessionDetailView} options={{ headerShown: false }} />
     </LogsStack.Navigator>
+    </ErrorBoundary>
   );
 }
 
 function AnalyticsStackScreen() {
   return (
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        console.error('[ErrorBoundary:Analytics]', error.message);
+        console.error('[ErrorBoundary:Analytics] Stack:', error.stack);
+        console.error('[ErrorBoundary:Analytics] Component:', errorInfo.componentStack);
+      }}
+      fallback={(error, retry) => (
+        <View style={styles.errorFallback}>
+          <Text style={styles.errorTitle}>Analytics unavailable</Text>
+          <Text style={styles.errorMessage}>{error.message}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={retry}>
+            <Text style={styles.retryText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    >
     <AnalyticsStack.Navigator screenOptions={stackScreenOptions}>
       <AnalyticsStack.Screen name="AnalyticsHome" component={AnalyticsScreen} />
       <AnalyticsStack.Screen name="NutritionReport" component={NutritionReportScreen} />
       <AnalyticsStack.Screen name="WeeklyReport" component={WeeklyReportScreen} />
     </AnalyticsStack.Navigator>
+    </ErrorBoundary>
   );
 }
 
 function ProfileStackScreen() {
   return (
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        console.error('[ErrorBoundary:Profile]', error.message);
+        console.error('[ErrorBoundary:Profile] Stack:', error.stack);
+        console.error('[ErrorBoundary:Profile] Component:', errorInfo.componentStack);
+      }}
+      fallback={(error, retry) => (
+        <View style={styles.errorFallback}>
+          <Text style={styles.errorTitle}>Profile unavailable</Text>
+          <Text style={styles.errorMessage}>{error.message}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={retry}>
+            <Text style={styles.retryText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    >
     <ProfileStack.Navigator screenOptions={stackScreenOptions}>
       <ProfileStack.Screen name="ProfileHome" component={ProfileScreen} />
       <ProfileStack.Screen name="Learn" component={LearnScreen} />
@@ -198,6 +267,7 @@ function ProfileStackScreen() {
       <ProfileStack.Screen name="ShoppingList" component={ShoppingListView} />
       <ProfileStack.Screen name="PrepSunday" component={PrepSundayFlow} />
     </ProfileStack.Navigator>
+    </ErrorBoundary>
   );
 }
 
@@ -268,10 +338,10 @@ export function BottomTabNavigator() {
         ),
       })}
     >
-      <Tab.Screen name="Home" component={DashboardStackScreen} options={{ tabBarTestID: 'tab-home' }} />
-      <Tab.Screen name="Log" component={LogsStackScreen} options={{ tabBarTestID: 'tab-log' }} />
-      <Tab.Screen name="Analytics" component={AnalyticsStackScreen} options={{ tabBarTestID: 'tab-analytics' }} />
-      <Tab.Screen name="Profile" component={ProfileStackScreen} options={{ tabBarTestID: 'tab-profile' }} />
+      <Tab.Screen name="Home" component={DashboardStackScreen} options={{ tabBarTestID: 'tab-home' }} listeners={{ tabPress: () => triggerHaptic('light') }} />
+      <Tab.Screen name="Log" component={LogsStackScreen} options={{ tabBarTestID: 'tab-log' }} listeners={{ tabPress: () => triggerHaptic('light') }} />
+      <Tab.Screen name="Analytics" component={AnalyticsStackScreen} options={{ tabBarTestID: 'tab-analytics' }} listeners={{ tabPress: () => triggerHaptic('light') }} />
+      <Tab.Screen name="Profile" component={ProfileStackScreen} options={{ tabBarTestID: 'tab-profile' }} listeners={{ tabPress: () => triggerHaptic('light') }} />
     </Tab.Navigator>
   );
 }
@@ -301,5 +371,35 @@ const styles = StyleSheet.create({
   },
   iconWrapActive: {
     backgroundColor: colors.accent.primaryMuted,
+  },
+  errorFallback: {
+    flex: 1,
+    backgroundColor: colors.bg.base,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing[6],
+  },
+  errorTitle: {
+    color: colors.text.primary,
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.semibold,
+    marginBottom: spacing[2],
+  },
+  errorMessage: {
+    color: colors.text.muted,
+    fontSize: typography.size.sm,
+    textAlign: 'center',
+    marginBottom: spacing[4],
+  },
+  retryButton: {
+    backgroundColor: colors.accent.primary,
+    paddingHorizontal: spacing[6],
+    paddingVertical: spacing[3],
+    borderRadius: 8,
+  },
+  retryText: {
+    color: colors.text.primary,
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
   },
 });

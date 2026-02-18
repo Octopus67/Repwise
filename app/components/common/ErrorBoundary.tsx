@@ -6,6 +6,8 @@ import { Button } from './Button';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
+  fallback?: (error: Error, retry: () => void) => ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface ErrorBoundaryState {
@@ -24,22 +26,31 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('ErrorBoundary caught:', error, errorInfo);
+    console.error('ErrorBoundary caught:', error.message);
+    console.error('Stack:', error.stack);
+    console.error('Component stack:', errorInfo.componentStack);
+    this.props.onError?.(error, errorInfo);
   }
 
+  private handleRetry = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
   render() {
-    if (this.state.hasError) {
+    if (this.state.hasError && this.state.error) {
+      if (this.props.fallback) {
+        return this.props.fallback(this.state.error, this.handleRetry);
+      }
+
       return (
         <SafeAreaView style={styles.container}>
           <View style={styles.content}>
             <Text style={styles.title}>HypertrophyOS</Text>
             <Text style={styles.subtitle}>Something went wrong</Text>
-            {this.state.error && (
-              <Text style={styles.errorMessage}>{this.state.error.message}</Text>
-            )}
+            <Text style={styles.errorMessage}>{this.state.error.message}</Text>
             <Button
               title="Restart"
-              onPress={() => this.setState({ hasError: false, error: null })}
+              onPress={this.handleRetry}
               style={styles.button}
             />
           </View>

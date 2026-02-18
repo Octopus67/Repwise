@@ -52,6 +52,7 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
     marginBottom: spacing[1],
   },
   glassRow: {
@@ -64,11 +65,16 @@ const styles = StyleSheet.create({
   },
   glassBtn: {
     padding: spacing[1],
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   glassIcon: {},
   summary: {
     color: colors.text.muted,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     marginTop: spacing[1],
   },
 });

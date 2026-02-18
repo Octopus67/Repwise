@@ -18,6 +18,7 @@ import { Card } from '../../components/common/Card';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Skeleton } from '../../components/common/Skeleton';
 import { SwipeableRow } from '../../components/common/SwipeableRow';
+import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { CopyMealsBar } from '../../components/nutrition/CopyMealsBar';
 import { BudgetBar } from '../../components/nutrition/BudgetBar';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
@@ -69,6 +70,7 @@ export function LogsScreen() {
   const [nutritionEntries, setNutritionEntries] = useState<NutritionEntry[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showNutritionModal, setShowNutritionModal] = useState(false);
   const [showTrainingModal, setShowTrainingModal] = useState(false);
   const [prefilledMealName, setPrefilledMealName] = useState<string | undefined>(undefined);
@@ -142,21 +144,27 @@ export function LogsScreen() {
     const recentStart = fourteenDaysAgo.toISOString().split('T')[0];
     const today = new Date().toISOString().split('T')[0];
 
-    const [nutritionRes, trainingRes, favoritesRes, recentRes, userTemplatesRes, staticTemplatesRes] = await Promise.allSettled([
-      loadNutritionData(),
-      loadTrainingPage(1, true),
-      api.get('meals/favorites', { params: { limit: 10 } }),
-      api.get('nutrition/entries', { params: { start_date: recentStart, end_date: today, limit: 200 } }),
-      api.get('training/user-templates'),
-      api.get('training/templates'),
-    ]);
+    setError(null);
 
-    if (favoritesRes.status === 'fulfilled') setFavorites(favoritesRes.value.data.items ?? []);
-    if (recentRes.status === 'fulfilled') setRecentEntries(recentRes.value.data.items ?? []);
-    if (userTemplatesRes.status === 'fulfilled') setUserTemplates(userTemplatesRes.value.data ?? []);
-    if (staticTemplatesRes.status === 'fulfilled') setStaticTemplates(staticTemplatesRes.value.data ?? []);
+    try {
+      const [nutritionRes, trainingRes, favoritesRes, recentRes, userTemplatesRes, staticTemplatesRes] = await Promise.allSettled([
+        loadNutritionData(),
+        loadTrainingPage(1, true),
+        api.get('meals/favorites', { params: { limit: 10 } }),
+        api.get('nutrition/entries', { params: { start_date: recentStart, end_date: today, limit: 200 } }),
+        api.get('training/user-templates'),
+        api.get('training/templates'),
+      ]);
 
-    setIsLoading(false);
+      if (favoritesRes.status === 'fulfilled') setFavorites(favoritesRes.value.data.items ?? []);
+      if (recentRes.status === 'fulfilled') setRecentEntries(recentRes.value.data.items ?? []);
+      if (userTemplatesRes.status === 'fulfilled') setUserTemplates(userTemplatesRes.value.data ?? []);
+      if (staticTemplatesRes.status === 'fulfilled') setStaticTemplates(staticTemplatesRes.value.data ?? []);
+    } catch {
+      setError('Unable to load logs. Check your connection.');
+    } finally {
+      setIsLoading(false);
+    }
   }, [loadNutritionData, loadTrainingPage]);
 
   useEffect(() => { loadData(); }, [loadData, selectedDate]);
@@ -389,6 +397,15 @@ export function LogsScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Error Banner */}
+      {error && (
+        <ErrorBanner
+          message={error}
+          onRetry={loadData}
+          onDismiss={() => setError(null)}
+        />
+      )}
+
       {isLoading ? (
         <View style={[styles.list, styles.listContent]}>
           <SkeletonCards />
@@ -598,6 +615,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
     padding: spacing[4],
     paddingBottom: spacing[2],
+    lineHeight: typography.lineHeight.xl,
   },
   tabs: {
     flexDirection: 'row',
@@ -614,7 +632,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
   },
   tabActive: { backgroundColor: colors.accent.primaryMuted },
-  tabText: { color: colors.text.muted, fontSize: typography.size.base, fontWeight: typography.weight.medium },
+  tabText: { color: colors.text.muted, fontSize: typography.size.base, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.base },
   tabTextActive: { color: colors.accent.primary },
   dateNav: {
     flexDirection: 'row',
@@ -629,11 +647,17 @@ const styles = StyleSheet.create({
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.semibold,
     paddingHorizontal: spacing[3],
+    minWidth: 44,
+    minHeight: 44,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    lineHeight: typography.lineHeight['2xl'],
   },
   dateText: {
     color: colors.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.base,
   },
   list: { flex: 1 },
   listContent: { padding: spacing[4], paddingTop: 0, paddingBottom: spacing[12] },
@@ -643,6 +667,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
     marginTop: spacing[4],
     marginBottom: spacing[2],
+    lineHeight: typography.lineHeight.sm,
   },
   entryCard: { marginBottom: spacing[2] },
   entryHeader: {
@@ -661,14 +686,16 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.base,
   },
   entryTimestamp: {
     color: colors.text.muted,
-    fontSize: 12,
+    fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
   },
   macroRow: { flexDirection: 'row', gap: spacing[2] },
-  exerciseText: { color: colors.text.secondary, fontSize: typography.size.sm, marginTop: spacing[1] },
-  moreText: { color: colors.text.muted, fontSize: typography.size.xs, marginTop: spacing[1] },
+  exerciseText: { color: colors.text.secondary, fontSize: typography.size.sm, marginTop: spacing[1], lineHeight: typography.lineHeight.sm },
+  moreText: { color: colors.text.muted, fontSize: typography.size.xs, marginTop: spacing[1], lineHeight: typography.lineHeight.xs },
   fab: {
     position: 'absolute',
     bottom: spacing[6],
@@ -680,7 +707,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 6,
-    shadowColor: '#000',
+    shadowColor: colors.bg.base,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.4,
     shadowRadius: 6,
@@ -714,22 +741,27 @@ const styles = StyleSheet.create({
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     color: colors.text.primary,
+    lineHeight: typography.lineHeight.base,
   },
   slotCalories: {
     fontSize: typography.size.sm,
     color: colors.text.secondary,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
   },
   slotAddButton: {
     alignItems: 'center',
     paddingVertical: spacing[2],
     borderTopWidth: 1,
     borderTopColor: colors.border.subtle,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   slotAddText: {
     fontSize: typography.size.sm,
     color: colors.accent.primary,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
   },
   // ── Favorites styles ──────────────────────────────────────────────────
   favoriteRow: {
@@ -743,22 +775,26 @@ const styles = StyleSheet.create({
     fontSize: typography.size.base,
     color: colors.text.primary,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.base,
   },
   favoriteMacros: {
     fontSize: typography.size.sm,
     color: colors.text.secondary,
+    lineHeight: typography.lineHeight.sm,
   },
   favoriteLogBtn: {
     fontSize: typography.size.sm,
     color: colors.accent.primary,
     fontWeight: typography.weight.semibold,
     paddingHorizontal: spacing[3],
+    lineHeight: typography.lineHeight.sm,
   },
   emptyFavText: {
     fontSize: typography.size.sm,
     color: colors.text.muted,
     textAlign: 'center',
     paddingVertical: spacing[2],
+    lineHeight: typography.lineHeight.sm,
   },
   // ── Template browse link ──────────────────────────────────────────────
   browseLink: {
@@ -769,5 +805,6 @@ const styles = StyleSheet.create({
     fontSize: typography.size.sm,
     color: colors.accent.primary,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
   },
 });

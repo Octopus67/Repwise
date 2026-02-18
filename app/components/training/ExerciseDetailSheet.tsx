@@ -11,7 +11,7 @@
  * Phase 5, Task 5.2
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   View,
@@ -20,13 +20,23 @@ import {
   ScrollView,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  Animated,
   Dimensions,
   StyleSheet,
-  PanResponder,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  runOnJS,
+} from 'react-native-reanimated';
+import {
+  Gesture,
+  GestureDetector,
+} from 'react-native-gesture-handler';
 import type { Exercise } from '../../types/exercise';
-import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { colors, spacing, typography, radius, springs, motion } from '../../theme/tokens';
+import { useReduceMotion } from '../../hooks/useReduceMotion';
 import {
   shouldShowInstructions,
   shouldShowTips,
@@ -48,56 +58,56 @@ interface ExerciseDetailSheetProps {
 }
 
 export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDetailSheetProps) {
-  const slideAnim = useRef(new Animated.Value(SHEET_HEIGHT)).current;
+  const slideAnim = useSharedValue(SHEET_HEIGHT);
   const [internalVisible, setInternalVisible] = useState(false);
+  const reduceMotion = useReduceMotion();
 
-  // Pan responder for swipe-down dismiss
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gestureState) => gestureState.dy > 10,
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dy > 0) {
-          slideAnim.setValue(gestureState.dy);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
-          dismiss();
-        } else {
-          Animated.spring(slideAnim, {
-            toValue: 0,
-            useNativeDriver: true,
-            damping: 20,
-            stiffness: 200,
-          }).start();
-        }
-      },
-    }),
-  ).current;
+  const setInternalVisibleFalse = () => setInternalVisible(false);
+
+  // Pan gesture for swipe-down dismiss
+  const panGesture = Gesture.Pan()
+    .onUpdate((e) => {
+      if (e.translationY > 0) {
+        slideAnim.value = e.translationY;
+      }
+    })
+    .onEnd((e) => {
+      if (e.translationY > 100 || e.velocityY > 500) {
+        slideAnim.value = withTiming(SHEET_HEIGHT, { duration: motion.duration.default }, () => {
+          runOnJS(setInternalVisibleFalse)();
+          runOnJS(onDismiss)();
+        });
+      } else {
+        slideAnim.value = reduceMotion ? 0 : withSpring(0, springs.gentle);
+      }
+    });
+
+  const animatedSheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: slideAnim.value }],
+  }));
 
   useEffect(() => {
     if (visible) {
       setInternalVisible(true);
-      slideAnim.setValue(SHEET_HEIGHT);
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        damping: 20,
-        stiffness: 200,
-      }).start();
+      if (reduceMotion) {
+        slideAnim.value = 0;
+      } else {
+        slideAnim.value = SHEET_HEIGHT;
+        slideAnim.value = withSpring(0, springs.gentle);
+      }
     }
-  }, [visible, slideAnim]);
+  }, [visible, reduceMotion]);
 
   const dismiss = () => {
-    Animated.timing(slideAnim, {
-      toValue: SHEET_HEIGHT,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
+    if (reduceMotion) {
       setInternalVisible(false);
       onDismiss();
-    });
+    } else {
+      slideAnim.value = withTiming(SHEET_HEIGHT, { duration: motion.duration.default }, () => {
+        runOnJS(setInternalVisibleFalse)();
+        runOnJS(onDismiss)();
+      });
+    }
   };
 
   if (!exercise) return null;
@@ -125,10 +135,10 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
       </TouchableWithoutFeedback>
 
       {/* Sheet */}
-      <Animated.View
-        style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}
-        {...panResponder.panHandlers}
-      >
+      <GestureDetector gesture={panGesture}>
+        <Animated.View
+          style={[styles.sheet, animatedSheetStyle]}
+        >
         {/* Drag handle */}
         <View style={styles.handleRow}>
           <View style={styles.handle} />
@@ -217,6 +227,7 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
           <View style={{ height: spacing[8] }} />
         </ScrollView>
       </Animated.View>
+      </GestureDetector>
     </Modal>
   );
 }

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { colors, radius, spacing, typography, letterSpacing } from '../../theme/tokens';
 import { Card } from '../../components/common/Card';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Skeleton } from '../../components/common/Skeleton';
+import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { TrendLineChart } from '../../components/charts/TrendLineChart';
 import { TimeRangeSelector } from '../../components/charts/TimeRangeSelector';
 import { filterByTimeRange } from '../../utils/filterByTimeRange';
@@ -77,6 +78,7 @@ export function AnalyticsScreen() {
   const [selectedTab, setSelectedTab] = useState<AnalyticsTab>('nutrition');
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [weightTrend, setWeightTrend] = useState<TrendPoint[]>([]);
   const [calorieTrend, setCalorieTrend] = useState<TrendPoint[]>([]);
   const [proteinTrend, setProteinTrend] = useState<TrendPoint[]>([]);
@@ -116,6 +118,7 @@ export function AnalyticsScreen() {
   }, []);
 
   const loadAnalytics = async () => {
+    setError(null);
     try {
       const end = new Date().toISOString().split('T')[0];
       const start = new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0];
@@ -168,7 +171,9 @@ export function AnalyticsScreen() {
       } catch {
         setFatigueScores([]);
       }
-    } catch { /* best-effort */ } finally {
+    } catch {
+      setError('Unable to load analytics. Check your connection.');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -238,6 +243,15 @@ export function AnalyticsScreen() {
     <SafeAreaView style={styles.safe} edges={['top']} testID="analytics-screen">
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <Text style={styles.title}>Analytics</Text>
+
+        {/* Error Banner */}
+        {error && (
+          <ErrorBanner
+            message={error}
+            onRetry={loadAnalytics}
+            onDismiss={() => setError(null)}
+          />
+        )}
 
         {/* Tab Pills */}
         <View style={styles.analyticsTabRow}>
@@ -632,10 +646,10 @@ function ComparisonItem({
 
 const compStyles = StyleSheet.create({
   item: { flex: 1, alignItems: 'center' },
-  label: { color: colors.text.secondary, fontSize: typography.size.sm },
-  actual: { color: colors.text.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, marginTop: spacing[1] },
-  target: { color: colors.text.muted, fontSize: typography.size.sm },
-  diff: { fontSize: typography.size.sm, fontWeight: typography.weight.medium, marginTop: spacing[1] },
+  label: { color: colors.text.secondary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm },
+  actual: { color: colors.text.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, marginTop: spacing[1], lineHeight: typography.lineHeight['2xl'] },
+  target: { color: colors.text.muted, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm },
+  diff: { fontSize: typography.size.sm, fontWeight: typography.weight.medium, marginTop: spacing[1], lineHeight: typography.lineHeight.sm },
 });
 
 const styles = StyleSheet.create({
@@ -647,6 +661,8 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xl,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[4],
+    lineHeight: typography.lineHeight.xl,
+    letterSpacing: letterSpacing.tight,
   },
   nutritionReportBtn: {
     flexDirection: 'row',
@@ -663,6 +679,7 @@ const styles = StyleSheet.create({
     color: colors.accent.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.base,
   },
   nutritionReportArrow: {
     color: colors.accent.primary,
@@ -672,8 +689,10 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
-    marginTop: spacing[5],
+    marginTop: spacing[6],
     marginBottom: spacing[3],
+    lineHeight: typography.lineHeight.lg,
+    letterSpacing: letterSpacing.tight,
   },
   comparisonRow: { flexDirection: 'row', gap: spacing[4] },
   exerciseSelector: {
@@ -698,6 +717,7 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.xs,
   },
   exercisePillTextActive: {
     color: colors.accent.primary,
@@ -708,7 +728,7 @@ const styles = StyleSheet.create({
     gap: spacing[3],
     marginBottom: spacing[2],
   },
-  gapNutrient: { color: colors.text.secondary, fontSize: typography.size.sm, width: 80 },
+  gapNutrient: { color: colors.text.secondary, fontSize: typography.size.sm, width: 80, lineHeight: typography.lineHeight.sm },
   gapBar: {
     flex: 1,
     height: 6,
@@ -717,7 +737,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   gapFill: { height: '100%', borderRadius: radius.full },
-  gapPct: { color: colors.semantic.negative, fontSize: typography.size.sm, fontWeight: typography.weight.medium, width: 44, textAlign: 'right' },
+  gapPct: { color: colors.semantic.negative, fontSize: typography.size.sm, fontWeight: typography.weight.medium, width: 44, textAlign: 'right', lineHeight: typography.lineHeight.sm },
   analyticsTabRow: {
     flexDirection: 'row',
     backgroundColor: colors.bg.surface,
@@ -732,6 +752,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
   },
   analyticsTabActive: { backgroundColor: colors.accent.primaryMuted },
-  analyticsTabText: { color: colors.text.muted, fontSize: typography.size.base, fontWeight: typography.weight.medium },
+  analyticsTabText: { color: colors.text.muted, fontSize: typography.size.base, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.base },
   analyticsTabTextActive: { color: colors.accent.primary },
 });

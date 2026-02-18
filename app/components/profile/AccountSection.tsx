@@ -4,14 +4,15 @@ import {
   Text,
   TouchableOpacity,
   Alert,
-  LayoutAnimation,
   StyleSheet,
 } from 'react-native';
+import Animated, { Layout } from 'react-native-reanimated';
 import Constants from 'expo-constants';
 import { colors, spacing, typography } from '../../theme/tokens';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { useStore } from '../../store';
+import { useReduceMotion } from '../../hooks/useReduceMotion';
 import api from '../../services/api';
 
 interface AccountSectionProps {
@@ -20,10 +21,10 @@ interface AccountSectionProps {
 
 export function AccountSection({ onLogout }: AccountSectionProps) {
   const store = useStore();
+  const reduceMotion = useReduceMotion();
   const [dangerZoneExpanded, setDangerZoneExpanded] = useState(false);
 
   const toggleDangerZone = useCallback(() => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setDangerZoneExpanded((prev) => !prev);
   }, []);
 
@@ -75,13 +76,13 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
       </TouchableOpacity>
 
       {dangerZoneExpanded && (
-        <View style={styles.dangerZoneContent}>
+        <Animated.View layout={reduceMotion ? undefined : Layout} style={styles.dangerZoneContent}>
           <Button
             title="Delete Account"
             variant="danger"
             onPress={handleDeleteAccount}
           />
-        </View>
+        </Animated.View>
       )}
 
       {/* App Version */}
@@ -95,6 +96,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.md,
     marginBottom: spacing[2],
   },
   logoutRow: {
@@ -104,11 +106,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[3],
     borderTopWidth: 1,
     borderTopColor: colors.border.subtle,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   dangerZoneText: {
     color: colors.semantic.negative,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.base,
   },
   dangerZoneContent: {
     paddingBottom: spacing[4],
@@ -116,6 +121,7 @@ const styles = StyleSheet.create({
   version: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
     marginTop: spacing[4],
     textAlign: 'center',
   },

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,14 +8,16 @@ import {
   Linking,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  Animated,
   ActivityIndicator,
 } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Markdown from 'react-native-markdown-display';
-import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { colors, radius, spacing, typography, motion } from '../../theme/tokens';
 import { Icon } from '../../components/common/Icon';
+import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { ArticleChart } from '../../components/learn/ArticleChart';
+import { useReduceMotion } from '../../hooks/useReduceMotion';
 import api from '../../services/api';
 
 interface ArticleDetail {
@@ -38,7 +40,8 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
   const [article, setArticle] = useState<ArticleDetail | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const progressAnim = useRef(new Animated.Value(0)).current;
+  const progressValue = useSharedValue(0);
+  const reduceMotion = useReduceMotion();
 
   useEffect(() => {
     loadArticle();
@@ -60,11 +63,11 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
     const maxScroll = contentSize.height - layoutMeasurement.height;
     if (maxScroll > 0) {
       const progress = Math.min(contentOffset.y / maxScroll, 1);
-      Animated.timing(progressAnim, {
-        toValue: progress,
-        duration: 50,
-        useNativeDriver: false,
-      }).start();
+      if (reduceMotion) {
+        progressValue.value = progress;
+      } else {
+        progressValue.value = withTiming(progress, { duration: motion.duration.instant });
+      }
     }
   };
 
@@ -105,16 +108,13 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
     return (
       <SafeAreaView style={styles.safe} edges={['top']} testID="article-detail-screen">
         <View style={styles.header}>
-          <TouchableOpacity testID="article-detail-back" onPress={onBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity testID="article-detail-back" onPress={onBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ minWidth: 44, minHeight: 44, justifyContent: 'center' }}>
             <Text style={styles.backBtn}>← Back</Text>
           </TouchableOpacity>
         </View>
         {error ? (
           <View testID="article-detail-error" style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity testID="article-detail-retry" onPress={loadArticle} style={styles.retryBtn}>
-              <Text style={styles.retryText}>Retry</Text>
-            </TouchableOpacity>
+            <ErrorBanner message={error} onRetry={loadArticle} />
           </View>
         ) : (
           <ActivityIndicator size="large" color={colors.accent.primary} />
@@ -123,24 +123,23 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
     );
   }
 
-  const progressWidth = progressAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
+  const progressBarStyle = useAnimatedStyle(() => ({
+    width: `${progressValue.value * 100}%` as any,
+  }));
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']} testID="article-detail-screen">
       {/* Scroll progress bar */}
       <View style={styles.progressBar}>
-        <Animated.View style={[styles.progressFill, { width: progressWidth }]} />
+        <Animated.View style={[styles.progressFill, progressBarStyle]} />
       </View>
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity testID="article-detail-back" onPress={onBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+        <TouchableOpacity testID="article-detail-back" onPress={onBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ minWidth: 44, minHeight: 44, justifyContent: 'center' }}>
           <Text style={styles.backBtn}>← Back</Text>
         </TouchableOpacity>
-        <TouchableOpacity testID="article-detail-favorite" onPress={toggleFavorite}>
+        <TouchableOpacity testID="article-detail-favorite" onPress={toggleFavorite} style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={[styles.favBtn, isFavorite && styles.favActive]}>
             {isFavorite ? <Icon name="star" /> : <Icon name="star-outline" />}
           </Text>
@@ -231,7 +230,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing[4],
   },
-  backBtn: { color: colors.accent.primary, fontSize: typography.size.base, fontWeight: typography.weight.medium },
+  backBtn: { color: colors.accent.primary, fontSize: typography.size.base, fontWeight: typography.weight.medium, lineHeight: typography.size.base * typography.lineHeight.normal },
   favBtn: { fontSize: typography.size.xl, color: colors.text.muted },
   favActive: { color: colors.semantic.warning },
   scroll: { flex: 1 },
@@ -249,9 +248,9 @@ const styles = StyleSheet.create({
     marginTop: spacing[3],
     marginBottom: spacing[6],
   },
-  readTime: { color: colors.text.muted, fontSize: typography.size.sm },
+  readTime: { color: colors.text.muted, fontSize: typography.size.sm, lineHeight: typography.size.sm * typography.lineHeight.normal },
   dot: { color: colors.text.muted },
-  date: { color: colors.text.muted, fontSize: typography.size.sm },
+  date: { color: colors.text.muted, fontSize: typography.size.sm, lineHeight: typography.size.sm * typography.lineHeight.normal },
   videoCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -264,7 +263,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing[4],
   },
   videoIcon: { color: colors.semantic.negative, fontSize: typography.size.xl },
-  videoText: { color: colors.text.primary, fontSize: typography.size.base, fontWeight: typography.weight.medium },
+  videoText: { color: colors.text.primary, fontSize: typography.size.base, fontWeight: typography.weight.medium, lineHeight: typography.size.base * typography.lineHeight.normal },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginTop: spacing[6] },
   tag: {
     color: colors.text.muted,

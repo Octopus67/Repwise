@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, typography } from '../../theme/tokens';
+import { colors, spacing, typography, letterSpacing } from '../../theme/tokens';
 import { Card } from '../common/Card';
 import { TrendLineChart } from '../charts/TrendLineChart';
 import {
@@ -78,6 +78,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
     color: colors.text.primary,
     marginBottom: spacing[2],
+    lineHeight: typography.lineHeight.md,
   },
   tdeeRow: {
     flexDirection: 'row',
@@ -89,15 +90,20 @@ const styles = StyleSheet.create({
     fontSize: typography.size['3xl'],
     fontWeight: typography.weight.bold,
     color: colors.text.primary,
+    fontVariant: typography.numeric.fontVariant as any,
+    letterSpacing: letterSpacing.tighter,
+    lineHeight: typography.lineHeight['3xl'],
   },
   tdeeUnit: {
     fontSize: typography.size.base,
     color: colors.text.secondary,
+    lineHeight: typography.lineHeight.base,
   },
   tdeeLabel: {
     fontSize: typography.size.xs,
     color: colors.text.muted,
     marginBottom: spacing[3],
+    lineHeight: typography.lineHeight.xs,
   },
   chartContainer: {
     marginTop: spacing[2],
@@ -107,11 +113,13 @@ const styles = StyleSheet.create({
     color: colors.text.muted,
     textAlign: 'center',
     paddingVertical: spacing[2],
+    lineHeight: typography.lineHeight.base,
   },
   emptySubtext: {
     fontSize: typography.size.sm,
     color: colors.text.muted,
     textAlign: 'center',
     paddingBottom: spacing[2],
+    lineHeight: typography.lineHeight.sm,
   },
 });

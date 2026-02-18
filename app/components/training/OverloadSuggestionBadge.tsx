@@ -12,7 +12,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import api from '../../services/api';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
 import { formatSuggestionText, OverloadSuggestionData } from '../../utils/intelligenceLayerLogic';

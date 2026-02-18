@@ -139,12 +139,14 @@ const pickerStyles = StyleSheet.create({
     fontSize: typography.size.xl,
     fontWeight: typography.weight.bold,
     color: colors.accent.primary,
+    lineHeight: typography.lineHeight.xl,
   },
   textMuted: {
     fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
     color: colors.text.muted,
     opacity: 0.4,
+    lineHeight: typography.lineHeight.md,
   },
 });
 
@@ -233,13 +235,13 @@ export function BodyBasicsStep({ onNext }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingHorizontal: spacing[4], paddingBottom: spacing[10] },
-  title: { color: colors.text.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, marginBottom: spacing[1] },
-  subtitle: { color: colors.text.secondary, fontSize: typography.size.base, marginBottom: spacing[6] },
-  label: { color: colors.text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, marginBottom: spacing[2], marginTop: spacing[4] },
+  title: { color: colors.text.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, marginBottom: spacing[1], lineHeight: typography.lineHeight['2xl'] },
+  subtitle: { color: colors.text.secondary, fontSize: typography.size.base, marginBottom: spacing[6], lineHeight: typography.lineHeight.base },
+  label: { color: colors.text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, marginBottom: spacing[2], marginTop: spacing[4], lineHeight: typography.lineHeight.sm },
   pillRow: { flexDirection: 'row', gap: spacing[2] },
-  pill: { flex: 1, paddingVertical: spacing[3], borderRadius: radius.md, backgroundColor: colors.bg.surfaceRaised, borderWidth: 1, borderColor: colors.border.subtle, alignItems: 'center' },
+  pill: { flex: 1, paddingVertical: spacing[3], borderRadius: radius.md, backgroundColor: colors.bg.surfaceRaised, borderWidth: 1, borderColor: colors.border.subtle, alignItems: 'center', minHeight: 44, justifyContent: 'center' },
   pillActive: { backgroundColor: colors.accent.primaryMuted, borderColor: colors.accent.primary },
-  pillText: { color: colors.text.secondary, fontSize: typography.size.base, fontWeight: typography.weight.medium },
+  pillText: { color: colors.text.secondary, fontSize: typography.size.base, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.base },
   pillTextActive: { color: colors.accent.primary, fontWeight: typography.weight.semibold },
   dateRow: { flexDirection: 'row', gap: spacing[3], marginTop: spacing[2] },
   dateCol: { flex: 1 },

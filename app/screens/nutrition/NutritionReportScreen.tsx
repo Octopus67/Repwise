@@ -8,12 +8,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { colors, radius, spacing, typography, opacityScale } from '../../theme/tokens';
 import { groupMicroFields, MicroField } from '../../utils/microNutrientSerializer';
 import { getRDA, computeRDAPercentage, rdaColor, Sex } from '../../utils/rdaValues';
 import { useStore } from '../../store';
 import { useOnboardingStore, computeAge } from '../../store/onboardingSlice';
 import { Icon } from '../../components/common/Icon';
+import { ErrorBanner } from '../../components/common/ErrorBanner';
 import api from '../../services/api';
 
 interface NutritionEntry {
@@ -250,12 +251,11 @@ export function NutritionReportScreen({ navigation }: { navigation?: any }) {
 
       {/* Error banner */}
       {error && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity onPress={() => { setError(null); loadEntries(); }}>
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
+        <ErrorBanner
+          message={error}
+          onRetry={() => { setError(null); loadEntries(); }}
+          onDismiss={() => setError(null)}
+        />
       )}
 
       {/* RDA defaults warning */}
@@ -306,12 +306,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[3],
   },
-  backBtn: { marginRight: spacing[3] },
-  backText: { color: colors.accent.primary, fontSize: typography.size['2xl'] },
+  backBtn: { marginRight: spacing[3], minWidth: 44, minHeight: 44, justifyContent: 'center' },
+  backText: { color: colors.accent.primary, fontSize: typography.size['2xl'], lineHeight: typography.lineHeight['2xl'] },
   title: {
     color: colors.text.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.xl,
   },
   dateRow: {
     flexDirection: 'row',
@@ -320,13 +321,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[2],
     gap: spacing[4],
   },
-  dateArrow: { padding: spacing[2] },
-  dateArrowText: { color: colors.accent.primary, fontSize: typography.size['2xl'] },
-  dateArrowDisabled: { color: colors.text.muted, opacity: 0.4 },
+  dateArrow: { padding: spacing[2], minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  dateArrowText: { color: colors.accent.primary, fontSize: typography.size['2xl'], lineHeight: typography.lineHeight['2xl'] },
+  dateArrowDisabled: { color: colors.text.muted, opacity: opacityScale.disabled },
   dateText: {
     color: colors.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.md,
   },
   listContent: { paddingHorizontal: spacing[4], paddingBottom: spacing[12] },
   sectionHeader: {
@@ -337,6 +339,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.lg,
   },
   nutrientRow: {
     backgroundColor: colors.bg.surface,
@@ -354,6 +357,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.base,
     flex: 1,
   },
   nutrientValues: {
@@ -364,20 +368,24 @@ const styles = StyleSheet.create({
   intakeText: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
   },
   rdaPct: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.sm,
     minWidth: 40,
     textAlign: 'right',
   },
   rdaActual: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
   },
   noDataText: {
     color: colors.text.muted,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
   },
   barTrack: {
     height: 6,
@@ -403,16 +411,19 @@ const styles = StyleSheet.create({
   contributionName: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     flex: 1,
   },
   contributionAmount: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
     marginRight: spacing[2],
   },
   contributionPct: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
     width: 36,
     textAlign: 'right',
   },
@@ -427,11 +438,13 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.lg,
     marginBottom: spacing[2],
   },
   emptyText: {
     color: colors.text.muted,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     textAlign: 'center',
   },
   rdaWarningBanner: {
@@ -446,29 +459,13 @@ const styles = StyleSheet.create({
   rdaWarningText: {
     color: colors.semantic.warning,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     flex: 1,
   },
   rdaWarningLink: {
     color: colors.semantic.warning,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
-  },
-  errorBanner: {
-    backgroundColor: colors.semantic.negativeSubtle,
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  errorText: {
-    color: colors.semantic.negative,
-    fontSize: typography.size.sm,
-    flex: 1,
-  },
-  retryText: {
-    color: colors.semantic.negative,
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.sm,
   },
 });

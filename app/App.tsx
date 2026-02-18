@@ -174,7 +174,11 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer theme={navTheme}>
         <StatusBar style="light" />
-        <ErrorBoundary>
+        <ErrorBoundary onError={(error, errorInfo) => {
+          console.error('[ErrorBoundary:Root]', error.message);
+          console.error('[ErrorBoundary:Root] Stack:', error.stack);
+          console.error('[ErrorBoundary:Root] Component:', errorInfo.componentStack);
+        }}>
           {isAuthenticated ? (
             needsOnboarding ? (
               <OnboardingWizard

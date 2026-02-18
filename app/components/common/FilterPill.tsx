@@ -6,7 +6,7 @@ import Animated, {
   withTiming,
   interpolateColor,
 } from 'react-native-reanimated';
-import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { colors, radius, spacing, typography, motion } from '../../theme/tokens';
 import { usePressAnimation } from '../../hooks/usePressAnimation';
 import { useHoverState } from '../../hooks/useHoverState';
 
@@ -47,7 +47,7 @@ export function FilterPill({ label, active, onPress }: FilterPillProps) {
   const { isHovered, hoverProps } = useHoverState();
 
   useEffect(() => {
-    progress.value = withTiming(active ? 1 : 0, { duration: 150 });
+    progress.value = withTiming(active ? 1 : 0, { duration: motion.duration.quick });
   }, [active]);
 
   const animatedStyle = useAnimatedStyle(() => {

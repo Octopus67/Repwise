@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
 import { Card } from '../../components/common/Card';
 import { Icon } from '../../components/common/Icon';
+import { ErrorBanner } from '../../components/common/ErrorBanner';
 import api from '../../services/api';
 
 interface CommunityLinks {
@@ -20,6 +21,7 @@ const DEFAULT_LINKS: CommunityLinks = {
 export function CommunityScreen() {
   const navigation = useNavigation();
   const [links, setLinks] = useState<CommunityLinks>(DEFAULT_LINKS);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadLinks();
@@ -27,26 +29,31 @@ export function CommunityScreen() {
 
   const loadLinks = async () => {
     try {
+      setError(null);
       const { data } = await api.get('community');
       setLinks({
         telegram_url: data.telegram_url ?? DEFAULT_LINKS.telegram_url,
         contact_email: data.contact_email ?? DEFAULT_LINKS.contact_email,
       });
-    } catch { /* use defaults */ }
+    } catch {
+      setError('Unable to load community links. Check your connection.');
+    }
   };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']} testID="community-screen">
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {navigation.canGoBack() && (
-          <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingVertical: spacing[2], marginBottom: spacing[2] }} activeOpacity={0.7}>
-            <Text style={{ color: colors.accent.primary, fontSize: typography.size.base, fontWeight: typography.weight.medium }}>← Back</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} activeOpacity={0.7}>
+            <Text style={styles.backButtonText}>← Back</Text>
           </TouchableOpacity>
         )}
         <Text style={styles.title}>Community</Text>
         <Text style={styles.subtitle}>
           Connect with fellow lifters, share progress, and get support.
         </Text>
+
+        {error && <ErrorBanner message={error} onRetry={loadLinks} />}
 
         <TouchableOpacity
           onPress={() => Linking.openURL(links.telegram_url)}
@@ -99,10 +106,13 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg.base },
   container: { flex: 1 },
   content: { padding: spacing[4], paddingBottom: spacing[12] },
+  backButton: { paddingVertical: spacing[2], marginBottom: spacing[2], minHeight: 44, justifyContent: 'center' as const },
+  backButtonText: { color: colors.accent.primary, fontSize: typography.size.base, fontWeight: typography.weight.medium, lineHeight: typography.size.base * typography.lineHeight.normal },
   title: {
     color: colors.text.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.size.xl * typography.lineHeight.tight,
   },
   subtitle: {
     color: colors.text.secondary,
@@ -116,6 +126,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing[4],
     marginBottom: spacing[3],
+    minHeight: 44,
   },
   linkIcon: { fontSize: typography.size['2xl'] },
   linkContent: { flex: 1 },
@@ -123,11 +134,13 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.size.md * typography.lineHeight.tight,
   },
   linkDesc: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
-    marginTop: 2,
+    marginTop: spacing[1],
+    lineHeight: typography.size.sm * typography.lineHeight.normal,
   },
   arrow: {
     color: colors.accent.primary,
@@ -140,6 +153,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[3],
+    lineHeight: typography.size.md * typography.lineHeight.tight,
   },
   infoText: {
     color: colors.text.secondary,

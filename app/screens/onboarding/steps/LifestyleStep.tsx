@@ -179,11 +179,13 @@ const styles = StyleSheet.create({
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.bold,
     marginBottom: spacing[1],
+    lineHeight: typography.lineHeight['2xl'],
   },
   subtitle: {
     color: colors.text.secondary,
     fontSize: typography.size.base,
     marginBottom: spacing[6],
+    lineHeight: typography.lineHeight.base,
   },
   sectionLabel: {
     color: colors.text.primary,
@@ -191,6 +193,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[3],
     marginTop: spacing[5],
+    lineHeight: typography.lineHeight.base,
   },
   activityGrid: {
     gap: spacing[3],
@@ -214,6 +217,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     flex: 1,
+    lineHeight: typography.lineHeight.base,
   },
   activityLabelSelected: {
     color: colors.accent.primary,
@@ -223,6 +227,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xs,
     flex: 1,
     textAlign: 'right',
+    lineHeight: typography.lineHeight.xs,
   },
   activityDescSelected: {
     color: colors.text.secondary,
@@ -251,6 +256,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     fontVariant: ['tabular-nums'],
+    lineHeight: typography.lineHeight.base,
   },
   sessionTextSelected: {
     color: colors.accent.primary,
@@ -267,6 +273,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg.surfaceRaised,
     borderWidth: 1,
     borderColor: colors.border.subtle,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   chipSelected: {
     borderColor: colors.accent.primary,
@@ -276,6 +284,7 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
   },
   chipTextSelected: {
     color: colors.accent.primary,
@@ -294,6 +303,7 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
   },
   activityCalValue: {
     color: colors.accent.primary,
@@ -301,11 +311,13 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.bold,
     marginTop: spacing[1],
     fontVariant: ['tabular-nums'],
+    lineHeight: typography.lineHeight.xl,
   },
   activityCalHint: {
     color: colors.text.muted,
     fontSize: typography.size.xs,
     marginTop: spacing[1],
+    lineHeight: typography.lineHeight.xs,
   },
   nextBtn: {
     marginTop: spacing[6],

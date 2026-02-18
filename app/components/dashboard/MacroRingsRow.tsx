@@ -39,7 +39,7 @@ export function MacroRingsRow({ calories, protein, carbs, fat, onTargetMissing }
         target={p.target ?? 0}
         color={colors.macro.protein}
         trackColor={colors.macro.proteinSubtle}
-        label="g"
+        label="Protein"
         onTargetMissing={onTargetMissing}
       />
       <ProgressRing
@@ -47,7 +47,7 @@ export function MacroRingsRow({ calories, protein, carbs, fat, onTargetMissing }
         target={cb.target ?? 0}
         color={colors.macro.carbs}
         trackColor={colors.macro.carbsSubtle}
-        label="g"
+        label="Carbs"
         onTargetMissing={onTargetMissing}
       />
       <ProgressRing
@@ -55,7 +55,7 @@ export function MacroRingsRow({ calories, protein, carbs, fat, onTargetMissing }
         target={f.target ?? 0}
         color={colors.macro.fat}
         trackColor={colors.macro.fatSubtle}
-        label="g"
+        label="Fat"
         onTargetMissing={onTargetMissing}
       />
     </View>

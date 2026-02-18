@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { colors, radius, spacing, typography, opacityScale } from '../../theme/tokens';
 import { Card } from '../common/Card';
 import { EditableField } from '../common/EditableField';
 import { EmptyState } from '../common/EmptyState';
@@ -551,6 +551,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.md,
     marginBottom: spacing[2],
   },
   footer: {
@@ -565,11 +566,13 @@ const styles = StyleSheet.create({
   lastUpdated: {
     color: colors.text.muted,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
   },
   viewHistory: {
     color: colors.accent.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
   },
 });
 
@@ -584,6 +587,7 @@ const editStyles = StyleSheet.create({
     color: colors.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
     marginBottom: spacing[1],
   },
   input: {
@@ -609,10 +613,12 @@ const editStyles = StyleSheet.create({
     color: colors.text.muted,
     fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.md,
   },
   error: {
     color: colors.semantic.negative,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     marginTop: spacing[2],
   },
   actions: {
@@ -630,12 +636,13 @@ const editStyles = StyleSheet.create({
     minHeight: 40,
   },
   saveBtnDisabled: {
-    opacity: 0.5,
+    opacity: opacityScale.disabled,
   },
   saveBtnText: {
     color: colors.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.base,
   },
   cancelBtn: {
     borderRadius: radius.sm,
@@ -648,6 +655,7 @@ const editStyles = StyleSheet.create({
     color: colors.text.muted,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.base,
   },
 });
 
@@ -659,6 +667,7 @@ const pickerStyles = StyleSheet.create({
     color: colors.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
     marginBottom: spacing[2],
   },
   options: {
@@ -673,6 +682,8 @@ const pickerStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border.default,
     backgroundColor: colors.bg.surface,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   optionActive: {
     borderColor: colors.accent.primary,
@@ -682,6 +693,7 @@ const pickerStyles = StyleSheet.create({
     color: colors.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
   },
   optionTextActive: {
     color: colors.accent.primary,

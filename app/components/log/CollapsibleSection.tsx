@@ -3,10 +3,11 @@ import {
   View,
   Text,
   TouchableOpacity,
-  LayoutAnimation,
   StyleSheet,
 } from 'react-native';
+import Animated, { Layout } from 'react-native-reanimated';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useReduceMotion } from '../../hooks/useReduceMotion';
 
 interface CollapsibleSectionProps {
   title: string;
@@ -22,9 +23,9 @@ export function CollapsibleSection({
   children,
 }: CollapsibleSectionProps) {
   const [expanded, setExpanded] = useState(defaultExpanded ?? true);
+  const reduceMotion = useReduceMotion();
 
   const toggle = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpanded((prev) => !prev);
   };
 
@@ -45,7 +46,7 @@ export function CollapsibleSection({
         <Text style={styles.chevron}>{expanded ? '▾' : '▸'}</Text>
       </TouchableOpacity>
 
-      {expanded && <View style={styles.body}>{children}</View>}
+      {expanded && <Animated.View layout={reduceMotion ? undefined : Layout} style={styles.body}>{children}</Animated.View>}
     </View>
   );
 }

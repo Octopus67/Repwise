@@ -20,12 +20,13 @@ export const colors = {
     default: 'rgba(255,255,255,0.08)',
     hover: 'rgba(255,255,255,0.12)',
     focus: '#06B6D4',
+    highlight: 'rgba(255,255,255,0.04)',
   },
 
   text: {
     primary: '#F1F5F9',
     secondary: '#94A3B8',
-    muted: '#64748B',
+    muted: '#7B8DA1',
     inverse: '#0B0F14',
   },
 
@@ -42,6 +43,8 @@ export const colors = {
     negativeSubtle: 'rgba(239,68,68,0.12)',
     warning: '#F59E0B',
     warningSubtle: 'rgba(245,158,11,0.12)',
+    caution: '#F97316',
+    cautionSubtle: 'rgba(249,115,22,0.12)',
     overTarget: '#6B8FBF',
     overTargetSubtle: 'rgba(107,143,191,0.15)',
   },
@@ -75,6 +78,11 @@ export const colors = {
     fat: '#F472B6',
     fatSubtle: 'rgba(244,114,182,0.10)',
   },
+
+  // Convenience aliases for semantic colors
+  error: '#EF4444',
+  warning: '#F59E0B',
+  success: '#22C55E',
 
   heatmap: {
     untrained: '#1E293B',
@@ -124,12 +132,23 @@ export const typography = {
     xl: 20,
     '2xl': 24,
     '3xl': 32,
+    '5xl': 64,
   },
 
   lineHeight: {
     tight: 1.2,
     normal: 1.5,
     relaxed: 1.625,
+    // Per-size lineHeight values (ratio ≥ 1.3)
+    xs: 16,    // 12 * 1.33
+    sm: 17,    // 13 * 1.31
+    base: 19,  // 14 * 1.36
+    md: 21,    // 16 * 1.31
+    lg: 24,    // 18 * 1.33
+    xl: 26,    // 20 * 1.3
+    '2xl': 32, // 24 * 1.33
+    '3xl': 42, // 32 * 1.31
+    '5xl': 84, // 64 * 1.31
   },
 
   numeric: {
@@ -141,6 +160,7 @@ export const typography = {
 
 export const spacing = {
   0: 0,
+  0.5: 2,
   1: 4,
   2: 8,
   3: 12,
@@ -156,9 +176,11 @@ export const spacing = {
 // ─── Border Radius ───────────────────────────────────────────────────────────
 
 export const radius = {
+  none: 0,
   sm: 8,
   md: 12,
   lg: 16,
+  xl: 16,
   full: 9999,
 } as const;
 
@@ -166,9 +188,13 @@ export const radius = {
 
 export const motion = {
   duration: {
+    instant: 50,
     fast: 100,
+    quick: 150,
     default: 200,
+    moderate: 250,
     slow: 300,
+    pulse: 600,
   },
   easing: {
     default: 'cubic-bezier(0.4, 0, 0.2, 1)',
@@ -184,6 +210,7 @@ export const letterSpacing = {
   tight: -0.25,
   normal: 0,
   wide: 0.5,
+  wider: 1,
 } as const;
 
 // ─── Shadows (React Native format) ──────────────────────────────────────────

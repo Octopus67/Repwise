@@ -1,7 +1,9 @@
-import { useRef, useEffect } from 'react';
-import { View, Text, TouchableWithoutFeedback, StyleSheet, Animated } from 'react-native';
+import { useEffect } from 'react';
+import { View, Text, TouchableWithoutFeedback, StyleSheet } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useTooltipStore } from '../../store/tooltipStore';
-import { colors, radius, spacing, typography, shadows } from '../../theme/tokens';
+import { colors, radius, spacing, typography, shadows, motion } from '../../theme/tokens';
+import { useReduceMotion } from '../../hooks/useReduceMotion';
 
 interface TooltipProps {
   tooltipId: string;
@@ -10,20 +12,25 @@ interface TooltipProps {
 }
 
 export const Tooltip = ({ tooltipId, text, children }: TooltipProps) => {
-  const opacity = useRef(new Animated.Value(0)).current;
+  const opacity = useSharedValue(0);
+  const reduceMotion = useReduceMotion();
   const { isDismissed, dismiss } = useTooltipStore();
 
   const dismissed = isDismissed(tooltipId);
 
+  const animatedBubbleStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
   useEffect(() => {
     if (!dismissed) {
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
+      if (reduceMotion) {
+        opacity.value = 1;
+      } else {
+        opacity.value = withTiming(1, { duration: motion.duration.default });
+      }
     }
-  }, [dismissed]);
+  }, [dismissed, reduceMotion]);
 
   if (dismissed) return <>{children}</>;
 
@@ -31,7 +38,7 @@ export const Tooltip = ({ tooltipId, text, children }: TooltipProps) => {
     <View style={styles.container}>
       {children}
       <TouchableWithoutFeedback onPress={() => dismiss(tooltipId)}>
-        <Animated.View style={[styles.bubble, { opacity }]}>
+        <Animated.View style={[styles.bubble, animatedBubbleStyle]}>
           <Text style={styles.text}>{text}</Text>
           <View style={styles.arrow} />
         </Animated.View>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,13 @@ import * as SecureStore from 'expo-secure-store';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Animated from 'react-native-reanimated';
-import { colors, spacing, typography } from '../../theme/tokens';
+import { colors, spacing, typography, radius } from '../../theme/tokens';
 import { Icon } from '../../components/common/Icon';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { EditableField } from '../../components/common/EditableField';
 import { SectionHeader } from '../../components/common/SectionHeader';
+import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { PremiumBadge } from '../../components/premium/PremiumBadge';
 import { UpgradeModal } from '../../components/premium/UpgradeModal';
 import { FeatureNavItem } from '../../components/profile/FeatureNavItem';
@@ -44,6 +45,7 @@ export function ProfileScreen() {
   const premium = isPremium(store);
   const navigation = useNavigation<any>();
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const headerAnim = useStaggeredEntrance(0, 60);
   const planPanelAnim = useStaggeredEntrance(1, 60);
@@ -53,57 +55,64 @@ export function ProfileScreen() {
   const subscriptionAnim = useStaggeredEntrance(5, 60);
   const accountAnim = useStaggeredEntrance(6, 60);
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const [profileRes, metricsRes, goalsRes, targetsRes] = await Promise.allSettled([
-          api.get('users/profile'),
-          api.get('users/metrics/history', { params: { limit: 1 } }),
-          api.get('users/goals'),
-          api.get('adaptive/snapshots', { params: { limit: 1 } }),
-        ]);
-        if (profileRes.status === 'fulfilled') {
-          const d = profileRes.value.data;
-          store.setProfile({
-            id: d.id, userId: d.user_id, displayName: d.display_name,
-            avatarUrl: d.avatar_url, timezone: d.timezone,
-            preferredCurrency: d.preferred_currency, region: d.region,
-            preferences: d.preferences, coachingMode: d.coaching_mode,
-          });
-        }
-        if (metricsRes.status === 'fulfilled') {
-          const raw = metricsRes.value.data;
-          const m = raw?.items?.[0] ?? (Array.isArray(raw) ? raw[0] : raw);
-          if (m && m.id) {
-            store.setLatestMetrics({
-              id: m.id, heightCm: m.height_cm, weightKg: m.weight_kg,
-              bodyFatPct: m.body_fat_pct, activityLevel: m.activity_level,
-              recordedAt: m.recorded_at,
-            });
-          }
-        }
-        if (goalsRes.status === 'fulfilled' && goalsRes.value.data) {
-          const g = goalsRes.value.data;
-          store.setGoals({
-            id: g.id, userId: g.user_id, goalType: g.goal_type,
-            targetWeightKg: g.target_weight_kg, goalRatePerWeek: g.goal_rate_per_week,
-          });
-        }
-        if (targetsRes.status === 'fulfilled') {
-          const raw = targetsRes.value.data;
-          const t = raw?.items?.[0] ?? (Array.isArray(raw) ? raw[0] : raw);
-          if (t && t.target_calories != null) {
-            store.setAdaptiveTargets({
-              calories: t.target_calories, protein_g: t.target_protein_g,
-              carbs_g: t.target_carbs_g, fat_g: t.target_fat_g,
-            });
-          }
-        }
-      } catch {
-        // sections handle empty state gracefully
+  const loadProfile = useCallback(async () => {
+    setError(null);
+    try {
+      const [profileRes, metricsRes, goalsRes, targetsRes] = await Promise.allSettled([
+        api.get('users/profile'),
+        api.get('users/metrics/history', { params: { limit: 1 } }),
+        api.get('users/goals'),
+        api.get('adaptive/snapshots', { params: { limit: 1 } }),
+      ]);
+      if (profileRes.status === 'fulfilled') {
+        const d = profileRes.value.data;
+        store.setProfile({
+          id: d.id, userId: d.user_id, displayName: d.display_name,
+          avatarUrl: d.avatar_url, timezone: d.timezone,
+          preferredCurrency: d.preferred_currency, region: d.region,
+          preferences: d.preferences, coachingMode: d.coaching_mode,
+        });
       }
-    };
-    fetchAll();
+      if (metricsRes.status === 'fulfilled') {
+        const raw = metricsRes.value.data;
+        const m = raw?.items?.[0] ?? (Array.isArray(raw) ? raw[0] : raw);
+        if (m && m.id) {
+          store.setLatestMetrics({
+            id: m.id, heightCm: m.height_cm, weightKg: m.weight_kg,
+            bodyFatPct: m.body_fat_pct, activityLevel: m.activity_level,
+            recordedAt: m.recorded_at,
+          });
+        }
+      }
+      if (goalsRes.status === 'fulfilled' && goalsRes.value.data) {
+        const g = goalsRes.value.data;
+        store.setGoals({
+          id: g.id, userId: g.user_id, goalType: g.goal_type,
+          targetWeightKg: g.target_weight_kg, goalRatePerWeek: g.goal_rate_per_week,
+        });
+      }
+      if (targetsRes.status === 'fulfilled') {
+        const raw = targetsRes.value.data;
+        const t = raw?.items?.[0] ?? (Array.isArray(raw) ? raw[0] : raw);
+        if (t && t.target_calories != null) {
+          store.setAdaptiveTargets({
+            calories: t.target_calories, protein_g: t.target_protein_g,
+            carbs_g: t.target_carbs_g, fat_g: t.target_fat_g,
+          });
+        }
+      }
+      // Check if all requests failed
+      const allFailed = [profileRes, metricsRes, goalsRes, targetsRes].every(r => r.status === 'rejected');
+      if (allFailed) {
+        setError('Unable to load profile data. Check your connection.');
+      }
+    } catch {
+      setError('Unable to load profile data. Check your connection.');
+    }
+  }, []);
+
+  useEffect(() => {
+    loadProfile();
   }, []);
 
 
@@ -134,6 +143,9 @@ export function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']} testID="profile-screen">
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        {error && (
+          <ErrorBanner message={error} onRetry={loadProfile} onDismiss={() => setError(null)} />
+        )}
         <Animated.View style={headerAnim}>
           <Card style={styles.profileCard}>
             <View style={styles.avatarCircle}>
@@ -209,28 +221,31 @@ const styles = StyleSheet.create({
   content: { padding: spacing[4], paddingBottom: spacing[12], gap: spacing[4] },
   profileCard: { alignItems: 'center', paddingVertical: spacing[6] },
   avatarCircle: {
-    width: 64, height: 64, borderRadius: 32,
+    width: 64, height: 64, borderRadius: radius.full,
     backgroundColor: colors.accent.primaryMuted,
     alignItems: 'center', justifyContent: 'center', marginBottom: spacing[3],
   },
   avatarText: {
     color: colors.accent.primary, fontSize: typography.size['2xl'],
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight['2xl'],
   },
   fieldsContainer: {
     alignSelf: 'stretch', paddingHorizontal: spacing[4], marginTop: spacing[3],
   },
   memberSince: {
     color: colors.text.muted, fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     marginTop: spacing[3], textAlign: 'center',
   },
   subRow: {
     flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing[2],
   },
-  subLabel: { color: colors.text.secondary, fontSize: typography.size.base },
+  subLabel: { color: colors.text.secondary, fontSize: typography.size.base, lineHeight: typography.lineHeight.base },
   subValue: {
     color: colors.text.primary, fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.base,
   },
   subActive: { color: colors.semantic.positive },
   upgradeBtn: { marginTop: spacing[4] },

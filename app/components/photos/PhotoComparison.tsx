@@ -9,7 +9,7 @@ import {
   GestureResponderEvent,
   PanResponder,
 } from 'react-native';
-import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { colors, radius, spacing, typography, opacityScale } from '../../theme/tokens';
 
 const STORAGE_KEY = 'progress_photo_paths';
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -220,6 +220,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.lg,
     marginBottom: spacing[3],
   },
   row: {
@@ -244,6 +245,7 @@ const styles = StyleSheet.create({
   placeholderText: {
     color: colors.text.muted,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     textAlign: 'center',
     paddingHorizontal: spacing[2],
   },
@@ -255,8 +257,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[1],
   },
   navBtn: {
-    width: 28,
-    height: 28,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -264,10 +266,11 @@ const styles = StyleSheet.create({
     color: colors.accent.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.bold,
+    lineHeight: typography.lineHeight.xl,
   },
   navDisabled: {
     color: colors.text.muted,
-    opacity: 0.4,
+    opacity: opacityScale.disabled,
   },
   dateInfo: {
     alignItems: 'center',
@@ -277,12 +280,14 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.xs,
   },
   weightText: {
     color: colors.accent.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
-    marginTop: 2,
+    lineHeight: typography.lineHeight.xs,
+    marginTop: spacing[0.5],
   },
   emptyContainer: {
     padding: spacing[8],
@@ -291,5 +296,6 @@ const styles = StyleSheet.create({
   emptyText: {
     color: colors.text.muted,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
   },
 });

@@ -60,8 +60,8 @@ export function FounderStoryScreen() {
     <SafeAreaView style={styles.safe} edges={['top']} testID="founder-story-screen">
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {navigation.canGoBack() && (
-          <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingVertical: spacing[2], marginBottom: spacing[2] }} activeOpacity={0.7}>
-            <Text style={{ color: colors.accent.primary, fontSize: typography.size.base, fontWeight: typography.weight.medium }}>← Back</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.7}>
+            <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
         )}
         <Text style={styles.title}>Founder's Story</Text>
@@ -121,7 +121,7 @@ export function FounderStoryScreen() {
             <Text style={styles.sectionTitle}>Gallery</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.gallery}>
               {content.media_gallery.map((url, i) => (
-                <Image key={i} source={{ uri: url }} style={styles.galleryImage} />
+                <Image key={i} source={{ uri: url }} style={styles.galleryImage} accessibilityLabel={`Gallery photo ${i + 1}`} />
               ))}
             </ScrollView>
           </>
@@ -135,23 +135,37 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg.base },
   container: { flex: 1 },
   content: { padding: spacing[4], paddingBottom: spacing[12] },
-  loading: { color: colors.text.muted, textAlign: 'center', marginTop: spacing[10], fontSize: typography.size.base },
+  loading: { color: colors.text.muted, textAlign: 'center', marginTop: spacing[10], fontSize: typography.size.base, lineHeight: typography.lineHeight.base },
+  backBtn: {
+    paddingVertical: spacing[2],
+    marginBottom: spacing[2],
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  backText: {
+    color: colors.accent.primary,
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.base,
+  },
   title: {
     color: colors.text.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.xl,
     marginBottom: spacing[4],
   },
   narrativeCard: { marginBottom: spacing[2] },
   narrative: {
     color: colors.text.primary,
     fontSize: typography.size.md,
-    lineHeight: typography.size.md * typography.lineHeight.relaxed,
+    lineHeight: typography.lineHeight.md,
   },
   sectionTitle: {
     color: colors.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.lg,
     marginTop: spacing[6],
     marginBottom: spacing[3],
   },
@@ -161,6 +175,7 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.sm,
     marginBottom: spacing[3],
     textAlign: 'center',
   },
@@ -169,32 +184,32 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: spacing[1],
   },
-  metricKey: { color: colors.text.muted, fontSize: typography.size.sm, textTransform: 'capitalize' },
-  metricVal: { color: colors.text.primary, fontSize: typography.size.base, fontWeight: typography.weight.semibold },
+  metricKey: { color: colors.text.muted, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm, textTransform: 'capitalize' },
+  metricVal: { color: colors.text.primary, fontSize: typography.size.base, fontWeight: typography.weight.semibold, lineHeight: typography.lineHeight.base },
   timelineItem: { flexDirection: 'row', marginBottom: spacing[4], position: 'relative' },
   timelineDot: {
     width: 10,
     height: 10,
-    borderRadius: 5,
+    borderRadius: radius.full,
     backgroundColor: colors.accent.primary,
-    marginTop: 4,
+    marginTop: spacing[1],
     marginRight: spacing[3],
   },
   timelineLine: {
     position: 'absolute',
-    left: 4,
+    left: spacing[1],
     top: 14,
     bottom: -spacing[4],
     width: 2,
     backgroundColor: colors.border.default,
   },
   timelineContent: { flex: 1 },
-  timelineYear: { color: colors.accent.primary, fontSize: typography.size.sm, fontWeight: typography.weight.semibold },
-  timelineEvent: { color: colors.text.primary, fontSize: typography.size.base, marginTop: 2 },
+  timelineYear: { color: colors.accent.primary, fontSize: typography.size.sm, fontWeight: typography.weight.semibold, lineHeight: typography.lineHeight.sm },
+  timelineEvent: { color: colors.text.primary, fontSize: typography.size.base, lineHeight: typography.lineHeight.base, marginTop: spacing[0.5] },
   philosophy: {
     color: colors.text.secondary,
     fontSize: typography.size.base,
-    lineHeight: typography.size.base * typography.lineHeight.relaxed,
+    lineHeight: typography.lineHeight.base,
     fontStyle: 'italic',
   },
   gallery: { marginTop: spacing[2] },

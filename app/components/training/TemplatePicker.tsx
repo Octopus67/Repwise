@@ -12,7 +12,7 @@ import {
 import api from '../../services/api';
 import { orderTemplates } from '../../utils/templateConversion';
 import type { WorkoutTemplateResponse } from '../../types/training';
-import { colors, spacing, typography, radius, shadows } from '../../theme/tokens';
+import { colors, spacing, typography, radius, shadows, letterSpacing as ls } from '../../theme/tokens';
 
 interface TemplatePickerProps {
   onSelectTemplate: (templateId: string, isSystem: boolean) => void;
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: ls.wide,
     marginTop: spacing[2],
   },
   card: {

@@ -4,6 +4,7 @@ import { colors, spacing, typography, radius } from '../../../theme/tokens';
 import { Button } from '../../../components/common/Button';
 import { useOnboardingStore, computeAge } from '../../../store/onboardingSlice';
 import { computeTDEEBreakdown } from '../../../utils/onboardingCalculations';
+import { useReduceMotion } from '../../../hooks/useReduceMotion';
 
 interface Props { onNext?: () => void; onBack?: () => void; onSkip?: () => void; onComplete?: () => void; onEditStep?: (step: number) => void; }
 
@@ -23,6 +24,7 @@ const BAR_LABELS = {
 
 export function TDEERevealStep({ onNext }: Props) {
   const store = useOnboardingStore();
+  const reduceMotion = useReduceMotion();
   const [showOverride, setShowOverride] = useState(false);
   const [overrideText, setOverrideText] = useState(
     store.tdeeOverride ? String(store.tdeeOverride) : '',
@@ -104,7 +106,7 @@ export function TDEERevealStep({ onNext }: Props) {
 
       {/* Override link */}
       {!showOverride ? (
-        <TouchableOpacity onPress={() => setShowOverride(true)} style={styles.overrideLink}>
+        <TouchableOpacity onPress={() => setShowOverride(true)} style={styles.overrideLink} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Text style={styles.overrideLinkText}>I already know my TDEE</Text>
         </TouchableOpacity>
       ) : (
@@ -120,6 +122,8 @@ export function TDEERevealStep({ onNext }: Props) {
             placeholderTextColor={colors.text.muted}
             returnKeyType="done"
             onSubmitEditing={handleOverrideSubmit}
+            accessibilityLabel="TDEE override"
+            accessibilityHint="Enter your known daily calorie expenditure"
           />
           {store.tdeeOverride && (
             <TouchableOpacity
@@ -148,8 +152,8 @@ export function TDEERevealStep({ onNext }: Props) {
 
 const styles = StyleSheet.create({
   scroll: { paddingBottom: spacing[8] },
-  heading: { color: colors.text.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, marginBottom: spacing[2] },
-  subheading: { color: colors.text.secondary, fontSize: typography.size.base, marginBottom: spacing[6] },
+  heading: { color: colors.text.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, marginBottom: spacing[2], lineHeight: typography.lineHeight['2xl'] },
+  subheading: { color: colors.text.secondary, fontSize: typography.size.base, marginBottom: spacing[6], lineHeight: typography.lineHeight.base },
   totalCard: {
     backgroundColor: colors.bg.surfaceRaised,
     borderRadius: radius.md,
@@ -159,8 +163,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border.default,
   },
-  totalLabel: { color: colors.text.secondary, fontSize: typography.size.sm, marginBottom: spacing[1] },
-  totalValue: { color: colors.text.primary, fontSize: typography.size['3xl'], fontWeight: typography.weight.bold },
+  totalLabel: { color: colors.text.secondary, fontSize: typography.size.sm, marginBottom: spacing[1], lineHeight: typography.lineHeight.sm },
+  totalValue: { color: colors.text.primary, fontSize: typography.size['3xl'], fontWeight: typography.weight.bold, lineHeight: typography.lineHeight['3xl'] },
   barsContainer: { marginBottom: spacing[5] },
   barRow: {
     flexDirection: 'row',
@@ -168,7 +172,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing[3],
   },
   barLabelCol: { width: 64 },
-  barLabel: { color: colors.text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium },
+  barLabel: { color: colors.text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.sm },
   barTrack: {
     flex: 1,
     height: 24,
@@ -179,12 +183,12 @@ const styles = StyleSheet.create({
   },
   barFill: { height: '100%', borderRadius: radius.sm },
   barValueCol: { width: 80, alignItems: 'flex-end' },
-  barValue: { color: colors.text.primary, fontSize: typography.size.sm, fontWeight: typography.weight.semibold },
-  barDesc: { color: colors.text.muted, fontSize: typography.size.xs },
+  barValue: { color: colors.text.primary, fontSize: typography.size.sm, fontWeight: typography.weight.semibold, lineHeight: typography.lineHeight.sm },
+  barDesc: { color: colors.text.muted, fontSize: typography.size.xs, lineHeight: typography.lineHeight.xs },
   overrideLink: { alignItems: 'center', marginBottom: spacing[4] },
-  overrideLinkText: { color: colors.accent.primary, fontSize: typography.size.sm, textDecorationLine: 'underline' },
+  overrideLinkText: { color: colors.accent.primary, fontSize: typography.size.sm, textDecorationLine: 'underline', lineHeight: typography.lineHeight.sm },
   overrideContainer: { marginBottom: spacing[4] },
-  overrideLabel: { color: colors.text.secondary, fontSize: typography.size.sm, marginBottom: spacing[2] },
+  overrideLabel: { color: colors.text.secondary, fontSize: typography.size.sm, marginBottom: spacing[2], lineHeight: typography.lineHeight.sm },
   overrideInput: {
     backgroundColor: colors.bg.surfaceRaised,
     borderRadius: radius.sm,
@@ -194,8 +198,9 @@ const styles = StyleSheet.create({
     fontSize: typography.size.md,
     padding: spacing[3],
     marginBottom: spacing[2],
+    lineHeight: typography.lineHeight.md,
   },
-  clearOverride: { color: colors.semantic.negative, fontSize: typography.size.sm, textAlign: 'center' },
-  note: { color: colors.text.muted, fontSize: typography.size.xs, textAlign: 'center', marginBottom: spacing[6] },
+  clearOverride: { color: colors.semantic.negative, fontSize: typography.size.sm, textAlign: 'center', lineHeight: typography.lineHeight.sm },
+  note: { color: colors.text.muted, fontSize: typography.size.xs, textAlign: 'center', marginBottom: spacing[6], lineHeight: typography.lineHeight.xs },
   btn: { marginTop: spacing[2] },
 });

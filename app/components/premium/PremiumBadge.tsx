@@ -36,9 +36,11 @@ const styles = StyleSheet.create({
   label: {
     color: colors.premium.gold,
     fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
     fontWeight: typography.weight.semibold,
   },
   labelMd: {
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
   },
 });

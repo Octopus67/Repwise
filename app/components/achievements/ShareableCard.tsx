@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
-import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { colors, spacing, typography, radius, letterSpacing as ls } from '../../theme/tokens';
 import { Icon } from '../common/Icon';
 import { Button } from '../common/Button';
 
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     color: colors.accent.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
-    letterSpacing: 1,
+    letterSpacing: ls.wider,
   },
   shareBtn: {
     marginTop: spacing[3],

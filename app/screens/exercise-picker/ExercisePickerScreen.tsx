@@ -317,10 +317,12 @@ const styles = StyleSheet.create({
   backText: {
     color: colors.text.primary,
     fontSize: typography.size.xl,
+    lineHeight: typography.lineHeight.xl,
   },
   title: {
     color: colors.text.primary,
     fontSize: typography.size.lg,
+    lineHeight: typography.lineHeight.lg,
     fontWeight: typography.weight.semibold,
   },
   filterHeader: {
@@ -333,11 +335,13 @@ const styles = StyleSheet.create({
   filterLabel: {
     color: colors.text.primary,
     fontSize: typography.size.md,
+    lineHeight: typography.lineHeight.md,
     fontWeight: typography.weight.semibold,
   },
   clearFilter: {
     color: colors.accent.primary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
   },
   center: {
@@ -353,6 +357,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: colors.text.secondary,
     fontSize: typography.size.md,
+    lineHeight: typography.lineHeight.md,
     marginBottom: spacing[3],
   },
   retryBtn: {
@@ -364,15 +369,18 @@ const styles = StyleSheet.create({
   retryText: {
     color: colors.text.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.semibold,
   },
   emptyText: {
     color: colors.text.muted,
     fontSize: typography.size.md,
+    lineHeight: typography.lineHeight.md,
   },
   emptyHint: {
     color: colors.text.muted,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     marginTop: spacing[2],
   },
   createCustomBtn: {
@@ -385,6 +393,7 @@ const styles = StyleSheet.create({
   createCustomText: {
     color: colors.text.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.semibold,
   },
   chipScroll: {
@@ -413,6 +422,7 @@ const styles = StyleSheet.create({
   chipText: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
   },
   chipTextActive: {

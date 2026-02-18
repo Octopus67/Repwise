@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableWithoutFeedback } from 'react-native';
 import Svg, { Line, Polyline, Circle, Text as SvgText } from 'react-native-svg';
-import { colors, spacing, typography } from '../../theme/tokens';
+import { colors, spacing, typography, radius } from '../../theme/tokens';
 
 const CHART_WIDTH = Dimensions.get('window').width - spacing[4] * 2 - spacing[4] * 2; // screen padding + card padding
 const CHART_HEIGHT = 160;
-const PADDING = { top: 16, right: 12, bottom: 28, left: 44 };
+const PADDING = { top: spacing[4], right: spacing[3], bottom: 28, left: 44 };
 
 interface DataPoint {
   date: string;
@@ -272,6 +272,7 @@ const styles = StyleSheet.create({
     color: colors.text.muted,
     fontSize: typography.size.base,
     textAlign: 'center',
+    lineHeight: typography.lineHeight.base,
   },
   tooltip: {
     flexDirection: 'row',
@@ -283,9 +284,12 @@ const styles = StyleSheet.create({
   tooltipDate: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
   },
   tooltipValue: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.sm,
+    fontVariant: typography.numeric.fontVariant as any,
   },
 });

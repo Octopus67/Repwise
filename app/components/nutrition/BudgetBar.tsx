@@ -107,21 +107,23 @@ const styles = StyleSheet.create({
   calorieNumber: {
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.bold,
+    lineHeight: typography.lineHeight['2xl'],
   },
   calorieLabel: {
     fontSize: typography.size.sm,
     color: colors.text.secondary,
+    lineHeight: typography.lineHeight.sm,
   },
   progressTrack: {
     height: 6,
     backgroundColor: colors.bg.surfaceRaised,
-    borderRadius: 3,
+    borderRadius: radius.full,
     overflow: 'hidden',
     marginBottom: spacing[3],
   },
   progressFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: radius.full,
   },
   macroRow: {
     flexDirection: 'row',
@@ -134,15 +136,18 @@ const styles = StyleSheet.create({
   macroLabel: {
     fontSize: typography.size.xs,
     color: colors.text.muted,
-    marginBottom: 2,
+    lineHeight: typography.lineHeight.xs,
+    marginBottom: spacing[0.5],
   },
   macroValue: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.sm,
   },
   noTargetsText: {
     fontSize: typography.size.base,
     color: colors.text.muted,
+    lineHeight: typography.lineHeight.base,
     textAlign: 'center',
     paddingVertical: spacing[2],
   },

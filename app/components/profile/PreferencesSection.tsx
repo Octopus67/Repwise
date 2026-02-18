@@ -271,6 +271,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.md,
     marginBottom: spacing[2],
   },
   row: {
@@ -285,6 +286,7 @@ const styles = StyleSheet.create({
     color: colors.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
   },
   rowControl: {
     flexShrink: 0,
@@ -295,7 +297,7 @@ const styles = StyleSheet.create({
   },
   coachingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: colors.bg.overlay,
     borderRadius: radius.md,
     zIndex: 1,
     alignItems: 'center',
@@ -304,6 +306,7 @@ const styles = StyleSheet.create({
   error: {
     color: colors.semantic.negative,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     marginTop: spacing[2],
   },
 });
@@ -331,6 +334,7 @@ const segStyles = StyleSheet.create({
     color: colors.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
   },
   segmentTextActive: {
     color: colors.accent.primary,

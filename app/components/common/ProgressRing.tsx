@@ -6,8 +6,9 @@ import Animated, {
   useAnimatedProps,
   withSpring,
 } from 'react-native-reanimated';
-import { colors, typography, springs } from '../../theme/tokens';
+import { colors, typography, springs, spacing } from '../../theme/tokens';
 import { computeRingFill, formatRingLabel } from '../../utils/progressRingLogic';
+import { useReduceMotion } from '../../hooks/useReduceMotion';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -40,24 +41,49 @@ export const ProgressRing = memo(function ProgressRing({
 
   const fill = computeRingFill(value, target, color);
   const ringLabel = formatRingLabel(value, target, label);
+  const reduceMotion = useReduceMotion();
 
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    if (animated && !fill.isMissing) {
+    if (animated && !fill.isMissing && !reduceMotion) {
       progress.value = 0;
       progress.value = withSpring(fill.percentage / 100, springs.gentle);
+
+      // DEV-only: warn if spring takes >1s to settle
+      if (__DEV__) {
+        const springStart = Date.now();
+        const checkSettled = setTimeout(() => {
+          const elapsed = Date.now() - springStart;
+          if (elapsed >= 1000) {
+            console.warn(`[ProgressRing] Spring animation for "${label}" took >1s to settle — potential performance issue`);
+          }
+        }, 1000);
+        return () => clearTimeout(checkSettled);
+      }
     } else {
+      // Reduce-motion or not animated: set directly, no spring
       progress.value = fill.isMissing ? 0 : fill.percentage / 100;
     }
-  }, [fill.percentage, fill.isMissing, animated]);
+  }, [fill.percentage, fill.isMissing, animated, reduceMotion]);
 
   const animatedProps = useAnimatedProps(() => ({
     strokeDashoffset: circumference * (1 - progress.value),
   }));
 
+  const percentage = fill.isMissing ? 0 : fill.percentage;
+
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
+    <View
+      style={[styles.container, { width: size, height: size }]}
+      accessibilityRole="progressbar"
+      accessibilityValue={{
+        min: 0,
+        max: 100,
+        now: percentage,
+        text: `${label}: ${value} of ${target}, ${percentage}%`,
+      }}
+    >
       <Svg width={size} height={size}>
         {/* Track circle */}
         <Circle

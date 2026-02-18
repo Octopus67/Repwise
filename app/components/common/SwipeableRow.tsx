@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   deleteText: {
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
   },

@@ -173,6 +173,7 @@ const segmentStyles = StyleSheet.create({
   segmentText: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
   },
   segmentTextActive: {
     color: colors.accent.primary,
@@ -191,6 +192,7 @@ const styles = StyleSheet.create({
   label: {
     color: colors.text.secondary,
     fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
   },
   input: {
@@ -200,6 +202,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border.default,
     color: colors.text.primary,
     fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
     padding: spacing[3],
   },
   submitBtn: {
@@ -213,6 +216,7 @@ const styles = StyleSheet.create({
   submitText: {
     color: colors.text.primary,
     fontSize: typography.size.md,
+    lineHeight: typography.lineHeight.md,
     fontWeight: typography.weight.semibold,
   },
 });

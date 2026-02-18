@@ -5,7 +5,8 @@ let Haptics: any = null;
 try { Haptics = require('expo-haptics'); } catch {}
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated from 'react-native-reanimated';
-import { colors, spacing, typography } from '../../theme/tokens';
+import { colors, spacing, typography, radius, letterSpacing } from '../../theme/tokens';
+import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { calculateStreak } from '../../utils/calculateStreak';
 import { MacroRingsRow } from '../../components/dashboard/MacroRingsRow';
@@ -86,6 +87,7 @@ export function DashboardScreen({ navigation }: any) {
   const [prefilledMealName, setPrefilledMealName] = useState<string | undefined>(undefined);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [dateLoading, setDateLoading] = useState(false);
   const isInitialLoad = useRef(true);
@@ -171,6 +173,7 @@ export function DashboardScreen({ navigation }: any) {
     try {
       const targetDate = dateToLoad ?? selectedDate;
       setDayClassLoading(true);
+      setError(null);
 
       const [nutritionRes, adaptiveRes, trainingRes, articlesRes, bwRes, dayClassRes, streakRes] = await Promise.allSettled([
         api.get('nutrition/entries', { params: { start_date: targetDate, end_date: targetDate } }),
@@ -338,7 +341,7 @@ export function DashboardScreen({ navigation }: any) {
         setStreak(calculateStreak(allDates, today));
       }
     } catch {
-      // Dashboard is best-effort — silently degrade
+      setError('Unable to load dashboard data. Check your connection.');
     } finally {
       setIsLoading(false);
       setRefreshing(false);
@@ -415,6 +418,15 @@ export function DashboardScreen({ navigation }: any) {
               setOnboardingSkipped(false);
               setNeedsOnboarding(true);
             }}
+          />
+        )}
+
+        {/* Error Banner */}
+        {error && (
+          <ErrorBanner
+            message={error}
+            onRetry={() => loadDashboardData(selectedDate)}
+            onDismiss={() => setError(null)}
           />
         )}
 
@@ -586,7 +598,8 @@ export function DashboardScreen({ navigation }: any) {
                     'Trend weight smooths out daily fluctuations from water, sodium, and other factors.'
                   )}
                   activeOpacity={0.7}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
                 >
                   <Text style={styles.infoIcon}>ⓘ</Text>
                 </TouchableOpacity>
@@ -693,7 +706,7 @@ export function DashboardScreen({ navigation }: any) {
               <Text style={styles.articlesEmpty}>No articles available right now.</Text>
             )}
             <TouchableOpacity onPress={() => navigation.navigate('Learn')} style={{ alignItems: 'flex-end', paddingVertical: spacing[2] }}>
-              <Text style={{ color: colors.accent.primary, fontSize: typography.size.sm, fontWeight: typography.weight.medium }}>See All Articles →</Text>
+              <Text style={{ color: colors.accent.primary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.sm }}>See All Articles →</Text>
             </TouchableOpacity>
           </Animated.View>
         )}
@@ -781,6 +794,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.sm,
     textAlign: 'center',
     paddingVertical: spacing[4],
+    lineHeight: typography.lineHeight.sm,
   },
   skeletonRingsRow: {
     flexDirection: 'row',
@@ -790,10 +804,10 @@ const styles = StyleSheet.create({
   },
   dateLoadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(10,14,19,0.5)',
+    backgroundColor: colors.bg.overlay,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 12,
+    borderRadius: radius.md,
   },
   skeletonSummaryRow: {
     flexDirection: 'row',
@@ -801,12 +815,13 @@ const styles = StyleSheet.create({
   },
   nutritionSummary: {
     flexDirection: 'row',
-    gap: 16,
+    gap: spacing[4],
     marginTop: spacing[2],
   },
   nutritionItem: {
     color: colors.text.secondary,
-    fontSize: 13,
+    fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
   },
   trendSection: {
     marginTop: spacing[3],
@@ -820,31 +835,36 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
   },
   trendBadge: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.sm,
   },
   infoIcon: {
     color: colors.text.muted,
-    fontSize: 14,
+    fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
   },
   milestoneBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.bg.surface,
-    borderRadius: 8,
+    borderRadius: radius.sm,
     padding: spacing[3],
     marginTop: spacing[3],
     borderWidth: 1,
     borderColor: colors.border.subtle,
     gap: spacing[2],
+    minHeight: 44,
   },
   milestoneText: {
     flex: 1,
     color: colors.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
   },
   milestoneChevron: {
     color: colors.accent.primary,
