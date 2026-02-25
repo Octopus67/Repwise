@@ -15,9 +15,6 @@
     },
     "production": {
       "distribution": "store",
-      "android": {
-        "image": "ubuntu-22.04-jdk-17-ndk-r21e"
-      },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://hypertrophyos-production.up.railway.app",
         "EXPO_PUBLIC_POSTHOG_KEY": "<production-key>",

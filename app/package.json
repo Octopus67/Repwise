@@ -43,7 +43,8 @@
     "react-native-web": "~0.19.6",
     "victory-native": "^41.20.2",
     "@sentry/react-native": "^5.0.0",
-    "zustand": "^4.5.0"
+    "zustand": "^4.5.0",
+    "expo-modules-core": "1.11.13"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
