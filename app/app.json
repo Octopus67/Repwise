@@ -9,24 +9,37 @@
     "splash": {
       "backgroundColor": "#0B0F14"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.hypertrophyos.app",
       "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "HypertrophyOS needs camera access to take progress photos and scan food barcodes.",
-        "NSPhotoLibraryUsageDescription": "HypertrophyOS needs photo library access to select progress photos."
+        "NSPhotoLibraryUsageDescription": "HypertrophyOS needs photo library access to select progress photos.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0B0F14"
       },
       "package": "com.hypertrophyos.app",
       "versionCode": 1,
-      "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE"]
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE"
+      ]
     },
-    "scheme": "hypertrophyos"
+    "scheme": "hypertrophyos",
+    "extra": {
+      "eas": {
+        "projectId": "1b9df205-27f5-4724-9981-c12d4a4b700b"
+      }
+    },
+    "owner": "octopus67"
   }
 }
