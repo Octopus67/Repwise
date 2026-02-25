@@ -89,7 +89,7 @@ describe('Property 15: Spacing scale compliance', () => {
   });
 
   test('property: any value from the spacing object is in the allowed set', () => {
-    const spacingKeys = Object.keys(spacing) as Array<keyof typeof spacing>;
+    const spacingKeys = Object.keys(spacing) as unknown as Array<keyof typeof spacing>;
 
     fc.assert(
       fc.property(

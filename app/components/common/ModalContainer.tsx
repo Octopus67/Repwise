@@ -20,7 +20,7 @@ import { Icon } from './Icon';
 interface ModalContainerProps {
   visible: boolean;
   onClose: () => void;
-  title: string;
+  title: string | React.ReactNode;
   children: React.ReactNode;
   testID?: string;
   closeButtonTestID?: string;

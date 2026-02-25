@@ -242,14 +242,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[2],
   },
   inputError: {
-    borderColor: colors.accent.error,
+    borderColor: colors.semantic.negative,
   },
   textArea: {
     minHeight: 80,
     textAlignVertical: 'top',
   },
   errorText: {
-    color: colors.accent.error,
+    color: colors.semantic.negative,
     fontSize: typography.size.xs,
     marginTop: spacing[1],
   },

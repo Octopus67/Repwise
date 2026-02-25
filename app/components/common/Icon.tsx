@@ -41,6 +41,19 @@ export type IconName =
   | 'moon'
   | 'eye'
   | 'eye-off'
+  // Navigation
+  | 'chevron-left'
+  | 'chevron-right'
+  | 'x'
+  // Alerts & Status
+  | 'alert-triangle'
+  | 'alert-circle'
+  | 'alert'
+  // Calendar & Social
+  | 'calendar'
+  | 'share'
+  | 'trophy'
+  | 'heart'
   // Water tracker
   | 'droplet-filled'
   | 'droplet-empty';
@@ -505,6 +518,107 @@ function renderIcon(name: IconName, color: string, sw: number) {
       );
 
     // ─── Water Tracker ──────────────────────────────────────────────────
+
+    case 'chevron-left':
+      return (
+        <Path
+          d="M15 18l-6-6 6-6"
+          stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"
+        />
+      );
+
+    case 'chevron-right':
+      return (
+        <Path
+          d="M9 18l6-6-6-6"
+          stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"
+        />
+      );
+
+    case 'x':
+      return (
+        <>
+          <Line x1="18" y1="6" x2="6" y2="18" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+          <Line x1="6" y1="6" x2="18" y2="18" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+        </>
+      );
+
+    case 'alert-triangle':
+      return (
+        <>
+          <Path
+            d="M10.3 3.2L1.7 18a2 2 0 001.7 3h17.2a2 2 0 001.7-3L13.7 3.2a2 2 0 00-3.4 0z"
+            stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"
+          />
+          <Line x1="12" y1="9" x2="12" y2="13" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+          <Circle cx="12" cy="17" r="0.5" stroke={color} strokeWidth={sw} />
+        </>
+      );
+
+    case 'alert-circle':
+      return (
+        <>
+          <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth={sw} />
+          <Line x1="12" y1="8" x2="12" y2="12" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+          <Circle cx="12" cy="16" r="0.5" stroke={color} strokeWidth={sw} />
+        </>
+      );
+
+    case 'alert':
+      return (
+        <>
+          <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth={sw} />
+          <Line x1="12" y1="8" x2="12" y2="12" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+          <Circle cx="12" cy="16" r="0.5" stroke={color} strokeWidth={sw} />
+        </>
+      );
+
+    case 'calendar':
+      return (
+        <>
+          <Rect x="3" y="4" width="18" height="18" rx="2" stroke={color} strokeWidth={sw} />
+          <Line x1="16" y1="2" x2="16" y2="6" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+          <Line x1="8" y1="2" x2="8" y2="6" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+          <Line x1="3" y1="10" x2="21" y2="10" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+        </>
+      );
+
+    case 'share':
+      return (
+        <>
+          <Circle cx="18" cy="5" r="3" stroke={color} strokeWidth={sw} />
+          <Circle cx="6" cy="12" r="3" stroke={color} strokeWidth={sw} />
+          <Circle cx="18" cy="19" r="3" stroke={color} strokeWidth={sw} />
+          <Line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+          <Line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+        </>
+      );
+
+    case 'trophy':
+      return (
+        <>
+          <Path
+            d="M8 21h8M12 17v4"
+            stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"
+          />
+          <Path
+            d="M7 4H4a1 1 0 00-1 1v3a4 4 0 004 4M17 4h3a1 1 0 011 1v3a4 4 0 01-4 4"
+            stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"
+          />
+          <Path
+            d="M7 4h10v9a5 5 0 01-10 0V4z"
+            stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"
+          />
+        </>
+      );
+
+    case 'heart':
+      return (
+        <Path
+          d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"
+          stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"
+        />
+      );
 
     case 'droplet-filled':
       return (

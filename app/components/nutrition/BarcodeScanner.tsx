@@ -3,7 +3,7 @@
  *
  * Flow:
  * 1. Request camera permission on first use
- * 2. Show BarCodeScanner with overlay
+ * 2. Show CameraView with overlay
  * 3. On scan → debounce → vibrate → lookup via API
  * 4. Show confirmation card or "not found" fallback
  *
@@ -22,6 +22,8 @@ import {
   Linking,
   Dimensions,
 } from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as Haptics from 'expo-haptics';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
 import api from '../../services/api';
 
@@ -49,28 +51,6 @@ interface Props {
 }
 
 // ---------------------------------------------------------------------------
-// Lazy imports for native-only modules
-// ---------------------------------------------------------------------------
-
-let BarCodeScanner: any = null;
-let Camera: any = null;
-let Haptics: any = null;
-
-try {
-  // These will fail on web — that's expected
-  BarCodeScanner = require('expo-barcode-scanner').BarCodeScanner;
-  Camera = require('expo-camera').Camera;
-} catch {
-  // expo-barcode-scanner not installed or not available on web
-}
-
-try {
-  Haptics = require('expo-haptics');
-} catch {
-  // expo-haptics not available
-}
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -85,9 +65,10 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
   const [multiplier, setMultiplier] = useState('1');
   const [error, setError] = useState('');
   const lastScanRef = useRef<number>(0);
+  const [permission, requestPermission] = useCameraPermissions();
 
   // ── Web guard ──────────────────────────────────────────────────────────
-  if (Platform.OS === 'web' || !BarCodeScanner || !Camera) {
+  if (Platform.OS === 'web') {
     return (
       <View style={styles.container}>
         <View style={styles.messageCard}>
@@ -105,24 +86,17 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
 
   // ── Permission handling ────────────────────────────────────────────────
   useEffect(() => {
-    checkPermission();
-  }, []);
-
-  const checkPermission = async () => {
-    try {
-      const { status } = await Camera.getCameraPermissionsAsync();
-      if (status === 'granted') {
-        setState('scanning');
-      } else if (status === 'undetermined') {
-        const { status: newStatus } = await Camera.requestCameraPermissionsAsync();
-        setState(newStatus === 'granted' ? 'scanning' : 'denied');
-      } else {
-        setState('denied');
-      }
-    } catch {
+    if (!permission) return; // still loading
+    if (permission.granted) {
+      setState('scanning');
+    } else if (permission.canAskAgain) {
+      requestPermission().then((result: { granted: boolean }) => {
+        setState(result.granted ? 'scanning' : 'denied');
+      });
+    } else {
       setState('denied');
     }
-  };
+  }, [permission?.status]);
 
   // ── Barcode scan handler ───────────────────────────────────────────────
   const handleBarCodeScanned = useCallback(
@@ -133,12 +107,10 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
       lastScanRef.current = now;
 
       // Vibrate on scan
-      if (Haptics) {
-        try {
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        } catch {
-          // Haptics not available — ignore
-        }
+      try {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      } catch {
+        // Haptics not available — ignore
       }
 
       setState('loading');
@@ -301,9 +273,12 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
   // ── Render: Scanning ───────────────────────────────────────────────────
   return (
     <View style={styles.container}>
-      <BarCodeScanner
-        onBarCodeScanned={handleBarCodeScanned}
+      <CameraView
         style={StyleSheet.absoluteFillObject}
+        onBarcodeScanned={handleBarCodeScanned}
+        barcodeScannerSettings={{
+          barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'qr', 'code128', 'code39'],
+        }}
       />
 
       {/* Semi-transparent overlay with scan area cutout */}

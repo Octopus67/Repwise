@@ -9,6 +9,7 @@ interface ErrorBannerProps {
   onRetry?: () => void;
   onDismiss?: () => void;
   variant?: ErrorBannerVariant;
+  testID?: string;
 }
 
 const variantConfig: Record<ErrorBannerVariant, { bg: string; accent: string; icon: string }> = {
@@ -34,6 +35,7 @@ export function ErrorBanner({
   onRetry,
   onDismiss,
   variant = 'error',
+  testID,
 }: ErrorBannerProps) {
   const config = variantConfig[variant];
 
@@ -42,6 +44,7 @@ export function ErrorBanner({
       style={[styles.container, { backgroundColor: config.bg }]}
       accessibilityRole="alert"
       accessibilityLiveRegion="assertive"
+      testID={testID}
     >
       <Icon name={config.icon as any} size={20} color={config.accent} />
       <Text style={styles.message} numberOfLines={3}>

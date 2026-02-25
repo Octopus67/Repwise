@@ -73,7 +73,7 @@ function setupExerciseWithSets(
       store.updateSetField(ex.localId, newSet.localId, 'rpe', setData[i].rpe);
     }
     if (setData[i].setType) {
-      store.updateSetType(ex.localId, newSet.localId, setData[i].setType);
+      store.updateSetType(ex.localId, newSet.localId, setData[i].setType!);
     }
     if (setData[i].completed) {
       useActiveWorkoutStore.getState().toggleSetCompleted(ex.localId, newSet.localId);

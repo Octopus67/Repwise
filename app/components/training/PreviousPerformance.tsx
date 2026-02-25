@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { colors, spacing, typography } from '../../theme/tokens';
 import { formatWeight } from '../../utils/unitConversion';
 import { useStore } from '../../store';
@@ -24,9 +24,7 @@ export function PreviousPerformance({ exerciseName }: PreviousPerformanceProps) 
   const [loading, setLoading] = useState(true);
   const pulseOpacity = useSkeletonPulse();
 
-  const pulseStyle = useAnimatedStyle(() => ({
-    opacity: pulseOpacity.value,
-  }));
+  const pulseStyle = pulseOpacity;
 
   // Fetch previous performance on mount / exercise change
   useEffect(() => {
