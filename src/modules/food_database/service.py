@@ -46,41 +46,205 @@ class FoodDatabaseService:
         region: Optional[str] = None,
         user_prefs: Optional[dict] = None,
     ) -> PaginatedResult[Any]:
-        """Search food items by name (case-insensitive LIKE).
+        """Search food items by name.
 
-        Uses ILIKE for SQLite/PostgreSQL compatibility in tests.
-        All food data is pre-seeded locally — no external API calls needed.
+        Uses FTS5 on SQLite for fast full-text search (~5ms vs ~3s for LIKE).
+        Falls back to LIKE for PostgreSQL or when FTS table doesn't exist.
         """
+        # Try FTS5 path for text queries on SQLite
+        if query and await self._has_fts_table():
+            return await self._search_fts(query, pagination, category, region, user_prefs)
+
+        # Fallback: original LIKE-based search
+        return await self._search_like(query, pagination, category, region, user_prefs)
+
+    async def _has_fts_table(self) -> bool:
+        """Check if the FTS5 virtual table exists (cached after first check)."""
+        if not hasattr(FoodDatabaseService, "_fts_available"):
+            try:
+                from sqlalchemy import text
+                result = await self.db.execute(
+                    text("SELECT 1 FROM sqlite_master WHERE type='table' AND name='food_items_fts' LIMIT 1")
+                )
+                FoodDatabaseService._fts_available = result.scalar_one_or_none() is not None
+            except Exception:
+                FoodDatabaseService._fts_available = False
+        return FoodDatabaseService._fts_available
+
+    async def _search_fts(
+        self,
+        query: str,
+        pagination: PaginationParams,
+        category: Optional[str] = None,
+        region: Optional[str] = None,
+        user_prefs: Optional[dict] = None,
+    ) -> PaginatedResult[Any]:
+        """FTS5-based search — prefix match first, then full token match.
+
+        Strategy:
+        1. Prefix match (query*) — instant, covers typeahead use case
+        2. If <limit results, try full token match — catches compound words
+        3. Fetch full FoodItem rows by rowid (indexed, ~1ms)
+        """
+        from sqlalchemy import text
+
+        limit = pagination.limit
+        offset = pagination.offset
+
+        # Sanitize query for FTS5: remove special chars, collapse whitespace
+        safe_query = "".join(c if c.isalnum() or c.isspace() else " " for c in query).strip()
+        if not safe_query:
+            return PaginatedResult(items=[], total_count=0, page=pagination.page, limit=limit)
+
+        # Build FTS MATCH expression: prefix match on each token
+        tokens = safe_query.split()
+        prefix_expr = " ".join(f"{t}*" for t in tokens)
+
+        # Optional category/source filter via FTS columns
+        fts_filter = ""
+        params: dict = {"match_expr": prefix_expr, "limit": limit, "offset": offset}
+        if category:
+            fts_filter = " AND fts.category = :category"
+            params["category"] = category
+
+        # Step 1: Prefix match with BM25 ranking
+        fts_sql = text(f"""
+            SELECT fts.rowid
+            FROM food_items_fts fts
+            WHERE fts.name MATCH :match_expr{fts_filter}
+            ORDER BY bm25(food_items_fts)
+            LIMIT :limit OFFSET :offset
+        """)
+        result = await self.db.execute(fts_sql, params)
+        rowids = [r[0] for r in result.fetchall()]
+
+        # Step 2: If too few results, try full token match (no prefix)
+        if len(rowids) < limit and len(tokens) == 1:
+            full_expr = safe_query
+            params2 = {**params, "match_expr": full_expr}
+            result2 = await self.db.execute(fts_sql, params2)
+            extra_rowids = [r[0] for r in result2.fetchall()]
+            seen = set(rowids)
+            for rid in extra_rowids:
+                if rid not in seen:
+                    rowids.append(rid)
+                    seen.add(rid)
+                    if len(rowids) >= limit:
+                        break
+
+        if not rowids:
+            return PaginatedResult(items=[], total_count=-1, page=pagination.page, limit=limit)
+
+        # Step 3: Fetch full rows by rowid using raw SQL (avoids ORM UUID binding issues on SQLite)
+        ph = ",".join(str(r) for r in rowids)
+        fetch_sql = text(f"""
+            SELECT id, name, category, region, serving_size, serving_unit,
+                   calories, protein_g, carbs_g, fat_g, micro_nutrients,
+                   is_recipe, source, barcode, description, total_servings,
+                   created_by, deleted_at, created_at, updated_at
+            FROM food_items WHERE rowid IN ({ph})
+        """)
+        if region:
+            fetch_sql = text(f"""
+                SELECT id, name, category, region, serving_size, serving_unit,
+                       calories, protein_g, carbs_g, fat_g, micro_nutrients,
+                       is_recipe, source, barcode, description, total_servings,
+                       created_by, deleted_at, created_at, updated_at
+                FROM food_items WHERE rowid IN ({ph}) AND region = :region
+            """)
+        fetch_result = await self.db.execute(
+            fetch_sql, {"region": region} if region else {}
+        )
+        rows = fetch_result.fetchall()
+
+        # Build a map of id→row for ordering
+        row_map: dict = {}
+        rowid_to_id: dict = {}
+        for row in rows:
+            row_map[row[0]] = row  # id is first column
+
+        # Also get rowid→id mapping for ordering
+        id_map_sql = text(f"SELECT rowid, id FROM food_items WHERE rowid IN ({ph})")
+        id_result = await self.db.execute(id_map_sql)
+        for r in id_result.fetchall():
+            rowid_to_id[r[0]] = r[1]
+
+        # Build ordered FoodItem objects preserving FTS rank
+        import json as _json
+        from datetime import datetime as _dt
+        items = []
+        for rid in rowids:
+            fid = rowid_to_id.get(rid)
+            if fid and fid in row_map:
+                row = row_map[fid]
+                item = FoodItem()
+                item.id = row[0]
+                item.name = row[1]
+                item.category = row[2]
+                item.region = row[3]
+                item.serving_size = row[4]
+                item.serving_unit = row[5]
+                item.calories = row[6]
+                item.protein_g = row[7]
+                item.carbs_g = row[8]
+                item.fat_g = row[9]
+                # micro_nutrients may be a JSON string from raw SQL
+                mn = row[10]
+                item.micro_nutrients = _json.loads(mn) if isinstance(mn, str) else mn
+                item.is_recipe = bool(row[11])
+                item.source = row[12]
+                item.barcode = row[13]
+                item.description = row[14]
+                item.total_servings = row[15]
+                # Parse datetime strings
+                ca = row[18]
+                item.created_at = _dt.fromisoformat(ca) if isinstance(ca, str) else ca
+                ua = row[19]
+                item.updated_at = _dt.fromisoformat(ua) if isinstance(ua, str) else ua
+                items.append(item)
+
+        # Apply Food DNA personalization
+        if user_prefs:
+            items = self._personalize_results(items, user_prefs)
+
+        return PaginatedResult(
+            items=items,
+            total_count=-1,  # Skip count for FTS — frontend doesn't need it for typeahead
+            page=pagination.page,
+            limit=limit,
+        )
+
+    async def _search_like(
+        self,
+        query: str,
+        pagination: PaginationParams,
+        category: Optional[str] = None,
+        region: Optional[str] = None,
+        user_prefs: Optional[dict] = None,
+    ) -> PaginatedResult[Any]:
+        """Original LIKE-based search — fallback for PostgreSQL or missing FTS."""
         base = select(FoodItem)
         base = FoodItem.not_deleted(base)
 
-        # Text search on name — prefix match first, then contains match.
         if query:
             base = base.where(func.lower(FoodItem.name).like(func.lower(f"%{query}%")))
 
-        # Optional filters
         if category:
             base = base.where(FoodItem.category == category)
         if region:
             base = base.where(FoodItem.region == region)
 
-        # Skip expensive count for search queries on large tables
-        # The frontend doesn't need exact total for typeahead results
         total = -1
         if not query:
             count_stmt = select(func.count()).select_from(base.subquery())
             total = (await self.db.execute(count_stmt)).scalar_one()
 
-        # For search queries, prioritize simpler/shorter names (e.g. "Cheese" before
-        # "CHEESE & ARTISAN CRACKERS"). Exact matches first, then by name length.
         if query:
-            # Relevance: exact match → short prefix match → longer prefix → contains match
             relevance = case(
-                (func.lower(FoodItem.name) == func.lower(query), 0),  # exact match
-                (func.lower(FoodItem.name).like(func.lower(f"{query}%")), 1),  # prefix match (starts with query)
-                else_=2,  # contains match
+                (func.lower(FoodItem.name) == func.lower(query), 0),
+                (func.lower(FoodItem.name).like(func.lower(f"{query}%")), 1),
+                else_=2,
             )
-            # Within same relevance tier, prefer shorter names (simpler foods)
             source_priority = case(
                 (FoodItem.source == "usda", 0),
                 (FoodItem.source == "verified", 1),
@@ -109,7 +273,6 @@ class FoodDatabaseService:
         result = await self.db.execute(items_stmt)
         items = list(result.scalars().all())
 
-        # Apply Food DNA personalization
         if user_prefs:
             items = self._personalize_results(items, user_prefs)
 

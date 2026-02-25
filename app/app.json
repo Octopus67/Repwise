@@ -12,13 +12,20 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.hypertrophyos.app"
+      "bundleIdentifier": "com.hypertrophyos.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "HypertrophyOS needs camera access to take progress photos and scan food barcodes.",
+        "NSPhotoLibraryUsageDescription": "HypertrophyOS needs photo library access to select progress photos."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#0B0F14"
       },
-      "package": "com.hypertrophyos.app"
+      "package": "com.hypertrophyos.app",
+      "versionCode": 1,
+      "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE"]
     },
     "scheme": "hypertrophyos"
   }

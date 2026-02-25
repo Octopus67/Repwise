@@ -11,7 +11,12 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError as PydanticValidationError
 
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+
 from src.config.settings import settings
+from src.middleware.logging_middleware import StructuredLoggingMiddleware
 from src.middleware.validate import (
     pydantic_validation_exception_handler,
     validation_exception_handler,
@@ -51,6 +56,7 @@ async def lifespan(application: FastAPI):
         import src.modules.readiness.readiness_models  # noqa: F401
         import src.modules.recomp.models  # noqa: F401
         import src.modules.meal_plans.models  # noqa: F401
+        import src.modules.notifications.models  # noqa: F401
         import src.shared.audit  # noqa: F401
 
         # Patch JSONB → JSON for SQLite compatibility
@@ -130,6 +136,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Sentry — conditional on SENTRY_DSN being set
+if settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        integrations=[FastApiIntegration(), SqlalchemyIntegration()],
+        traces_sample_rate=0.1,
+        environment="production" if not settings.DEBUG else "development",
+    )
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
@@ -138,6 +153,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(StructuredLoggingMiddleware)
 
 
 # Global exception handler for ApiError
@@ -236,3 +253,6 @@ app.include_router(recomp_router, prefix="/api/v1/recomp", tags=["recomp"])
 
 from src.modules.meal_plans.router import router as meal_plans_router
 app.include_router(meal_plans_router, prefix="/api/v1/meal-plans", tags=["meal-plans"])
+
+from src.modules.notifications.router import router as notifications_router
+app.include_router(notifications_router, prefix="/api/v1/notifications", tags=["notifications"])

@@ -16,7 +16,16 @@ import { initAnalytics } from './services/analytics';
 import { useStore } from './store';
 import { useActiveWorkoutStore } from './store/activeWorkoutSlice';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import * as Sentry from '@sentry/react-native';
 import api from './services/api';
+
+if (process.env.EXPO_PUBLIC_SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+    tracesSampleRate: 0.1,
+    environment: __DEV__ ? 'development' : 'production',
+  });
+}
 
 type AuthStackParamList = {
   Login: undefined;

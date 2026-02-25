@@ -32,6 +32,7 @@ import src.modules.achievements.models  # noqa: F401
 import src.modules.recomp.models  # noqa: F401
 import src.modules.meal_plans.models  # noqa: F401
 import src.modules.periodization.models  # noqa: F401
+import src.modules.notifications.models  # noqa: F401
 
 # Use SQLite for tests — async via aiosqlite
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"

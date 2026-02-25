@@ -85,3 +85,20 @@ class PhotoResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+class UploadUrlRequest(BaseModel):
+    """Schema for requesting a pre-signed upload URL."""
+
+    filename: str = Field(min_length=1, max_length=255)
+    content_type: str = Field(
+        default="image/jpeg",
+        pattern=r"^image/(jpeg|png|webp)$",
+    )
+
+
+class UploadUrlResponse(BaseModel):
+    """Schema for the pre-signed upload URL response."""
+
+    upload_url: str
+    key: str
+

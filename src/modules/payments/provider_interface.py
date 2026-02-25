@@ -113,13 +113,52 @@ class PaymentProvider(ABC):
 # Region-based provider routing
 # ---------------------------------------------------------------------------
 
-from src.modules.payments.stripe_provider import StripeProvider  # noqa: E402
-from src.modules.payments.razorpay_provider import RazorpayProvider  # noqa: E402
 
-PROVIDER_MAP: dict[str, type[PaymentProvider]] = {
-    "US": StripeProvider,
-    "IN": RazorpayProvider,
-}
+def _build_provider_map() -> dict[str, type[PaymentProvider]]:
+    """Lazy import to avoid circular dependency with provider modules."""
+    from src.modules.payments.stripe_provider import StripeProvider
+    from src.modules.payments.razorpay_provider import RazorpayProvider
+
+    return {
+        "US": StripeProvider,
+        "IN": RazorpayProvider,
+    }
+
+
+# Lazy-initialized module-level reference for backward compatibility.
+# Populated on first access via get_provider_for_region or direct import.
+class _LazyProviderMap(dict):  # type: ignore[type-arg]
+    """Dict subclass that populates itself on first access."""
+
+    _loaded: bool = False
+
+    def _ensure_loaded(self) -> None:
+        if not self._loaded:
+            self.update(_build_provider_map())
+            self._loaded = True
+
+    def __getitem__(self, key):  # type: ignore[override]
+        self._ensure_loaded()
+        return super().__getitem__(key)
+
+    def get(self, key, default=None):  # type: ignore[override]
+        self._ensure_loaded()
+        return super().get(key, default)
+
+    def keys(self):  # type: ignore[override]
+        self._ensure_loaded()
+        return super().keys()
+
+    def __contains__(self, key):  # type: ignore[override]
+        self._ensure_loaded()
+        return super().__contains__(key)
+
+    def __iter__(self):  # type: ignore[override]
+        self._ensure_loaded()
+        return super().__iter__()
+
+
+PROVIDER_MAP: dict[str, type[PaymentProvider]] = _LazyProviderMap()
 
 
 def get_provider_for_region(region: str) -> PaymentProvider:

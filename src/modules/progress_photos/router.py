@@ -16,8 +16,11 @@ from src.modules.progress_photos.schemas import (
     PhotoCreate,
     PhotoResponse,
     PhotoUpdate,
+    UploadUrlRequest,
+    UploadUrlResponse,
 )
 from src.modules.progress_photos.service import ProgressPhotoService
+from src.shared.storage import generate_upload_url
 from src.shared.pagination import PaginatedResult, PaginationParams
 
 logger = logging.getLogger(__name__)
@@ -27,6 +30,16 @@ router = APIRouter()
 
 def _get_service(db: AsyncSession = Depends(get_db)) -> ProgressPhotoService:
     return ProgressPhotoService(db)
+
+
+@router.post("/upload-url", response_model=UploadUrlResponse)
+async def get_upload_url(
+    data: UploadUrlRequest,
+    user: User = Depends(get_current_user),
+) -> UploadUrlResponse:
+    """Generate a pre-signed R2 upload URL for a progress photo."""
+    result = generate_upload_url(str(user.id), data.filename, data.content_type)
+    return UploadUrlResponse(upload_url=result["upload_url"], key=result["key"])
 
 
 @router.post("", response_model=PhotoResponse, status_code=201)

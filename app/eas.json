@@ -1,0 +1,38 @@
+{
+  "cli": { "version": ">= 12.0.0" },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "staging": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://hypertrophyos-production.up.railway.app",
+        "EXPO_PUBLIC_POSTHOG_KEY": "<staging-key>",
+        "EXPO_PUBLIC_SENTRY_DSN": "<staging-sentry-dsn>"
+      }
+    },
+    "production": {
+      "distribution": "store",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://hypertrophyos-production.up.railway.app",
+        "EXPO_PUBLIC_POSTHOG_KEY": "<production-key>",
+        "EXPO_PUBLIC_SENTRY_DSN": "<production-sentry-dsn>"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "<apple-id>",
+        "ascAppId": "<app-store-connect-app-id>",
+        "appleTeamId": "<team-id>"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json",
+        "track": "internal"
+      }
+    }
+  }
+}

@@ -42,6 +42,7 @@
     "react-native-svg": "^15.15.3",
     "react-native-web": "~0.19.6",
     "victory-native": "^41.20.2",
+    "@sentry/react-native": "^5.0.0",
     "zustand": "^4.5.0"
   },
   "devDependencies": {
