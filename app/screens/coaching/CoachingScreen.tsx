@@ -129,7 +129,7 @@ export function CoachingScreen() {
             textAlignVertical="top"
             testID="coaching-goals-input"
           />
-          <Button title="Submit Request" onPress={handleSubmit} loading={submitting} testID="coaching-submit-button" />
+          <Button title="Submit Request" onPress={handleSubmit} loading={submitting} disabled={submitting} testID="coaching-submit-button" />
         </Card>
 
         {/* Request history */}

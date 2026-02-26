@@ -36,6 +36,14 @@ export function UpgradeModal({ visible, onClose }: UpgradeModalProps) {
   const [selectedPlan, setSelectedPlan] = React.useState<'monthly' | 'yearly'>('yearly');
   const [loading, setLoading] = React.useState(false);
 
+  // Reset state when modal closes so it's fresh on next open
+  React.useEffect(() => {
+    if (!visible) {
+      setSelectedPlan('yearly');
+      setLoading(false);
+    }
+  }, [visible]);
+
   const handleSubscribe = async () => {
     setLoading(true);
     try {

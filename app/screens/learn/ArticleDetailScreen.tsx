@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -45,9 +45,9 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
 
   useEffect(() => {
     loadArticle();
-  }, [articleId]);
+  }, [articleId, loadArticle]);
 
-  const loadArticle = async () => {
+  const loadArticle = useCallback(async () => {
     setError(null);
     try {
       const { data } = await api.get(`content/articles/${articleId}`);
@@ -56,7 +56,7 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
       const msg = err?.response?.data?.message ?? err?.message ?? 'Failed to load article';
       setError(msg);
     }
-  };
+  }, [articleId]);
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
@@ -117,7 +117,7 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
         </View>
         {error ? (
           <View testID="article-detail-error" style={styles.errorContainer}>
-            <ErrorBanner message={error} onRetry={loadArticle} />
+            <ErrorBanner message={error} onRetry={loadArticle} onDismiss={() => setError(null)} />
           </View>
         ) : (
           <ActivityIndicator size="large" color={colors.accent.primary} />

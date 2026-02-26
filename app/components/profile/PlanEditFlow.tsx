@@ -421,7 +421,11 @@ export function PlanEditFlow({
       )}
 
       {/* Error message */}
-      {error && <Text style={flowStyles.error}>{error}</Text>}
+      {error && (
+        <TouchableOpacity onPress={() => setError(null)} activeOpacity={0.7}>
+          <Text style={flowStyles.error}>{error} (tap to dismiss)</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Navigation buttons */}
       <View style={flowStyles.actions}>

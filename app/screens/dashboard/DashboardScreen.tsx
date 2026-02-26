@@ -155,6 +155,7 @@ export function DashboardScreen({ navigation }: any) {
 
   useEffect(() => {
     loadDashboardData(selectedDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Debounced date switching
@@ -167,7 +168,7 @@ export function DashboardScreen({ navigation }: any) {
     dateDebounceRef.current = setTimeout(() => {
       loadDashboardData(date);
     }, 300);
-  }, []);
+  }, [loadDashboardData]);
 
   const loadDashboardData = useCallback(async (dateToLoad?: string) => {
     try {

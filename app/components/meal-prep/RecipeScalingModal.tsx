@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { ModalContainer } from '../common/ModalContainer';
 import { colors, typography, spacing } from '../../theme/tokens';
@@ -32,14 +32,21 @@ export function RecipeScalingModal({
   const [targetValue, setTargetValue] = useState('');
   const [targetMacro, setTargetMacro] = useState<string>('calories');
 
-  const originalMap: Record<string, number> = {
-    calories: originalCalories,
-    protein_g: originalProtein,
-    carbs_g: originalCarbs,
-    fat_g: originalFat,
-  };
+  // Reset state when modal closes so it's fresh on next open
+  useEffect(() => {
+    if (!visible) {
+      setTargetValue('');
+      setTargetMacro('calories');
+    }
+  }, [visible]);
 
   const preview = useMemo(() => {
+    const originalMap: Record<string, number> = {
+      calories: originalCalories,
+      protein_g: originalProtein,
+      carbs_g: originalCarbs,
+      fat_g: originalFat,
+    };
     const val = parseFloat(targetValue);
     if (!val || val <= 0) return null;
     const orig = originalMap[targetMacro];
@@ -58,7 +65,7 @@ export function RecipeScalingModal({
     } catch {
       return null;
     }
-  }, [targetValue, targetMacro, ingredients]);
+  }, [targetValue, targetMacro, ingredients, originalCalories, originalProtein, originalCarbs, originalFat]);
 
   return (
     <ModalContainer visible={visible} onClose={onClose} title="Scale Recipe">

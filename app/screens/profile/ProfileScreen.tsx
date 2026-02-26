@@ -112,7 +112,7 @@ export function ProfileScreen() {
 
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [loadProfile]);
 
 
   const handleSaveDisplayName = async (newName: string) => {

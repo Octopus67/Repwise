@@ -28,7 +28,10 @@ interface GeneratedPlan {
 export function MealPlanScreen({ navigation }: any) {
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [saving, setSaving] = useState(false);
 
   const handleGenerate = useCallback(async () => {
     setLoading(true);
@@ -51,6 +54,7 @@ export function MealPlanScreen({ navigation }: any) {
 
   const handleSave = useCallback(async () => {
     if (!plan) return;
+    setSaving(true);
     setError(null);
     try {
       const res = await fetch('/api/v1/meal-plans/save', {
@@ -65,6 +69,8 @@ export function MealPlanScreen({ navigation }: any) {
       if (!res.ok) throw new Error('Failed to save plan');
     } catch (e: any) {
       setError(e.message ?? 'Failed to save plan');
+    } finally {
+      setSaving(false);
     }
   }, [plan]);
 
@@ -86,7 +92,12 @@ export function MealPlanScreen({ navigation }: any) {
       )}
 
       {loading && <ActivityIndicator size="large" color={colors.accent.primary} />}
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && (
+        <TouchableOpacity onPress={() => setError(null)} style={styles.errorRow}>
+          <Text style={styles.error}>{error}</Text>
+          <Text style={styles.errorDismiss}>✕</Text>
+        </TouchableOpacity>
+      )}
 
       {plan?.days.map((day) => {
         const summary = computeDaySummary(day.assignments);
@@ -114,13 +125,29 @@ export function MealPlanScreen({ navigation }: any) {
       })}
 
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.btn} onPress={handleGenerate}>
-          <Text style={styles.btnText}>Generate Plan</Text>
+        <TouchableOpacity
+          style={[styles.btn, loading && styles.btnDisabled]}
+          onPress={handleGenerate}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color={colors.text.primary} size="small" />
+          ) : (
+            <Text style={styles.btnText}>Generate Plan</Text>
+          )}
         </TouchableOpacity>
         {plan && (
           <>
-            <TouchableOpacity style={styles.btn} onPress={handleSave}>
-              <Text style={styles.btnText}>Save Plan</Text>
+            <TouchableOpacity
+              style={[styles.btn, saving && styles.btnDisabled]}
+              onPress={handleSave}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator color={colors.text.primary} size="small" />
+              ) : (
+                <Text style={styles.btnText}>Save Plan</Text>
+              )}
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.btnSecondary}
@@ -151,7 +178,10 @@ const styles = StyleSheet.create({
   daySummary: { fontSize: typography.size.xs, color: colors.text.muted, marginTop: spacing[2], textAlign: 'right' },
   actions: { flexDirection: 'row', gap: spacing[2], marginTop: spacing[4], marginBottom: spacing[8] },
   btn: { flex: 1, backgroundColor: colors.accent.primary, padding: spacing[3], borderRadius: 8, alignItems: 'center' },
+  btnDisabled: { opacity: 0.5 },
   btnSecondary: { flex: 1, backgroundColor: colors.bg.surface, padding: spacing[3], borderRadius: 8, alignItems: 'center' },
   btnText: { color: colors.text.primary, fontWeight: typography.weight.semibold },
-  error: { color: colors.semantic.negative, marginBottom: spacing[2] },
+  error: { color: colors.semantic.negative, flex: 1 },
+  errorRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing[2], backgroundColor: colors.semantic.negativeSubtle ?? colors.bg.surface, padding: spacing[2], borderRadius: 6 },
+  errorDismiss: { color: colors.semantic.negative, fontWeight: typography.weight.bold, paddingLeft: spacing[2] },
 });

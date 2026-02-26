@@ -68,6 +68,23 @@ export function ShoppingListView({ route }: any) {
     return (
       <View style={styles.center}>
         <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity
+          style={styles.retryBtn}
+          onPress={() => {
+            setError(null);
+            setLoading(true);
+            fetch(`/api/v1/meal-plans/${planId}/shopping-list`)
+              .then((r) => {
+                if (!r.ok) throw new Error('Failed to load shopping list');
+                return r.json();
+              })
+              .then((data) => setItems(data.items ?? []))
+              .catch((e: any) => setError(e.message ?? 'Failed to load shopping list'))
+              .finally(() => setLoading(false));
+          }}
+        >
+          <Text style={styles.retryText}>Retry</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -102,7 +119,9 @@ export function ShoppingListView({ route }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg.base, padding: spacing[4] },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  errorText: { color: colors.semantic.negative, fontSize: typography.size.base, textAlign: 'center' },
+  errorText: { color: colors.semantic.negative, fontSize: typography.size.base, textAlign: 'center', marginBottom: spacing[3] },
+  retryBtn: { backgroundColor: colors.accent.primary, paddingHorizontal: spacing[5], paddingVertical: spacing[2], borderRadius: 8 },
+  retryText: { color: colors.text.primary, fontWeight: typography.weight.semibold },
   title: { fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, color: colors.text.primary, marginBottom: spacing[4] },
   section: { marginBottom: spacing[4] },
   categoryLabel: { fontSize: typography.size.lg, fontWeight: typography.weight.semibold, color: colors.accent.primary, marginBottom: spacing[2] },

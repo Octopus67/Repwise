@@ -53,7 +53,7 @@ export function CommunityScreen() {
           Connect with fellow lifters, share progress, and get support.
         </Text>
 
-        {error && <ErrorBanner message={error} onRetry={loadLinks} />}
+        {error && <ErrorBanner message={error} onRetry={loadLinks} onDismiss={() => setError(null)} />}
 
         <TouchableOpacity
           onPress={() => Linking.openURL(links.telegram_url)}

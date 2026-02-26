@@ -78,7 +78,6 @@ export function RecompDashboardCard({ metrics, loading = false, error = null }: 
       </Card>
     );
   }
-
   if (!metrics || !metrics.has_sufficient_data) {
     return (
       <Card variant="flat" style={styles.card}>

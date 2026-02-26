@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, Modal, TouchableOpacity, Switch, ScrollView, StyleSheet } from 'react-native';
 import { ActiveExercise } from '../../types/training';
 import { computeWorkoutSummary, formatMiniSummary } from '../../utils/workoutSummaryFormatter';
@@ -25,6 +25,13 @@ export const ConfirmationSheet = ({
   onCancel,
 }: ConfirmationSheetProps) => {
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
+
+  // Reset toggle state whenever the sheet is opened
+  useEffect(() => {
+    if (visible) {
+      setSaveAsTemplate(false);
+    }
+  }, [visible]);
 
   const summary = computeWorkoutSummary(exercises, startedAt);
   const durationMin = Math.floor(summary.durationSeconds / 60);

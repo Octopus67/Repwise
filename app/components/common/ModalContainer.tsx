@@ -58,6 +58,8 @@ export function ModalContainer({
         opacity.value = withTiming(0, { duration: motion.duration.default, easing: Easing.in(Easing.ease) });
       }
     }
+  // scale, opacity, translateY are stable shared value refs — safe to omit from deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const backdropStyle = useAnimatedStyle(() => ({

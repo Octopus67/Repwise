@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
 import { Card } from '../common/Card';
 import { EmptyState } from '../common/EmptyState';
@@ -18,11 +18,13 @@ import api from '../../services/api';
 export function PeriodizationCalendar() {
   const [blocks, setBlocks] = useState<TrainingBlock[]>([]);
   const [sessionDates, setSessionDates] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [showTemplate, setShowTemplate] = useState(false);
   const [editBlock, setEditBlock] = useState<TrainingBlock | null>(null);
 
   const loadData = useCallback(async () => {
+    setLoading(true);
     try {
       const [blocksRes, sessionsRes] = await Promise.allSettled([
         api.get('periodization/blocks'),
@@ -33,7 +35,9 @@ export function PeriodizationCalendar() {
         const items = sessionsRes.value.data.items ?? sessionsRes.value.data ?? [];
         setSessionDates(items.map((s: any) => s.session_date));
       }
-    } catch { /* best-effort */ }
+    } catch { /* best-effort */ } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -63,7 +67,11 @@ export function PeriodizationCalendar() {
       )}
 
       {/* Calendar rows */}
-      {rows.length === 0 ? (
+      {loading ? (
+        <Card>
+          <ActivityIndicator color={colors.accent.primary} style={{ marginVertical: spacing[4] }} />
+        </Card>
+      ) : rows.length === 0 ? (
         <Card>
           <EmptyState
             icon={<Icon name="calendar" />}

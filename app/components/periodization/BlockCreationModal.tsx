@@ -140,7 +140,11 @@ export function BlockCreationModal({ visible, onClose, onSaved, block }: BlockCr
           ))}
         </View>
 
-        {error && <Text style={styles.error}>{error}</Text>}
+        {error && (
+          <TouchableOpacity onPress={() => setError(null)} activeOpacity={0.7}>
+            <Text style={styles.error}>{error} (tap to dismiss)</Text>
+          </TouchableOpacity>
+        )}
 
         <Button title={isEdit ? 'Update' : 'Create'} onPress={handleSave} variant="primary" disabled={saving} loading={saving} />
       </ScrollView>

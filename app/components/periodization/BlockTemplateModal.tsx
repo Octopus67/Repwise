@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
 import { ModalContainer } from '../common/ModalContainer';
 import { Button } from '../common/Button';
@@ -29,13 +29,18 @@ export function BlockTemplateModal({ visible, onClose, onApplied }: BlockTemplat
   const [startDate, setStartDate] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
 
   useEffect(() => {
     if (visible) {
       setError(null);
       setSelectedId(null);
       setStartDate(new Date().toISOString().split('T')[0]);
-      api.get('periodization/templates').then(({ data }) => setTemplates(data)).catch(() => {});
+      setLoadingTemplates(true);
+      api.get('periodization/templates')
+        .then(({ data }) => setTemplates(data))
+        .catch(() => setError('Failed to load templates'))
+        .finally(() => setLoadingTemplates(false));
     }
   }, [visible]);
 
@@ -58,23 +63,27 @@ export function BlockTemplateModal({ visible, onClose, onApplied }: BlockTemplat
   return (
     <ModalContainer visible={visible} onClose={onClose} title="Apply Block Template">
       <ScrollView style={styles.content}>
-        {templates.map((t) => (
-          <TouchableOpacity
-            key={t.id}
-            style={[styles.card, selectedId === t.id && styles.cardSelected]}
-            onPress={() => setSelectedId(t.id)}
-          >
-            <Text style={styles.cardTitle}>{t.name}</Text>
-            <Text style={styles.cardDesc}>{t.description}</Text>
-            <View style={styles.phases}>
-              {t.phases.map((p, i) => (
-                <Text key={i} style={styles.phaseTag}>
-                  {p.phase_type} ({p.duration_weeks}w)
-                </Text>
-              ))}
-            </View>
-          </TouchableOpacity>
-        ))}
+        {loadingTemplates ? (
+          <ActivityIndicator color={colors.accent.primary} style={{ marginVertical: spacing[4] }} />
+        ) : (
+          templates.map((t) => (
+            <TouchableOpacity
+              key={t.id}
+              style={[styles.card, selectedId === t.id && styles.cardSelected]}
+              onPress={() => setSelectedId(t.id)}
+            >
+              <Text style={styles.cardTitle}>{t.name}</Text>
+              <Text style={styles.cardDesc}>{t.description}</Text>
+              <View style={styles.phases}>
+                {t.phases.map((p, i) => (
+                  <Text key={i} style={styles.phaseTag}>
+                    {p.phase_type} ({p.duration_weeks}w)
+                  </Text>
+                ))}
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
 
         <Text style={styles.label}>Start Date</Text>
         <TextInput

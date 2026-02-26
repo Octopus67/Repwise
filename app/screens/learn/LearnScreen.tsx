@@ -287,12 +287,41 @@ export function LearnScreen() {
 
       {error && <ErrorBanner message={error} onRetry={loadArticles} onDismiss={() => setError(null)} />}
 
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search articles..."
+        placeholderTextColor={colors.text.muted}
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        returnKeyType="search"
+        accessibilityLabel="Search articles"
+        testID="learn-search-input"
+      />
+
       <FlatList
         testID="learn-article-list"
         data={displayArticles}
         keyExtractor={(a) => a.id}
         renderItem={renderArticle}
         contentContainerStyle={styles.listContent}
+        ListHeaderComponent={
+          <FlatList
+            horizontal
+            data={CATEGORIES}
+            keyExtractor={(c) => c}
+            renderItem={({ item: c }) => (
+              <FilterPill
+                key={c}
+                label={c}
+                active={category === c}
+                onPress={() => setCategory(c)}
+              />
+            )}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRow}
+            style={{ marginBottom: spacing[3] }}
+          />
+        }
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent.primary} />
         }

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { useEffect, useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Card } from '../common/Card';
 import { colors, spacing, typography } from '../../theme/tokens';
 import { WeekNavigator } from './WeekNavigator';
@@ -26,7 +26,7 @@ export function HeatMapCard() {
   const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const fetchVolume = async (ws: string) => {
+  const fetchVolume = useCallback(async (ws: string) => {
     setLoading(true);
     setError(false);
     try {
@@ -40,11 +40,11 @@ export function HeatMapCard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchVolume(weekStart);
-  }, [weekStart]);
+  }, [weekStart, fetchVolume]);
 
   const handleMusclePress = (mg: string) => {
     setSelectedMuscle(mg);
@@ -62,7 +62,12 @@ export function HeatMapCard() {
       <WeekNavigator currentWeekStart={weekStart} onWeekChange={setWeekStart} />
 
       {error ? (
-        <Text style={styles.errorText}>Failed to load volume data. Pull to retry.</Text>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Failed to load volume data.</Text>
+          <TouchableOpacity onPress={() => fetchVolume(weekStart)} style={styles.retryButton}>
+            <Text style={styles.retryText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
         <>
           <BodyHeatMap
@@ -99,11 +104,28 @@ export function HeatMapCard() {
 }
 
 const styles = StyleSheet.create({
+  errorContainer: {
+    alignItems: 'center',
+    padding: spacing[4],
+    gap: spacing[2],
+  },
   errorText: {
     color: colors.semantic.negative,
     fontSize: typography.size.sm,
     textAlign: 'center',
-    padding: spacing[4],
+  },
+  retryButton: {
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2],
+    borderRadius: 6,
+    backgroundColor: colors.bg.surfaceRaised,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+  },
+  retryText: {
+    color: colors.text.primary,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.medium,
   },
   frequencyList: {
     marginTop: spacing[3],

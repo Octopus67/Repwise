@@ -51,6 +51,7 @@ export function LifestyleStep({ onNext }: Props) {
     exerciseTypes,
     sex,
     birthYear,
+    birthMonth,
     heightCm,
     weightKg,
     bodyFatPct,
@@ -58,7 +59,7 @@ export function LifestyleStep({ onNext }: Props) {
   } = useOnboardingStore();
 
   // Live TDEE activity component
-  const age = computeAge(birthYear, null);
+  const age = computeAge(birthYear, birthMonth);
   const liveActivity = useMemo(() => {
     const bmr = computeBMR(weightKg, heightCm, age, sex, bodyFatPct ?? undefined);
     if (bmr <= 0) return 0;

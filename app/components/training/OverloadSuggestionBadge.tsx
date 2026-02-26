@@ -29,6 +29,10 @@ export function OverloadSuggestionBadge({ exerciseName, unitSystem }: OverloadSu
 
   useEffect(() => {
     let cancelled = false;
+    // Reset dismissed state when exercise changes so the badge shows for the new exercise
+    setDismissed(false);
+    setSuggestion(null);
+    setLoading(true);
     (async () => {
       try {
         const encoded = encodeURIComponent(exerciseName);

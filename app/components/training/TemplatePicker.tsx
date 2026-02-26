@@ -90,10 +90,11 @@ export function TemplatePicker({
         );
       }
     },
-    [onSelectTemplate],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [onSelectTemplate, deleteTemplate],
   );
 
-  async function deleteTemplate(id: string) {
+  const deleteTemplate = useCallback(async (id: string) => {
     try {
       await api.delete(`training/user-templates/${id}`);
       setUserTemplates((prev) => prev.filter((t) => t.id !== id));
@@ -105,7 +106,7 @@ export function TemplatePicker({
         );
       }
     }
-  }
+  }, []);
 
   const ordered = orderTemplates(userTemplates, systemTemplates);
 

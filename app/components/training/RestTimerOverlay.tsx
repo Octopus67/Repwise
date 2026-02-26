@@ -46,7 +46,7 @@ export function RestTimerOverlay({
     } else {
       clearTimer();
     }
-  }, [visible, durationSeconds]);
+  }, [visible, durationSeconds, clearTimer]);
 
   // Countdown interval
   useEffect(() => {
@@ -69,14 +69,14 @@ export function RestTimerOverlay({
     }, 1000);
 
     return clearTimer;
-  }, [visible, state]);
+  }, [visible, state, clearTimer]);
 
-  function clearTimer() {
+  const clearTimer = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-  }
+  }, []);
 
   const handlePauseResume = useCallback(() => {
     setState((s) => (s === 'RUNNING' ? 'PAUSED' : 'RUNNING'));
@@ -85,7 +85,7 @@ export function RestTimerOverlay({
   const handleSkip = useCallback(() => {
     clearTimer();
     onDismiss();
-  }, [onDismiss]);
+  }, [onDismiss, clearTimer]);
 
   const handleAdjust = useCallback((delta: number) => {
     setRemaining((prev) => Math.max(0, prev + delta));

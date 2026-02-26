@@ -32,7 +32,7 @@ export function OnboardingWizard({ onComplete, onSkip }: Props) {
   const progress = useSharedValue(currentStep / TOTAL_STEPS);
   useEffect(() => {
     progress.value = withTiming(currentStep / TOTAL_STEPS, { duration: motion.duration.slow, easing: Easing.out(Easing.ease) });
-  }, [currentStep]);
+  }, [currentStep, progress]);
 
 
   const progressStyle = useAnimatedStyle(() => ({

@@ -117,6 +117,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
   const [searchError, setSearchError] = useState('');
   const [searchEmpty, setSearchEmpty] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Serving options state ────────────────────────────────────────────────
   const [servingOptions, setServingOptions] = useState<ServingOption[]>([]);
@@ -432,6 +433,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
     };
   }, []);
 
@@ -692,7 +694,8 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
       setSuccessMessage(`${calories} kcal logged ✓`);
       onSuccess();
       clearForm();
-      setTimeout(() => setSuccessMessage(''), 2000);
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+      successTimerRef.current = setTimeout(() => setSuccessMessage(''), 2000);
     } catch {
       Alert.alert('Error', 'Failed to log nutrition entry.');
     } finally {

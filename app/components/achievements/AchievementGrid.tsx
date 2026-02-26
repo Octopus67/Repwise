@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, useWindowDimensions } from 'react-native';
+import { useEffect, useState, useCallback } from 'react';
+import { View, Text, FlatList, StyleSheet, useWindowDimensions, TouchableOpacity } from 'react-native';
 import { colors, spacing, typography, letterSpacing as ls } from '../../theme/tokens';
 import { AchievementCard } from './AchievementCard';
 import { Skeleton } from '../common/Skeleton';
@@ -46,21 +46,26 @@ export function groupAchievementsByCategory(
 export function AchievementGrid() {
   const [achievements, setAchievements] = useState<AchievementItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const { width } = useWindowDimensions();
   const numColumns = width > 500 ? 4 : 3;
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await api.get('achievements/');
-        setAchievements(data);
-      } catch {
-        // graceful degradation
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const fetchAchievements = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const { data } = await api.get('achievements/');
+      setAchievements(data);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchAchievements();
+  }, [fetchAchievements]);
 
   if (loading) {
     return (
@@ -68,6 +73,17 @@ export function AchievementGrid() {
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} width={90} height={100} borderRadius={12} />
         ))}
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.empty}>Failed to load achievements.</Text>
+        <TouchableOpacity onPress={fetchAchievements} style={styles.retryBtn}>
+          <Text style={styles.retryText}>Retry</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -130,5 +146,21 @@ const styles = StyleSheet.create({
   },
   row: {
     gap: spacing[1],
+  },
+  errorContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing[4],
+  },
+  retryBtn: {
+    marginTop: spacing[2],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2],
+    backgroundColor: colors.accent.primary,
+    borderRadius: 8,
+  },
+  retryText: {
+    color: colors.text.primary,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
   },
 });

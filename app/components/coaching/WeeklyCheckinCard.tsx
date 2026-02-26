@@ -63,6 +63,17 @@ export function WeeklyCheckinCard({
     fat_g: checkin.new_targets?.fat_g ?? 60,
   });
 
+  // Sync edit targets when checkin prop changes (e.g. new suggestion arrives)
+  React.useEffect(() => {
+    setEditTargets({
+      calories: checkin.new_targets?.calories ?? 2000,
+      protein_g: checkin.new_targets?.protein_g ?? 150,
+      carbs_g: checkin.new_targets?.carbs_g ?? 200,
+      fat_g: checkin.new_targets?.fat_g ?? 60,
+    });
+    setIsEditing(false);
+  }, [checkin.new_targets]);
+
   // Manual mode: not shown
   if (checkin.coaching_mode === 'manual') return null;
 

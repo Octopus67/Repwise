@@ -42,16 +42,20 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose }: Dri
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (visible && muscleGroup) {
-      setLoading(true);
-      api
-        .get(`training/analytics/muscle-volume/${encodeURIComponent(muscleGroup)}/detail`, {
-          params: { week_start: weekStart },
-        })
-        .then((res) => setData(res.data))
-        .catch(() => setData(null))
-        .finally(() => setLoading(false));
+    if (!visible) {
+      // Reset stale data so reopening doesn't flash previous muscle's content
+      setData(null);
+      return;
     }
+    if (!muscleGroup) return;
+    setLoading(true);
+    api
+      .get(`training/analytics/muscle-volume/${encodeURIComponent(muscleGroup)}/detail`, {
+        params: { week_start: weekStart },
+      })
+      .then((res) => setData(res.data))
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
   }, [visible, muscleGroup, weekStart]);
 
   const title = muscleGroup

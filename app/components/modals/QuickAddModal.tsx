@@ -41,6 +41,7 @@ export function QuickAddModal({ visible, onClose, onSuccess, targetDate }: Quick
   };
 
   const doSubmit = async () => {
+    if (loading) return; // guard against double-submit from Alert callback
     setLoading(true);
     try {
       await api.post('nutrition/entries', {

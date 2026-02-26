@@ -86,7 +86,12 @@ export function PrepSundayFlow({ navigation }: any) {
       <Text style={styles.title}>Prep Sunday</Text>
 
       {loading && <ActivityIndicator size="large" color={colors.accent.primary} />}
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && (
+        <TouchableOpacity onPress={() => setError(null)} style={styles.errorRow}>
+          <Text style={styles.error}>{error}</Text>
+          <Text style={styles.errorDismiss}>✕</Text>
+        </TouchableOpacity>
+      )}
 
       {step === 'days' && (
         <View>
@@ -113,7 +118,11 @@ export function PrepSundayFlow({ navigation }: any) {
             <TouchableOpacity style={styles.backBtn} onPress={() => setStep('days')}>
               <Text style={styles.btnText}>Back</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.nextBtn} onPress={handleGenerate}>
+            <TouchableOpacity
+              style={[styles.nextBtn, loading && styles.btnDisabled]}
+              onPress={handleGenerate}
+              disabled={loading}
+            >
               <Text style={styles.btnText}>Auto-Fill</Text>
             </TouchableOpacity>
           </View>
@@ -140,7 +149,11 @@ export function PrepSundayFlow({ navigation }: any) {
             <TouchableOpacity style={styles.backBtn} onPress={() => setStep('slots')}>
               <Text style={styles.btnText}>Back</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.nextBtn} onPress={handleSave}>
+            <TouchableOpacity
+              style={[styles.nextBtn, loading && styles.btnDisabled]}
+              onPress={handleSave}
+              disabled={loading}
+            >
               <Text style={styles.btnText}>Save Plan</Text>
             </TouchableOpacity>
           </View>
@@ -181,5 +194,8 @@ const styles = StyleSheet.create({
   reviewMacros: { fontSize: typography.size.sm, color: colors.text.secondary },
   confirmView: { alignItems: 'center', paddingTop: spacing[8] },
   confirmText: { fontSize: typography.size.xl, color: colors.text.primary, marginBottom: spacing[4] },
-  error: { color: colors.semantic.negative, marginBottom: spacing[2], textAlign: 'center' },
+  error: { color: colors.semantic.negative, textAlign: 'center' },
+  errorRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing[2], backgroundColor: colors.bg.surface, padding: spacing[2], borderRadius: 6 },
+  errorDismiss: { color: colors.semantic.negative, fontWeight: typography.weight.bold, paddingLeft: spacing[2] },
+  btnDisabled: { opacity: 0.5 },
 });

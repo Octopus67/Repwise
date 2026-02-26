@@ -96,7 +96,7 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
     } else {
       setState('denied');
     }
-  }, [permission?.status]);
+  }, [permission?.status, requestPermission]);
 
   // ── Barcode scan handler ───────────────────────────────────────────────
   const handleBarCodeScanned = useCallback(

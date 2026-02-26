@@ -171,22 +171,27 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
   };
 
   const addSet = (exId: string) => {
-    setExercises((prev) =>
-      prev.map((e) => {
+    setExercises((prev) => {
+      const updated = prev.map((e) => {
         if (e.id !== exId) return e;
         const lastSet = e.sets[e.sets.length - 1];
         const newSet: SetState = lastSet
           ? { id: localId(), reps: lastSet.reps, weight: lastSet.weight, rpe: lastSet.rpe }
           : emptySet();
         return { ...e, sets: [...e.sets, newSet] };
-      }),
-    );
+      });
 
-    const exercise = exercises.find((e) => e.id === exId);
-    if (exercise?.name) {
-      setRestTimerExercise(exercise.name);
-      setRestTimerVisible(true);
-    }
+      // Trigger rest timer using up-to-date state (avoids stale closure on `exercises`)
+      const exercise = updated.find((e) => e.id === exId);
+      if (exercise?.name) {
+        setTimeout(() => {
+          setRestTimerExercise(exercise.name);
+          setRestTimerVisible(true);
+        }, 0);
+      }
+
+      return updated;
+    });
   };
 
   const removeSet = (exId: string, setId: string) => {

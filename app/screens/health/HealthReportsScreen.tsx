@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -38,10 +39,12 @@ export function HealthReportsScreen() {
   const [reports, setReports] = useState<HealthReport[]>([]);
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [correlations, setCorrelations] = useState<NutritionCorrelation[]>([]);
+  const [correlationsLoading, setCorrelationsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadReports();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadReports = async () => {
@@ -56,11 +59,14 @@ export function HealthReportsScreen() {
 
   const loadCorrelations = async (reportId: string) => {
     setSelectedReport(reportId);
+    setCorrelationsLoading(true);
     try {
       const { data } = await api.get(`health-reports/${reportId}/correlations`);
       setCorrelations(data.correlations ?? []);
     } catch {
       setCorrelations([]);
+    } finally {
+      setCorrelationsLoading(false);
     }
   };
 
@@ -139,7 +145,10 @@ export function HealthReportsScreen() {
         )}
 
         {/* Nutrition correlations */}
-        {selectedReport && correlations.length > 0 && (
+        {selectedReport && correlationsLoading && (
+          <ActivityIndicator size="small" color={colors.accent.primary} style={{ marginTop: spacing[4] }} />
+        )}
+        {selectedReport && !correlationsLoading && correlations.length > 0 && (
           <>
             <Text style={styles.sectionTitle}>Nutrition Correlations</Text>
             <Card>

@@ -75,6 +75,13 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
   }, []);
 
+  // Clear debounce timer on unmount to prevent state updates on unmounted component
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, []);
+
   // Fetch exercises on mount
   const fetchData = useCallback(async () => {
     setLoading(true);

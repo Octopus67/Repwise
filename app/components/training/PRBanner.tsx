@@ -43,6 +43,9 @@ export function PRBanner({ prs, visible, onDismiss }: PRBannerProps) {
     transform: [{ scale: scale.value }],
   }));
 
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+
   useEffect(() => {
     if (visible && prs.length > 0) {
       // Haptic feedback for PR detection
@@ -58,7 +61,7 @@ export function PRBanner({ prs, visible, onDismiss }: PRBannerProps) {
 
       // Auto-dismiss after 3s
       dismissTimer.current = setTimeout(() => {
-        onDismiss();
+        onDismissRef.current();
       }, 3000);
     } else {
       scale.value = 0;
@@ -70,7 +73,7 @@ export function PRBanner({ prs, visible, onDismiss }: PRBannerProps) {
         dismissTimer.current = null;
       }
     };
-  }, [visible, prs, reduceMotion]);
+  }, [visible, prs, reduceMotion, hapticNotification]);
 
   if (!visible || prs.length === 0) return null;
 

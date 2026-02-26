@@ -210,54 +210,103 @@ export function BodyStatsSection({ metrics, unitSystem }: BodyStatsSectionProps)
   }, [draftWeight, draftHeightCm, draftFeet, draftInches, draftBodyFat, draftActivity, unitSystem, store]);
 
   // Handle single-field save for non-edit-all mode
-  const handleFieldSave = useCallback(
-    (field: 'height' | 'weight' | 'bodyFat') =>
-      async (newValue: string) => {
-        const payload: Record<string, unknown> = {
-          activity_level: metrics?.activityLevel ?? 'moderate',
-        };
+  const handleHeightSave = useCallback(
+    async (newValue: string) => {
+      const num = parseFloat(newValue);
+      if (isNaN(num) || num <= 0) throw new Error('Invalid height');
+      const payload: Record<string, unknown> = {
+        activity_level: metrics?.activityLevel ?? 'moderate',
+        height_cm: Math.round(num),
+      };
+      if (metrics?.weightKg != null) payload.weight_kg = metrics.weightKg;
+      if (metrics?.bodyFatPct != null) payload.body_fat_pct = metrics.bodyFatPct;
+      const { data } = await api.post('users/recalculate', { metrics: payload });
+      if (data.metrics) {
+        store.setLatestMetrics({
+          id: data.metrics.id,
+          heightCm: data.metrics.height_cm,
+          weightKg: data.metrics.weight_kg,
+          bodyFatPct: data.metrics.body_fat_pct,
+          activityLevel: data.metrics.activity_level,
+          recordedAt: data.metrics.recorded_at,
+        });
+      }
+      if (data.targets) {
+        store.setAdaptiveTargets({
+          calories: data.targets.calories,
+          protein_g: data.targets.protein_g,
+          carbs_g: data.targets.carbs_g,
+          fat_g: data.targets.fat_g,
+        });
+      }
+    },
+    [metrics, store],
+  );
 
-        if (field === 'weight') {
-          const num = parseFloat(newValue);
-          if (isNaN(num) || num <= 0) throw new Error('Invalid weight');
-          payload.weight_kg = parseWeightInput(num, unitSystem);
-        } else if (field === 'height') {
-          const num = parseFloat(newValue);
-          if (isNaN(num) || num <= 0) throw new Error('Invalid height');
-          payload.height_cm = Math.round(num);
-        } else if (field === 'bodyFat') {
-          const num = parseFloat(newValue);
-          if (isNaN(num) || num < 0 || num > 100) throw new Error('Invalid body fat');
-          payload.body_fat_pct = num;
-        }
-
-        // Carry forward existing values
-        if (field !== 'weight' && metrics?.weightKg != null) payload.weight_kg = metrics.weightKg;
-        if (field !== 'height' && metrics?.heightCm != null) payload.height_cm = metrics.heightCm;
-        if (field !== 'bodyFat' && metrics?.bodyFatPct != null) payload.body_fat_pct = metrics.bodyFatPct;
-
-        const { data } = await api.post('users/recalculate', { metrics: payload });
-
-        if (data.metrics) {
-          store.setLatestMetrics({
-            id: data.metrics.id,
-            heightCm: data.metrics.height_cm,
-            weightKg: data.metrics.weight_kg,
-            bodyFatPct: data.metrics.body_fat_pct,
-            activityLevel: data.metrics.activity_level,
-            recordedAt: data.metrics.recorded_at,
-          });
-        }
-        if (data.targets) {
-          store.setAdaptiveTargets({
-            calories: data.targets.calories,
-            protein_g: data.targets.protein_g,
-            carbs_g: data.targets.carbs_g,
-            fat_g: data.targets.fat_g,
-          });
-        }
-      },
+  const handleWeightSave = useCallback(
+    async (newValue: string) => {
+      const num = parseFloat(newValue);
+      if (isNaN(num) || num <= 0) throw new Error('Invalid weight');
+      const payload: Record<string, unknown> = {
+        activity_level: metrics?.activityLevel ?? 'moderate',
+        weight_kg: parseWeightInput(num, unitSystem),
+      };
+      if (metrics?.heightCm != null) payload.height_cm = metrics.heightCm;
+      if (metrics?.bodyFatPct != null) payload.body_fat_pct = metrics.bodyFatPct;
+      const { data } = await api.post('users/recalculate', { metrics: payload });
+      if (data.metrics) {
+        store.setLatestMetrics({
+          id: data.metrics.id,
+          heightCm: data.metrics.height_cm,
+          weightKg: data.metrics.weight_kg,
+          bodyFatPct: data.metrics.body_fat_pct,
+          activityLevel: data.metrics.activity_level,
+          recordedAt: data.metrics.recorded_at,
+        });
+      }
+      if (data.targets) {
+        store.setAdaptiveTargets({
+          calories: data.targets.calories,
+          protein_g: data.targets.protein_g,
+          carbs_g: data.targets.carbs_g,
+          fat_g: data.targets.fat_g,
+        });
+      }
+    },
     [metrics, unitSystem, store],
+  );
+
+  const handleBodyFatSave = useCallback(
+    async (newValue: string) => {
+      const num = parseFloat(newValue);
+      if (isNaN(num) || num < 0 || num > 100) throw new Error('Invalid body fat');
+      const payload: Record<string, unknown> = {
+        activity_level: metrics?.activityLevel ?? 'moderate',
+        body_fat_pct: num,
+      };
+      if (metrics?.weightKg != null) payload.weight_kg = metrics.weightKg;
+      if (metrics?.heightCm != null) payload.height_cm = metrics.heightCm;
+      const { data } = await api.post('users/recalculate', { metrics: payload });
+      if (data.metrics) {
+        store.setLatestMetrics({
+          id: data.metrics.id,
+          heightCm: data.metrics.height_cm,
+          weightKg: data.metrics.weight_kg,
+          bodyFatPct: data.metrics.body_fat_pct,
+          activityLevel: data.metrics.activity_level,
+          recordedAt: data.metrics.recorded_at,
+        });
+      }
+      if (data.targets) {
+        store.setAdaptiveTargets({
+          calories: data.targets.calories,
+          protein_g: data.targets.protein_g,
+          carbs_g: data.targets.carbs_g,
+          fat_g: data.targets.fat_g,
+        });
+      }
+    },
+    [metrics, store],
   );
 
   // Handle activity level save
@@ -371,17 +420,17 @@ export function BodyStatsSection({ metrics, unitSystem }: BodyStatsSectionProps)
       <EditableField
         label="Height"
         value={heightDisplay}
-        onSave={handleFieldSave('height')}
+        onSave={handleHeightSave}
       />
       <EditableField
         label="Weight"
         value={weightDisplay}
-        onSave={handleFieldSave('weight')}
+        onSave={handleWeightSave}
       />
       <EditableField
         label="Body Fat"
         value={bodyFatDisplay}
-        onSave={handleFieldSave('bodyFat')}
+        onSave={handleBodyFatSave}
       />
       <EditableField
         label="Activity Level"

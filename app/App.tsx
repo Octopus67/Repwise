@@ -91,6 +91,7 @@ export default function App() {
     initTokenProvider(clearAuth);
     initAnalytics(process.env.EXPO_PUBLIC_POSTHOG_KEY);
     restoreSession();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const restoreSession = async () => {
