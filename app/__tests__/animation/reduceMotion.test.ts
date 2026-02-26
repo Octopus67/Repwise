@@ -3,6 +3,11 @@ import * as fc from 'fast-check';
 // Feature: premium-ui-implementation, Property 1: Reduce-motion hooks produce static output
 // Validates: Requirements 7.1, 7.2, 7.4
 
+// Ensure React Native globals are defined in the test environment
+if (typeof __DEV__ === 'undefined') {
+  (global as any).__DEV__ = false;
+}
+
 /**
  * Property-based tests for reduce-motion behavior across all animation hooks.
  *
@@ -314,14 +319,17 @@ describe('Property 2: Reduce-motion hooks produce animated output when motion en
           (reanimated.withTiming as jest.Mock).mockClear();
 
           const style = useStaggeredEntrance(index);
+          // Effects may fire synchronously in the mock (useAnimatedStyle calls factory immediately)
           flushEffects();
 
           // When motion is enabled, the hook returns the useAnimatedStyle result
           expect(style).toHaveProperty('opacity');
           expect(style).toHaveProperty('transform');
 
-          // withTiming should have been called for the entrance animation
-          expect(reanimated.withTiming).toHaveBeenCalled();
+          // withTiming should have been called at some point (either in useAnimatedStyle or useEffect)
+          // The mock calls the factory synchronously, so withTiming fires during style creation
+          const withTimingCallCount = (reanimated.withTiming as jest.Mock).mock.calls.length;
+          expect(withTimingCallCount).toBeGreaterThan(0);
         },
       ),
       { numRuns: 100 },

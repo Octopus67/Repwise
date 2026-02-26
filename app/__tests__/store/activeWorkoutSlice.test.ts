@@ -394,7 +394,11 @@ describe('activeWorkoutSlice', () => {
 
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      const futureDate = tomorrow.toISOString().split('T')[0];
+      // Use local date string to avoid UTC/local timezone mismatch
+      const y = tomorrow.getFullYear();
+      const m = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const d = String(tomorrow.getDate()).padStart(2, '0');
+      const futureDate = `${y}-${m}-${d}`;
 
       store.setSessionDate(futureDate);
 

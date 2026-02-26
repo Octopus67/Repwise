@@ -23,7 +23,9 @@ const activeSetArb = fc.record({
   rpe: fc.oneof(fc.constant(''), fc.integer({ min: 1, max: 10 }).map(String)),
   setType: fc.constantFrom('normal', 'warm-up', 'drop-set', 'amrap') as fc.Arbitrary<SetType>,
   completed: fc.boolean(),
-  completedAt: fc.oneof(fc.constant(null), fc.date({ min: new Date('2020-01-01'), max: new Date('2030-01-01') }).map(d => d.toISOString())),
+  completedAt: fc.oneof(fc.constant(null), fc.date({ min: new Date('2020-01-01'), max: new Date('2030-01-01') }).map(d => {
+    try { return d.toISOString(); } catch { return null; }
+  }).filter((v): v is string => v !== null)),
 });
 
 const activeExerciseArb = fc.record({

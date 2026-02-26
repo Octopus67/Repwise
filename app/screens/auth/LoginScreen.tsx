@@ -103,7 +103,7 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
       );
       onLoginSuccess();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Login failed');
+      setError(err?.response?.data?.message ?? err?.response?.data?.detail ?? 'Login failed. Please check your credentials.');
       setEmailError('');
     } finally {
       setLoading(false);
