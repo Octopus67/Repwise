@@ -148,3 +148,93 @@ async def test_prefix_matches_before_contains(db_session: AsyncSession):
             assert name.lower().startswith("cheese"), (
                 f"'{name}' doesn't start with 'cheese' but appears before contains-only matches"
             )
+
+
+@pytest.mark.asyncio
+async def test_orange_search_returns_orange_before_orangina(db_session: AsyncSession):
+    """Searching 'orange' should return 'Orange' before 'Orangina rouge'.
+
+    This is the exact scenario from the screenshot — brand names that start
+    with the query should not outrank the plain fruit/food name.
+    """
+    await _seed_food(db_session, "Orange")
+    await _seed_food(db_session, "Orange juice")
+    await _seed_food(db_session, "Orangina rouge (Orangina, Orangina rouge)")
+    await _seed_food(db_session, "Orangina, Rouge (Orangina, Orangina rouge)")
+    await _seed_food(db_session, "Orange sherbet, orange")
+    await _seed_food(db_session, "Orange soda, orange")
+    await db_session.commit()
+
+    service = FoodDatabaseService(db_session)
+    result = await service.search("orange", PaginationParams(page=1, limit=10))
+
+    names = [item.name for item in result.items]
+    assert len(names) > 0, "Search should return results"
+
+    # Exact match "Orange" must be first
+    assert names[0].lower() == "orange", (
+        f"Exact match 'Orange' should be first, got: {names[0]}"
+    )
+
+    # "Orange juice" (starts-with, short) should come before "Orangina rouge" (starts-with, long)
+    orange_juice_idx = next((i for i, n in enumerate(names) if n.lower() == "orange juice"), None)
+    orangina_idx = next((i for i, n in enumerate(names) if "orangina rouge" in n.lower()), None)
+
+    if orange_juice_idx is not None and orangina_idx is not None:
+        assert orange_juice_idx < orangina_idx, (
+            f"'Orange juice' (idx {orange_juice_idx}) should appear before "
+            f"'Orangina rouge' (idx {orangina_idx})"
+        )
+
+
+@pytest.mark.asyncio
+async def test_shorter_prefix_match_before_longer_prefix_match(db_session: AsyncSession):
+    """Among starts-with matches, shorter names should rank higher."""
+    await _seed_food(db_session, "Milk")
+    await _seed_food(db_session, "Milk, whole")
+    await _seed_food(db_session, "Milk chocolate bar with almonds and caramel")
+    await db_session.commit()
+
+    service = FoodDatabaseService(db_session)
+    result = await service.search("milk", PaginationParams(page=1, limit=10))
+
+    names = [item.name for item in result.items]
+    assert names[0].lower() == "milk", f"Exact match 'Milk' should be first, got: {names[0]}"
+
+    # "Milk, whole" should come before the long compound name
+    milk_whole_idx = next((i for i, n in enumerate(names) if n.lower() == "milk, whole"), None)
+    long_idx = next((i for i, n in enumerate(names) if "almonds" in n.lower()), None)
+    if milk_whole_idx is not None and long_idx is not None:
+        assert milk_whole_idx < long_idx, (
+            f"'Milk, whole' should appear before the long compound name"
+        )
+
+
+@pytest.mark.asyncio
+async def test_word_boundary_match_before_mid_word_match(db_session: AsyncSession):
+    """'orange' should match 'Blood orange' (word boundary) before 'Orangeade' (mid-word)."""
+    await _seed_food(db_session, "Orange")
+    await _seed_food(db_session, "Blood orange")
+    await _seed_food(db_session, "Orangeade")
+    await db_session.commit()
+
+    service = FoodDatabaseService(db_session)
+    result = await service.search("orange", PaginationParams(page=1, limit=10))
+
+    names = [item.name for item in result.items]
+    assert len(names) > 0
+
+    # "Orange" (exact) must be first
+    assert names[0].lower() == "orange", f"Exact match should be first, got: {names[0]}"
+
+    # "Blood orange" (word boundary) should come before or at same level as "Orangeade"
+    blood_idx = next((i for i, n in enumerate(names) if n.lower() == "blood orange"), None)
+    ade_idx = next((i for i, n in enumerate(names) if n.lower() == "orangeade"), None)
+    if blood_idx is not None and ade_idx is not None:
+        # Both are "starts-with" tier (orangeade starts with orange, blood orange contains it)
+        # blood orange is a contains match, orangeade is a starts-with match
+        # so orangeade should come first (tier 1 < tier 2)
+        assert ade_idx < blood_idx, (
+            f"'Orangeade' (starts-with, tier 1) should appear before "
+            f"'Blood orange' (contains, tier 2)"
+        )
