@@ -31,8 +31,6 @@ export function MealPlanScreen({ navigation }: any) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [saving, setSaving] = useState(false);
-
   const handleGenerate = useCallback(async () => {
     setLoading(true);
     setError(null);
