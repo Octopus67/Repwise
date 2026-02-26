@@ -207,6 +207,19 @@ class FoodDatabaseService:
         if user_prefs:
             items = self._personalize_results(items, user_prefs)
 
+        # Re-rank: exact match → starts-with → contains, then by name length
+        q_lower = query.lower()
+        def _rank(item: FoodItem) -> tuple:
+            n = item.name.lower()
+            if n == q_lower:
+                tier = 0
+            elif n.startswith(q_lower):
+                tier = 1
+            else:
+                tier = 2
+            return (tier, len(item.name), item.name)
+        items.sort(key=_rank)
+
         return PaginatedResult(
             items=items,
             total_count=-1,  # Skip count for FTS — frontend doesn't need it for typeahead
@@ -243,7 +256,8 @@ class FoodDatabaseService:
             relevance = case(
                 (func.lower(FoodItem.name) == func.lower(query), 0),
                 (func.lower(FoodItem.name).like(func.lower(f"{query}%")), 1),
-                else_=2,
+                (func.lower(FoodItem.name).like(func.lower(f"% {query}%")), 2),
+                else_=3,
             )
             source_priority = case(
                 (FoodItem.source == "usda", 0),
@@ -253,7 +267,7 @@ class FoodDatabaseService:
                 else_=4,
             )
             items_stmt = (
-                base.order_by(relevance, source_priority, func.length(FoodItem.name), FoodItem.name)
+                base.order_by(relevance, func.length(FoodItem.name), source_priority, FoodItem.name)
                 .offset(pagination.offset)
                 .limit(pagination.limit)
             )
