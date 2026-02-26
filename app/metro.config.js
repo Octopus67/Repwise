@@ -29,6 +29,13 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
       type: 'sourceFile',
     };
   }
+  // @sentry/react-native uses native modules unavailable on web — use a stub
+  if (moduleName === '@sentry/react-native' && platform === 'web') {
+    return {
+      filePath: path.resolve(__dirname, 'mocks/sentry-react-native.js'),
+      type: 'sourceFile',
+    };
+  }
   if (defaultResolver) {
     return defaultResolver(context, moduleName, platform);
   }
