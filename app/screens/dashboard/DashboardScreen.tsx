@@ -153,23 +153,6 @@ export function DashboardScreen({ navigation }: any) {
   const summaryAnim = useStaggeredEntrance(7, 60);
   const featuredAnim = useStaggeredEntrance(8, 60);
 
-  useEffect(() => {
-    loadDashboardData(selectedDate);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Debounced date switching
-  const handleDateSelect = useCallback((date: string) => {
-    setSelectedDate(date);
-    setDateLoading(true);
-    if (dateDebounceRef.current) {
-      clearTimeout(dateDebounceRef.current);
-    }
-    dateDebounceRef.current = setTimeout(() => {
-      loadDashboardData(date);
-    }, 300);
-  }, [loadDashboardData]);
-
   const loadDashboardData = useCallback(async (dateToLoad?: string) => {
     try {
       const targetDate = dateToLoad ?? selectedDate;
@@ -350,6 +333,23 @@ export function DashboardScreen({ navigation }: any) {
       setDayClassLoading(false);
     }
   }, [selectedDate]);
+
+  // Debounced date switching
+  const handleDateSelect = useCallback((date: string) => {
+    setSelectedDate(date);
+    setDateLoading(true);
+    if (dateDebounceRef.current) {
+      clearTimeout(dateDebounceRef.current);
+    }
+    dateDebounceRef.current = setTimeout(() => {
+      loadDashboardData(date);
+    }, 300);
+  }, [loadDashboardData]);
+
+  useEffect(() => {
+    loadDashboardData(selectedDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleRefresh = useCallback(() => {
     isInitialLoad.current = false;
