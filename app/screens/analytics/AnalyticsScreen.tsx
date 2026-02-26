@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing, typography, letterSpacing } from '../../theme/tokens';
@@ -99,25 +99,25 @@ export function AnalyticsScreen() {
 
   useEffect(() => {
     loadAnalytics();
-  }, []);
+  }, [loadAnalytics]);
 
   useEffect(() => {
     loadVolumeTrend();
-  }, [timeRange]);
+  }, [loadVolumeTrend]);
 
   useEffect(() => {
     loadStrengthProgression();
-  }, [selectedExercise, timeRange]);
+  }, [loadStrengthProgression]);
 
   useEffect(() => {
     loadE1RMTrend();
-  }, [selectedE1RMExercise, timeRange]);
+  }, [loadE1RMTrend]);
 
   useEffect(() => {
     loadStrengthStandards();
-  }, []);
+  }, [loadStrengthStandards]);
 
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     setError(null);
     try {
       const end = new Date().toISOString().split('T')[0];
@@ -176,9 +176,9 @@ export function AnalyticsScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [premium]);
 
-  const loadVolumeTrend = async () => {
+  const loadVolumeTrend = useCallback(async () => {
     try {
       const end = new Date().toISOString().split('T')[0];
       const days = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }[timeRange];
@@ -189,9 +189,9 @@ export function AnalyticsScreen() {
       const items = data.items ?? data ?? [];
       setVolumeTrend(items.map((p: any) => ({ date: p.date, value: p.total_volume })));
     } catch { /* best-effort */ }
-  };
+  }, [timeRange]);
 
-  const loadStrengthProgression = async () => {
+  const loadStrengthProgression = useCallback(async () => {
     try {
       const end = new Date().toISOString().split('T')[0];
       const days = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }[timeRange];
@@ -202,9 +202,9 @@ export function AnalyticsScreen() {
       const items = data.items ?? data ?? [];
       setStrengthData(items.map((p: any) => ({ date: p.date, value: p.best_weight_kg })));
     } catch { /* best-effort */ }
-  };
+  }, [selectedExercise, timeRange]);
 
-  const loadE1RMTrend = async () => {
+  const loadE1RMTrend = useCallback(async () => {
     try {
       const end = new Date().toISOString().split('T')[0];
       const days = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }[timeRange];
@@ -215,14 +215,14 @@ export function AnalyticsScreen() {
       const items = Array.isArray(data) ? data : data.items ?? [];
       setE1rmTrend(items.map((p: any) => ({ date: p.date, value: p.e1rm_kg })));
     } catch { /* best-effort */ }
-  };
+  }, [selectedE1RMExercise, timeRange]);
 
-  const loadStrengthStandards = async () => {
+  const loadStrengthStandards = useCallback(async () => {
     try {
       const { data } = await api.get('training/analytics/strength-standards');
       setStrengthStandards(data);
     } catch { /* best-effort */ }
-  };
+  }, []);
 
   const filteredWeight = filterByTimeRange(weightTrend, timeRange);
   const filteredCalories = filterByTimeRange(calorieTrend, timeRange);

@@ -87,7 +87,7 @@ export function BlockTemplateModal({ visible, onClose, onApplied }: BlockTemplat
 
         {error && <Text style={styles.error}>{error}</Text>}
 
-        <Button title={applying ? 'Applying...' : 'Apply Template'} onPress={handleApply} variant="primary" />
+        <Button title="Apply Template" onPress={handleApply} variant="primary" disabled={applying} loading={applying} />
       </ScrollView>
     </ModalContainer>
   );

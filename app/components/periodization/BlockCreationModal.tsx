@@ -142,7 +142,7 @@ export function BlockCreationModal({ visible, onClose, onSaved, block }: BlockCr
 
         {error && <Text style={styles.error}>{error}</Text>}
 
-        <Button title={saving ? 'Saving...' : isEdit ? 'Update' : 'Create'} onPress={handleSave} variant="primary" />
+        <Button title={isEdit ? 'Update' : 'Create'} onPress={handleSave} variant="primary" disabled={saving} loading={saving} />
       </ScrollView>
     </ModalContainer>
   );

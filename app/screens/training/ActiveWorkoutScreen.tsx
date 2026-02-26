@@ -251,6 +251,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
         }
       }
     })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Fetch previous performance when exercises change ─────────────────────
@@ -285,6 +286,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
         // best-effort
       }
     })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.exercises.length]);
 
   // ── Back navigation interception ─────────────────────────────────────────
@@ -325,6 +327,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
         // best-effort
       }
     })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.exercises.length]);
 
   // ── Compute muscle groups for current exercises ──────────────────────────

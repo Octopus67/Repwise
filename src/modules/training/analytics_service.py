@@ -161,13 +161,17 @@ class TrainingAnalyticsService:
         start_date: date,
         end_date: date,
     ) -> list[E1RMHistoryPoint]:
-        """Best e1RM per session for exercise in date range. Sorted by date ascending."""
+        """Best e1RM per calendar date for exercise in date range. Sorted by date ascending.
+
+        When multiple sessions exist on the same date, the highest e1RM across
+        all sessions on that date is used (one point per date).
+        """
         rows = await self._fetch_sessions(user_id, start_date, end_date)
         target = exercise_name.lower().strip()
 
-        points: list[E1RMHistoryPoint] = []
+        # Group by date — take max e1RM across all sessions on the same date
+        best_per_date: dict[date, float] = {}
         for session_date, exercises in rows:
-            # Collect all sets for the target exercise across all exercise entries
             all_sets: list[dict] = []
             for ex in exercises:
                 if ex.get("exercise_name", "").lower().strip() == target:
@@ -178,15 +182,20 @@ class TrainingAnalyticsService:
 
             best = best_e1rm_for_exercise(all_sets)
             if best is not None:
-                points.append(
-                    E1RMHistoryPoint(
-                        date=session_date,
-                        exercise_name=exercise_name,
-                        e1rm_kg=round(best.primary, 2),
-                        formula="epley",
-                        low_confidence=best.low_confidence,
-                    )
-                )
+                current = best_per_date.get(session_date)
+                if current is None or best.primary > current:
+                    best_per_date[session_date] = best.primary
+
+        points = [
+            E1RMHistoryPoint(
+                date=d,
+                exercise_name=exercise_name,
+                e1rm_kg=round(e1rm, 2),
+                formula="epley",
+                low_confidence=False,
+            )
+            for d, e1rm in best_per_date.items()
+        ]
 
         return sorted(points, key=lambda p: p.date)
 

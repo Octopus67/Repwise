@@ -60,7 +60,6 @@ export function WeeklyReportScreen({ navigation }: any) {
   const [week, setWeek] = useState(now.week);
   const [report, setReport] = useState<WeeklyReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSwitching, setIsSwitching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const reportCardRef = useRef<any>(null);
 
@@ -144,10 +143,6 @@ export function WeeklyReportScreen({ navigation }: any) {
             <Text style={[styles.arrowText, isCurrentWeek && styles.arrowDisabled]}>›</Text>
           </TouchableOpacity>
         </View>
-
-        {isSwitching && (
-          <ActivityIndicator size="small" color={colors.accent.primary} style={{ marginBottom: spacing[3] }} />
-        )}
 
         {isLoading ? (
           <View style={styles.skeletons}>

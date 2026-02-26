@@ -101,9 +101,8 @@ export function ProfileScreen() {
           });
         }
       }
-      // Check if all requests failed
-      const allFailed = [profileRes, metricsRes, goalsRes, targetsRes].every(r => r.status === 'rejected');
-      if (allFailed) {
+      // Show error if the critical profile request failed
+      if (profileRes.status === 'rejected') {
         setError('Unable to load profile data. Check your connection.');
       }
     } catch {

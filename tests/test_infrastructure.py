@@ -52,7 +52,7 @@ class TestEnums:
         assert set(UserRole) == {UserRole.USER, UserRole.PREMIUM, UserRole.ADMIN}
 
     def test_goal_types(self):
-        assert set(GoalType) == {GoalType.CUTTING, GoalType.MAINTAINING, GoalType.BULKING}
+        assert set(GoalType) == {GoalType.CUTTING, GoalType.MAINTAINING, GoalType.BULKING, GoalType.RECOMPOSITION}
 
     def test_activity_levels(self):
         assert len(ActivityLevel) == 5

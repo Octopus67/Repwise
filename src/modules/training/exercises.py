@@ -2219,7 +2219,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'band-assisted-pull-up',
         "name": 'Band Assisted Pull-Up',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['abs', 'forearms'],
         "equipment": 'bodyweight',
         "category": 'compound',
@@ -2569,7 +2569,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'chin-up',
         "name": 'Chin-Up',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps', 'forearms'],
         "equipment": 'bodyweight',
         "category": 'compound',
@@ -2588,7 +2588,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'chin-ups',
         "name": 'Chin-Ups',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps', 'forearms'],
         "equipment": 'bodyweight',
         "category": 'compound',
@@ -2607,7 +2607,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'close-grip-front-lat-pulldown',
         "name": 'Close-Grip Front Lat Pulldown',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps', 'shoulders'],
         "equipment": 'cable',
         "category": 'compound',
@@ -2627,7 +2627,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'close-grip-lat-pulldown',
         "name": 'Close-Grip Lat Pulldown',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps', 'shoulders'],
         "equipment": 'cable',
         "category": 'compound',
@@ -2647,7 +2647,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'commando-pull-up',
         "name": 'Commando Pull-Up',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps'],
         "equipment": 'bodyweight',
         "category": 'compound',
@@ -2843,7 +2843,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'full-range-of-motion-lat-pulldown',
         "name": 'Full Range-Of-Motion Lat Pulldown',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps', 'shoulders'],
         "equipment": 'cable',
         "category": 'compound',
@@ -3134,7 +3134,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'lat-pulldown',
         "name": 'Lat Pulldown',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps'],
         "equipment": 'cable',
         "category": 'compound',
@@ -3270,7 +3270,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'machine-lat-pulldown',
         "name": 'Machine Lat Pulldown',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps'],
         "equipment": 'machine',
         "category": 'compound',
@@ -3393,7 +3393,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'neutral-grip-pull-up',
         "name": 'Neutral Grip Pull-Up',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps'],
         "equipment": 'bodyweight',
         "category": 'compound',
@@ -3422,7 +3422,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'one-arm-chin-up',
         "name": 'One Arm Chin-Up',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps', 'forearms'],
         "equipment": 'bodyweight',
         "category": 'compound',
@@ -3443,7 +3443,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'one-arm-lat-pulldown',
         "name": 'One Arm Lat Pulldown',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps'],
         "equipment": 'cable',
         "category": 'compound',
@@ -3596,7 +3596,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'pull-ups',
         "name": 'Pull-Ups',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps'],
         "equipment": 'bodyweight',
         "category": 'compound',
@@ -3615,7 +3615,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'pullups',
         "name": 'Pullups',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps'],
         "equipment": 'bodyweight',
         "category": 'compound',
@@ -3778,7 +3778,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'reverse-grip-lat-pulldown',
         "name": 'Reverse Grip Lat Pulldown',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps'],
         "equipment": 'cable',
         "category": 'compound',
@@ -3814,7 +3814,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'rocky-pull-ups-pulldowns',
         "name": 'Rocky Pull-Ups/Pulldowns',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps', 'shoulders'],
         "equipment": 'bodyweight',
         "category": 'compound',
@@ -3866,7 +3866,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'rope-straight-arm-pulldown',
         "name": 'Rope Straight-Arm Pulldown',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": [],
         "equipment": 'cable',
         "category": 'isolation',
@@ -4028,7 +4028,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'single-arm-lat-pulldown',
         "name": 'Single Arm Lat Pulldown',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps'],
         "equipment": 'cable',
         "category": 'compound',
@@ -4211,7 +4211,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'straight-arm-pulldown',
         "name": 'Straight-Arm Pulldown',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": [],
         "equipment": 'cable',
         "category": 'isolation',
@@ -4349,7 +4349,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'underhand-cable-pulldowns',
         "name": 'Underhand Cable Pulldowns',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps', 'shoulders'],
         "equipment": 'cable',
         "category": 'compound',
@@ -4384,7 +4384,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'v-bar-lat-pulldown',
         "name": 'V-Bar Lat Pulldown',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps'],
         "equipment": 'cable',
         "category": 'compound',
@@ -4404,7 +4404,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'v-bar-pulldown',
         "name": 'V-Bar Pulldown',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps', 'shoulders'],
         "equipment": 'cable',
         "category": 'compound',
@@ -4424,7 +4424,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'v-bar-pullup',
         "name": 'V-Bar Pullup',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps', 'shoulders'],
         "equipment": 'bodyweight',
         "category": 'compound',
@@ -4461,7 +4461,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'weighted-pull-ups',
         "name": 'Weighted Pull Ups',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps'],
         "equipment": 'bodyweight',
         "category": 'compound',
@@ -4479,7 +4479,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'wide-grip-pull-up',
         "name": 'Wide Grip Pull-Up',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps'],
         "equipment": 'bodyweight',
         "category": 'compound',
@@ -4498,7 +4498,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'wide-grip-lat-pulldown',
         "name": 'Wide-Grip Lat Pulldown',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps', 'shoulders'],
         "equipment": 'cable',
         "category": 'compound',
@@ -4518,7 +4518,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'wide-grip-pulldown-behind-the-neck',
         "name": 'Wide-Grip Pulldown Behind The Neck',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps', 'shoulders'],
         "equipment": 'cable',
         "category": 'compound',
@@ -4538,7 +4538,7 @@ EXERCISES: list[dict] = [
     {
         "id": 'wide-grip-rear-pull-up',
         "name": 'Wide-Grip Rear Pull-Up',
-        "muscle_group": 'back',
+        "muscle_group": 'lats',
         "secondary_muscles": ['biceps', 'shoulders'],
         "equipment": 'bodyweight',
         "category": 'compound',

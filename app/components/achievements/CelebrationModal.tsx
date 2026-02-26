@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, Pressable } from 'react-native';
 import Animated, {
   FadeIn,
@@ -28,6 +28,13 @@ export function CelebrationModal({
   onDismiss,
 }: CelebrationModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Reset index when modal opens so it always starts from the first achievement
+  useEffect(() => {
+    if (visible) {
+      setCurrentIndex(0);
+    }
+  }, [visible]);
 
   if (!visible || achievements.length === 0) return null;
 

@@ -123,7 +123,7 @@ export function RestTimerV2({
         : colors.semantic.negative;
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleSkip}>
       <View style={styles.overlay}>
         <View style={styles.container}>
           <Text style={styles.label}>Rest Timer</Text>

@@ -48,6 +48,15 @@ export function RecoveryCheckinModal({ visible, onClose, onSuccess }: Props) {
   const [sleepQuality, setSleepQuality] = useState(3);
   const [submitting, setSubmitting] = useState(false);
 
+  // Reset state when modal opens so stale values don't persist on reopen
+  React.useEffect(() => {
+    if (visible) {
+      setSoreness(1);
+      setStress(1);
+      setSleepQuality(3);
+    }
+  }, [visible]);
+
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
@@ -74,14 +83,19 @@ export function RecoveryCheckinModal({ visible, onClose, onSuccess }: Props) {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
-          <Text style={styles.title}>Recovery Check-in</Text>
+          <View style={styles.header}>
+            <Text style={styles.title}>Recovery Check-in</Text>
+            <TouchableOpacity onPress={onClose} hitSlop={8} style={styles.closeBtn}>
+              <Text style={styles.closeBtnText}>✕</Text>
+            </TouchableOpacity>
+          </View>
           <Stepper label="Soreness" value={soreness} onChange={setSoreness} labels={LABELS.soreness} />
           <Stepper label="Stress" value={stress} onChange={setStress} labels={LABELS.stress} />
           <Stepper label="Sleep Quality" value={sleepQuality} onChange={setSleepQuality} labels={LABELS.sleep_quality} />
-          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={submitting}>
+          <TouchableOpacity style={[styles.submitBtn, submitting && styles.submitBtnDisabled]} onPress={handleSubmit} disabled={submitting}>
             {submitting ? (
               <ActivityIndicator color={colors.text.inverse} />
             ) : (
@@ -116,6 +130,19 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
     textAlign: 'center',
     marginBottom: spacing[5],
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing[5],
+  },
+  closeBtn: {
+    padding: spacing[2],
+  },
+  closeBtnText: {
+    color: colors.text.secondary,
+    fontSize: typography.size.md,
   },
   stepperContainer: {
     marginBottom: spacing[4],
@@ -165,6 +192,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: spacing[4],
+  },
+  submitBtnDisabled: {
+    opacity: 0.6,
   },
   submitText: {
     color: colors.text.inverse,

@@ -285,7 +285,7 @@ export function LearnScreen() {
     <SafeAreaView style={styles.safe} edges={['top']} testID="learn-screen">
       <Text style={styles.title}>Learn</Text>
 
-      {error && <ErrorBanner message={error} onRetry={loadArticles} />}
+      {error && <ErrorBanner message={error} onRetry={loadArticles} onDismiss={() => setError(null)} />}
 
       <FlatList
         testID="learn-article-list"

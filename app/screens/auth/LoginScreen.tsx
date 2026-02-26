@@ -104,6 +104,7 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
       onLoginSuccess();
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Login failed');
+      setEmailError('');
     } finally {
       setLoading(false);
     }

@@ -72,14 +72,17 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
   };
 
   const toggleFavorite = async () => {
+    const wasActive = isFavorite;
+    setIsFavorite(!isFavorite); // optimistic
     try {
-      if (isFavorite) {
+      if (wasActive) {
         await api.delete(`content/articles/${articleId}/favorite`);
       } else {
         await api.post(`content/articles/${articleId}/favorite`);
       }
-      setIsFavorite(!isFavorite);
-    } catch { /* ignore */ }
+    } catch {
+      setIsFavorite(wasActive); // revert on error
+    }
   };
 
   /** Split markdown at <!-- chart:ID --> markers into alternating text/chart segments */

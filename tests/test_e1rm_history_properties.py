@@ -89,8 +89,9 @@ class TestProperty4E1RMHistoryOrdering:
 
         target_lower = target.lower().strip()
 
-        # Manually compute expected: best Epley per session containing target
-        expected: list[tuple[date, float]] = []
+        # Manually compute expected: best Epley per DATE containing target
+        # (multiple sessions on same date → take max e1RM for that date)
+        best_per_date: dict[date, float] = {}
         for session_date, exercises in sessions:
             if not (start <= session_date <= end):
                 continue
@@ -100,13 +101,15 @@ class TestProperty4E1RMHistoryOrdering:
                     all_sets.extend(ex.sets)
             if not all_sets:
                 continue
-            max_epley = max(
-                compute_e1rm(s.weight_kg, s.reps).epley
-                for s in all_sets
-                if s.weight_kg > 0 and s.reps > 0
-            ) if any(s.weight_kg > 0 and s.reps > 0 for s in all_sets) else None
-            if max_epley is not None:
-                expected.append((session_date, max_epley))
+            valid_sets = [s for s in all_sets if s.weight_kg > 0 and s.reps > 0]
+            if not valid_sets:
+                continue
+            max_epley = max(compute_e1rm(s.weight_kg, s.reps).epley for s in valid_sets)
+            current = best_per_date.get(session_date)
+            if current is None or max_epley > current:
+                best_per_date[session_date] = max_epley
+
+        expected = list(best_per_date.items())
 
         assert len(result) == len(expected)
 

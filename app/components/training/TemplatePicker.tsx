@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
   ActionSheetIOS,
+  Alert,
   Platform,
 } from 'react-native';
 import api from '../../services/api';
@@ -64,18 +65,28 @@ export function TemplatePicker({
     (template: WorkoutTemplateResponse) => {
       if (template.is_system) return;
 
-      const options = ['Edit', 'Delete', 'Cancel'];
       if (Platform.OS === 'ios') {
+        const options = ['Edit', 'Delete', 'Cancel'];
         ActionSheetIOS.showActionSheetWithOptions(
           { options, destructiveButtonIndex: 1, cancelButtonIndex: 2 },
           (index) => {
             if (index === 0) {
-              // Edit — delegate to parent via template selection with edit intent
               onSelectTemplate(template.id, false);
             } else if (index === 1) {
               deleteTemplate(template.id);
             }
           },
+        );
+      } else {
+        // Android: use Alert
+        Alert.alert(
+          template.name,
+          'What would you like to do?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Edit', onPress: () => onSelectTemplate(template.id, false) },
+            { text: 'Delete', style: 'destructive', onPress: () => deleteTemplate(template.id) },
+          ],
         );
       }
     },
@@ -87,7 +98,12 @@ export function TemplatePicker({
       await api.delete(`training/user-templates/${id}`);
       setUserTemplates((prev) => prev.filter((t) => t.id !== id));
     } catch {
-      // Silently fail — user can retry
+      if (Platform.OS === 'ios') {
+        ActionSheetIOS.showActionSheetWithOptions(
+          { options: ['OK'], cancelButtonIndex: 0, title: 'Failed to delete template. Please try again.' },
+          () => {},
+        );
+      }
     }
   }
 

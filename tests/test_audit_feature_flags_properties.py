@@ -43,7 +43,7 @@ _meal_names = st.text(
     max_size=50,
 ).filter(lambda s: s.strip() != "")
 
-_entry_dates = st.dates(min_value=date(2020, 1, 1), max_value=date(2030, 12, 31))
+_entry_dates = st.dates(min_value=date(2020, 1, 1), max_value=date.today())
 
 _nutrition_entry_create = st.builds(
     NutritionEntryCreate,

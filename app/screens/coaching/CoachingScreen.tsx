@@ -112,7 +112,7 @@ export function CoachingScreen() {
           <PremiumBadge size="md" />
         </View>
 
-        {error && <ErrorBanner message={error} onRetry={loadData} />}
+        {error && <ErrorBanner message={error} onRetry={loadData} onDismiss={() => setError(null)} />}
 
         {/* Request form */}
         <Text style={styles.sectionTitle}>New Request</Text>

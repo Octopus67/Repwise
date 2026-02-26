@@ -349,7 +349,7 @@ export function LogsScreen() {
             <TouchableOpacity
               style={styles.browseLink}
               onPress={() => {
-                // Browse all templates — for now, same as "From Template" in StartWorkoutCard
+                navigation.push('ActiveWorkout', { mode: 'template' });
               }}
               activeOpacity={0.7}
             >

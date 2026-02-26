@@ -35,7 +35,7 @@ export const ConfirmationSheet = ({
       : `${Math.round(summary.totalVolumeKg)} kg`;
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onCancel}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           <Text style={styles.header}>Workout Summary</Text>

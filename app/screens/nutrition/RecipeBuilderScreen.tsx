@@ -340,7 +340,7 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
             </Text>
           </View>
 
-          {/* Search bar */}
+          {/* Search bar + quantity */}
           <View style={styles.searchRow}>
             <TextInput
               style={[styles.input, { flex: 1 }]}
@@ -349,6 +349,17 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
               placeholder="Search foods..."
               placeholderTextColor={colors.text.muted}
             />
+            <View style={styles.qtyInputRow}>
+              <TextInput
+                style={styles.qtyInput}
+                value={quantityInput}
+                onChangeText={setQuantityInput}
+                keyboardType="numeric"
+                placeholder="100"
+                placeholderTextColor={colors.text.muted}
+              />
+              <Text style={styles.qtyUnit}>g</Text>
+            </View>
           </View>
 
           {/* Search results */}
@@ -372,17 +383,6 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
                       <Text style={styles.foodMacros}>
                         {Math.round(item.calories)} kcal · {item.serving_size}{item.serving_unit}
                       </Text>
-                    </View>
-                    <View style={styles.qtyInputRow}>
-                      <TextInput
-                        style={styles.qtyInput}
-                        value={quantityInput}
-                        onChangeText={setQuantityInput}
-                        keyboardType="numeric"
-                        placeholder="100"
-                        placeholderTextColor={colors.text.muted}
-                      />
-                      <Text style={styles.qtyUnit}>g</Text>
                     </View>
                     <Ionicons name="add-circle" size={24} color={colors.accent.primary} />
                   </TouchableOpacity>

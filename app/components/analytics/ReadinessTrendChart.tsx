@@ -22,29 +22,25 @@ export function ReadinessTrendChart({ timeRange }: Props) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadHistory();
-  }, [timeRange]);
+    setIsLoading(true);
+    const days = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }[timeRange] ?? 30;
+    const end = new Date().toISOString().split('T')[0];
+    const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
 
-  const loadHistory = async () => {
-    try {
-      const days = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }[timeRange] ?? 30;
-      const end = new Date().toISOString().split('T')[0];
-      const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
-      const { data: res } = await api.get('readiness/history', {
-        params: { start_date: start, end_date: end },
-      });
-      const items = (res.items ?? [])
-        .filter((i: any) => i.score !== null)
-        .map((i: any) => ({ date: i.score_date, value: i.score }))
-        .reverse();
-      setData(items);
-    } catch (err) {
-      console.warn('[ReadinessTrendChart] Failed to load history:', err);
-      setData([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    api.get('readiness/history', { params: { start_date: start, end_date: end } })
+      .then(({ data: res }) => {
+        const items = (res.items ?? [])
+          .filter((i: any) => i.score !== null)
+          .map((i: any) => ({ date: i.score_date, value: i.score }))
+          .reverse();
+        setData(items);
+      })
+      .catch((err) => {
+        console.warn('[ReadinessTrendChart] Failed to load history:', err);
+        setData([]);
+      })
+      .finally(() => setIsLoading(false));
+  }, [timeRange]);
 
   if (isLoading) return null;
 

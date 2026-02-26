@@ -95,7 +95,7 @@ export function RestTimerOverlay({
   if (!visible) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
       <View style={styles.overlay}>
         <View style={styles.container}>
           <Text style={styles.label}>Rest Timer</Text>

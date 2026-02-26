@@ -131,7 +131,7 @@ export function RestTimer({
   if (!visible) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleSkip}>
       <View style={styles.overlay}>
         <View style={styles.container}>
           {/* Header with gear icon */}

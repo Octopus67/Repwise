@@ -209,11 +209,14 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
       </View>
 
       {/* 2. Timezone */}
-      <EditableField
-        label="Timezone"
-        value={timezoneDisplay}
-        onSave={handleTimezoneSave}
-      />
+      <View style={styles.row}>
+        <EditableField
+          label="Timezone"
+          value={timezoneDisplay}
+          onSave={handleTimezoneSave}
+        />
+        {savingTimezone && <ActivityIndicator color={colors.accent.primary} size="small" style={{ position: 'absolute', right: 0 }} />}
+      </View>
 
       {/* 3. Region */}
       <EditableField
