@@ -54,6 +54,14 @@ async function ensureOnDashboard(page: Page) {
       await page.locator('[data-testid="register-email-input"]').fill(email);
       await page.locator('[data-testid="register-password-input"]').fill(password);
       await page.locator('[data-testid="register-confirm-password-input"]').fill(password);
+
+      // Accept Terms of Service checkbox
+      const tosCheckbox = page.locator('[data-testid="register-tos-checkbox"]');
+      if (await tosCheckbox.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await tosCheckbox.click();
+        await page.waitForTimeout(500);
+      }
+
       await page.locator('[data-testid="register-submit-button"]').click();
       await page.waitForTimeout(5000);
     }

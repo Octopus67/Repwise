@@ -62,6 +62,11 @@ test.describe('Authentication', () => {
     await page.locator('[data-testid="register-email-input"]').fill(uniqueEmail);
     await page.locator('[data-testid="register-password-input"]').fill(password);
     await page.locator('[data-testid="register-confirm-password-input"]').fill(password);
+
+    // Accept Terms of Service
+    await page.locator('[data-testid="register-tos-checkbox"]').click();
+    await page.waitForTimeout(500);
+
     await page.locator('[data-testid="register-submit-button"]').click();
     await page.waitForTimeout(3000);
 
@@ -86,6 +91,11 @@ test.describe('Authentication', () => {
     await page.locator('[data-testid="register-email-input"]').fill(uniqueEmail);
     await page.locator('[data-testid="register-password-input"]').fill(password);
     await page.locator('[data-testid="register-confirm-password-input"]').fill(password);
+
+    // Accept Terms of Service
+    await page.locator('[data-testid="register-tos-checkbox"]').click();
+    await page.waitForTimeout(500);
+
     await page.locator('[data-testid="register-submit-button"]').click();
     await page.waitForTimeout(3000);
 

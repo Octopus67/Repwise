@@ -24,6 +24,14 @@ export async function registerUser(page: Page) {
   await page.locator('[data-testid="register-email-input"]').fill(TEST_USER.email);
   await page.locator('[data-testid="register-password-input"]').fill(TEST_USER.password);
   await page.locator('[data-testid="register-confirm-password-input"]').fill(TEST_USER.password);
+
+  // Accept Terms of Service checkbox (required before register button is enabled)
+  const tosCheckbox = page.locator('[data-testid="register-tos-checkbox"]');
+  if (await tosCheckbox.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await tosCheckbox.click();
+    await page.waitForTimeout(500);
+  }
+
   await page.locator('[data-testid="register-submit-button"]').click();
   await page.waitForTimeout(3000);
 }
