@@ -1,1 +1,1 @@
-"""Content and educational module for HypertrophyOS."""
+"""Content and educational module for Repwise."""

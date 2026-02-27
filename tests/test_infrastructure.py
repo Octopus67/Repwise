@@ -36,7 +36,7 @@ from src.shared.types import (
 class TestSettings:
     def test_default_settings(self):
         s = Settings()
-        assert s.APP_NAME == "HypertrophyOS"
+        assert s.APP_NAME == "Repwise"
         assert s.JWT_ACCESS_TOKEN_EXPIRE_MINUTES == 15
         assert s.JWT_REFRESH_TOKEN_EXPIRE_DAYS == 7
         assert s.JWT_ALGORITHM == "HS256"

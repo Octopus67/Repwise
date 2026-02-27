@@ -38,4 +38,4 @@ def generate_upload_url(
 
 def generate_read_url(key: str) -> str:
     """Return the public CDN URL for a stored object."""
-    return f"https://cdn.hypertrophyos.com/{key}"
+    return f"https://cdn.repwise.com/{key}"

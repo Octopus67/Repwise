@@ -421,7 +421,7 @@ describe('ProfileScreen: Structure', () => {
   const FEATURE_NAV_ITEMS = [
     { label: 'Coaching', description: 'AI-powered training guidance' },
     { label: 'Community', description: 'Connect with other lifters' },
-    { label: "Founder's Story", description: 'The story behind HypertrophyOS' },
+    { label: "Founder's Story", description: 'The story behind Repwise' },
     { label: 'Health Reports', description: 'Detailed health analysis' },
     { label: 'Learn', description: 'Articles and educational content' },
     { label: 'Progress Photos', description: 'Track your transformation visually' },

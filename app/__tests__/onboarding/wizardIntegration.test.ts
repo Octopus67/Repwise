@@ -29,7 +29,7 @@ import {
   computeMacroSplit,
 } from '../../utils/onboardingCalculations';
 
-const STORAGE_KEY = 'hos_onboarding_wizard_v2';
+const STORAGE_KEY = 'rw_onboarding_wizard_v2';
 
 function getState() {
   return useOnboardingStore.getState();
@@ -453,7 +453,7 @@ describe('computeAge edge cases', () => {
 
 describe('Persistence edge cases', () => {
   test('corrupted localStorage JSON → store uses defaults', () => {
-    localStorageMock.setItem('hos_onboarding_wizard_v2', 'not-valid-json{{{');
+    localStorageMock.setItem('rw_onboarding_wizard_v2', 'not-valid-json{{{');
     // The store's loadState catches JSON.parse errors and returns null
     // Since the store is a singleton, we verify the catch path works
     // by checking that the store still functions after corruption
@@ -463,7 +463,7 @@ describe('Persistence edge cases', () => {
 
   test('setStep also persists to localStorage', () => {
     getState().setStep(5);
-    const raw = localStorageMock.getItem('hos_onboarding_wizard_v2');
+    const raw = localStorageMock.getItem('rw_onboarding_wizard_v2');
     expect(raw).not.toBeNull();
     const parsed = JSON.parse(raw!);
     expect(parsed.currentStep).toBe(5);
@@ -475,7 +475,7 @@ describe('Persistence edge cases', () => {
     getState().updateField('sex', 'female');
     getState().updateField('goalType', 'lose_fat');
 
-    const raw = localStorageMock.getItem('hos_onboarding_wizard_v2');
+    const raw = localStorageMock.getItem('rw_onboarding_wizard_v2');
     const parsed = JSON.parse(raw!);
     expect(parsed.weightKg).toBe(80);
     expect(parsed.heightCm).toBe(175);

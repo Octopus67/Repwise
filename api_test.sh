@@ -49,7 +49,7 @@ test_endpoint() {
 }
 
 echo "=========================================="
-echo "  HypertrophyOS API E2E TEST SUITE"
+echo "  Repwise API E2E TEST SUITE"
 echo "=========================================="
 echo ""
 

@@ -1,1 +1,1 @@
-"""Achievement system module — gamification for Hypertrophy OS."""
+"""Achievement system module — gamification for Repwise."""

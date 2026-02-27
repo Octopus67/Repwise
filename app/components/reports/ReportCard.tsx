@@ -29,7 +29,7 @@ export const ReportCard = forwardRef<View, ReportCardProps>(({ report }, ref) =>
         <StatBox label="Weight Δ" value={trendStr} />
       </View>
       {topRec ? <Text style={styles.rec}>💡 {topRec}</Text> : null}
-      <Text style={styles.brand}>Hypertrophy OS</Text>
+      <Text style={styles.brand}>Repwise</Text>
     </View>
   );
 });

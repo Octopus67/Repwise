@@ -1,16 +1,16 @@
 # Terms of Service
 
-**Hypertrophy OS**
+**Repwise**
 **Last Updated:** [DATE]
 **Effective Date:** [DATE]
 
 ## 1. Acceptance of Terms
 
-By downloading, installing, or using the Hypertrophy OS mobile application ("App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the App.
+By downloading, installing, or using the Repwise mobile application ("App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the App.
 
 ## 2. Description of Service
 
-Hypertrophy OS is a fitness application that provides adaptive nutrition tracking, training logging, body composition analysis, coaching recommendations, and related health and fitness features. The App is available as a free version with limited features and a premium subscription with full access.
+Repwise is a fitness application that provides adaptive nutrition tracking, training logging, body composition analysis, coaching recommendations, and related health and fitness features. The App is available as a free version with limited features and a premium subscription with full access.
 
 ## 3. Account Registration
 
@@ -56,7 +56,7 @@ Hypertrophy OS is a fitness application that provides adaptive nutrition trackin
 
 - Refund requests made within 14 days of the initial subscription purchase or a renewal charge are eligible for a pro-rated refund
 - Pro-rated refunds are calculated based on the unused portion of the billing period
-- To request a refund, contact support@hypertrophyos.com with your account email and reason for the request
+- To request a refund, contact support@repwise.com with your account email and reason for the request
 - Refunds are processed through the original payment method (Stripe or Razorpay) and may take 5-10 business days to appear
 - Refund requests made after 14 days from the charge date are not eligible
 
@@ -66,7 +66,7 @@ Hypertrophy OS is a fitness application that provides adaptive nutrition trackin
 - When you request account deletion, a 30-day grace period begins during which you can reactivate your account
 - After 30 days, all personal data is permanently removed from our systems
 - If you have an active subscription at the time of deletion, it will be cancelled automatically
-- For full details on data handling, see our [Privacy Policy](https://hypertrophyos.com/privacy)
+- For full details on data handling, see our [Privacy Policy](https://repwise.com/privacy)
 
 ## 8. Acceptable Use
 
@@ -86,7 +86,7 @@ We reserve the right to suspend or terminate accounts that violate these terms.
 
 ## 9. Health and Fitness Disclaimer
 
-- Hypertrophy OS provides general fitness and nutrition information and tools — it is not a substitute for professional medical advice, diagnosis, or treatment
+- Repwise provides general fitness and nutrition information and tools — it is not a substitute for professional medical advice, diagnosis, or treatment
 - Always consult a qualified healthcare provider before starting any new diet or exercise program
 - The App's TDEE calculations, nutrition recommendations, and coaching suggestions are algorithmic estimates and may not be appropriate for all individuals
 - We are not responsible for any injury, health issue, or adverse outcome resulting from following the App's recommendations
@@ -94,7 +94,7 @@ We reserve the right to suspend or terminate accounts that violate these terms.
 
 ## 10. Intellectual Property
 
-- The App, including its design, code, content, logos, and trademarks, is owned by Hypertrophy OS and protected by intellectual property laws
+- The App, including its design, code, content, logos, and trademarks, is owned by Repwise and protected by intellectual property laws
 - Your use of the App does not grant you any ownership rights to the App or its content
 - You retain ownership of the data you input into the App (nutrition logs, training logs, photos, etc.)
 
@@ -102,7 +102,7 @@ We reserve the right to suspend or terminate accounts that violate these terms.
 
 To the maximum extent permitted by applicable law:
 
-- Hypertrophy OS is provided "as is" and "as available" without warranties of any kind, express or implied
+- Repwise is provided "as is" and "as available" without warranties of any kind, express or implied
 - We do not warrant that the App will be uninterrupted, error-free, or free of harmful components
 - We are not liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the App
 - Our total liability for any claim related to the App shall not exceed the amount you paid us in the 12 months preceding the claim
@@ -110,7 +110,7 @@ To the maximum extent permitted by applicable law:
 
 ## 12. Indemnification
 
-You agree to indemnify and hold harmless Hypertrophy OS, its officers, directors, employees, and agents from any claims, damages, losses, or expenses (including reasonable legal fees) arising from your use of the App or violation of these Terms.
+You agree to indemnify and hold harmless Repwise, its officers, directors, employees, and agents from any claims, damages, losses, or expenses (including reasonable legal fees) arising from your use of the App or violation of these Terms.
 
 ## 13. Modifications to Terms
 
@@ -133,4 +133,4 @@ These Terms shall be governed by and construed in accordance with the laws of [J
 
 For questions about these Terms, contact us at:
 
-**Email:** support@hypertrophyos.com
+**Email:** support@repwise.com

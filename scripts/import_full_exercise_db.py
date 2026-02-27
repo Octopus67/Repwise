@@ -205,7 +205,7 @@ def main():
     # 6. Generate the Python file
     lines = []
     lines.append('"""')
-    lines.append("Static exercise database for HypertrophyOS.")
+    lines.append("Static exercise database for Repwise.")
     lines.append("")
     lines.append("Auto-generated — DO NOT EDIT MANUALLY.")
     lines.append('"""')

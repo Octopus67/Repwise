@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# HypertrophyOS Production Setup Script
+# Repwise Production Setup Script
 # =============================================================================
 # This script automates as much of the production setup as possible.
 # Run it after creating your accounts and installing the CLIs.
@@ -34,7 +34,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 echo -e "${CYAN}╔═══════════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║   HypertrophyOS Production Setup              ║${NC}"
+echo -e "${CYAN}║   Repwise Production Setup              ║${NC}"
 echo -e "${CYAN}╚═══════════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -73,7 +73,7 @@ echo -e "${GREEN}  ✓ JWT_SECRET generated (${#JWT_SECRET} chars)${NC}"
 # Save to a local .env.production (gitignored)
 cat > .env.production <<EOF
 # =============================================================================
-# HypertrophyOS Production Environment Variables
+# Repwise Production Environment Variables
 # Generated on $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 # =============================================================================
 # IMPORTANT: Do NOT commit this file. Add to .gitignore if not already there.
@@ -102,7 +102,7 @@ RAZORPAY_WEBHOOK_SECRET=REPLACE_ME
 R2_ACCESS_KEY=REPLACE_ME
 R2_SECRET_KEY=REPLACE_ME
 R2_ENDPOINT_URL=https://ACCOUNT_ID.r2.cloudflarestorage.com
-R2_BUCKET_NAME=hypertrophy-os-uploads
+R2_BUCKET_NAME=repwise-uploads
 
 # Sentry (sentry.io → Project Settings → Client Keys)
 SENTRY_DSN=REPLACE_ME
@@ -114,7 +114,7 @@ FCM_SERVER_KEY=REPLACE_ME
 USDA_API_KEY=REPLACE_ME
 
 # CORS
-CORS_ORIGINS=["https://hypertrophyos.com"]
+CORS_ORIGINS=["https://repwise.com"]
 EOF
 
 echo -e "${GREEN}  ✓ .env.production created — fill in the REPLACE_ME values${NC}"
@@ -157,7 +157,7 @@ echo ""
 echo -e "  After logging into Stripe CLI (${CYAN}stripe login${NC}), create webhooks:"
 echo ""
 echo -e "  ${CYAN}stripe webhooks create \\${NC}"
-echo -e "  ${CYAN}  --url https://api.hypertrophyos.com/api/v1/payments/webhook/stripe \\${NC}"
+echo -e "  ${CYAN}  --url https://api.repwise.com/api/v1/payments/webhook/stripe \\${NC}"
 echo -e "  ${CYAN}  --events invoice.paid,invoice.payment_failed,customer.subscription.deleted,customer.subscription.updated${NC}"
 echo ""
 echo -e "  Copy the webhook signing secret (whsec_...) into .env.production"
@@ -176,7 +176,7 @@ if stripe config --list 2>/dev/null | grep -q "test_mode"; then
   # Create the product
   PRODUCT_ID=$(stripe products create \
     --name="HOS Premium" \
-    --description="Hypertrophy OS Premium subscription" \
+    --description="Repwise Premium subscription" \
     2>/dev/null | grep '"id"' | head -1 | sed 's/.*: "\(.*\)".*/\1/' || echo "")
 
   if [ -n "$PRODUCT_ID" ]; then
@@ -280,11 +280,11 @@ echo -e "${CYAN}│  □ 2. railway login && railway link                       
 echo -e "${CYAN}│  □ 3. Set env vars in Railway dashboard (paste from .env)   │${NC}"
 echo -e "${CYAN}│  □ 4. Push to main → Railway auto-deploys                   │${NC}"
 echo -e "${CYAN}│  □ 5. Run: alembic upgrade head (against Neon)              │${NC}"
-echo -e "${CYAN}│  □ 6. Verify: curl https://api.hypertrophyos.com/api/v1/health │${NC}"
+echo -e "${CYAN}│  □ 6. Verify: curl https://api.repwise.com/api/v1/health │${NC}"
 echo -e "${CYAN}│  □ 7. stripe login && create webhook (see step 3 above)     │${NC}"
 echo -e "${CYAN}│  □ 8. cd app && eas build --profile production --platform all │${NC}"
 echo -e "${CYAN}│  □ 9. Submit to App Store and Google Play                   │${NC}"
-echo -e "${CYAN}│  □ 10. Create reviewer@hypertrophyos.com demo account       │${NC}"
+echo -e "${CYAN}│  □ 10. Create reviewer@repwise.com demo account       │${NC}"
 echo -e "${CYAN}│                                                             │${NC}"
 echo -e "${CYAN}│  Estimated time: 2-3 hours (mostly waiting for builds)      │${NC}"
 echo -e "${CYAN}└─────────────────────────────────────────────────────────────┘${NC}"

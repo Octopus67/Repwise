@@ -1,14 +1,14 @@
 # Privacy Policy
 
-**Hypertrophy OS**
+**Repwise**
 **Last Updated:** [DATE]
 **Effective Date:** [DATE]
 
 ## 1. Introduction
 
-Hypertrophy OS ("we," "us," or "our") operates the Hypertrophy OS mobile application (the "App"). This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our App.
+Repwise ("we," "us," or "our") operates the Repwise mobile application (the "App"). This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our App.
 
-By using Hypertrophy OS, you agree to the collection and use of information as described in this policy.
+By using Repwise, you agree to the collection and use of information as described in this policy.
 
 ## 2. Information We Collect
 
@@ -117,7 +117,7 @@ You can request an export of your personal data in a machine-readable format by 
 
 ## 8. Children's Privacy
 
-Hypertrophy OS is not intended for children under the age of 13. We do not knowingly collect personal information from children under 13. If we become aware that we have collected data from a child under 13, we will delete it promptly.
+Repwise is not intended for children under the age of 13. We do not knowingly collect personal information from children under 13. If we become aware that we have collected data from a child under 13, we will delete it promptly.
 
 ## 9. Push Notifications
 
@@ -135,6 +135,6 @@ We may update this Privacy Policy from time to time. We will notify you of any m
 
 If you have questions about this Privacy Policy or wish to exercise your data rights, contact us at:
 
-**Email:** support@hypertrophyos.com
+**Email:** support@repwise.com
 
-**Privacy Policy URL:** https://hypertrophyos.com/privacy
+**Privacy Policy URL:** https://repwise.com/privacy

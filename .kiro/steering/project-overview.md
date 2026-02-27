@@ -2,7 +2,7 @@
 inclusion: always
 ---
 
-# HypertrophyOS — Project Steering
+# Repwise — Project Steering
 
 This is a science-based fitness platform. Full details are in `README.md`. Key points for Kiro:
 

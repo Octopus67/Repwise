@@ -65,7 +65,7 @@ async def get_product_by_barcode(barcode: str) -> Optional[dict]:
         try:
             response = await client.get(
                 f"{OFF_BASE_URL}/product/{barcode}.json",
-                headers={"User-Agent": "HypertrophyOS/1.0"},
+                headers={"User-Agent": "Repwise/1.0"},
             )
 
             if response.status_code == 404:

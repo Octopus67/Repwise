@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # App
-    APP_NAME: str = "HypertrophyOS"
+    APP_NAME: str = "Repwise"
     DEBUG: bool = False
     CORS_ORIGINS: list[str] = ["*"]
 
@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     R2_ACCESS_KEY: str = ""
     R2_SECRET_KEY: str = ""
     R2_ENDPOINT_URL: str = ""
-    R2_BUCKET_NAME: str = "hypertrophy-os-uploads"
+    R2_BUCKET_NAME: str = "repwise-uploads"
     FCM_SERVER_KEY: str = ""
     APNS_KEY_ID: str = ""
     APNS_TEAM_ID: str = ""

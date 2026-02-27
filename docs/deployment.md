@@ -1,6 +1,6 @@
 # Deployment Guide
 
-**Hypertrophy OS — Production Infrastructure Setup**
+**Repwise — Production Infrastructure Setup**
 
 This guide walks through setting up all production infrastructure from scratch. Follow sections in order.
 
@@ -10,7 +10,7 @@ This guide walks through setting up all production infrastructure from scratch. 
 
 1. Sign up at [railway.app](https://railway.app)
 2. Create a new project → "Deploy from GitHub repo"
-3. Connect your GitHub account and select the Hypertrophy OS repository
+3. Connect your GitHub account and select the Repwise repository
 4. Railway auto-detects the `Dockerfile` at the repo root
 
 ### 1.2 Configure Build
@@ -36,19 +36,19 @@ Add all variables in Railway's "Variables" tab:
 | `RAZORPAY_KEY_ID` | `rzp_live_...` | Razorpay Dashboard → Settings → API Keys |
 | `RAZORPAY_KEY_SECRET` | Live secret key | Razorpay Dashboard → Settings → API Keys |
 | `RAZORPAY_WEBHOOK_SECRET` | Webhook secret | Razorpay Dashboard → Settings → Webhooks |
-| `CORS_ORIGINS` | `["https://hypertrophyos.com"]` | Custom |
+| `CORS_ORIGINS` | `["https://repwise.com"]` | Custom |
 | `SENTRY_DSN` | `https://...@sentry.io/...` | Sentry project (Section 5) |
 | `R2_ACCESS_KEY` | R2 API token access key | Cloudflare dashboard (Section 3) |
 | `R2_SECRET_KEY` | R2 API token secret | Cloudflare dashboard (Section 3) |
 | `R2_ENDPOINT_URL` | `https://<account-id>.r2.cloudflarestorage.com` | Cloudflare dashboard |
-| `R2_BUCKET_NAME` | `hypertrophy-os-uploads` | Cloudflare R2 (Section 3) |
+| `R2_BUCKET_NAME` | `repwise-uploads` | Cloudflare R2 (Section 3) |
 | `FCM_SERVER_KEY` | Firebase server key | Firebase console (Section 4) |
 | `DEBUG` | `false` | Production mode |
 
 ### 1.4 Configure Custom Domain
 
 1. In Railway service settings → "Custom Domain"
-2. Add `api.hypertrophyos.com`
+2. Add `api.repwise.com`
 3. Railway provides a CNAME target (e.g., `<service>.up.railway.app`)
 4. Add this CNAME in Cloudflare DNS (Section 3)
 
@@ -82,7 +82,7 @@ Add all variables in Railway's "Variables" tab:
 
 1. Sign up at [neon.tech](https://neon.tech)
 2. Create a new project
-   - Name: `hypertrophy-os`
+   - Name: `repwise`
    - Region: **US-East** (same network proximity as Railway US-West for low latency)
    - PostgreSQL version: 16
 
@@ -148,7 +148,7 @@ alembic upgrade head
 ### 3.1 Add Domain
 
 1. Sign up at [cloudflare.com](https://cloudflare.com) (free plan)
-2. Add site: `hypertrophyos.com`
+2. Add site: `repwise.com`
 3. Update domain registrar nameservers to Cloudflare's assigned nameservers
 4. Wait for DNS propagation (up to 24 hours, usually minutes)
 
@@ -171,7 +171,7 @@ alembic upgrade head
 ### 3.4 Create R2 Bucket
 
 1. Go to R2 → "Create bucket"
-2. Bucket name: `hypertrophy-os-uploads`
+2. Bucket name: `repwise-uploads`
 3. Location: Automatic
 4. Create an API token for the bucket:
    - Go to R2 → "Manage R2 API Tokens"
@@ -185,7 +185,7 @@ alembic upgrade head
 
 1. In the R2 bucket settings → "Public Access"
 2. Enable public access via custom domain
-3. Set custom domain: `cdn.hypertrophyos.com`
+3. Set custom domain: `cdn.repwise.com`
 4. This automatically creates the DNS CNAME record
 
 ### 3.6 Configure Cache Rules
@@ -194,9 +194,9 @@ Go to Caching → Cache Rules and create:
 
 | Rule Name | Match | Cache Behavior | TTL |
 |-----------|-------|----------------|-----|
-| Static Assets | `api.hypertrophyos.com/static/*` | Cache Everything | 1 year (31536000s) |
-| API Bypass | `api.hypertrophyos.com/api/*` | Bypass Cache | — |
-| CDN Assets | `cdn.hypertrophyos.com/*` | Cache Everything | 1 year (31536000s) |
+| Static Assets | `api.repwise.com/static/*` | Cache Everything | 1 year (31536000s) |
+| API Bypass | `api.repwise.com/api/*` | Bypass Cache | — |
+| CDN Assets | `cdn.repwise.com/*` | Cache Everything | 1 year (31536000s) |
 
 Set default Cache-Control headers:
 - Hashed/versioned filenames: `max-age=31536000, immutable`
@@ -207,7 +207,7 @@ Set default Cache-Control headers:
 ### 4.1 Create Project
 
 1. Go to [console.firebase.google.com](https://console.firebase.google.com)
-2. Create a new project: "Hypertrophy OS"
+2. Create a new project: "Repwise"
 3. Disable Google Analytics for the project (we use PostHog instead)
 
 ### 4.2 Enable FCM
@@ -233,7 +233,7 @@ Set default Cache-Control headers:
 ### 4.5 Android Setup
 
 1. In Firebase console → Project Settings → General → Android app
-2. Register app with package name: `com.hypertrophyos.app`
+2. Register app with package name: `com.repwise.app`
 3. Download `google-services.json` and place in the app's Android directory
 
 ## 5. Sentry (Crash Reporting & Error Tracking)
@@ -241,7 +241,7 @@ Set default Cache-Control headers:
 ### 5.1 Create Project
 
 1. Sign up at [sentry.io](https://sentry.io) (free tier: 5,000 events/month)
-2. Create organization: "Hypertrophy OS"
+2. Create organization: "Repwise"
 
 ### 5.2 Backend Project (Python)
 
@@ -283,15 +283,15 @@ After all services are configured, verify the full stack:
 
 ```bash
 # 1. Health check
-curl https://api.hypertrophyos.com/api/v1/health
+curl https://api.repwise.com/api/v1/health
 # Expected: {"status": "ok"}
 
 # 2. SSL verification
-curl -vI https://api.hypertrophyos.com 2>&1 | grep "SSL certificate"
+curl -vI https://api.repwise.com 2>&1 | grep "SSL certificate"
 # Expected: Valid SSL certificate
 
 # 3. CDN verification
-curl -I https://cdn.hypertrophyos.com/test.txt
+curl -I https://cdn.repwise.com/test.txt
 # Expected: Cloudflare headers present (cf-ray, cf-cache-status)
 
 # 4. Database connectivity (via health check response time)

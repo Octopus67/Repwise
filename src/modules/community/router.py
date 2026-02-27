@@ -20,8 +20,8 @@ router = APIRouter()
 
 # Default community links — used when no admin-configured values exist
 _DEFAULT_LINKS = {
-    "telegram": "https://t.me/hypertrophyos",
-    "email": "community@hypertrophyos.com",
+    "telegram": "https://t.me/repwise",
+    "email": "community@repwise.com",
 }
 
 COMMUNITY_SECTION_KEY = "community_links"

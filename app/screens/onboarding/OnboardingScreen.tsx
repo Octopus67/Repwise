@@ -18,7 +18,7 @@ import api from '../../services/api';
 
 import * as SecureStore from 'expo-secure-store';
 
-const STORAGE_KEY = 'hos_onboarding_state';
+const STORAGE_KEY = 'rw_onboarding_state';
 
 async function storageGet(key: string): Promise<string | null> {
   if (Platform.OS === 'web') {

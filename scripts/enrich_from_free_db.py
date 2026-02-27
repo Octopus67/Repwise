@@ -43,7 +43,7 @@ def fetch_free_db(use_cache: bool = True) -> list[dict]:
         return json.loads(cache_file.read_text())
 
     print(f"  [fetching] {FREE_DB_URL[:80]}...")
-    req = Request(FREE_DB_URL, headers={"User-Agent": "HypertrophyOS/1.0"})
+    req = Request(FREE_DB_URL, headers={"User-Agent": "Repwise/1.0"})
     try:
         with urlopen(req, timeout=30) as resp:
             data = json.loads(resp.read())
@@ -204,7 +204,7 @@ def write_exercises_py(exercises: list[dict]) -> None:
 
     lines = []
     lines.append('"""')
-    lines.append("Static exercise database for HypertrophyOS.")
+    lines.append("Static exercise database for Repwise.")
     lines.append("")
     lines.append("Auto-generated — DO NOT EDIT MANUALLY.")
     lines.append('"""')

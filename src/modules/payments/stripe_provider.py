@@ -74,8 +74,8 @@ class StripeProvider(PaymentProvider):
                 line_items=[{"price": plan_price_id, "quantity": 1}],
                 customer_email=params.customer_email,
                 metadata=params.metadata,
-                success_url="https://hypertrophyos.com/payment/success",
-                cancel_url="https://hypertrophyos.com/payment/cancel",
+                success_url="https://repwise.com/payment/success",
+                cancel_url="https://repwise.com/payment/cancel",
             )
         except stripe.StripeError as exc:
             raise ProviderError(f"Stripe error: {exc}") from exc

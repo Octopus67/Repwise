@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""E2E API test suite for HypertrophyOS backend."""
+"""E2E API test suite for Repwise backend."""
 import json
 import subprocess
 import sys
@@ -67,7 +67,7 @@ def test(num, name, method, path, data=None, auth=None):
     return http_code, body
 
 log("=" * 50)
-log("  HypertrophyOS API E2E TEST SUITE")
+log("  Repwise API E2E TEST SUITE")
 log("=" * 50)
 log()
 

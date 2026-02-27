@@ -95,7 +95,7 @@ const INITIAL_STATE: OnboardingWizardState = {
   fastTrackCompleted: false,
 };
 
-const STORAGE_KEY = 'hos_onboarding_wizard_v2';
+const STORAGE_KEY = 'rw_onboarding_wizard_v2';
 
 // Persistence helpers
 function saveState(state: OnboardingWizardState) {

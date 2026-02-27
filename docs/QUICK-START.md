@@ -16,7 +16,7 @@ Get your app live on both app stores in under 3 hours. No custom domain required
 ### 1.1 Create Neon Database
 
 1. Go to neon.tech → Sign up with GitHub
-2. Create project: name it `hypertrophy-os`, region `AWS US East 1`, Postgres 17
+2. Create project: name it `repwise`, region `AWS US East 1`, Postgres 17
 3. Copy the connection string (looks like `postgresql://neondb_owner:password@ep-...`)
 4. Convert it:
    - Change `postgresql://` to `postgresql+asyncpg://`
@@ -26,7 +26,7 @@ Get your app live on both app stores in under 3 hours. No custom domain required
 ### 1.2 Create Railway Project
 
 1. Go to railway.app → Sign up with GitHub
-2. "New Project" → "Deploy from GitHub repo" → Select your HypertrophyOS repo
+2. "New Project" → "Deploy from GitHub repo" → Select your Repwise repo
 3. Railway auto-detects the Dockerfile and deploys
 4. Go to your service → "Variables" → "Raw Editor"
 5. Paste this (replace the two values):
@@ -48,7 +48,7 @@ SENTRY_DSN=
 R2_ACCESS_KEY=
 R2_SECRET_KEY=
 R2_ENDPOINT_URL=
-R2_BUCKET_NAME=hypertrophy-os-uploads
+R2_BUCKET_NAME=repwise-uploads
 FCM_SERVER_KEY=
 CORS_ORIGINS=["*"]
 ```
@@ -59,7 +59,7 @@ CORS_ORIGINS=["*"]
 ### 1.3 Get Your Railway URL
 
 1. In Railway → Your service → "Settings" → "Networking"
-2. Click "Generate Domain" — Railway gives you a URL like `hypertrophy-os-production.up.railway.app`
+2. Click "Generate Domain" — Railway gives you a URL like `repwise-production.up.railway.app`
 3. Copy this URL
 
 ### 1.4 Run Database Migrations
@@ -124,7 +124,7 @@ Follow `docs/app-store-submission.md` Section 1 (Apple). Key steps:
 1. Create App Store Connect listing
 2. Upload 5 screenshots per device size (use Simulator or real device)
 3. Create IAP subscription products ($9.99/mo, $79.99/yr)
-4. Create demo account: `reviewer@hypertrophyos.com` with premium access
+4. Create demo account: `reviewer@repwise.com` with premium access
 5. Upload `.ipa` via Transporter or `eas submit --platform ios`
 6. Submit for review
 

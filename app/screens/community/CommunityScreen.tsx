@@ -14,8 +14,8 @@ interface CommunityLinks {
 }
 
 const DEFAULT_LINKS: CommunityLinks = {
-  telegram_url: 'https://t.me/hypertrophyos',
-  contact_email: 'community@hypertrophyos.com',
+  telegram_url: 'https://t.me/repwise',
+  contact_email: 'community@repwise.com',
 };
 
 export function CommunityScreen() {

@@ -1,6 +1,6 @@
 # App Store Submission Guide
 
-**Hypertrophy OS — iOS & Android Store Submission**
+**Repwise — iOS & Android Store Submission**
 
 ## Part 1: Apple App Store (iOS)
 
@@ -16,32 +16,32 @@
 1. In App Store Connect → "My Apps" → "+" → "New App"
 2. Fill in:
    - **Platform:** iOS
-   - **Name:** Hypertrophy OS
+   - **Name:** Repwise
    - **Primary Language:** English (U.S.)
-   - **Bundle ID:** `com.hypertrophyos.app` (must match `app.json`)
-   - **SKU:** `hypertrophy-os-ios`
+   - **Bundle ID:** `com.repwise.app` (must match `app.json`)
+   - **SKU:** `repwise-ios`
 
 ### 1.3 App Metadata
 
 | Field | Value |
 |-------|-------|
-| Name | Hypertrophy OS |
+| Name | Repwise |
 | Subtitle | Smart Training & Nutrition |
 | Category | Health & Fitness |
 | Description | See Section 1.4 below |
 | Keywords | hypertrophy, workout tracker, nutrition tracker, macro tracker, TDEE, bodybuilding, fitness, meal plan, coaching, progressive overload |
-| Support URL | https://hypertrophyos.com/support |
-| Marketing URL | https://hypertrophyos.com |
-| Privacy Policy URL | https://hypertrophyos.com/privacy |
+| Support URL | https://repwise.com/support |
+| Marketing URL | https://repwise.com |
+| Privacy Policy URL | https://repwise.com/privacy |
 
 ### 1.4 App Description
 
 ```
-Hypertrophy OS is the adaptive training and nutrition platform built for serious lifters.
+Repwise is the adaptive training and nutrition platform built for serious lifters.
 
 Track your nutrition with barcode scanning and a database of 300,000+ foods. Log your training with smart exercise suggestions and automatic PR detection. Watch your body composition change with progress photo comparisons.
 
-What makes Hypertrophy OS different:
+What makes Repwise different:
 - Adaptive TDEE that adjusts to YOUR metabolism using real weight and intake data
 - Three coaching modes (Autonomous, Guided, Coached) that match your experience level
 - Progressive overload tracking with personal record detection
@@ -92,10 +92,10 @@ Create subscription products in App Store Connect → "Features" → "In-App Pur
 
 | Product ID | Reference Name | Type | Price |
 |------------|---------------|------|-------|
-| `hos_premium_monthly` | HOS Premium Monthly | Auto-Renewable Subscription | $9.99/month |
-| `hos_premium_annual` | HOS Premium Annual | Auto-Renewable Subscription | $79.99/year |
+| `rw_premium_monthly` | RW Premium Monthly | Auto-Renewable Subscription | $9.99/month |
+| `rw_premium_annual` | RW Premium Annual | Auto-Renewable Subscription | $79.99/year |
 
-**Subscription Group:** "HOS Premium"
+**Subscription Group:** "RW Premium"
 
 For each product:
 1. Set display name and description
@@ -110,7 +110,7 @@ Provide a demo account so Apple reviewers can test the app:
 
 | Field | Value |
 |-------|-------|
-| Email | reviewer@hypertrophyos.com |
+| Email | reviewer@repwise.com |
 | Password | ReviewPass123 |
 
 **Setup:**
@@ -123,7 +123,7 @@ Provide a demo account so Apple reviewers can test the app:
 Paste this in the "Notes for Review" field in App Store Connect:
 
 ```
-Hypertrophy OS is a freemium fitness app for tracking nutrition and training.
+Repwise is a freemium fitness app for tracking nutrition and training.
 
 FREE FEATURES:
 - Nutrition tracking with barcode scanner (300,000+ food database)
@@ -137,7 +137,7 @@ PREMIUM FEATURES ($9.99/mo or $79.99/yr):
 - Progress photo comparisons
 
 DEMO ACCOUNT:
-Email: reviewer@hypertrophyos.com
+Email: reviewer@repwise.com
 Password: ReviewPass123
 (This account has premium access enabled for review purposes)
 
@@ -153,7 +153,7 @@ Push notifications are used for weekly coaching reminders and subscription statu
 
 ### 1.10 Privacy URL
 
-- Privacy Policy URL: `https://hypertrophyos.com/privacy`
+- Privacy Policy URL: `https://repwise.com/privacy`
 - Ensure the privacy policy page is live and accessible before submission
 
 ### 1.11 App Privacy Details
@@ -200,7 +200,7 @@ In App Store Connect → "App Privacy", declare:
 
 1. In Google Play Console → "All apps" → "Create app"
 2. Fill in:
-   - **App name:** Hypertrophy OS
+   - **App name:** Repwise
    - **Default language:** English (United States)
    - **App or game:** App
    - **Free or paid:** Free
@@ -209,7 +209,7 @@ In App Store Connect → "App Privacy", declare:
 
 | Field | Value |
 |-------|-------|
-| Title | Hypertrophy OS |
+| Title | Repwise |
 | Short description (80 chars) | Adaptive training & nutrition for serious lifters |
 | Full description | Same as iOS description (Section 1.4), adapted for Google Play formatting |
 | Category | Health & Fitness |
@@ -267,8 +267,8 @@ Create subscription products in Google Play Console → "Monetize" → "Products
 
 | Product ID | Name | Base Plan | Price |
 |------------|------|-----------|-------|
-| `hos_premium_monthly` | HOS Premium Monthly | Monthly auto-renew | $9.99/month (₹499/month in India) |
-| `hos_premium_annual` | HOS Premium Annual | Annual auto-renew | $79.99/year (₹3,999/year in India) |
+| `rw_premium_monthly` | RW Premium Monthly | Monthly auto-renew | $9.99/month (₹499/month in India) |
+| `rw_premium_annual` | RW Premium Annual | Annual auto-renew | $79.99/year (₹3,999/year in India) |
 
 For each product:
 1. Create the subscription
@@ -325,7 +325,7 @@ Google Play requires progressive rollout through testing tracks:
 
 | Rejection Reason | Fix |
 |-----------------|-----|
-| Missing demo account | Ensure reviewer@hypertrophyos.com works and has premium access |
+| Missing demo account | Ensure reviewer@repwise.com works and has premium access |
 | Privacy policy incomplete | Verify all collected data types are disclosed |
 | Broken links | Test all URLs (privacy, support, marketing) before submission |
 | Subscription not clearly explained | Add clear pricing and auto-renewal info in the app and description |

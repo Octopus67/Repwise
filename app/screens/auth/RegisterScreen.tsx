@@ -83,8 +83,8 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
     setLoading(true);
     try {
       const { data } = await api.post('auth/register', { email: cleanEmail, password });
-      await secureSet('hos_access_token', data.access_token);
-      await secureSet('hos_refresh_token', data.refresh_token);
+      await secureSet('rw_access_token', data.access_token);
+      await secureSet('rw_refresh_token', data.refresh_token);
       setAuth(
         { id: parseJwtSub(data.access_token), email: cleanEmail, role: 'user' },
         {

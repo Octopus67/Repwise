@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Enrich HypertrophyOS exercises with animated GIF URLs from ExerciseDB.
+"""Enrich Repwise exercises with animated GIF URLs from ExerciseDB.
 
 Downloads the ExerciseDB v1 dataset (free, open-source from exercisedb.dev),
 fuzzy-matches exercises by name using difflib.SequenceMatcher (threshold 0.85),
@@ -96,7 +96,7 @@ def fetch_exercisedb_dataset(use_cache: bool = True) -> list[dict]:
     last_error: Optional[Exception] = None
     for url in urls_to_try:
         print(f"  [fetching] {url[:80]}...")
-        headers = {"User-Agent": "HypertrophyOS-EnrichScript/1.0"}
+        headers = {"User-Agent": "Repwise-EnrichScript/1.0"}
         if url == EXERCISEDB_API_URL and api_key:
             headers["X-RapidAPI-Key"] = api_key
             headers["X-RapidAPI-Host"] = "exercisedb.p.rapidapi.com"
@@ -382,7 +382,7 @@ def write_exercises_py(exercises: list[dict]) -> None:
     grouped = group_exercises_by_muscle(exercises_sorted)
 
     lines: list[str] = []
-    lines.append('"""Static exercise database for HypertrophyOS.')
+    lines.append('"""Static exercise database for Repwise.')
     lines.append("")
     lines.append(f"~{len(exercises)}+ exercises organized by muscle group with search helpers.")
     lines.append('"""')

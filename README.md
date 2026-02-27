@@ -1,4 +1,4 @@
-# HypertrophyOS
+# Repwise
 
 A science-based fitness platform combining adaptive nutrition tracking, intelligent training logging, and evidence-based coaching. Built for serious lifters who want data-driven results.
 
@@ -6,7 +6,7 @@ A science-based fitness platform combining adaptive nutrition tracking, intellig
 
 ## What This App Does
 
-HypertrophyOS is a full-stack mobile + web app (React Native / Expo frontend, FastAPI backend) that helps users:
+Repwise is a full-stack mobile + web app (React Native / Expo frontend, FastAPI backend) that helps users:
 
 - Track training sessions with progressive overload suggestions
 - Log nutrition with adaptive TDEE targets that adjust weekly

@@ -211,7 +211,7 @@ def fetch_json(url: str, use_cache: bool = True) -> Any:
         return json.loads(cache_file.read_text(encoding="utf-8"))
 
     print(f"  [fetching] {url[:80]}...")
-    req = Request(url, headers={"User-Agent": "HypertrophyOS-ImportScript/1.0"})
+    req = Request(url, headers={"User-Agent": "Repwise-ImportScript/1.0"})
 
     try:
         with urlopen(req, timeout=30) as resp:
@@ -603,7 +603,7 @@ def write_exercises_py(exercises: list[dict]) -> None:
 
     # Build the file content
     lines: list[str] = []
-    lines.append('"""Static exercise database for HypertrophyOS.')
+    lines.append('"""Static exercise database for Repwise.')
     lines.append("")
     lines.append(f"~{len(exercises)}+ exercises organized by muscle group with search helpers.")
     lines.append('"""')

@@ -42,7 +42,7 @@ export function ShareableCard({
             month: 'long', day: 'numeric', year: 'numeric',
           })}
         </Text>
-        <Text style={styles.branding}>HypertrophyOS</Text>
+        <Text style={styles.branding}>Repwise</Text>
       </View>
       {Platform.OS !== 'web' && onShare && (
         <Button title="Share" onPress={handleShare} style={styles.shareBtn} />

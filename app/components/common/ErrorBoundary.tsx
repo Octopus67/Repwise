@@ -45,7 +45,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         <SafeAreaView style={styles.container}>
           <View style={styles.content}>
-            <Text style={styles.title}>HypertrophyOS</Text>
+            <Text style={styles.title}>Repwise</Text>
             <Text style={styles.subtitle}>Something went wrong</Text>
             <Text style={styles.errorMessage}>{this.state.error.message}</Text>
             <Button

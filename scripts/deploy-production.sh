@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# HypertrophyOS Deploy to Production
+# Repwise Deploy to Production
 # =============================================================================
 # Run this AFTER you've filled in .env.production with real values.
 # It pushes env vars to Railway and runs migrations.
@@ -28,7 +28,7 @@ if grep -q "REPLACE_ME" .env.production; then
   exit 1
 fi
 
-echo -e "${CYAN}Deploying HypertrophyOS to production...${NC}"
+echo -e "${CYAN}Deploying Repwise to production...${NC}"
 echo ""
 
 # Step 1: Push env vars to Railway
@@ -68,6 +68,6 @@ echo ""
 # Step 4: Health check
 echo -e "${YELLOW}[4/4] Health check...${NC}"
 echo -e "  Once Railway finishes deploying, verify:"
-echo -e "    ${CYAN}curl https://api.hypertrophyos.com/api/v1/health${NC}"
+echo -e "    ${CYAN}curl https://api.repwise.com/api/v1/health${NC}"
 echo ""
 echo -e "${GREEN}Deploy script complete.${NC}"

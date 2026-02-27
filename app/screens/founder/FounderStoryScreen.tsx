@@ -39,7 +39,7 @@ export function FounderStoryScreen() {
           { year: '2019', event: 'First cut — discovered macro tracking' },
           { year: '2020', event: 'Built first spreadsheet tracker' },
           { year: '2022', event: 'First natural bodybuilding competition' },
-          { year: '2024', event: 'HypertrophyOS launched' },
+          { year: '2024', event: 'Repwise launched' },
         ],
         before_metrics: { weight: '95 kg', bodyFat: '30%', bench: '60 kg' },
         after_metrics: { weight: '82 kg', bodyFat: '12%', bench: '140 kg' },

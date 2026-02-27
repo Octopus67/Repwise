@@ -60,7 +60,7 @@ def test_presigned_url_user_scoping(user_id, filename):
 
     # Test generate_read_url (pure function, no boto3 needed)
     read_url = generate_read_url(expected_key)
-    assert read_url == f"https://cdn.hypertrophyos.com/{expected_key}"
+    assert read_url == f"https://cdn.repwise.com/{expected_key}"
 
     # Also verify the key format is correct for any arbitrary key
     assert expected_key.startswith(f"users/{user_id}/")

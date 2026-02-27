@@ -1,5 +1,5 @@
 """
-Static exercise database for HypertrophyOS.
+Static exercise database for Repwise.
 
 Auto-generated — DO NOT EDIT MANUALLY.
 """

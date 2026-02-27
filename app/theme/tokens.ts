@@ -1,5 +1,5 @@
 /**
- * HypertrophyOS Design Token System
+ * Repwise Design Token System
  *
  * Bloomberg Terminal × modern fintech × elite training brand.
  * Dark-first with layered depth. Institutional, trustworthy, engineered.

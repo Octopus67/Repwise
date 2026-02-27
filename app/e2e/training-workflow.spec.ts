@@ -34,8 +34,8 @@ async function ensureOnDashboard(page: Page) {
     if (tokens.access_token) {
       // Inject tokens into localStorage with the correct keys the app expects
       await page.evaluate(({ access, refresh }) => {
-        localStorage.setItem('hos_access_token', access);
-        localStorage.setItem('hos_refresh_token', refresh);
+        localStorage.setItem('rw_access_token', access);
+        localStorage.setItem('rw_refresh_token', refresh);
       }, { access: tokens.access_token, refresh: tokens.refresh_token });
       await page.reload();
       await page.waitForLoadState('networkidle');

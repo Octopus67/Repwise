@@ -18,7 +18,7 @@ import api, { setTokenProvider } from '../../services/api';
 import { useStore } from '../../store';
 import { isValidEmail, trimEmail } from '../../utils/validation';
 
-const TOKEN_KEYS = { access: 'hos_access_token', refresh: 'hos_refresh_token' };
+const TOKEN_KEYS = { access: 'rw_access_token', refresh: 'rw_refresh_token' };
 
 async function secureSet(key: string, value: string) {
   if (Platform.OS === 'web') { localStorage.setItem(key, value); }
@@ -116,7 +116,7 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>HypertrophyOS</Text>
+        <Text style={styles.title}>Repwise</Text>
         <Text style={styles.subtitle}>Sign in to continue</Text>
 
         {error ? <ErrorBanner testID="login-error-message" message={error} onDismiss={() => setError('')} /> : null}

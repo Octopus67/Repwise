@@ -1,5 +1,5 @@
 [project]
-name = "hypertrophy-os"
+name = "repwise"
 version = "0.1.0"
 description = "Adaptive macro and strength-optimization platform"
 requires-python = ">=3.12"

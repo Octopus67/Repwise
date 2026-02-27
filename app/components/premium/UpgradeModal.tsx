@@ -67,7 +67,7 @@ export function UpgradeModal({ visible, onClose }: UpgradeModalProps) {
           <ScrollView showsVerticalScrollIndicator={false}>
             <Text style={styles.title}>Upgrade to Premium</Text>
             <Text style={styles.subtitle}>
-              Unlock the full HypertrophyOS experience
+              Unlock the full Repwise experience
             </Text>
 
             <View style={styles.plans}>

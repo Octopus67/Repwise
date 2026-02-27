@@ -65,10 +65,10 @@ Follow `docs/app-store-submission.md` for detailed steps. Quick version:
 ### Apple App Store
 
 1. Go to appstoreconnect.apple.com
-2. Create app listing (name: HypertrophyOS, category: Health & Fitness)
+2. Create app listing (name: Repwise, category: Health & Fitness)
 3. Upload 5 screenshots per device size (use Simulator)
 4. Create IAP products: $9.99/mo, $79.99/yr
-5. Create demo account: `reviewer@hypertrophyos.com` / `ReviewPass123`
+5. Create demo account: `reviewer@repwise.com` / `ReviewPass123`
 6. Upload `.ipa` via Transporter or `eas submit --platform ios`
 7. Submit for review
 
@@ -87,10 +87,10 @@ Apple and Google require a privacy policy URL. Quick options:
 
 1. **GitHub Pages** (easiest):
    ```bash
-   # Create a new repo called "hypertrophyos-legal"
+   # Create a new repo called "repwise-legal"
    # Enable Pages in repo settings
    # Upload docs/privacy-policy.md as index.md
-   # URL: https://YOUR_USERNAME.github.io/hypertrophyos-legal/
+   # URL: https://YOUR_USERNAME.github.io/repwise-legal/
    ```
 
 2. **Notion** (free): Publish `docs/privacy-policy.md` as a public page

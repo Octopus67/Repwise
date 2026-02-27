@@ -97,11 +97,11 @@ export default function App() {
   const restoreSession = async () => {
     try {
       const accessToken = Platform.OS === 'web'
-        ? localStorage.getItem('hos_access_token')
-        : await SecureStore.getItemAsync('hos_access_token');
+        ? localStorage.getItem('rw_access_token')
+        : await SecureStore.getItemAsync('rw_access_token');
       const refreshToken = Platform.OS === 'web'
-        ? localStorage.getItem('hos_refresh_token')
-        : await SecureStore.getItemAsync('hos_refresh_token');
+        ? localStorage.getItem('rw_refresh_token')
+        : await SecureStore.getItemAsync('rw_refresh_token');
       if (accessToken && refreshToken) {
         // Validate the token by fetching the current user
         const { data } = await api.get('auth/me');
@@ -173,7 +173,7 @@ export default function App() {
     return (
       <SafeAreaProvider>
         <View style={{ flex: 1, backgroundColor: colors.bg.base, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: colors.text.primary, fontSize: 28, fontWeight: '700' }}>HypertrophyOS</Text>
+          <Text style={{ color: colors.text.primary, fontSize: 28, fontWeight: '700' }}>Repwise</Text>
           <ActivityIndicator size="large" color={colors.accent.primary} style={{ marginTop: 24 }} />
         </View>
       </SafeAreaProvider>
