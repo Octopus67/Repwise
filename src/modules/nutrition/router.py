@@ -64,7 +64,7 @@ async def get_entries(
     start_date: Optional[date] = Query(default=None),
     end_date: Optional[date] = Query(default=None),
     page: int = Query(default=1, ge=1),
-    limit: int = Query(default=20, ge=1, le=100),
+    limit: int = Query(default=20, ge=1, le=500),
 ) -> PaginatedResult[NutritionEntryResponse]:
     """Get nutrition entries with optional date range filter and pagination."""
     filters = None

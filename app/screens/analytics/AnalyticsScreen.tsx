@@ -97,26 +97,6 @@ export function AnalyticsScreen() {
   const [fatigueScores, setFatigueScores] = useState<any[]>([]);
   const [selectedFatigueGroup, setSelectedFatigueGroup] = useState<any | null>(null);
 
-  useEffect(() => {
-    loadAnalytics();
-  }, [loadAnalytics]);
-
-  useEffect(() => {
-    loadVolumeTrend();
-  }, [loadVolumeTrend]);
-
-  useEffect(() => {
-    loadStrengthProgression();
-  }, [loadStrengthProgression]);
-
-  useEffect(() => {
-    loadE1RMTrend();
-  }, [loadE1RMTrend]);
-
-  useEffect(() => {
-    loadStrengthStandards();
-  }, [loadStrengthStandards]);
-
   const loadAnalytics = useCallback(async () => {
     setError(null);
     try {
@@ -223,6 +203,26 @@ export function AnalyticsScreen() {
       setStrengthStandards(data);
     } catch { /* best-effort */ }
   }, []);
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [loadAnalytics]);
+
+  useEffect(() => {
+    loadVolumeTrend();
+  }, [loadVolumeTrend]);
+
+  useEffect(() => {
+    loadStrengthProgression();
+  }, [loadStrengthProgression]);
+
+  useEffect(() => {
+    loadE1RMTrend();
+  }, [loadE1RMTrend]);
+
+  useEffect(() => {
+    loadStrengthStandards();
+  }, [loadStrengthStandards]);
 
   const filteredWeight = filterByTimeRange(weightTrend, timeRange);
   const filteredCalories = filterByTimeRange(calorieTrend, timeRange);

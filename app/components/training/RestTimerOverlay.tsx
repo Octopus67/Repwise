@@ -37,6 +37,13 @@ export function RestTimerOverlay({
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
 
+  const clearTimer = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
   // Reset when visibility or duration changes
   useEffect(() => {
     if (visible) {
@@ -70,13 +77,6 @@ export function RestTimerOverlay({
 
     return clearTimer;
   }, [visible, state, clearTimer]);
-
-  const clearTimer = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
 
   const handlePauseResume = useCallback(() => {
     setState((s) => (s === 'RUNNING' ? 'PAUSED' : 'RUNNING'));

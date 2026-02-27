@@ -93,6 +93,7 @@ export function scaleMacros(
 
 export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealName }: Props) {
   const selectedDate = useStore((s) => s.selectedDate);
+  const isAuthenticated = useStore((s) => s.isAuthenticated);
 
   // ── Manual entry state ───────────────────────────────────────────────────
   const [calories, setCalories] = useState('');
@@ -155,10 +156,10 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
 
   // ── Fetch favorites on modal open ────────────────────────────────────────
   useEffect(() => {
-    if (visible) {
+    if (visible && isAuthenticated) {
       fetchFavorites();
     }
-  }, [visible]);
+  }, [visible, isAuthenticated]);
 
   // ── Pre-fill meal name when provided ─────────────────────────────────────
   useEffect(() => {
