@@ -19,6 +19,8 @@ from src.modules.training.exercises import (
 )
 from src.modules.training.day_classification import classify_day
 from src.modules.training.schemas import (
+    BatchOverloadRequest,
+    BatchOverloadResponse,
     BatchPreviousPerformanceRequest,
     BatchPreviousPerformanceResponse,
     CustomExerciseCreate,
@@ -112,6 +114,23 @@ async def get_overload_suggestion(
     if suggestion is None:
         return Response(status_code=204)
     return suggestion
+
+
+@router.post(
+    "/exercises/batch-overload-suggestions",
+    response_model=BatchOverloadResponse,
+)
+async def get_batch_overload_suggestions(
+    request: BatchOverloadRequest,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> BatchOverloadResponse:
+    """Return progressive overload suggestions for multiple exercises at once."""
+    from src.modules.training.overload_service import OverloadSuggestionService
+
+    svc = OverloadSuggestionService(db)
+    suggestions = await svc.get_batch_suggestions(user.id, request.exercise_names)
+    return BatchOverloadResponse(suggestions=suggestions)
 
 
 @router.get("/exercises")

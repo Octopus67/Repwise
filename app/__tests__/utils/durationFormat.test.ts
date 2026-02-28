@@ -4,34 +4,64 @@ import { formatDuration, formatRestTimer } from '../../utils/durationFormat';
 const NUM_RUNS = 100;
 
 /**
- * Feature: training-log-redesign, Task 8.1
- * **Validates: Requirements 1.2, 4.3**
+ * Property 14: Duration formatting is correct
+ * **Validates: Requirements 9.2**
  */
-
 describe('Duration Format Property Tests', () => {
-  /**
-   * Property: For any non-negative integer seconds, formatDuration returns
-   * a string matching /^\d{2}:\d{2}:\d{2}$/
-   * **Validates: Requirements 1.2**
-   */
-  it('formatDuration always returns HH:MM:SS format for non-negative integers', () => {
+  it('returns MM:SS format for seconds < 3600', () => {
     fc.assert(
       fc.property(
-        fc.integer({ min: 0, max: 359999 }),
+        fc.integer({ min: 0, max: 3599 }),
         (seconds) => {
           const result = formatDuration(seconds);
-          return /^\d{2}:\d{2}:\d{2}$/.test(result);
+          return /^\d{2}:\d{2}$/.test(result);
         },
       ),
       { numRuns: NUM_RUNS },
     );
   });
 
-  /**
-   * Property: For any non-negative integer seconds, formatRestTimer returns
-   * a string matching /^\d+:\d{2}$/
-   * **Validates: Requirements 4.3**
-   */
+  it('returns H:MM:SS format for seconds >= 3600', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 3600, max: 359999 }),
+        (seconds) => {
+          const result = formatDuration(seconds);
+          return /^\d+:\d{2}:\d{2}$/.test(result);
+        },
+      ),
+      { numRuns: NUM_RUNS },
+    );
+  });
+
+  it('values are mathematically correct for < 3600', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 3599 }),
+        (seconds) => {
+          const result = formatDuration(seconds);
+          const [mm, ss] = result.split(':').map(Number);
+          return mm * 60 + ss === seconds;
+        },
+      ),
+      { numRuns: NUM_RUNS },
+    );
+  });
+
+  it('values are mathematically correct for >= 3600', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 3600, max: 359999 }),
+        (seconds) => {
+          const result = formatDuration(seconds);
+          const [h, mm, ss] = result.split(':').map(Number);
+          return h * 3600 + mm * 60 + ss === seconds;
+        },
+      ),
+      { numRuns: NUM_RUNS },
+    );
+  });
+
   it('formatRestTimer always returns M:SS format for non-negative integers', () => {
     fc.assert(
       fc.property(
@@ -47,16 +77,24 @@ describe('Duration Format Property Tests', () => {
 });
 
 describe('Duration Format — specific value tests', () => {
-  it('formatDuration(3661) === "01:01:01"', () => {
-    expect(formatDuration(3661)).toBe('01:01:01');
+  it('formatDuration(3661) === "1:01:01"', () => {
+    expect(formatDuration(3661)).toBe('1:01:01');
   });
 
-  it('formatDuration(0) === "00:00:00"', () => {
-    expect(formatDuration(0)).toBe('00:00:00');
+  it('formatDuration(0) === "00:00"', () => {
+    expect(formatDuration(0)).toBe('00:00');
   });
 
-  it('formatDuration(3599) === "00:59:59"', () => {
-    expect(formatDuration(3599)).toBe('00:59:59');
+  it('formatDuration(3599) === "59:59"', () => {
+    expect(formatDuration(3599)).toBe('59:59');
+  });
+
+  it('formatDuration(3600) === "1:00:00"', () => {
+    expect(formatDuration(3600)).toBe('1:00:00');
+  });
+
+  it('formatDuration(61) === "01:01"', () => {
+    expect(formatDuration(61)).toBe('01:01');
   });
 
   it('formatRestTimer(90) === "1:30"', () => {
@@ -68,7 +106,7 @@ describe('Duration Format — specific value tests', () => {
   });
 
   it('formatDuration handles negative input gracefully', () => {
-    expect(formatDuration(-1)).toBe('00:00:00');
+    expect(formatDuration(-1)).toBe('00:00');
   });
 
   it('formatRestTimer handles negative input gracefully', () => {

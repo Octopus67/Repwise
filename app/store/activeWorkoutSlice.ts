@@ -21,7 +21,10 @@ import type {
   SetType,
   ActiveWorkoutPayload,
   PreviousPerformanceData,
+  OverloadSuggestion,
 } from '../types/training';
+
+import type { MuscleVolumeEntry } from '../utils/volumeAggregator';
 
 import { canCompleteSet } from '../utils/setCompletionLogic';
 import {
@@ -46,6 +49,7 @@ function makeEmptySet(setNumber: number): ActiveSet {
     weight: '',
     reps: '',
     rpe: '',
+    rir: '',
     setType: 'normal',
     completed: false,
     completedAt: null,
@@ -65,6 +69,12 @@ const defaultState: ActiveWorkoutState = {
   previousPerformance: {},
   previousPerformanceLoading: false,
   isActive: false,
+  restTimerActive: false,
+  restTimerExerciseName: '',
+  restTimerDuration: 0,
+  restTimerStartedAt: null,
+  overloadSuggestions: {},
+  weeklyVolumeData: [],
 };
 
 // ─── Store ───────────────────────────────────────────────────────────────────
@@ -196,6 +206,7 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
               weight: lastSet?.weight ?? '',
               reps: lastSet?.reps ?? '',
               rpe: '',
+              rir: '',
               setType: 'normal',
               completed: false,
               completedAt: null,
@@ -221,7 +232,7 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
       updateSetField: (
         exerciseLocalId: string,
         setLocalId: string,
-        field: 'weight' | 'reps' | 'rpe',
+        field: 'weight' | 'reps' | 'rpe' | 'rir',
         value: string,
       ) => {
         set((state) => ({
@@ -410,6 +421,7 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
               weight: String(ws.weightKg),
               reps: String(ws.reps),
               rpe: '',
+              rir: '',
               setType: ws.setType,
               completed: false,
               completedAt: null,
@@ -421,6 +433,35 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
             return { ...ex, sets: allSets };
           }),
         }));
+      },
+
+      // ── Rest Timer ──────────────────────────────────────────────────────
+
+      startRestTimer: (exerciseName: string, duration: number) => {
+        set({
+          restTimerActive: true,
+          restTimerExerciseName: exerciseName,
+          restTimerDuration: duration,
+          restTimerStartedAt: new Date().toISOString(),
+        });
+      },
+
+      dismissRestTimer: () => {
+        set({
+          restTimerActive: false,
+          restTimerExerciseName: '',
+          restTimerStartedAt: null,
+        });
+      },
+
+      // ── Overload & Volume ────────────────────────────────────────────────
+
+      setOverloadSuggestions: (data: Record<string, OverloadSuggestion | null>) => {
+        set({ overloadSuggestions: data });
+      },
+
+      setWeeklyVolumeData: (data: MuscleVolumeEntry[]) => {
+        set({ weeklyVolumeData: data });
       },
 
       // ── Metadata ─────────────────────────────────────────────────────────

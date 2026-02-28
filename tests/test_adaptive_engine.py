@@ -1,6 +1,7 @@
 """Unit tests for the adaptive engine pure functions."""
 
 from datetime import date, timedelta
+from typing import Optional
 
 import pytest
 
@@ -29,7 +30,7 @@ from src.shared.types import ActivityLevel, GoalType
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _make_history(weights: list[float], start: date | None = None) -> list[tuple[date, float]]:
+def _make_history(weights: list[float], start: Optional[date] = None) -> list[tuple[date, float]]:
     """Build a bodyweight history from a list of weights, one per day."""
     start = start or date(2024, 1, 1)
     return [(start + timedelta(days=i), w) for i, w in enumerate(weights)]

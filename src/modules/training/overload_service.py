@@ -144,6 +144,73 @@ class OverloadSuggestionService:
         snapshots = await self._fetch_snapshots(user_id, exercise_name)
         return compute_suggestion(exercise_name, snapshots)
 
+    async def get_batch_suggestions(
+        self, user_id: uuid.UUID, exercise_names: list[str]
+    ) -> dict[str, OverloadSuggestion | None]:
+        """Return overload suggestions for multiple exercises with a single DB query.
+
+        Fetches the last 50 sessions once and extracts per-exercise snapshots
+        from the cached result, avoiding N separate queries.
+        """
+        # Single DB fetch — same query as _fetch_snapshots but unfiltered by exercise
+        stmt = (
+            select(TrainingSession)
+            .where(TrainingSession.user_id == user_id)
+        )
+        stmt = TrainingSession.not_deleted(stmt)
+        stmt = stmt.order_by(TrainingSession.session_date.desc()).limit(50)
+
+        result = await self.session.execute(stmt)
+        rows = result.scalars().all()
+
+        suggestions: dict[str, OverloadSuggestion | None] = {}
+
+        for exercise_name in exercise_names:
+            name_lower = exercise_name.lower().strip()
+            snapshots: list[_SessionSnapshot] = []
+
+            for row in rows:
+                for ex in row.exercises:
+                    if ex.get("exercise_name", "").lower().strip() != name_lower:
+                        continue
+                    sets = ex.get("sets", [])
+                    if not sets:
+                        continue
+
+                    rpe_values = [
+                        s["rpe"] for s in sets
+                        if s.get("rpe") is not None and s.get("set_type", "normal") == "normal"
+                    ]
+                    avg_rpe = (
+                        sum(rpe_values) / len(rpe_values)
+                        if rpe_values
+                        else _DEFAULT_RPE
+                    )
+
+                    normal_sets = [
+                        s for s in sets if s.get("set_type", "normal") == "normal"
+                    ]
+                    if not normal_sets:
+                        continue
+                    best = max(normal_sets, key=lambda s: s.get("weight_kg", 0))
+
+                    snapshots.append(
+                        _SessionSnapshot(
+                            weight_kg=best.get("weight_kg", 0),
+                            reps=best.get("reps", 0),
+                            avg_rpe=avg_rpe,
+                        )
+                    )
+                    break  # one snapshot per session
+
+                if len(snapshots) >= _MAX_SESSIONS:
+                    break
+
+            suggestions[exercise_name] = compute_suggestion(exercise_name, snapshots)
+
+        return suggestions
+
+
     async def _fetch_snapshots(
         self, user_id: uuid.UUID, exercise_name: str
     ) -> list[_SessionSnapshot]:

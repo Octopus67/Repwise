@@ -8,6 +8,7 @@
  */
 
 import type { UnitSystem } from '../utils/unitConversion';
+import type { MuscleVolumeEntry } from '../utils/volumeAggregator';
 
 // ─── Set Types ──────────────────────────────────────────────────────────────
 
@@ -21,6 +22,7 @@ export interface ActiveSet {
   weight: string;
   reps: string;
   rpe: string;
+  rir: string;
   setType: SetType;
   completed: boolean;
   completedAt: string | null;
@@ -45,6 +47,14 @@ export interface PreviousPerformanceData {
   sets: Array<{ weightKg: number; reps: number; rpe: number | null }>;
 }
 
+export interface OverloadSuggestion {
+  exercise_name: string;
+  suggested_weight_kg: number;
+  suggested_reps: number;
+  reasoning: string;
+  confidence: 'high' | 'medium' | 'low';
+}
+
 export interface ActiveWorkoutState {
   workoutId: string;
   mode: 'new' | 'edit';
@@ -58,6 +68,12 @@ export interface ActiveWorkoutState {
   previousPerformance: Record<string, PreviousPerformanceData | null>;
   previousPerformanceLoading: boolean;
   isActive: boolean;
+  restTimerActive: boolean;
+  restTimerExerciseName: string;
+  restTimerDuration: number;
+  restTimerStartedAt: string | null;
+  overloadSuggestions: Record<string, OverloadSuggestion | null>;
+  weeklyVolumeData: MuscleVolumeEntry[];
 }
 
 // ─── Active Workout Actions ─────────────────────────────────────────────────
@@ -84,7 +100,7 @@ export interface ActiveWorkoutActions {
   updateSetField: (
     exerciseLocalId: string,
     setLocalId: string,
-    field: 'weight' | 'reps' | 'rpe',
+    field: 'weight' | 'reps' | 'rpe' | 'rir',
     value: string,
   ) => void;
   updateSetType: (
@@ -116,6 +132,14 @@ export interface ActiveWorkoutActions {
   // Metadata
   setSessionDate: (date: string) => void;
   setNotes: (notes: string) => void;
+
+  // Rest timer
+  startRestTimer: (exerciseName: string, duration: number) => void;
+  dismissRestTimer: () => void;
+
+  // Overload & volume
+  setOverloadSuggestions: (data: Record<string, OverloadSuggestion | null>) => void;
+  setWeeklyVolumeData: (data: MuscleVolumeEntry[]) => void;
 }
 
 // ─── API Payloads ───────────────────────────────────────────────────────────
@@ -129,6 +153,7 @@ export interface ActiveWorkoutPayload {
       reps: number;
       weight_kg: number;
       rpe: number | null;
+      rir: number | null;
       set_type: SetType;
     }>;
   }>;

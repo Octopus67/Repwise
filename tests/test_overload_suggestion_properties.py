@@ -213,3 +213,128 @@ class TestNoRPEData:
     def test_default_rpe_value(self):
         """Verify the default RPE constant is 7.5."""
         assert _DEFAULT_RPE == 7.5
+
+
+# ---------------------------------------------------------------------------
+# Hypothesis property-based tests
+# ---------------------------------------------------------------------------
+
+from hypothesis import given, settings as h_settings, strategies as st
+
+# Shared Hypothesis settings — minimum 100 examples per property
+_hypothesis_settings = h_settings(max_examples=100, deadline=None)
+
+
+# ---------------------------------------------------------------------------
+# Property 7: Overload suggestion weight is always non-negative
+# **Validates: Requirements 4.3**
+# ---------------------------------------------------------------------------
+
+
+class TestProperty7NonNegativeWeight:
+    """Property 7 — suggested_weight_kg >= 0 for any valid snapshots."""
+
+    @_hypothesis_settings
+    @given(
+        snapshots=st.lists(
+            st.builds(
+                _SessionSnapshot,
+                weight_kg=st.floats(0, 500),
+                reps=st.integers(1, 50),
+                avg_rpe=st.floats(1, 10),
+            ),
+            min_size=3,
+            max_size=5,
+        ),
+    )
+    def test_suggested_weight_is_non_negative(self, snapshots):
+        """**Validates: Requirements 4.3**
+
+        For any list of 3-5 session snapshots with non-negative weights,
+        compute_suggestion must return a suggestion with suggested_weight_kg >= 0.
+        """
+        result = compute_suggestion("Test Exercise", snapshots, equipment="barbell")
+        assert result is not None, "Should return a suggestion for 3+ snapshots"
+        assert result.suggested_weight_kg >= 0, (
+            f"suggested_weight_kg must be non-negative, got {result.suggested_weight_kg}"
+        )
+
+    @_hypothesis_settings
+    @given(
+        snapshots=st.lists(
+            st.builds(
+                _SessionSnapshot,
+                weight_kg=st.floats(0, 500),
+                reps=st.integers(1, 50),
+                avg_rpe=st.floats(1, 10),
+            ),
+            min_size=3,
+            max_size=5,
+        ),
+        equipment=st.sampled_from(["barbell", "dumbbell", "cable", "machine", "other"]),
+    )
+    def test_suggested_weight_non_negative_all_equipment(self, snapshots, equipment):
+        """**Validates: Requirements 4.3**
+
+        Non-negative weight holds across all equipment types.
+        """
+        result = compute_suggestion("Test Exercise", snapshots, equipment=equipment)
+        assert result is not None
+        assert result.suggested_weight_kg >= 0
+
+
+# ---------------------------------------------------------------------------
+# Property 8: Overload suggestion confidence is always valid
+# **Validates: Requirements 4.5**
+# ---------------------------------------------------------------------------
+
+
+class TestProperty8ValidConfidence:
+    """Property 8 — confidence is always one of high, medium, low."""
+
+    @_hypothesis_settings
+    @given(
+        snapshots=st.lists(
+            st.builds(
+                _SessionSnapshot,
+                weight_kg=st.floats(0, 500),
+                reps=st.integers(1, 50),
+                avg_rpe=st.floats(1, 10),
+            ),
+            min_size=3,
+            max_size=5,
+        ),
+    )
+    def test_confidence_is_valid_enum(self, snapshots):
+        """**Validates: Requirements 4.5**
+
+        For any valid suggestion, confidence must be one of high, medium, or low.
+        """
+        result = compute_suggestion("Test Exercise", snapshots, equipment="barbell")
+        assert result is not None
+        assert result.confidence in {"high", "medium", "low"}, (
+            f"confidence must be high/medium/low, got '{result.confidence}'"
+        )
+
+    @_hypothesis_settings
+    @given(
+        snapshots=st.lists(
+            st.builds(
+                _SessionSnapshot,
+                weight_kg=st.floats(0, 500),
+                reps=st.integers(1, 50),
+                avg_rpe=st.floats(1, 10),
+            ),
+            min_size=3,
+            max_size=5,
+        ),
+        equipment=st.sampled_from(["barbell", "dumbbell", "cable", "machine", "other"]),
+    )
+    def test_confidence_valid_all_equipment(self, snapshots, equipment):
+        """**Validates: Requirements 4.5**
+
+        Valid confidence holds across all equipment types.
+        """
+        result = compute_suggestion("Test Exercise", snapshots, equipment=equipment)
+        assert result is not None
+        assert result.confidence in {"high", "medium", "low"}

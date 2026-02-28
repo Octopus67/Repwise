@@ -7,7 +7,7 @@ inclusion: always
 This is a science-based fitness platform. Full details are in `README.md`. Key points for Kiro:
 
 ## Stack
-- **Frontend:** React Native + Expo SDK 52, TypeScript, Zustand, React Navigation, Reanimated 3 — lives in `app/`
+- **Frontend:** React Native + Expo SDK 53, TypeScript, Zustand, React Navigation, Reanimated 4 — lives in `app/`
 - **Backend:** FastAPI + SQLAlchemy async + SQLite (dev) / PostgreSQL (prod) — lives in `src/`
 - **Tests:** Jest + fast-check (frontend), pytest + Hypothesis (backend)
 

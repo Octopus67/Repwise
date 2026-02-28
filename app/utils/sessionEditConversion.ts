@@ -20,6 +20,7 @@ export interface ExercisePayload {
     reps: number;
     weight_kg: number;
     rpe: number | null;
+    rir: number | null;
     set_type: SetType;
   }>;
 }
@@ -41,6 +42,7 @@ export function sessionResponseToActiveExercises(
       weight: String(convertWeight(s.weight_kg, unitSystem)),
       reps: String(s.reps),
       rpe: s.rpe != null ? String(s.rpe) : '',
+      rir: '',
       setType: (s.set_type as SetType) || 'normal',
       completed: true,
       completedAt: null,
@@ -56,17 +58,20 @@ export function activeExercisesToPayload(
   exercises: ActiveExercise[],
   unitSystem: UnitSystem,
 ): ExercisePayload[] {
-  return exercises.map((ex) => ({
-    exercise_name: ex.exerciseName,
-    sets: ex.sets
-      .filter((s) => s.completed)
-      .map((s) => ({
-        reps: parseInt(s.reps, 10) || 0,
-        weight_kg: parseWeightInput(parseFloat(s.weight) || 0, unitSystem),
-        rpe: s.rpe ? parseFloat(s.rpe) : null,
-        set_type: s.setType,
-      })),
-  }));
+  return exercises
+    .map((ex) => ({
+      exercise_name: ex.exerciseName,
+      sets: ex.sets
+        .filter((s) => s.completed)
+        .map((s) => ({
+          reps: parseInt(s.reps, 10) || 0,
+          weight_kg: parseWeightInput(parseFloat(s.weight) || 0, unitSystem),
+          rpe: s.rpe ? parseFloat(s.rpe) : null,
+          rir: s.rir ? parseInt(s.rir, 10) : null,
+          set_type: s.setType,
+        })),
+    }))
+    .filter((ex) => ex.sets.length > 0);
 }
 
 /**

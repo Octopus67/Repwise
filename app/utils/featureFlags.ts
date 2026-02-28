@@ -21,3 +21,23 @@ export function setTrainingLogV2Flag(enabled: boolean): void {
 export function isTrainingLogV2Enabled(): boolean {
   return _trainingLogV2Enabled;
 }
+
+
+// ─── Premium Workout Logger Flag ─────────────────────────────────────────────
+
+let _premiumWorkoutLoggerEnabled = true;
+
+/**
+ * Set the premium_workout_logger feature flag value.
+ */
+export function setPremiumWorkoutLoggerFlag(enabled: boolean): void {
+  _premiumWorkoutLoggerEnabled = enabled;
+}
+
+/**
+ * Check if the premium_workout_logger feature flag is enabled.
+ * Gates the new ActiveWorkoutScreen (workout-logging-premium spec).
+ */
+export function isPremiumWorkoutLoggerEnabled(): boolean {
+  return _premiumWorkoutLoggerEnabled;
+}

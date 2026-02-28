@@ -10,7 +10,8 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://hypertrophyos-production.up.railway.app",
         "EXPO_PUBLIC_POSTHOG_KEY": "<staging-key>",
-        "EXPO_PUBLIC_SENTRY_DSN": "<staging-sentry-dsn>"
+        "EXPO_PUBLIC_SENTRY_DSN": "<staging-sentry-dsn>",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
     "production": {
@@ -18,7 +19,8 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://hypertrophyos-production.up.railway.app",
         "EXPO_PUBLIC_POSTHOG_KEY": "<production-key>",
-        "EXPO_PUBLIC_SENTRY_DSN": "<production-sentry-dsn>"
+        "EXPO_PUBLIC_SENTRY_DSN": "<production-sentry-dsn>",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     }
   },

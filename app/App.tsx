@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SecureStore from 'expo-secure-store';
 import { Platform, Alert, View, Text, ActivityIndicator } from 'react-native';
 import { colors } from './theme/tokens';
@@ -15,6 +16,7 @@ import { OnboardingWizard } from './screens/onboarding/OnboardingWizard';
 import { initAnalytics } from './services/analytics';
 import { useStore } from './store';
 import { useActiveWorkoutStore } from './store/activeWorkoutSlice';
+import { isPremiumWorkoutLoggerEnabled } from './utils/featureFlags';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import * as Sentry from '@sentry/react-native';
 import api from './services/api';
@@ -86,6 +88,7 @@ export default function App() {
   const setNeedsOnboarding = useStore((s) => s.setNeedsOnboarding);
   const setOnboardingSkipped = useStore((s) => s.setOnboardingSkipped);
   const [ready, setReady] = useState(false);
+  const navigationRef = useRef<NavigationContainerRef<any>>(null);
 
   useEffect(() => {
     initTokenProvider(clearAuth);
@@ -158,7 +161,11 @@ export default function App() {
               style: 'destructive',
               onPress: () => useActiveWorkoutStore.getState().discardWorkout(),
             },
-            { text: 'Resume', style: 'default' },
+            { text: 'Resume', style: 'default', onPress: () => {
+              if (isPremiumWorkoutLoggerEnabled() && navigationRef.current) {
+                navigationRef.current.navigate('Home', { screen: 'ActiveWorkout', params: { mode: 'new' } });
+              }
+            } },
           ],
         );
       }
@@ -171,38 +178,42 @@ export default function App() {
 
   if (!ready) {
     return (
-      <SafeAreaProvider>
-        <View style={{ flex: 1, backgroundColor: colors.bg.base, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: colors.text.primary, fontSize: 28, fontWeight: '700' }}>Repwise</Text>
-          <ActivityIndicator size="large" color={colors.accent.primary} style={{ marginTop: 24 }} />
-        </View>
-      </SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <View style={{ flex: 1, backgroundColor: colors.bg.base, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ color: colors.text.primary, fontSize: 28, fontWeight: '700' }}>Repwise</Text>
+            <ActivityIndicator size="large" color={colors.accent.primary} style={{ marginTop: 24 }} />
+          </View>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     );
   }
 
   return (
-    <SafeAreaProvider>
-      <NavigationContainer theme={navTheme}>
-        <StatusBar style="light" />
-        <ErrorBoundary onError={(error, errorInfo) => {
-          console.error('[ErrorBoundary:Root]', error.message);
-          console.error('[ErrorBoundary:Root] Stack:', error.stack);
-          console.error('[ErrorBoundary:Root] Component:', errorInfo.componentStack);
-        }}>
-          {isAuthenticated ? (
-            needsOnboarding ? (
-              <OnboardingWizard
-                onComplete={handleOnboardingComplete}
-                onSkip={handleOnboardingSkip}
-              />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <NavigationContainer ref={navigationRef} theme={navTheme}>
+          <StatusBar style="light" />
+          <ErrorBoundary onError={(error, errorInfo) => {
+            console.error('[ErrorBoundary:Root]', error.message);
+            console.error('[ErrorBoundary:Root] Stack:', error.stack);
+            console.error('[ErrorBoundary:Root] Component:', errorInfo.componentStack);
+          }}>
+            {isAuthenticated ? (
+              needsOnboarding ? (
+                <OnboardingWizard
+                  onComplete={handleOnboardingComplete}
+                  onSkip={handleOnboardingSkip}
+                />
+              ) : (
+                <BottomTabNavigator />
+              )
             ) : (
-              <BottomTabNavigator />
-            )
-          ) : (
-            <AuthNavigator />
-          )}
-        </ErrorBoundary>
-      </NavigationContainer>
-    </SafeAreaProvider>
+              <AuthNavigator />
+            )}
+          </ErrorBoundary>
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

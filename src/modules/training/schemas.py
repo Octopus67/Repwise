@@ -17,6 +17,9 @@ class SetEntry(BaseModel):
     rpe: Optional[float] = Field(
         default=None, ge=0, le=10, description="Rate of perceived exertion (0-10)"
     )
+    rir: Optional[int] = Field(
+        default=None, ge=0, le=5, description="Reps in Reserve (0-5)"
+    )
     set_type: str = Field(
         default="normal",
         description="Set type: normal, warm-up, drop-set, amrap",
@@ -159,6 +162,7 @@ class PreviousPerformanceSetData(BaseModel):
     weight_kg: float
     reps: int
     rpe: Optional[float] = None
+    rir: Optional[int] = None
 
 
 class PreviousPerformanceResult(BaseModel):
@@ -243,6 +247,19 @@ class OverloadSuggestion(BaseModel):
     suggested_reps: int
     reasoning: str
     confidence: str  # "high", "medium", "low"
+
+
+class BatchOverloadRequest(BaseModel):
+    """Request payload for batch overload suggestions."""
+
+    exercise_names: list[str] = Field(min_length=1, max_length=20)
+
+
+class BatchOverloadResponse(BaseModel):
+    """Response for batch overload suggestions."""
+
+    suggestions: dict[str, Optional[OverloadSuggestion]]
+
 
 
 

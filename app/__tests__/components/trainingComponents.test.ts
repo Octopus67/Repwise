@@ -16,32 +16,32 @@ import type { SetType, WorkoutTemplateResponse } from '../../types/training';
 // ─── formatDuration edge cases ──────────────────────────────────────────────
 
 describe('formatDuration edge cases', () => {
-  it('0 seconds → "00:00:00"', () => {
-    expect(formatDuration(0)).toBe('00:00:00');
+  it('0 seconds → "00:00"', () => {
+    expect(formatDuration(0)).toBe('00:00');
   });
 
-  it('3599 seconds → "00:59:59"', () => {
-    expect(formatDuration(3599)).toBe('00:59:59');
+  it('3599 seconds → "59:59"', () => {
+    expect(formatDuration(3599)).toBe('59:59');
   });
 
-  it('3600 seconds → "01:00:00"', () => {
-    expect(formatDuration(3600)).toBe('01:00:00');
+  it('3600 seconds → "1:00:00"', () => {
+    expect(formatDuration(3600)).toBe('1:00:00');
   });
 
   it('86399 seconds → "23:59:59"', () => {
     expect(formatDuration(86399)).toBe('23:59:59');
   });
 
-  it('negative input → "00:00:00"', () => {
-    expect(formatDuration(-5)).toBe('00:00:00');
+  it('negative input → "00:00"', () => {
+    expect(formatDuration(-5)).toBe('00:00');
   });
 
-  it('NaN input → "00:00:00"', () => {
-    expect(formatDuration(NaN)).toBe('00:00:00');
+  it('NaN input → "00:00"', () => {
+    expect(formatDuration(NaN)).toBe('00:00');
   });
 
-  it('Infinity input → "00:00:00"', () => {
-    expect(formatDuration(Infinity)).toBe('00:00:00');
+  it('Infinity input → "00:00"', () => {
+    expect(formatDuration(Infinity)).toBe('00:00');
   });
 });
 

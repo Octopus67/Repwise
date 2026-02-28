@@ -43,7 +43,7 @@ import { Icon } from '../../components/common/Icon';
 import { useDailyTargets } from '../../hooks/useDailyTargets';
 import { useHealthData } from '../../hooks/useHealthData';
 import api from '../../services/api';
-import { isTrainingLogV2Enabled } from '../../utils/featureFlags';
+import { isPremiumWorkoutLoggerEnabled } from '../../utils/featureFlags';
 
 interface Article {
   id: string;
@@ -476,7 +476,7 @@ export function DashboardScreen({ navigation }: any) {
                   accentColor={colors.macro.protein}
                   completed={trainingLogged}
                   onPress={() => handleQuickAction(() => {
-                    if (isTrainingLogV2Enabled()) {
+                    if (isPremiumWorkoutLoggerEnabled()) {
                       navigation.push('ActiveWorkout', { mode: 'new' });
                     } else {
                       setShowTraining(true);
@@ -725,7 +725,7 @@ export function DashboardScreen({ navigation }: any) {
         onSuccess={() => loadDashboardData(selectedDate)}
         prefilledMealName={prefilledMealName}
       />
-      {!isTrainingLogV2Enabled() && (
+      {!isPremiumWorkoutLoggerEnabled() && (
         <AddTrainingModal
           visible={showTraining}
           onClose={() => setShowTraining(false)}

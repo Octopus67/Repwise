@@ -20,7 +20,7 @@ Repwise is a full-stack mobile + web app (React Native / Expo frontend, FastAPI 
 
 ```
 HOS/
-├── app/                    # React Native (Expo SDK 52) frontend
+├── app/                    # React Native (Expo SDK 53) frontend
 │   ├── screens/            # Screen components by feature
 │   ├── components/         # Reusable UI components
 │   ├── store/              # Zustand state management
@@ -39,7 +39,7 @@ HOS/
 ```
 
 **Tech stack:**
-- Frontend: React Native + Expo SDK 52, TypeScript, Zustand, React Navigation, Reanimated 3
+- Frontend: React Native + Expo SDK 53, TypeScript, Zustand, React Navigation, Reanimated 4
 - Backend: FastAPI, SQLAlchemy (async), SQLite (dev) / PostgreSQL (prod), Alembic
 - Auth: JWT (access + refresh tokens), bcrypt
 - Payments: Stripe (global) + Razorpay (India)
