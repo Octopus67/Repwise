@@ -751,8 +751,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <>
-    <ModalContainer visible={visible} onClose={handleClose} title="Log Nutrition" testID="add-nutrition-modal" closeButtonTestID="nutrition-cancel-button">
+    <><ModalContainer visible={visible} onClose={handleClose} title="Log Nutrition" testID="add-nutrition-modal" closeButtonTestID="nutrition-cancel-button">
       <ScrollView keyboardShouldPersistTaps="handled">
         {/* ── Inline Success Message ──────────────────────────── */}
         {successMessage && (
@@ -1482,8 +1481,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
           onClose={() => setShowBarcodeScanner(false)}
         />
       </Modal>
-    )}
-    </>
+    )}</>
   );
 }
 
