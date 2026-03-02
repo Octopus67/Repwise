@@ -32,6 +32,24 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
       type: 'sourceFile',
     };
   }
+  // Zustand ESM (.mjs) uses import.meta.env which breaks Metro's web bundle
+  // (served as non-module script). Force CJS builds on web.
+  if (platform === 'web') {
+    const zustandCjsMap = {
+      'zustand': 'node_modules/zustand/index.js',
+      'zustand/vanilla': 'node_modules/zustand/vanilla.js',
+      'zustand/middleware': 'node_modules/zustand/middleware.js',
+      'zustand/shallow': 'node_modules/zustand/shallow.js',
+      'zustand/traditional': 'node_modules/zustand/traditional.js',
+      'zustand/context': 'node_modules/zustand/context.js',
+    };
+    if (zustandCjsMap[moduleName]) {
+      return {
+        filePath: path.resolve(__dirname, zustandCjsMap[moduleName]),
+        type: 'sourceFile',
+      };
+    }
+  }
   if (defaultResolver) {
     return defaultResolver(context, moduleName, platform);
   }

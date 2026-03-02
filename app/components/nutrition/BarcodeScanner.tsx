@@ -26,6 +26,12 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
 import api from '../../services/api';
+import {
+  isValidBarcode,
+  shouldProcessScan,
+  scaleBarcodeResult,
+  isValidMultiplier,
+} from '../../utils/barcodeUtils';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -101,9 +107,12 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
   // ── Barcode scan handler ───────────────────────────────────────────────
   const handleBarCodeScanned = useCallback(
     async ({ data }: { type: string; data: string }) => {
+      // Validate barcode format before processing
+      if (!isValidBarcode(data)) return;
+
       // Debounce: ignore scans within 2 seconds of last scan
       const now = Date.now();
-      if (now - lastScanRef.current < 2000) return;
+      if (!shouldProcessScan(now, lastScanRef.current, 2000)) return;
       lastScanRef.current = now;
 
       // Vibrate on scan
@@ -138,9 +147,8 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
   // ── Confirm selection ──────────────────────────────────────────────────
   const handleConfirm = () => {
     if (!scannedFood) return;
-    const mult = parseFloat(multiplier);
-    if (isNaN(mult) || mult <= 0) return;
-    onFoodSelected(scannedFood, mult);
+    if (!isValidMultiplier(multiplier)) return;
+    onFoodSelected(scannedFood, parseFloat(multiplier));
   };
 
   // ── Render: Permission denied ──────────────────────────────────────────
@@ -183,12 +191,7 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
   // ── Render: Food found — confirmation card ─────────────────────────────
   if (state === 'found' && scannedFood) {
     const mult = parseFloat(multiplier) || 1;
-    const scaled = {
-      calories: Math.round(scannedFood.calories * mult),
-      protein_g: Math.round(scannedFood.protein_g * mult * 10) / 10,
-      carbs_g: Math.round(scannedFood.carbs_g * mult * 10) / 10,
-      fat_g: Math.round(scannedFood.fat_g * mult * 10) / 10,
-    };
+    const scaled = scaleBarcodeResult(scannedFood, mult);
 
     return (
       <View style={styles.container}>

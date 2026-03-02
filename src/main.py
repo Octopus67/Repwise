@@ -256,3 +256,6 @@ app.include_router(meal_plans_router, prefix="/api/v1/meal-plans", tags=["meal-p
 
 from src.modules.notifications.router import router as notifications_router
 app.include_router(notifications_router, prefix="/api/v1/notifications", tags=["notifications"])
+
+from src.modules.feature_flags.router import router as feature_flags_router
+app.include_router(feature_flags_router, prefix="/api/v1/feature-flags", tags=["feature-flags"])

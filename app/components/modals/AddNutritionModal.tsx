@@ -33,6 +33,8 @@ import { BarcodeScanner } from '../nutrition/BarcodeScanner';
 import { RecipeBuilderScreen } from '../../screens/nutrition/RecipeBuilderScreen';
 import { Icon } from '../common/Icon';
 import { useStore } from '../../store';
+import { useFeatureFlag } from '../../hooks/useFeatureFlag';
+import { resolveScannerMode } from '../../utils/barcodeUtils';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -138,6 +140,11 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
 
   // ── Barcode scanner state ──────────────────────────────────────────────
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showManualBarcode, setShowManualBarcode] = useState(false);
+  const [manualBarcodeValue, setManualBarcodeValue] = useState('');
+  const [manualBarcodeError, setManualBarcodeError] = useState('');
+  const [manualBarcodeLoading, setManualBarcodeLoading] = useState(false);
+  const { enabled: cameraFlagEnabled } = useFeatureFlag('camera_barcode_scanner');
 
   // ── Recipe logging state ────────────────────────────────────────────────
   const [userRecipes, setUserRecipes] = useState<FoodItem[]>([]);
@@ -349,7 +356,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
     setSearchLoading(true);
     setSearchError('');
     try {
-      const res = await api.get('food/barcode', { params: { code: barcode } });
+      const res = await api.get(`food/barcode/${barcode}`);
       if (res.data?.found && res.data?.food_item) {
         handleSelectFood(res.data.food_item);
       } else {
@@ -651,6 +658,10 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
     setActiveTab('quick');
     setShowRecipeBuilder(false);
     setShowBarcodeScanner(false);
+    setShowManualBarcode(false);
+    setManualBarcodeValue('');
+    setManualBarcodeError('');
+    setManualBarcodeLoading(false);
     setUserRecipes([]);
     setSuccessMessage('');
   };
@@ -1145,12 +1156,11 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
             )}
             <TouchableOpacity
               onPress={() => {
-                if (Platform.OS === 'web') {
-                  // On web, prompt user to type barcode in search field
-                  setSearchQuery('');
-                  setSearchError('Type a barcode number in the search field above, then press Enter.');
-                } else {
+                const mode = resolveScannerMode(Platform.OS as 'ios' | 'android' | 'web' | 'windows' | 'macos', cameraFlagEnabled);
+                if (mode === 'camera') {
                   setShowBarcodeScanner(true);
+                } else {
+                  setShowManualBarcode(true);
                 }
               }}
               style={styles.barcodeBtn}
@@ -1159,6 +1169,59 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
               <Ionicons name="barcode-outline" size={24} color={colors.accent.primary} />
             </TouchableOpacity>
           </View>
+
+          {/* Manual barcode input — shown when flag is off or on web */}
+          {showManualBarcode && (
+            <View style={{ marginTop: spacing[2] }}>
+              <View style={{ flexDirection: 'row', gap: spacing[1] }}>
+                <TextInput
+                  style={[styles.searchInput, { flex: 1 }]}
+                  placeholder="Enter barcode (8-14 digits)"
+                  placeholderTextColor={colors.text.muted}
+                  value={manualBarcodeValue}
+                  onChangeText={(t) => {
+                    setManualBarcodeValue(t);
+                    setManualBarcodeError('');
+                  }}
+                  keyboardType="numeric"
+                  maxLength={14}
+                  autoFocus
+                />
+                <TouchableOpacity
+                  style={[styles.barcodeBtn, { opacity: manualBarcodeLoading ? 0.5 : 1 }]}
+                  disabled={manualBarcodeLoading}
+                  onPress={async () => {
+                    if (!/^\d{8,14}$/.test(manualBarcodeValue)) {
+                      setManualBarcodeError('Enter 8-14 digits');
+                      return;
+                    }
+                    setManualBarcodeLoading(true);
+                    await handleManualBarcodeEntry(manualBarcodeValue);
+                    setManualBarcodeLoading(false);
+                    setShowManualBarcode(false);
+                    setManualBarcodeValue('');
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="search-outline" size={20} color={colors.accent.primary} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.barcodeBtn}
+                  onPress={() => {
+                    setShowManualBarcode(false);
+                    setManualBarcodeValue('');
+                    setManualBarcodeError('');
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="close-outline" size={20} color={colors.text.secondary} />
+                </TouchableOpacity>
+              </View>
+              {manualBarcodeError ? (
+                <Text style={[styles.errorText, { marginTop: 4 }]}>{manualBarcodeError}</Text>
+              ) : null}
+            </View>
+          )}
 
           {searchLoading && (
             <ActivityIndicator color={colors.accent.primary} style={styles.searchSpinner} />

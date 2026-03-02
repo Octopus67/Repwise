@@ -610,3 +610,143 @@ async def test_barcode_endpoint_unauthenticated_returns_401(client, override_get
     """GET /food/barcode/12345678 without auth → 401."""
     resp = await client.get("/api/v1/food/barcode/12345678")
     assert resp.status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# Property 5: Barcode format validation (backend)
+# Feature: camera-barcode-scanner, Property 5: Barcode format validation (backend)
+# ---------------------------------------------------------------------------
+
+import re
+
+_BARCODE_VALID_RE = re.compile(r"^\d{8,14}$")
+
+# Strategy: invalid barcodes — digit-only strings with wrong length.
+# We use digit-only strings to ensure they route cleanly to /barcode/{barcode}
+# and isolate the regex validation logic (not URL routing or UUID parsing).
+_invalid_digit_barcode_strategy = st.one_of(
+    # Too short: 0-7 digits
+    st.text(alphabet="0123456789", min_size=0, max_size=7),
+    # Too long: 15-30 digits
+    st.text(alphabet="0123456789", min_size=15, max_size=30),
+)
+
+# Strategy: invalid barcodes — contain non-digit characters.
+# Use safe URL-path characters (alphanumeric + some punctuation) to avoid
+# routing issues with slashes, percent-encoding, etc.
+_invalid_alpha_barcode_strategy = st.text(
+    alphabet="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_",
+    min_size=1,
+    max_size=20,
+).filter(lambda s: not _BARCODE_VALID_RE.match(s))
+
+# Combined invalid strategy
+_invalid_barcode_strategy_p5 = st.one_of(
+    _invalid_digit_barcode_strategy,
+    _invalid_alpha_barcode_strategy,
+)
+
+# Strategy: strings that DO match ^\d{8,14}$
+_valid_barcode_strategy_p5 = st.text(
+    alphabet="0123456789",
+    min_size=8,
+    max_size=14,
+)
+
+
+class TestProperty5BarcodeFormatValidationBackend:
+    """Property 5: Barcode format validation (backend).
+
+    For any string that does NOT match ``^\\d{8,14}$``, the
+    ``GET /food/barcode/{barcode}`` endpoint should return HTTP 422.
+    For any string that DOES match the pattern, the endpoint should NOT
+    return 422.
+
+    **Validates: Requirements 8.2**
+    """
+
+    @pytest.mark.asyncio
+    @h_settings(
+        max_examples=100,
+        suppress_health_check=[HealthCheck.function_scoped_fixture],
+        deadline=None,
+    )
+    @given(barcode=_invalid_barcode_strategy_p5)
+    async def test_property_5_invalid_barcode_returns_422(
+        self,
+        barcode: str,
+        client,
+        override_get_db,
+    ):
+        """Strings not matching ^\\d{8,14}$ → HTTP 422.
+
+        **Validates: Requirements 8.2**
+        """
+        # Empty strings can't form a valid URL path segment
+        if not barcode:
+            return
+
+        # Register a user and get auth token
+        email = f"prop5_inv_{uuid.uuid4().hex[:8]}@test.com"
+        resp = await client.post(
+            "/api/v1/auth/register",
+            json={"email": email, "password": "securepass123"},
+        )
+        token = resp.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        resp = await client.get(
+            f"/api/v1/food/barcode/{barcode}",
+            headers=headers,
+        )
+        assert resp.status_code == 422, (
+            f"Expected 422 for invalid barcode {barcode!r}, got {resp.status_code}"
+        )
+
+    @pytest.mark.asyncio
+    @h_settings(
+        max_examples=100,
+        suppress_health_check=[HealthCheck.function_scoped_fixture],
+        deadline=None,
+    )
+    @given(barcode=_valid_barcode_strategy_p5)
+    async def test_property_5_valid_barcode_not_422(
+        self,
+        barcode: str,
+        client,
+        override_get_db,
+    ):
+        """Strings matching ^\\d{8,14}$ → NOT HTTP 422.
+
+        **Validates: Requirements 8.2**
+        """
+        # Register a user and get auth token
+        email = f"prop5_val_{uuid.uuid4().hex[:8]}@test.com"
+        resp = await client.post(
+            "/api/v1/auth/register",
+            json={"email": email, "password": "securepass123"},
+        )
+        token = resp.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # Mock external APIs to avoid real network calls — we only care
+        # that the endpoint does NOT reject valid barcodes with 422.
+        with (
+            patch(
+                "src.modules.food_database.barcode_service.get_product_by_barcode",
+                new_callable=AsyncMock,
+                return_value=None,
+            ),
+            patch(
+                "src.modules.food_database.barcode_service.search_usda_foods",
+                new_callable=AsyncMock,
+                return_value=[],
+            ),
+        ):
+            resp = await client.get(
+                f"/api/v1/food/barcode/{barcode}",
+                headers=headers,
+            )
+            assert resp.status_code != 422, (
+                f"Got 422 for valid barcode {barcode!r} — should pass validation"
+            )
