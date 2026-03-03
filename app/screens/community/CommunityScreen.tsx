@@ -6,7 +6,7 @@ import { colors, radius, spacing, typography } from '../../theme/tokens';
 import { Card } from '../../components/common/Card';
 import { Icon } from '../../components/common/Icon';
 
-const TELEGRAM_URL = 'https://t.me/repwise';
+const TELEGRAM_URL = 'https://t.me/repwiseCommunity';
 
 export function CommunityScreen() {
   const navigation = useNavigation();

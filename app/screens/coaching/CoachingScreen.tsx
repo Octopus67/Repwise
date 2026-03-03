@@ -115,7 +115,7 @@ export function CoachingScreen() {
             Get personalized training and nutrition guidance from an experienced coach. Available for premium members.
           </Text>
           <TouchableOpacity
-            onPress={() => Linking.openURL('https://t.me/repwise')}
+            onPress={() => Linking.openURL('https://t.me/repwiseCommunity')}
             style={styles.dmButton}
             activeOpacity={0.8}
           >
