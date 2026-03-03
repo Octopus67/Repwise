@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.payments.models import PaymentTransaction, Subscription
 from src.modules.payments.provider_interface import (
+    CreateSubscriptionParams,
     WebhookEvent,
     get_provider_for_region,
 )
@@ -106,7 +107,31 @@ class PaymentService:
         provider = get_provider_for_region(data.region)
         subscription.provider_name = type(provider).__name__
 
+        # Call provider to create checkout session
+        try:
+            from src.modules.auth.models import User as AuthUser
+            user_stmt = select(AuthUser).where(AuthUser.id == user_id)
+            user_result = await self.session.execute(user_stmt)
+            user = user_result.scalar_one()
+
+            provider_result = await provider.create_subscription(
+                CreateSubscriptionParams(
+                    customer_email=user.email,
+                    plan_id=data.plan_id,
+                    currency=data.currency,
+                    region=data.region,
+                )
+            )
+            subscription.provider_subscription_id = provider_result.provider_subscription_id
+            subscription.provider_customer_id = provider_result.provider_customer_id
+        except Exception:
+            # Provider call failed — revert to free
+            subscription.status = SubscriptionStatus.FREE
+            await self.session.flush()
+            raise
+
         await self.session.flush()
+        await self.session.refresh(subscription)
         return subscription
 
     async def handle_webhook(

@@ -47,11 +47,20 @@ export function UpgradeModal({ visible, onClose }: UpgradeModalProps) {
   const handleSubscribe = async () => {
     setLoading(true);
     try {
-      await api.post('payments/subscribe', { plan: selectedPlan });
+      // Detect region from profile or default to US
+      const profileRes = await api.get('users/profile').catch(() => null);
+      const region = profileRes?.data?.region || 'US';
+      const currency = region === 'IN' ? 'INR' : 'USD';
+
+      await api.post('payments/subscribe', {
+        plan_id: selectedPlan,
+        region,
+        currency,
+      });
       Alert.alert('Success', 'Subscription activated!');
       onClose();
     } catch (err: any) {
-      const message = err?.response?.data?.detail ?? err?.message ?? 'Something went wrong';
+      const message = err?.response?.data?.detail ?? err?.response?.data?.message ?? err?.message ?? 'Something went wrong';
       Alert.alert('Error', message);
     } finally {
       setLoading(false);

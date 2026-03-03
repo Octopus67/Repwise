@@ -40,7 +40,11 @@ async def subscribe(
     service: PaymentService = Depends(_get_service),
 ) -> SubscriptionResponse:
     """Initiate a subscription for the authenticated user."""
-    subscription = await service.initiate_subscription(user_id=user.id, data=data)
+    try:
+        subscription = await service.initiate_subscription(user_id=user.id, data=data)
+    except ValueError as e:
+        from src.shared.errors import UnprocessableError
+        raise UnprocessableError(str(e))
     return SubscriptionResponse.model_validate(subscription)
 
 
