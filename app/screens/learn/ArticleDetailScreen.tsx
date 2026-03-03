@@ -107,6 +107,10 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
     return sections.length > 0 ? sections : [{ type: 'markdown' as const, content: md }];
   }, [article]);
 
+  const progressBarStyle = useAnimatedStyle(() => ({
+    width: `${progressValue.value * 100}%` as any,
+  }));
+
   if (!article) {
     return (
       <SafeAreaView style={styles.safe} edges={['top']} testID="article-detail-screen">
@@ -125,10 +129,6 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
       </SafeAreaView>
     );
   }
-
-  const progressBarStyle = useAnimatedStyle(() => ({
-    width: `${progressValue.value * 100}%` as any,
-  }));
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']} testID="article-detail-screen">
