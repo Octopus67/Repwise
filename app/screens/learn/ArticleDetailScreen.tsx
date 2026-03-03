@@ -43,10 +43,6 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
   const progressValue = useSharedValue(0);
   const reduceMotion = useReduceMotion();
 
-  useEffect(() => {
-    loadArticle();
-  }, [articleId, loadArticle]);
-
   const loadArticle = useCallback(async () => {
     setError(null);
     try {
@@ -57,6 +53,10 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
       setError(msg);
     }
   }, [articleId]);
+
+  useEffect(() => {
+    loadArticle();
+  }, [articleId, loadArticle]);
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
