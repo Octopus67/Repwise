@@ -106,6 +106,7 @@ test('property', () => {
 | `test_wns_integration_simulation.py` | 14 | DB-backed 4-week workout simulations |
 | `test_micro_dashboard.py` | 22 | Micronutrient aggregation, scoring, deficiency detection |
 | `test_nutrition_bugfixes.py` | 6 | Pagination, validation, copy, date filtering |
+| `test_weekly_report_unit.py` | 31 | Report generation, recommendations, schema validation |
 | `test_fatigue_engine_unit.py` | ~20 | Fatigue score computation, regression detection |
 | `test_auth_unit.py` | ~10 | Auth service unit tests |
 | `test_adaptive_engine.py` | ~15 | Adaptive macro calculations |

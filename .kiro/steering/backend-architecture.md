@@ -71,11 +71,12 @@ All mounted at `/api/v1/<prefix>`:
 ## Key Services
 
 ### WNS Volume Engine (`src/modules/training/`)
-- `wns_engine.py` — Pure functions: stimulating_reps, diminishing_returns, atrophy
+- `wns_engine.py` — Pure functions: stimulating_reps, diminishing_returns (K=1.69), atrophy
 - `wns_volume_service.py` — DB-backed WNS calculation per muscle group
 - `exercise_coefficients.py` — Direct (1.0) / fractional (0.5) muscle attribution
 - `volume_service.py` — Legacy volume calculation (RPE-tier based)
-- Feature flag `wns_engine` controls which engine is used
+- Feature flag `wns_engine` controls which engine is used (currently ON by default)
+- Constants: MAX_STIM_REPS=5, DEFAULT_RIR=3.0 (RPE 7), DIMINISHING_K=1.69
 
 ### Fatigue Engine (`src/modules/training/`)
 - `fatigue_engine.py` — Pure functions: e1RM regression, composite fatigue score
@@ -83,10 +84,23 @@ All mounted at `/api/v1/<prefix>`:
 - Components: regression (35%), volume (30%), frequency (20%), nutrition (15%)
 
 ### Micronutrient Dashboard (`src/modules/nutrition/`)
-- `micro_dashboard_service.py` — Weekly aggregation, nutrient score, deficiency alerts
+- `micro_dashboard_service.py` — Weekly aggregation, nutrient score (0-100), deficiency alerts
 - 27 tracked nutrients with age/sex-specific RDA values
+- Score=0 when no data logged; sodium/cholesterol inverted in scoring
 - Endpoint: `GET /nutrition/micronutrient-dashboard`
+
+### Weekly Intelligence Report (`src/modules/reports/`)
+- Integrates WNS HU, nutrient score, compliance, weight-goal alignment
+- Up to 5 actionable recommendations; compliance threshold ±10%
 
 ### Adaptive Engine (`src/modules/adaptive/`)
 - Daily macro targets adjusted by training volume and body composition goals
-- Sync engine computes volume multiplier from training data
+
+### User/Profile (`src/modules/user/`)
+- Bodyweight: upsert by date (no duplicates)
+- display_name: min_length=1 enforced
+
+### Nutrition (`src/modules/nutrition/`)
+- `food_name` field on entries (optional, nullable)
+- Pagination limit max 500; macro-calorie mismatch logged as warning
+- Copy entries preserves source_meal_id and food_name

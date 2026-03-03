@@ -45,8 +45,8 @@ atrophy = atrophy_days * daily_rate
 | Constant | Value | Source |
 |----------|-------|--------|
 | MAX_STIM_REPS | 5.0 | Beardsley (2019) |
-| DEFAULT_RIR | 3.0 | Conservative default (RPE 7) |
-| DIMINISHING_K | 1.69 | Schoenfeld meta-analysis fit |
+| DEFAULT_RIR | 3.0 | Conservative default (RPE 7) — assumes moderate effort when user doesn't log RPE/RIR |
+| DIMINISHING_K | 1.69 | Fitted to Schoenfeld meta-analysis: 6 sets = 2.0x stimulus of 1 set |
 | STIMULUS_DURATION | 2.0 days | MPS elevation research |
 | MAINTENANCE_SETS | 3.0/week | Beardsley recommendation |
 
