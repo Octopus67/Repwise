@@ -325,13 +325,14 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   }, [store]);
 
   const handleFinishTap = useCallback(() => {
+    if (saving) return;
     const completedSets = store.exercises.flatMap((e) => e.sets).filter((s) => s.completed);
     if (completedSets.length === 0) {
       showAlert('No Completed Sets', 'Complete at least one set to save.');
       return;
     }
     setFinishSheetVisible(true);
-  }, [store]);
+  }, [store, saving]);
 
   const handleConfirmFinish = useCallback(async () => {
     setSaving(true);
@@ -363,8 +364,9 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
         isNavigatingAway.current = true;
         navigation.navigate('DashboardHome');
       }
-    } catch {
-      showAlert('Save Failed', 'Could not save workout. Please try again.');
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Could not save workout. Please try again.';
+      showAlert('Save Failed', errorMessage);
     } finally {
       setSaving(false);
     }
@@ -372,7 +374,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
 
   const handleSaveAsTemplate = useCallback(async () => {
     const payload = store.finishWorkout();
-    const templateName = `Workout - ${store.sessionDate || new Date().toISOString().slice(0, 10)}`;
+    const templateName = `Workout - ${store.sessionDate || new Date().toLocaleDateString('en-CA')}`;
     try {
       await api.post('training/user-templates', { name: templateName, exercises: payload.exercises });
       showAlert('Template Saved', `"${templateName}" saved.`);
@@ -521,6 +523,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
         durationFormatted={durationFormatted}
         onFinish={handleFinishTap}
         loading={saving}
+        disabled={saving}
       />
 
       {/* Bottom sheets */}

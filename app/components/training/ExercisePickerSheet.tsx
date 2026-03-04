@@ -27,11 +27,29 @@ export function ExercisePickerSheet({
 }: ExercisePickerSheetProps) {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounce search input
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      setSearch(searchInput);
+    }, 200);
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [searchInput]);
 
   // Reset search when sheet opens/closes
   useEffect(() => {
     if (visible) {
       setSearch('');
+      setSearchInput('');
       bottomSheetRef.current?.expand();
     } else {
       bottomSheetRef.current?.close();
@@ -95,8 +113,8 @@ export function ExercisePickerSheet({
           style={styles.searchInput}
           placeholder="Search exercises…"
           placeholderTextColor={colors.text.muted}
-          value={search}
-          onChangeText={setSearch}
+          value={searchInput}
+          onChangeText={setSearchInput}
           autoCapitalize="none"
           autoCorrect={false}
           returnKeyType="search"

@@ -21,15 +21,19 @@ export function templateToActiveExercises(
   template: WorkoutTemplateResponse,
   unitSystem: UnitSystem,
 ): ActiveExercise[] {
+  const exerciseNotes = template.metadata?.exercise_notes as Record<string, string> || {};
+  
   return template.exercises.map((ex, exIdx) => ({
     localId: `tmpl-ex-${exIdx}-${Date.now()}`,
     exerciseName: ex.exercise_name,
+    notes: exerciseNotes[ex.exercise_name] || undefined,
     sets: ex.sets.map((s, sIdx) => ({
       localId: `tmpl-set-${exIdx}-${sIdx}-${Date.now()}`,
       setNumber: sIdx + 1,
       weight: s.weight_kg > 0 ? String(convertWeight(s.weight_kg, unitSystem)) : '',
       reps: s.reps > 0 ? String(s.reps) : '',
       rpe: s.rpe != null ? String(s.rpe) : '',
+      rir: '',
       setType: (s.set_type as SetType) || 'normal',
       completed: false,
       completedAt: null,
@@ -47,6 +51,14 @@ export function activeExercisesToTemplate(
   name: string,
   description?: string,
 ): WorkoutTemplateCreate {
+  // Build exercise_notes map: exerciseName → notes (only for exercises with notes)
+  const exerciseNotes: Record<string, string> = {};
+  for (const ex of exercises) {
+    if (ex.notes != null && typeof ex.notes === 'string' && ex.notes.trim()) {
+      exerciseNotes[ex.exerciseName] = ex.notes;
+    }
+  }
+
   return {
     name,
     description: description ?? null,
@@ -59,6 +71,7 @@ export function activeExercisesToTemplate(
         set_type: s.setType,
       })),
     })),
+    metadata: Object.keys(exerciseNotes).length > 0 ? { exercise_notes: exerciseNotes } : null,
   };
 }
 

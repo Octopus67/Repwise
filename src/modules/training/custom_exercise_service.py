@@ -98,9 +98,22 @@ class CustomExerciseService:
         notes: Optional[str] = None,
     ) -> CustomExercise:
         """Persist a new custom exercise."""
+        # Check for duplicate name (case-insensitive)
+        name_trimmed = name.strip()
+        stmt = select(CustomExercise).where(
+            CustomExercise.user_id == user_id,
+            CustomExercise.name.ilike(name_trimmed)
+        )
+        stmt = CustomExercise.not_deleted(stmt)
+        result = await self.session.execute(stmt)
+        existing = result.scalar_one_or_none()
+        if existing:
+            from src.shared.errors import ConflictError
+            raise ConflictError("Exercise with this name already exists")
+        
         exercise = CustomExercise(
             user_id=user_id,
-            name=name.strip(),
+            name=name_trimmed,
             muscle_group=muscle_group.lower(),
             secondary_muscles=secondary_muscles or [],
             equipment=equipment.lower(),

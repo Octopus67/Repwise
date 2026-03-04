@@ -34,7 +34,7 @@ export function calculatePlates(
   if (targetWeightKg <= barWeightKg) {
     return {
       barWeightKg,
-      totalWeightKg: targetWeightKg,
+      totalWeightKg: barWeightKg,
       platesPerSide: [],
       achievableWeightKg: barWeightKg,
       isExact: true,

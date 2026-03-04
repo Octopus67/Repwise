@@ -28,7 +28,7 @@ export function computeWorkoutSummary(
 
   for (const ex of active) {
     for (const s of ex.sets) {
-      if (s.completed) {
+      if (s.completed && s.setType !== 'warm-up') {
         setCount++;
         const w = parseFloat(s.weight) || 0;
         const r = parseInt(s.reps, 10) || 0;

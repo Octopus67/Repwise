@@ -203,7 +203,7 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
 
       {/* Set rows */}
       {exercise.sets.map((set, idx) => {
-        const prevSet = previousPerformance?.sets[idx] ?? null;
+        const prevSet = previousPerformance?.sets?.[idx] ?? null;
         return (
           <SetRowPremium
             key={set.localId}

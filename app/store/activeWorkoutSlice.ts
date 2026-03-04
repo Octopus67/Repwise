@@ -235,6 +235,16 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
         field: 'weight' | 'reps' | 'rpe' | 'rir',
         value: string,
       ) => {
+        // Validate RPE and RIR values
+        if (field === 'rpe' && value !== '') {
+          const rpe = parseFloat(value);
+          if (!isNaN(rpe) && (rpe < 1 || rpe > 10)) return;
+        }
+        if (field === 'rir' && value !== '') {
+          const rir = parseFloat(value);
+          if (!isNaN(rir) && (rir < 0 || rir > 5)) return;
+        }
+        
         set((state) => ({
           exercises: state.exercises.map((ex) => {
             if (ex.localId !== exerciseLocalId) return ex;
@@ -478,6 +488,13 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
     {
       name: 'active-workout-v1',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 1,
+      migrate: (persistedState: any, version: number) => {
+        if (version === 0) {
+          return { ...persistedState, _version: 1 };
+        }
+        return persistedState;
+      },
     },
   ),
 );

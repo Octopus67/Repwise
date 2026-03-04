@@ -9,7 +9,7 @@ export function filterExercises(
   let result = exercises;
 
   if (muscleGroup) {
-    result = result.filter((ex) => ex.muscle_group === muscleGroup);
+    result = result.filter((ex) => ex.muscle_group.toLowerCase() === muscleGroup.toLowerCase());
   }
 
   if (equipment) {

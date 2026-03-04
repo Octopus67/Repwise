@@ -7,6 +7,7 @@ interface StickyFinishBarProps {
   durationFormatted: string;
   onFinish: () => void;
   loading: boolean;
+  disabled?: boolean;
 }
 
 export function StickyFinishBar({
@@ -15,6 +16,7 @@ export function StickyFinishBar({
   durationFormatted,
   onFinish,
   loading,
+  disabled,
 }: StickyFinishBarProps) {
   const summaryText = `${exerciseCount} exercise${exerciseCount !== 1 ? 's' : ''} · ${setCount} set${setCount !== 1 ? 's' : ''} · ${durationFormatted}`;
 
@@ -24,7 +26,7 @@ export function StickyFinishBar({
       <TouchableOpacity
         style={[styles.finishBtn, loading && styles.finishBtnDisabled]}
         onPress={onFinish}
-        disabled={loading}
+        disabled={loading || disabled}
         accessibilityLabel="Finish Workout"
         accessibilityRole="button"
         activeOpacity={0.7}

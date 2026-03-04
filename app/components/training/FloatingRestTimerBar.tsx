@@ -126,8 +126,9 @@ export function FloatingRestTimerBar({
 
   const timerColorKey = getTimerColor(remaining, durationSeconds);
   const timerColor = TIMER_COLOR_MAP[timerColorKey];
-  const minutes = Math.floor(remaining / 60);
-  const seconds = remaining % 60;
+  const clampedRemaining = Math.max(0, remaining);
+  const minutes = Math.floor(clampedRemaining / 60);
+  const seconds = clampedRemaining % 60;
   const timeText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 
   return (

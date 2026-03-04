@@ -17,7 +17,7 @@ export function canCompleteSet(set: ActiveSet): { valid: boolean; errors: string
   const weight = parseFloat(set.weight);
   const reps = parseFloat(set.reps);
 
-  if (!set.weight.trim() || !Number.isFinite(weight) || weight <= 0) {
+  if (!set.weight.trim() || !Number.isFinite(weight) || weight < 0) {
     errors.push('weight');
   }
   if (!set.reps.trim() || !Number.isFinite(reps) || reps <= 0) {
