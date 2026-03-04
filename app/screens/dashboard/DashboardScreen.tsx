@@ -31,7 +31,6 @@ import { TodayWorkoutCard } from '../../components/dashboard/TodayWorkoutCard';
 import { useStore, isPremium } from '../../store';
 import { useActiveWorkoutStore } from '../../store/activeWorkoutSlice';
 import { computeEMA, computeWeeklyChange, formatWeeklyChange } from '../../utils/emaTrend';
-import { formatMuscleGroups } from '../../utils/dayClassificationLogic';
 import { WeeklyCheckinCard } from '../../components/coaching/WeeklyCheckinCard';
 import { FatigueAlertCard } from '../../components/dashboard/FatigueAlertCard';
 import { RecompDashboardCard } from '../../components/dashboard/RecompDashboardCard';
@@ -44,8 +43,6 @@ import { useDailyTargets } from '../../hooks/useDailyTargets';
 import { useHealthData } from '../../hooks/useHealthData';
 import api from '../../services/api';
 import { isPremiumWorkoutLoggerEnabled } from '../../utils/featureFlags';
-import { getWeekDates } from '../../utils/dateScrollerLogic';
-import { calculateWeeklyStreak } from '../../utils/calculateWeeklyStreak';
 
 const DATE_DEBOUNCE_MS = 300;
 
@@ -112,21 +109,11 @@ export function DashboardScreen({ navigation }: any) {
   const [nutritionLogged, setNutritionLogged] = useState(false);
   const [trainingLogged, setTrainingLogged] = useState(false);
   const [totalFat, setTotalFat] = useState(0);
-  const [totalWaterMl, setTotalWaterMl] = useState(0);
-  const [totalFibreG, setTotalFibreG] = useState(0);
 
   // Raw nutrition entries for MealSlotDiary
   const [nutritionEntries, setNutritionEntries] = useState<NutritionEntryRaw[]>([]);
   // Training sessions for Today's Workout card
   const [trainingSessions, setTrainingSessions] = useState<any[]>([]);
-  // Weekly training dates for WeeklyTrainingCalendar
-  const [weeklyTrainedDates, setWeeklyTrainedDates] = useState<Set<string>>(new Set());
-  // Day classification state
-  const [dayClassification, setDayClassification] = useState<{
-    isTrainingDay: boolean;
-    muscleGroups: string[];
-  }>({ isTrainingDay: false, muscleGroups: [] });
-  const [dayClassLoading, setDayClassLoading] = useState(true);
   // Logged dates for DateScroller dot indicators
   const [loggedDates, setLoggedDates] = useState<Set<string>>(new Set());
   // Bodyweight history for trend display
@@ -150,9 +137,6 @@ export function DashboardScreen({ navigation }: any) {
   // Sync engine: adjusted daily targets
   const {
     effectiveTargets: syncTargets,
-    dayClassification: syncDayClass,
-    explanation: syncExplanation,
-    isOverride: syncIsOverride,
     isLoading: syncLoading,
     refetch: refetchSync,
   } = useDailyTargets(selectedDate);
@@ -160,7 +144,6 @@ export function DashboardScreen({ navigation }: any) {
   // Staggered entrance for each section
   const headerAnim = useStaggeredEntrance(0, 60);
   const dateScrollerAnim = useStaggeredEntrance(1, 60);
-  const dayBadgeAnim = useStaggeredEntrance(2, 60);
   const quickActionsAnim = useStaggeredEntrance(3, 60);
   const ringsAnim = useStaggeredEntrance(4, 60);
   const budgetAnim = useStaggeredEntrance(5, 60);
@@ -171,23 +154,14 @@ export function DashboardScreen({ navigation }: any) {
   const loadDashboardData = useCallback(async (dateToLoad?: string, signal?: AbortSignal) => {
     try {
       const targetDate = dateToLoad ?? selectedDate;
-      setDayClassLoading(true);
       setError(null);
 
-      const [nutritionRes, adaptiveRes, trainingRes, weeklyTrainingRes, articlesRes, bwRes, dayClassRes, streakRes] = await Promise.allSettled([
+      const [nutritionRes, adaptiveRes, trainingRes, articlesRes, bwRes, streakRes] = await Promise.allSettled([
         api.get('nutrition/entries', { params: { start_date: targetDate, end_date: targetDate }, signal }),
         api.get('adaptive/snapshots', { params: { limit: 1 }, signal }),
         api.get('training/sessions', { params: { start_date: targetDate, end_date: targetDate, limit: 10 }, signal }),
-        // Fetch weekly training data
-        (() => {
-          const weekDates = getWeekDates(targetDate);
-          const weekStart = weekDates[0];
-          const weekEnd = weekDates[6];
-          return api.get('training/sessions', { params: { start_date: weekStart, end_date: weekEnd, limit: 100 }, signal });
-        })(),
         api.get('content/articles', { params: { limit: 5, status: 'published' }, signal }),
         api.get('users/bodyweight/history', { params: { limit: 90 }, signal }),
-        api.get('training/day-classification', { params: { date: targetDate }, signal }),
         api.get('achievements/streak', { signal }),
       ]);
 
@@ -197,22 +171,18 @@ export function DashboardScreen({ navigation }: any) {
         setNutritionEntries(entries);
 
         const totals = entries.reduce(
-          (acc: { cal: number; pro: number; carb: number; fat: number; water: number; fibre: number }, e: any) => ({
+          (acc: { cal: number; pro: number; carb: number; fat: number }, e: any) => ({
             cal: acc.cal + (e.calories ?? 0),
             pro: acc.pro + (e.protein_g ?? 0),
             carb: acc.carb + (e.carbs_g ?? 0),
             fat: acc.fat + (e.fat_g ?? 0),
-            water: acc.water + (e.micro_nutrients?.water_ml ?? 0),
-            fibre: acc.fibre + (e.micro_nutrients?.fibre_g ?? 0),
           }),
-          { cal: 0, pro: 0, carb: 0, fat: 0, water: 0, fibre: 0 },
+          { cal: 0, pro: 0, carb: 0, fat: 0 },
         );
         setCalories((prev) => ({ ...prev, value: Math.round(totals.cal) }));
         setProtein((prev) => ({ ...prev, value: Math.round(totals.pro) }));
         setCarbs((prev) => ({ ...prev, value: Math.round(totals.carb) }));
         setTotalFat(Math.round(totals.fat));
-        setTotalWaterMl(totals.water);
-        setTotalFibreG(totals.fibre);
         setNutritionLogged(entries.length > 0);
 
         // Build logged dates set from entry_date values
@@ -248,28 +218,6 @@ export function DashboardScreen({ navigation }: any) {
         setTrainingLogged(sessions.length > 0);
         setTrainingSessions(sessions);
       }
-
-      // Process weekly training data
-      if (weeklyTrainingRes.status === 'fulfilled') {
-        const weeklySessions = weeklyTrainingRes.value.data.items ?? [];
-        const trainedDates = new Set<string>();
-        weeklySessions.forEach((session: any) => {
-          if (session.session_date) {
-            trainedDates.add(session.session_date);
-          }
-        });
-        setWeeklyTrainedDates(trainedDates);
-      }
-
-      // Process day classification
-      if (dayClassRes.status === 'fulfilled') {
-        const data = dayClassRes.value.data;
-        setDayClassification({
-          isTrainingDay: data.is_training_day,
-          muscleGroups: formatMuscleGroups(data.muscle_groups),
-        });
-      }
-      // On failure: leave default rest day state — graceful degradation
 
       // Process articles
       if (articlesRes.status === 'fulfilled') {
@@ -346,20 +294,11 @@ export function DashboardScreen({ navigation }: any) {
         setNudges([]);
       }
 
-      // Use achievement API streak if available, fall back to weekly streak calculation
+      // Use achievement API streak
       if (streakRes.status === 'fulfilled' && streakRes.value.data?.current_streak != null) {
         setStreak(streakRes.value.data.current_streak);
       } else {
-        // Fallback: compute weekly streak from training dates
-        const allTrainingDates: string[] = [];
-        if (weeklyTrainingRes.status === 'fulfilled') {
-          const sessions = weeklyTrainingRes.value.data.items ?? [];
-          sessions.forEach((s: any) => {
-            if (s.session_date) allTrainingDates.push(s.session_date);
-          });
-        }
-        const today = new Date().toISOString().split('T')[0];
-        setStreak(calculateWeeklyStreak(allTrainingDates, today));
+        setStreak(0);
       }
     } catch {
       setError('Unable to load dashboard data. Check your connection.');
@@ -367,7 +306,6 @@ export function DashboardScreen({ navigation }: any) {
       setIsLoading(false);
       setRefreshing(false);
       setDateLoading(false);
-      setDayClassLoading(false);
     }
   }, [selectedDate]);
 
@@ -663,9 +601,9 @@ export function DashboardScreen({ navigation }: any) {
 
           if (weightHistory.length === 0) {
             return (
-              <View style={styles.trendSection}>
-                <Text style={styles.emptyStateText}>No weight data yet</Text>
-              </View>
+              <TouchableOpacity style={styles.trendSection} onPress={() => setShowBodyweight(true)} activeOpacity={0.7}>
+                <Text style={styles.emptyStateText}>Tap to log your first weigh-in</Text>
+              </TouchableOpacity>
             );
           }
 
@@ -687,23 +625,13 @@ export function DashboardScreen({ navigation }: any) {
           }
 
           return (
-            <View style={styles.trendSection}>
+            <TouchableOpacity style={styles.trendSection} onPress={() => setShowBodyweight(true)} activeOpacity={0.7} accessibilityLabel="Log bodyweight" accessibilityRole="button">
               <View style={styles.trendRow}>
                 <Text style={styles.trendLabel}>Trend: {displayWeight}{unit}</Text>
                 <Text style={[styles.trendBadge, { color: badgeColor }]}>{changeText}</Text>
-                <TouchableOpacity
-                  onPress={() => Alert.alert(
-                    'Trend Weight',
-                    'Trend weight smooths out daily fluctuations from water, sodium, and other factors.'
-                  )}
-                  activeOpacity={0.7}
-                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                  style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
-                >
-                  <Text style={styles.infoIcon}>ⓘ</Text>
-                </TouchableOpacity>
+                <Text style={styles.trendLogHint}>+ Log</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           );
         })()}
 
@@ -889,13 +817,6 @@ const styles = StyleSheet.create({
   quickItem: {
     flex: 1,
   },
-  articlesEmpty: {
-    color: colors.text.muted,
-    fontSize: typography.size.sm,
-    textAlign: 'center',
-    paddingVertical: spacing[4],
-    lineHeight: typography.lineHeight.sm,
-  },
   skeletonRingsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -932,10 +853,11 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.sm,
   },
-  infoIcon: {
-    color: colors.text.muted,
-    fontSize: typography.size.base,
-    lineHeight: typography.lineHeight.base,
+  trendLogHint: {
+    color: colors.accent.primary,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
   },
   milestoneBanner: {
     flexDirection: 'row',
