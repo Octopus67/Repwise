@@ -167,6 +167,10 @@ class UserService:
             existing.weight_kg = data.weight_kg
             await self.db.flush()
             await self.db.refresh(existing)
+            
+            # Auto-recalculate targets if weight has changed significantly
+            await self._maybe_auto_recalculate(user_id)
+            
             return BodyweightLogResponse.model_validate(existing)
 
         log = BodyweightLog(
@@ -176,6 +180,10 @@ class UserService:
         )
         self.db.add(log)
         await self.db.flush()
+        
+        # Auto-recalculate targets if weight has changed significantly
+        await self._maybe_auto_recalculate(user_id)
+        
         return BodyweightLogResponse.model_validate(log)
 
     async def get_bodyweight_history(
@@ -375,3 +383,105 @@ class UserService:
                 fat_g=output.target_fat_g,
             ),
         )
+
+    async def _maybe_auto_recalculate(self, user_id: uuid.UUID) -> None:
+        """Auto-recalculate targets if weight has changed significantly since last snapshot."""
+        try:
+            # Get latest adaptive snapshot
+            snap_stmt = (
+                select(AdaptiveSnapshot)
+                .where(AdaptiveSnapshot.user_id == user_id)
+                .order_by(AdaptiveSnapshot.created_at.desc())
+                .limit(1)
+            )
+            snap = (await self.db.execute(snap_stmt)).scalar_one_or_none()
+            if snap is None:
+                return  # No snapshot to compare against
+            
+            # Get current EMA weight from recent bodyweight logs
+            bw_stmt = (
+                select(BodyweightLog)
+                .where(BodyweightLog.user_id == user_id)
+                .order_by(BodyweightLog.recorded_date.desc())
+                .limit(14)
+            )
+            bw_rows = (await self.db.execute(bw_stmt)).scalars().all()
+            if len(bw_rows) < 3:
+                return  # Not enough data for EMA
+            
+            # Simple EMA: average of last 7 entries
+            recent_weights = [r.weight_kg for r in bw_rows[:7]]
+            current_ema = sum(recent_weights) / len(recent_weights)
+            
+            # Compare with snapshot weight
+            snapshot_weight = snap.ema_current
+            if snapshot_weight is None or snapshot_weight <= 0:
+                return
+            
+            # Threshold: recalculate if weight changed by > 1kg or > 1.5%
+            diff = abs(current_ema - snapshot_weight)
+            pct_diff = diff / snapshot_weight * 100
+            if diff < 1.0 and pct_diff < 1.5:
+                return  # Not significant enough
+            
+            # Trigger recalculation - get user data
+            goal = (await self.db.execute(
+                select(UserGoal).where(UserGoal.user_id == user_id)
+            )).scalar_one_or_none()
+            
+            metrics = (await self.db.execute(
+                select(UserMetric).where(UserMetric.user_id == user_id)
+                .order_by(UserMetric.recorded_at.desc()).limit(1)
+            )).scalar_one_or_none()
+            
+            if not goal or not metrics:
+                return
+            
+            # Get profile for age/sex
+            profile = await self.get_profile(user_id)
+            prefs = profile.preferences or {}
+            age_years = prefs.get("age_years", 30)
+            sex = prefs.get("sex", "male")
+            
+            # Build adaptive input
+            bw_history = [(r.recorded_date, r.weight_kg) for r in reversed(bw_rows)]
+            adaptive_input = AdaptiveInput(
+                weight_kg=current_ema,
+                height_cm=metrics.height_cm or 170,
+                age_years=age_years,
+                sex=sex,
+                activity_level=ActivityLevel(metrics.activity_level or "moderate"),
+                goal_type=GoalType(goal.goal_type),
+                goal_rate_per_week=goal.goal_rate_per_week or 0.0,
+                bodyweight_history=bw_history,
+                training_load_score=0.0,
+            )
+            
+            new_snap = compute_snapshot(adaptive_input)
+            
+            # Save new snapshot
+            snap_model = AdaptiveSnapshot(
+                user_id=user_id,
+                target_calories=new_snap.target_calories,
+                target_protein_g=new_snap.target_protein_g,
+                target_carbs_g=new_snap.target_carbs_g,
+                target_fat_g=new_snap.target_fat_g,
+                ema_current=new_snap.ema_current,
+                adjustment_factor=new_snap.adjustment_factor,
+                input_parameters={
+                    "weight_kg": adaptive_input.weight_kg,
+                    "height_cm": adaptive_input.height_cm,
+                    "age_years": adaptive_input.age_years,
+                    "sex": adaptive_input.sex,
+                    "activity_level": adaptive_input.activity_level.value,
+                    "goal_type": adaptive_input.goal_type.value,
+                    "goal_rate_per_week": adaptive_input.goal_rate_per_week,
+                    "training_load_score": adaptive_input.training_load_score,
+                },
+            )
+            self.db.add(snap_model)
+            await self.db.flush()
+            
+        except Exception:
+            # Non-critical — don't fail the bodyweight log
+            pass

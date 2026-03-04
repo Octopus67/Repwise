@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.config.database import get_db
 from src.middleware.authenticate import get_current_user
 from src.modules.adaptive.coaching_service import CoachingService
+from src.modules.adaptive.nudge_service import NudgeService
 from typing import Dict, List, Optional
 
 from src.modules.adaptive.schemas import (
@@ -41,6 +42,10 @@ def _get_coaching_service(db: AsyncSession = Depends(get_db)) -> CoachingService
 
 def _get_sync_service(db: AsyncSession = Depends(get_db)) -> SyncEngineService:
     return SyncEngineService(db)
+
+
+def _get_nudge_service(db: AsyncSession = Depends(get_db)) -> NudgeService:
+    return NudgeService(db)
 
 
 @router.post("/snapshots", response_model=SnapshotResponse, status_code=201)
@@ -82,6 +87,15 @@ async def recalculation_status(
         current_goal_type=current_goal_type,
         current_goal_rate=current_goal_rate,
     )
+
+
+@router.get("/nudges")
+async def get_nudges(
+    user: User = Depends(get_current_user),
+    service: NudgeService = Depends(_get_nudge_service),
+) -> list[dict]:
+    """Get smart nudges for the user."""
+    return await service.get_nudges(user_id=user.id)
 
 
 # ---------------------------------------------------------------------------
