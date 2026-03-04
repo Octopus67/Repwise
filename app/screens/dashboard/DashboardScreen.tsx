@@ -725,7 +725,7 @@ export function DashboardScreen({ navigation }: any) {
             />
         )}
 
-        {/* Featured — single tip card, not a full feed */}
+        {/* Featured — single tip card with link to all articles */}
         {!isLoading && articles.length > 0 && (
           <Animated.View style={featuredAnim}>
             <TouchableOpacity
@@ -738,6 +738,15 @@ export function DashboardScreen({ navigation }: any) {
               <Icon name="book" size={16} color={colors.accent.primary} />
               <Text style={styles.milestoneText} numberOfLines={1}>{articles[0].title}</Text>
               <Text style={styles.milestoneChevron}>›</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Learn')}
+              style={styles.seeAllLink}
+              activeOpacity={0.7}
+              accessibilityLabel="See all articles"
+              accessibilityRole="button"
+            >
+              <Text style={styles.seeAllText}>See all articles →</Text>
             </TouchableOpacity>
           </Animated.View>
         )}
@@ -905,6 +914,16 @@ const styles = StyleSheet.create({
     borderColor: colors.border.subtle,
     gap: spacing[2],
     minHeight: 44,
+  },
+  seeAllLink: {
+    alignItems: 'flex-end',
+    paddingVertical: spacing[2],
+  },
+  seeAllText: {
+    color: colors.accent.primary,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.medium,
+    lineHeight: typography.lineHeight.sm,
   },
   readinessEmoji: {
     fontSize: 16,

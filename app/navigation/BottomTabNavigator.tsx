@@ -188,6 +188,7 @@ function DashboardStackScreen() {
           <ArticleDetailScreen
             articleId={route.params.articleId}
             onBack={() => navigation.goBack()}
+            onSeeAll={() => navigation.navigate('Learn')}
           />
         )}
       </DashboardStack.Screen>
@@ -280,6 +281,7 @@ function ProfileStackScreen() {
           <ArticleDetailScreen
             articleId={route.params.articleId}
             onBack={() => navigation.goBack()}
+            onSeeAll={() => navigation.navigate('Learn')}
           />
         )}
       </ProfileStack.Screen>

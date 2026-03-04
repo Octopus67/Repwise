@@ -34,9 +34,10 @@ interface ArticleDetail {
 interface ArticleDetailScreenProps {
   articleId: string;
   onBack: () => void;
+  onSeeAll?: () => void;
 }
 
-export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenProps) {
+export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDetailScreenProps) {
   const [article, setArticle] = useState<ArticleDetail | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -192,6 +193,13 @@ export function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenPr
             <Text key={tag} style={styles.tag}>{tag}</Text>
           ))}
         </View>
+
+        {/* See all articles link */}
+        {onSeeAll && (
+          <TouchableOpacity onPress={onSeeAll} style={styles.seeAllLink} activeOpacity={0.7} accessibilityLabel="Browse all articles" accessibilityRole="button">
+            <Text style={styles.seeAllText}>Browse all articles →</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -276,5 +284,17 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[1],
     borderRadius: radius.full,
     overflow: 'hidden',
+  },
+  seeAllLink: {
+    alignItems: 'center',
+    paddingVertical: spacing[4],
+    marginTop: spacing[4],
+    borderTopWidth: 1,
+    borderTopColor: colors.border.subtle,
+  },
+  seeAllText: {
+    color: colors.accent.primary,
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.medium,
   },
 });
