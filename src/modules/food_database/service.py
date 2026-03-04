@@ -201,8 +201,8 @@ class FoodDatabaseService:
             row_map[row[0]] = row  # id is first column
 
         # Also get rowid→id mapping for ordering
-        id_map_sql = text(f"SELECT rowid, id FROM food_items WHERE rowid IN ({ph})")
-        id_result = await self.db.execute(id_map_sql, params)
+        id_map_sql = text(f"SELECT rowid, id FROM food_items WHERE rowid IN ({','.join(['?' for _ in rowids])})")
+        id_result = await self.db.execute(id_map_sql, rowids)
         for r in id_result.fetchall():
             rowid_to_id[r[0]] = r[1]
 

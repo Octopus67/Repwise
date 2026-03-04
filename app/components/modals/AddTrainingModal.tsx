@@ -174,7 +174,7 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
     setExercises((prev) => {
       const updated = prev.map((e) => {
         if (e.id !== exId) return e;
-        const lastSet = e.sets[e.sets.length - 1];
+        const lastSet = e.sets.length > 0 ? e.sets[e.sets.length - 1] : null;
         const newSet: SetState = lastSet
           ? { id: localId(), reps: lastSet.reps, weight: lastSet.weight, rpe: lastSet.rpe }
           : emptySet();

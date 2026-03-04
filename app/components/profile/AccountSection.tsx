@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
+  Linking,
 } from 'react-native';
 import Animated, { Layout } from 'react-native-reanimated';
 import Constants from 'expo-constants';
@@ -61,6 +62,24 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
         <Button title="Log Out" variant="secondary" onPress={onLogout} />
       </View>
 
+      {/* Legal Links */}
+      <View style={styles.legalSection}>
+        <TouchableOpacity
+          style={styles.legalLink}
+          onPress={() => Linking.openURL('https://repwise.app/privacy')}
+          accessibilityRole="link"
+        >
+          <Text style={styles.legalText}>Privacy Policy</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.legalLink}
+          onPress={() => Linking.openURL('https://repwise.app/terms')}
+          accessibilityRole="link"
+        >
+          <Text style={styles.legalText}>Terms of Service</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Danger Zone */}
       <TouchableOpacity
         style={styles.dangerZoneHeader}
@@ -101,6 +120,23 @@ const styles = StyleSheet.create({
   },
   logoutRow: {
     marginBottom: spacing[4],
+  },
+  legalSection: {
+    marginBottom: spacing[4],
+    paddingBottom: spacing[4],
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.subtle,
+  },
+  legalLink: {
+    paddingVertical: spacing[2],
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  legalText: {
+    color: colors.accent.primary,
+    fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
+    textAlign: 'center',
   },
   dangerZoneHeader: {
     paddingVertical: spacing[3],
