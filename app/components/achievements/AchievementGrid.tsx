@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, useWindowDimensions, TouchableOpacity } from 'react-native';
 import { colors, spacing, typography, letterSpacing as ls } from '../../theme/tokens';
 import { AchievementCard } from './AchievementCard';
+import { AchievementDetailSheet } from './AchievementDetailSheet';
 import { Skeleton } from '../common/Skeleton';
 import api from '../../services/api';
 
@@ -47,6 +48,7 @@ export function AchievementGrid() {
   const [achievements, setAchievements] = useState<AchievementItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [selectedAchievement, setSelectedAchievement] = useState<AchievementItem | null>(null);
   const { width } = useWindowDimensions();
   const numColumns = width > 500 ? 4 : 3;
 
@@ -112,12 +114,29 @@ export function AchievementGrid() {
                   unlocked={item.unlocked}
                   unlockedAt={item.unlocked_at}
                   progress={item.progress}
+                  onPress={() => setSelectedAchievement(item)}
                 />
               </View>
             )}
           />
         </View>
       ))}
+      <AchievementDetailSheet
+        visible={selectedAchievement !== null}
+        onClose={() => setSelectedAchievement(null)}
+        achievement={selectedAchievement ? {
+          id: selectedAchievement.definition.id,
+          title: selectedAchievement.definition.title,
+          description: selectedAchievement.definition.description,
+          category: selectedAchievement.definition.category,
+          threshold: selectedAchievement.definition.threshold,
+          unlocked: selectedAchievement.unlocked,
+          unlocked_at: selectedAchievement.unlocked_at || undefined,
+          progress: selectedAchievement.progress || 0,
+          current_value: selectedAchievement.current_value || undefined,
+          icon: selectedAchievement.definition.icon,
+        } : null}
+      />
     </View>
   );
 }
