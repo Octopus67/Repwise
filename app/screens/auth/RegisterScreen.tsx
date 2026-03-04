@@ -25,6 +25,8 @@ import { Button } from '../../components/common/Button';
 import api from '../../services/api';
 import { useStore } from '../../store';
 import { isValidEmail, trimEmail } from '../../utils/validation';
+import Animated from 'react-native-reanimated';
+import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 
 /** Decode the user ID from a JWT access token. */
 function parseJwtSub(token: string): string {
@@ -54,6 +56,11 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
   const passwordRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
   const setAuth = useStore((s) => s.setAuth);
+  const titleAnim = useStaggeredEntrance(0, 80);
+  const subtitleAnim = useStaggeredEntrance(1, 80);
+  const formAnim = useStaggeredEntrance(2, 80);
+  const buttonAnim = useStaggeredEntrance(3, 80);
+  const linkAnim = useStaggeredEntrance(4, 80);
 
   const handleRegister = async () => {
     setError('');
@@ -108,9 +115,14 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>Start your optimization journey</Text>
+        <Animated.View style={titleAnim}>
+          <Text style={styles.title}>Create Account</Text>
+        </Animated.View>
+        <Animated.View style={subtitleAnim}>
+          <Text style={styles.subtitle}>Start your optimization journey</Text>
+        </Animated.View>
 
+        <Animated.View style={formAnim}>
         {error ? <ErrorBanner testID="register-error-message" message={error} onDismiss={() => setError('')} /> : null}
 
         <TextInput
@@ -178,7 +190,9 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
             <Icon name={showConfirm ? 'eye-off' : 'eye'} size={20} color={colors.text.muted} />
           </TouchableOpacity>
         </View>
+        </Animated.View>
 
+        <Animated.View style={buttonAnim}>
         <TouchableOpacity testID="register-tos-checkbox" onPress={() => setTosAccepted(!tosAccepted)} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing[3], gap: spacing[2], minHeight: 44 }} accessibilityRole="checkbox" accessibilityState={{ checked: tosAccepted }} accessibilityLabel="Accept Terms of Service and Privacy Policy">
           <View style={{ width: 22, height: 22, borderRadius: 4, borderWidth: 1.5, borderColor: tosAccepted ? colors.accent.primary : colors.border.default, backgroundColor: tosAccepted ? colors.accent.primary : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
             {tosAccepted && <Text style={{ color: colors.text.primary, fontSize: typography.size.base }}>✓</Text>}
@@ -187,12 +201,15 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
         </TouchableOpacity>
 
         <Button testID="register-submit-button" title="Register" onPress={handleRegister} loading={loading} disabled={!tosAccepted || loading} style={styles.btn} />
+        </Animated.View>
 
+        <Animated.View style={linkAnim}>
         <TouchableOpacity testID="register-login-link" onPress={onNavigateLogin} style={styles.link}>
           <Text style={styles.linkText}>
             Already have an account? <Text style={styles.linkAccent}>Sign In</Text>
           </Text>
         </TouchableOpacity>
+        </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
   );

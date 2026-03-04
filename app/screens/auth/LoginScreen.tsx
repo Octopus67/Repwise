@@ -17,6 +17,8 @@ import { Button } from '../../components/common/Button';
 import api, { setTokenProvider } from '../../services/api';
 import { useStore } from '../../store';
 import { isValidEmail, trimEmail } from '../../utils/validation';
+import Animated from 'react-native-reanimated';
+import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 
 const TOKEN_KEYS = { access: 'rw_access_token', refresh: 'rw_refresh_token' };
 
@@ -76,6 +78,11 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
   const [loading, setLoading] = useState(false);
   const setAuth = useStore((s) => s.setAuth);
   const passwordRef = useRef<TextInput>(null);
+  const titleAnim = useStaggeredEntrance(0, 80);
+  const subtitleAnim = useStaggeredEntrance(1, 80);
+  const formAnim = useStaggeredEntrance(2, 80);
+  const buttonAnim = useStaggeredEntrance(3, 80);
+  const linkAnim = useStaggeredEntrance(4, 80);
 
   const handleLogin = async () => {
     setError('');
@@ -116,9 +123,14 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Repwise</Text>
-        <Text style={styles.subtitle}>Sign in to continue</Text>
+        <Animated.View style={titleAnim}>
+          <Text style={styles.title}>Repwise</Text>
+        </Animated.View>
+        <Animated.View style={subtitleAnim}>
+          <Text style={styles.subtitle}>Sign in to continue</Text>
+        </Animated.View>
 
+        <Animated.View style={formAnim}>
         {error ? <ErrorBanner testID="login-error-message" message={error} onDismiss={() => setError('')} /> : null}
 
         <TextInput
@@ -162,7 +174,9 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
           </TouchableOpacity>
         </View>
         <View style={{ marginBottom: spacing[3] }} />
+        </Animated.View>
 
+        <Animated.View style={buttonAnim}>
         {onNavigateForgotPassword ? (
           <TouchableOpacity testID="forgot-password-link" onPress={onNavigateForgotPassword} style={{ alignItems: 'flex-end', marginBottom: spacing[3], minHeight: 44, justifyContent: 'center' }}>
             <Text style={{ color: colors.accent.primary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm }}>Forgot Password?</Text>
@@ -170,14 +184,15 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
         ) : null}
 
         <Button testID="login-submit-button" title="Sign In" onPress={handleLogin} loading={loading} style={styles.btn} />
+        </Animated.View>
 
-        {/* OAuth buttons hidden until providers are configured */}
-
+        <Animated.View style={linkAnim}>
         <TouchableOpacity testID="login-register-link" onPress={onNavigateRegister} style={styles.link}>
           <Text style={styles.linkText}>
             Don't have an account? <Text style={styles.linkAccent}>Register</Text>
           </Text>
         </TouchableOpacity>
+        </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
   );

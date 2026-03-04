@@ -12,6 +12,8 @@ import { colors, radius, spacing, typography } from '../../theme/tokens';
 import { Button } from '../../components/common/Button';
 import api from '../../services/api';
 import { isValidEmail, trimEmail } from '../../utils/validation';
+import Animated from 'react-native-reanimated';
+import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 
 interface ForgotPasswordScreenProps {
   onNavigateBack: () => void;
@@ -22,6 +24,10 @@ export function ForgotPasswordScreen({ onNavigateBack }: ForgotPasswordScreenPro
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const titleAnim = useStaggeredEntrance(0, 80);
+  const subtitleAnim = useStaggeredEntrance(1, 80);
+  const formAnim = useStaggeredEntrance(2, 80);
+  const buttonAnim = useStaggeredEntrance(3, 80);
 
   const handleSubmit = async () => {
     setError('');
@@ -52,13 +58,19 @@ export function ForgotPasswordScreen({ onNavigateBack }: ForgotPasswordScreenPro
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <Text style={styles.title}>Check Your Email</Text>
-          <Text style={styles.successMessage}>
-            If an account with that email exists, we've sent a reset link.
-          </Text>
-          <TouchableOpacity onPress={onNavigateBack} style={styles.backLink}>
-            <Text style={styles.backLinkText}>← Back to Sign In</Text>
-          </TouchableOpacity>
+          <Animated.View style={titleAnim}>
+            <Text style={styles.title}>Check Your Email</Text>
+          </Animated.View>
+          <Animated.View style={subtitleAnim}>
+            <Text style={styles.successMessage}>
+              If an account with that email exists, we've sent a reset link.
+            </Text>
+          </Animated.View>
+          <Animated.View style={formAnim}>
+            <TouchableOpacity onPress={onNavigateBack} style={styles.backLink}>
+              <Text style={styles.backLinkText}>← Back to Sign In</Text>
+            </TouchableOpacity>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     );
@@ -70,9 +82,14 @@ export function ForgotPasswordScreen({ onNavigateBack }: ForgotPasswordScreenPro
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Reset Password</Text>
-        <Text style={styles.subtitle}>Enter your email and we'll send a reset link.</Text>
+        <Animated.View style={titleAnim}>
+          <Text style={styles.title}>Reset Password</Text>
+        </Animated.View>
+        <Animated.View style={subtitleAnim}>
+          <Text style={styles.subtitle}>Enter your email and we'll send a reset link.</Text>
+        </Animated.View>
 
+        <Animated.View style={formAnim}>
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <TextInput
@@ -85,7 +102,9 @@ export function ForgotPasswordScreen({ onNavigateBack }: ForgotPasswordScreenPro
           value={email}
           onChangeText={(text) => { setEmail(text); setError(''); }}
         />
+        </Animated.View>
 
+        <Animated.View style={buttonAnim}>
         <Button
           testID="forgot-submit-button"
           title="Send Reset Link"
@@ -97,6 +116,7 @@ export function ForgotPasswordScreen({ onNavigateBack }: ForgotPasswordScreenPro
         <TouchableOpacity onPress={onNavigateBack} style={styles.backLink}>
           <Text style={styles.backLinkText}>← Back to Sign In</Text>
         </TouchableOpacity>
+        </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
