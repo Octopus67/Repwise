@@ -426,7 +426,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
     setSearchLoading(true);
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await api.get('food/search', { params: { q: text.trim() } });
+        const res = await api.get('food/search', { params: { q: text.trim(), limit: 50 } });
         const items = res.data?.items ?? res.data ?? [];
         const safeItems = Array.isArray(items) ? items : [];
         if (safeItems.length === 0) {
@@ -1264,7 +1264,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
 
           {searchResults.length > 0 && (
             <ScrollView style={styles.resultsList} nestedScrollEnabled keyboardShouldPersistTaps="handled">
-              {searchResults.slice(0, 15).map((item) => (
+              {searchResults.slice(0, 50).map((item) => (
                 <TouchableOpacity
                   key={item.id}
                   style={styles.resultItem}
@@ -1283,9 +1283,9 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
                   </Text>
                 </TouchableOpacity>
               ))}
-              {searchResults.length > 15 && (
+              {searchResults.length > 50 && (
                 <Text style={styles.truncationText}>
-                  Showing 15 of {searchResults.length} results. Refine your search for more.
+                  Showing 50 of {searchResults.length} results. Refine your search for more.
                 </Text>
               )}
             </ScrollView>

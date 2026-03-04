@@ -124,6 +124,8 @@ class FoodDatabaseService:
 
         limit = pagination.limit
         offset = pagination.offset
+        # Fetch more candidates from FTS so Python re-ranking can surface exact/USDA matches
+        fts_fetch_limit = max(limit * 5, 100)
 
         # Sanitize query for FTS5: remove special chars, collapse whitespace
         import re
@@ -138,7 +140,7 @@ class FoodDatabaseService:
 
         # Optional category/source filter via FTS columns
         fts_filter = ""
-        params: dict = {"match_expr": prefix_expr, "limit": limit, "offset": offset}
+        params: dict = {"match_expr": prefix_expr, "limit": fts_fetch_limit, "offset": offset}
         if category:
             fts_filter = " AND fts.category = :category"
             params["category"] = category
@@ -155,7 +157,7 @@ class FoodDatabaseService:
         rowids = [r[0] for r in result.fetchall()]
 
         # Step 2: If too few results, try full token match (no prefix)
-        if len(rowids) < limit and len(tokens) == 1:
+        if len(rowids) < fts_fetch_limit and len(tokens) == 1:
             full_expr = safe_query
             params2 = {**params, "match_expr": full_expr}
             result2 = await self.db.execute(fts_sql, params2)
@@ -165,7 +167,7 @@ class FoodDatabaseService:
                 if rid not in seen:
                     rowids.append(rid)
                     seen.add(rid)
-                    if len(rowids) >= limit:
+                    if len(rowids) >= fts_fetch_limit:
                         break
 
         if not rowids:
@@ -201,8 +203,10 @@ class FoodDatabaseService:
             row_map[row[0]] = row  # id is first column
 
         # Also get rowid→id mapping for ordering
-        id_map_sql = text(f"SELECT rowid, id FROM food_items WHERE rowid IN ({','.join(['?' for _ in rowids])})")
-        id_result = await self.db.execute(id_map_sql, rowids)
+        param_names = [f"r{i}" for i in range(len(rowids))]
+        ph = ",".join(f":{n}" for n in param_names)
+        id_map_sql = text(f"SELECT rowid, id FROM food_items WHERE rowid IN ({ph})")
+        id_result = await self.db.execute(id_map_sql, dict(zip(param_names, rowids)))
         for r in id_result.fetchall():
             rowid_to_id[r[0]] = r[1]
 
@@ -244,19 +248,23 @@ class FoodDatabaseService:
         if user_prefs:
             items = self._personalize_results(items, user_prefs)
 
-        # Re-rank: exact match → starts-with → contains, prefer USDA/verified, then by name length
+        # Re-rank: exact → starts-with → word-match → contains, prefer USDA/verified, shorter names first
         q_lower = query.lower()
+        q_words = q_lower.split()
         source_order = {"usda": 0, "verified": 1, "community": 2, "custom": 3}
         def _rank(item: FoodItem) -> tuple:
             n = item.name.lower()
             if n == q_lower:
-                tier = 0
+                tier = 0  # exact match: "apple" == "apple"
             elif n.startswith(q_lower):
-                tier = 1
+                tier = 1  # starts with: "apple juice" starts with "apple"
+            elif all(any(w.startswith(qw) for w in n.split()) for qw in q_words):
+                tier = 2  # all query words match word starts: "White Bread" for "bread"
             else:
-                tier = 2
+                tier = 3  # substring: "Breadless" contains "bread"
             return (tier, source_order.get(item.source, 9), len(item.name), item.name)
         items.sort(key=_rank)
+        items = items[:limit]  # Trim to requested limit after re-ranking
 
         return PaginatedResult(
             items=items,
