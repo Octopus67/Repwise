@@ -11,6 +11,7 @@ import { Card } from '../common/Card';
 import { EditableField } from '../common/EditableField';
 import { CoachingModeSelector, type CoachingMode } from '../coaching/CoachingModeSelector';
 import { useStore, type UserProfile } from '../../store';
+import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
 import api from '../../services/api';
 
 // ─── SegmentedControl (inline) ───────────────────────────────────────────────
@@ -70,6 +71,8 @@ function detectTimezone(): string {
 
 export function PreferencesSection({ profile, unitSystem, coachingMode }: PreferencesSectionProps) {
   const store = useStore();
+  const showRpeRirTooltip = useWorkoutPreferencesStore((s) => s.showRpeRirTooltip);
+  const dismissRpeRirTooltip = useWorkoutPreferencesStore((s) => s.dismissRpeRirTooltip);
   const [savingUnit, setSavingUnit] = useState(false);
   const [savingTimezone, setSavingTimezone] = useState(false);
   const [savingCoaching, setSavingCoaching] = useState(false);
@@ -183,6 +186,12 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
     [coachingMode, store],
   );
 
+  // ── Reset RPE/RIR tooltip ──
+  const handleResetRpeTooltip = useCallback(() => {
+    // Reset to true to show tooltip again
+    useWorkoutPreferencesStore.setState({ showRpeRirTooltip: true });
+  }, []);
+
   const timezoneDisplay = profile.timezone ?? detectTimezone();
 
   return (
@@ -244,6 +253,21 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
           onChange={handleCoachingChange}
         />
       </View>
+
+      {/* 6. Reset RPE/RIR Guide */}
+      {!showRpeRirTooltip && (
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>RPE/RIR Guide</Text>
+          <TouchableOpacity
+            onPress={handleResetRpeTooltip}
+            style={styles.resetButton}
+            accessibilityLabel="Reset RPE/RIR guide"
+            accessibilityRole="button"
+          >
+            <Text style={styles.resetButtonText}>Reset</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Inline error */}
       {error && <Text style={styles.error}>{error}</Text>}
@@ -311,6 +335,19 @@ const styles = StyleSheet.create({
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     marginTop: spacing[2],
+  },
+  resetButton: {
+    backgroundColor: colors.bg.surfaceRaised,
+    borderRadius: radius.sm,
+    paddingVertical: spacing[1],
+    paddingHorizontal: spacing[2],
+    borderWidth: 1,
+    borderColor: colors.border.default,
+  },
+  resetButtonText: {
+    color: colors.text.secondary,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.medium,
   },
 });
 

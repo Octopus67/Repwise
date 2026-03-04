@@ -42,6 +42,7 @@ import { StickyFinishBar } from '../../components/training/StickyFinishBar';
 import { FinishConfirmationSheet } from '../../components/training/FinishConfirmationSheet';
 import { ExercisePickerSheet } from '../../components/training/ExercisePickerSheet';
 import { PRCelebration } from '../../components/training/PRCelebration';
+import { RPEEducationSheet } from '../../components/training/RPEEducationSheet';
 
 // Utilities
 import { formatDuration } from '../../utils/durationFormat';
@@ -78,6 +79,8 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   const profile = useStore((s) => s.profile);
   const showRpeRir = useWorkoutPreferencesStore((s) => s.showRpeColumn);
   const toggleRpeColumn = useWorkoutPreferencesStore((s) => s.toggleRpeColumn);
+  const showRpeRirTooltip = useWorkoutPreferencesStore((s) => s.showRpeRirTooltip);
+  const dismissRpeRirTooltip = useWorkoutPreferencesStore((s) => s.dismissRpeRirTooltip);
 
   // ── Local UI state ──
   const [saving, setSaving] = useState(false);
@@ -87,6 +90,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   const [prCelebrationVisible, setPrCelebrationVisible] = useState(false);
   const [prData, setPrData] = useState<PersonalRecordResponse[]>([]);
   const [overflowMenuVisible, setOverflowMenuVisible] = useState(false);
+  const [rpeEducationVisible, setRpeEducationVisible] = useState(false);
   const [exerciseList, setExerciseList] = useState<string[]>([]);
   const [recentExercises, setRecentExercises] = useState<string[]>([]);
   const [muscleGroupMap, setMuscleGroupMap] = useState<Record<string, string>>({});
@@ -419,6 +423,15 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
     store.dismissRestTimer();
   }, [store]);
 
+  const handleRpeEducationClose = useCallback(() => {
+    setRpeEducationVisible(false);
+  }, []);
+
+  const handleRpeEducationDontShowAgain = useCallback(() => {
+    dismissRpeRirTooltip();
+    setRpeEducationVisible(false);
+  }, [dismissRpeRirTooltip]);
+
   // ── Derived state ──
 
   const summary = computeWorkoutSummary(store.exercises);
@@ -456,7 +469,15 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
           <View style={styles.overflowMenu}>
             <TouchableOpacity
               style={styles.overflowMenuItem}
-              onPress={() => { toggleRpeColumn(); setOverflowMenuVisible(false); }}
+              onPress={() => { 
+                const wasHidden = !showRpeRir;
+                toggleRpeColumn(); 
+                setOverflowMenuVisible(false);
+                // Show education sheet on first enable
+                if (wasHidden && showRpeRirTooltip) {
+                  setRpeEducationVisible(true);
+                }
+              }}
               accessibilityLabel={showRpeRir ? 'Hide RPE/RIR column' : 'Show RPE/RIR column'}
               accessibilityRole="button"
             >
@@ -518,6 +539,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
                 handleWeightStep(exercise.localId, setLocalId, direction)
               }
               onApplyOverload={() => handleApplyOverload(exercise.localId)}
+              onShowRpeEducation={() => setRpeEducationVisible(true)}
               />
             </ExerciseCardWrapper>
           );
@@ -571,6 +593,12 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
         onConfirm={handleConfirmFinish}
         onSaveAsTemplate={handleSaveAsTemplate}
         onCancel={() => setFinishSheetVisible(false)}
+      />
+
+      <RPEEducationSheet
+        visible={rpeEducationVisible}
+        onClose={handleRpeEducationClose}
+        onDontShowAgain={handleRpeEducationDontShowAgain}
       />
 
       {/* PR Celebration overlay */}

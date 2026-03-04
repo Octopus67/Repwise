@@ -11,10 +11,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface WorkoutPreferencesState {
   showRpeColumn: boolean;
+  showRpeRirTooltip: boolean;
 }
 
 interface WorkoutPreferencesActions {
   toggleRpeColumn: () => void;
+  dismissRpeRirTooltip: () => void;
 }
 
 export const useWorkoutPreferencesStore = create<
@@ -23,9 +25,14 @@ export const useWorkoutPreferencesStore = create<
   persist(
     (set) => ({
       showRpeColumn: false,
+      showRpeRirTooltip: true,
 
       toggleRpeColumn: () => {
         set((state) => ({ showRpeColumn: !state.showRpeColumn }));
+      },
+
+      dismissRpeRirTooltip: () => {
+        set({ showRpeRirTooltip: false });
       },
     }),
     {

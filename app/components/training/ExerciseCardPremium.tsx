@@ -52,6 +52,7 @@ export interface ExerciseCardPremiumProps {
   onCopyPreviousToSet: (setLocalId: string) => void;
   onWeightStep: (setLocalId: string, direction: 'up' | 'down') => void;
   onApplyOverload?: () => void;
+  onShowRpeEducation?: () => void;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -75,6 +76,7 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
   onCopyPreviousToSet,
   onWeightStep,
   onApplyOverload,
+  onShowRpeEducation,
 }) => {
   const [notesVisible, setNotesVisible] = useState(false);
   const [notesText, setNotesText] = useState(exercise.notes ?? '');
@@ -200,6 +202,31 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
           />
         </View>
       )}
+
+      {/* Column headers */}
+      <View style={styles.columnHeaders}>
+        <Text style={styles.columnHeader}>#</Text>
+        <Text style={styles.columnHeader}>Previous</Text>
+        <Text style={styles.columnHeader}>Reps</Text>
+        <Text style={styles.columnHeader}>Weight</Text>
+        {showRpeRir && (
+          <View style={styles.rpeHeaderContainer}>
+            <Text style={styles.columnHeader}>{rpeMode === 'rpe' ? 'RPE' : 'RIR'}</Text>
+            {onShowRpeEducation && (
+              <TouchableOpacity
+                onPress={onShowRpeEducation}
+                style={styles.infoButton}
+                accessibilityLabel="Learn about RPE and RIR"
+                accessibilityRole="button"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.infoButtonText}>ⓘ</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+        <Text style={styles.columnHeader}>Done</Text>
+      </View>
 
       {/* Set rows */}
       {exercise.sets.map((set, idx) => {
@@ -377,6 +404,43 @@ const styles = StyleSheet.create({
 
   badgeRow: {
     marginBottom: spacing[2],
+  },
+
+  columnHeaders: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing[1],
+    paddingHorizontal: spacing[2],
+    marginBottom: spacing[1],
+    gap: spacing[2],
+  },
+  columnHeader: {
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.medium,
+    color: colors.text.muted,
+    textAlign: 'center',
+    flex: 1,
+    minWidth: 44,
+    maxWidth: 60,
+  },
+  rpeHeaderContainer: {
+    flex: 1,
+    minWidth: 44,
+    maxWidth: 60,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[1],
+  },
+  infoButton: {
+    width: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoButtonText: {
+    fontSize: 12,
+    color: colors.text.muted,
   },
 
   addSetBtn: {
