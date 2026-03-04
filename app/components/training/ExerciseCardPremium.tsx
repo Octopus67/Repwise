@@ -205,14 +205,14 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
 
       {/* Column headers */}
       <View style={styles.columnHeaders}>
-        <Text style={styles.columnHeader}>#</Text>
-        <Text style={styles.columnHeader}>Previous</Text>
-        <Text style={styles.columnHeader}>Reps</Text>
-        <Text style={styles.columnHeader}>Weight</Text>
+        <Text style={styles.columnHeaderSetNum}>#</Text>
+        <Text style={styles.columnHeaderPrev}>Previous</Text>
+        <Text style={styles.columnHeaderReps}>Reps</Text>
+        <Text style={styles.columnHeaderWeight}>Weight</Text>
         {showRpeRir && (
           <View style={styles.rpeHeaderContainer}>
-            <Text style={styles.columnHeader}>RPE</Text>
-            <Text style={styles.columnHeader}>RIR</Text>
+            <Text style={styles.columnHeaderIntensity}>RPE</Text>
+            <Text style={styles.columnHeaderIntensity}>RIR</Text>
             {onShowRpeEducation && (
               <TouchableOpacity
                 onPress={onShowRpeEducation}
@@ -226,7 +226,7 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
             )}
           </View>
         )}
-        <Text style={styles.columnHeader}>Done</Text>
+        <Text style={styles.columnHeaderDone}>Done</Text>
       </View>
 
       {/* Set rows */}
@@ -412,24 +412,59 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[1],
     paddingHorizontal: spacing[2],
     marginBottom: spacing[1],
-    gap: spacing[2],
+    gap: spacing[1],
   },
   columnHeader: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
     color: colors.text.muted,
     textAlign: 'center',
-    flex: 1,
-    minWidth: 44,
-    maxWidth: 60,
+  },
+  columnHeaderSetNum: {
+    width: 18,
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.medium,
+    color: colors.text.muted,
+    textAlign: 'center',
+  },
+  columnHeaderPrev: {
+    width: 68,
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.medium,
+    color: colors.text.muted,
+    textAlign: 'center',
+  },
+  columnHeaderReps: {
+    width: 48,
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.medium,
+    color: colors.text.muted,
+    textAlign: 'center',
+  },
+  columnHeaderWeight: {
+    width: 108, // 26 + 56 + 26 (steppers + input)
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.medium,
+    color: colors.text.muted,
+    textAlign: 'center',
+  },
+  columnHeaderIntensity: {
+    width: 44,
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.medium,
+    color: colors.text.muted,
+    textAlign: 'center',
+  },
+  columnHeaderDone: {
+    width: 32,
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.medium,
+    color: colors.text.muted,
+    textAlign: 'center',
   },
   rpeHeaderContainer: {
-    flex: 1,
-    minWidth: 44,
-    maxWidth: 60,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: spacing[1],
   },
   infoButton: {
