@@ -56,6 +56,11 @@ export function CopyMealsBar({ targetDate, onCopyComplete }: CopyMealsBarProps) 
       Alert.alert('Invalid date', 'Please enter a date in YYYY-MM-DD format.');
       return;
     }
+    const date = new Date(sourceDate);
+    if (isNaN(date.getTime())) {
+      Alert.alert('Invalid date', 'Please enter a valid date.');
+      return;
+    }
     copyFromDate(sourceDate);
   };
 

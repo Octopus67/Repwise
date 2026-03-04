@@ -48,7 +48,7 @@ export function QuickAddModal({ visible, onClose, onSuccess, targetDate }: Quick
       await api.post('nutrition/entries', {
         entry_date: targetDate,
         meal_name: 'Quick add',
-        calories: Number(calories),
+        calories: safeNum(calories),
         protein_g: safeNum(protein),
         carbs_g: safeNum(carbs),
         fat_g: safeNum(fat),

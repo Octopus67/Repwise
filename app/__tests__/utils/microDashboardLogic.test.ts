@@ -11,14 +11,14 @@ describe('getStatusColor', () => {
   test('deficient is red', () => expect(getStatusColor('deficient')).toBe('#EF4444'));
   test('low is yellow', () => expect(getStatusColor('low')).toBe('#F59E0B'));
   test('adequate is green', () => expect(getStatusColor('adequate')).toBe('#22C55E'));
-  test('excess is blue', () => expect(getStatusColor('excess')).toBe('#3B82F6'));
+  test('excess is blue', () => expect(getStatusColor('excess')).toBe('#06B6D4'));
 });
 
 describe('getScoreColor', () => {
   test('80+ is green', () => expect(getScoreColor(85)).toBe('#22C55E'));
-  test('60-79 is lime', () => expect(getScoreColor(65)).toBe('#84CC16'));
+  test('60-79 is green', () => expect(getScoreColor(65)).toBe('#22C55E'));
   test('40-59 is yellow', () => expect(getScoreColor(45)).toBe('#F59E0B'));
-  test('20-39 is orange', () => expect(getScoreColor(25)).toBe('#F97316'));
+  test('20-39 is yellow', () => expect(getScoreColor(25)).toBe('#F59E0B'));
   test('<20 is red', () => expect(getScoreColor(10)).toBe('#EF4444'));
 });
 

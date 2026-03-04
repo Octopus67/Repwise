@@ -104,6 +104,7 @@ class NutritionEntryResponse(BaseModel):
     entry_date: date
     source_meal_id: Optional[uuid.UUID] = None
     newly_unlocked: list[NewlyUnlockedAchievement] = Field(default_factory=list)
+    calorie_mismatch: bool = False
     created_at: datetime
     updated_at: datetime
 

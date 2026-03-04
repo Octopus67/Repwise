@@ -129,7 +129,6 @@ export function MicronutrientDashboardScreen() {
           </TouchableOpacity>
         </View>
         <View style={styles.emptyState}>
-          <Text style={styles.emptyEmoji}>🥗</Text>
           <Text style={styles.emptyTitle}>No nutrition data this week</Text>
           <Text style={styles.emptySubtext}>
             Log your meals to see micronutrient insights, deficiency alerts, and your Nutrient Quality Score.
@@ -220,7 +219,6 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   errorText: { color: colors.semantic.negative, fontSize: typography.size.sm },
   emptyState: { alignItems: 'center', paddingVertical: spacing[8] },
-  emptyEmoji: { fontSize: 48, marginBottom: spacing[4] },
   emptyTitle: { fontSize: typography.size.lg, fontWeight: typography.weight.semibold, color: colors.text.primary, marginBottom: spacing[2] },
   emptySubtext: { fontSize: typography.size.sm, color: colors.text.muted, textAlign: 'center', lineHeight: 20, paddingHorizontal: spacing[4] },
   weekNav: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[4] },

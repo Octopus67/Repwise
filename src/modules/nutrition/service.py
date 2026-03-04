@@ -65,8 +65,8 @@ class NutritionService:
                 user_id=user_id,
                 entry_date=data.entry_date,
             )
-        except Exception:
-            logger.exception("Achievement evaluation failed for nutrition entry")
+        except Exception as e:
+            logger.warning(f'Achievement eval failed: {e}')
 
         # Attach unlocks to the entry object for the router to pick up
         entry._newly_unlocked = newly_unlocked  # type: ignore[attr-defined]
@@ -155,7 +155,13 @@ class NutritionService:
             user_id=user_id,
             action=AuditAction.DELETE,
             entity_id=entry_id,
-            changes={},
+            changes={
+                "calories": entry.calories,
+                "protein_g": entry.protein_g,
+                "carbs_g": entry.carbs_g,
+                "fat_g": entry.fat_g,
+                "food_name": entry.food_name,
+            },
         )
         await self.session.flush()
 
@@ -199,8 +205,8 @@ class NutritionService:
                 user_id=user_id,
                 entry_date=data.entry_date,
             )
-        except Exception:
-            logger.exception("Achievement evaluation failed for batch nutrition entry")
+        except Exception as e:
+            logger.warning(f'Achievement eval failed: {e}')
 
         # Attach to first entry for router to pick up
         if created and newly_unlocked:

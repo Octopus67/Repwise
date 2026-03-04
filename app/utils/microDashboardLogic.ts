@@ -2,15 +2,17 @@
  * Pure logic functions for the micronutrient dashboard.
  */
 
+import { colors } from '../theme/tokens';
+
 export type NutrientStatus = 'deficient' | 'low' | 'adequate' | 'excess' | 'no_data';
 
 export function getStatusColor(status: NutrientStatus): string {
   switch (status) {
-    case 'deficient': return '#EF4444';
-    case 'low': return '#F59E0B';
-    case 'adequate': return '#22C55E';
-    case 'excess': return '#3B82F6';
-    case 'no_data': return '#6B7280';
+    case 'deficient': return colors.semantic.negative;
+    case 'low': return colors.semantic.warning;
+    case 'adequate': return colors.semantic.positive;
+    case 'excess': return colors.accent.primary;
+    case 'no_data': return colors.text.muted;
   }
 }
 
@@ -25,11 +27,11 @@ export function getStatusLabel(status: NutrientStatus): string {
 }
 
 export function getScoreColor(score: number): string {
-  if (score >= 80) return '#22C55E';
-  if (score >= 60) return '#84CC16';
-  if (score >= 40) return '#F59E0B';
-  if (score >= 20) return '#F97316';
-  return '#EF4444';
+  if (score >= 80) return colors.semantic.positive;
+  if (score >= 60) return colors.semantic.positive;
+  if (score >= 40) return colors.semantic.warning;
+  if (score >= 20) return colors.semantic.warning;
+  return colors.semantic.negative;
 }
 
 export function getScoreLabel(score: number): string {

@@ -97,6 +97,9 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
   const selectedDate = useStore((s) => s.selectedDate);
   const isAuthenticated = useStore((s) => s.isAuthenticated);
 
+  // ── Long press tracking to prevent race conditions ──────────────────────
+  const isLongPressingRef = useRef(false);
+
   // ── Manual entry state ───────────────────────────────────────────────────
   const [calories, setCalories] = useState('');
   const [protein, setProtein] = useState('');
@@ -426,8 +429,13 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
         const res = await api.get('food/search', { params: { q: text.trim() } });
         const items = res.data?.items ?? res.data ?? [];
         const safeItems = Array.isArray(items) ? items : [];
-        setSearchResults(safeItems);
-        setSearchEmpty(safeItems.length === 0);
+        if (safeItems.length === 0) {
+          setSearchResults([]);
+          setSearchEmpty(true);
+        } else {
+          setSearchResults(safeItems);
+          setSearchEmpty(false);
+        }
         setSearchError('');
       } catch {
         setSearchError('Search failed. You can still enter macros manually.');
@@ -534,7 +542,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
   const handleMultiplierChange = (text: string) => {
     setServingMultiplier(text);
     const num = parseFloat(text);
-    const maxMult = selectedServing?.label === 'Custom (g)' ? 9999 : 99;
+    const maxMult = selectedServing?.label === 'Custom (g)' ? 10000 : 99;
     if (selectedFood && !isNaN(num) && num > 0 && num <= maxMult) {
       if (selectedServing) {
         // Scale from base serving to (selectedServing * multiplier)
@@ -638,7 +646,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
     setFibre('');
     setWaterGlasses(0);
     setMicroNutrients({});
-    setMicroExpanded(false);
+    // Don't reset microExpanded - preserve user's preference
     setSearchQuery('');
     setSearchResults([]);
     setSelectedFood(null);
@@ -665,6 +673,8 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
     setManualBarcodeLoading(false);
     setUserRecipes([]);
     setSuccessMessage('');
+    // Reset microExpanded only on modal close
+    setMicroExpanded(false);
   };
 
   const handleSubmit = async () => {
@@ -684,7 +694,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
 
     if (selectedFood) {
       const mult = parseFloat(servingMultiplier);
-      const maxMult = selectedServing?.label === 'Custom (g)' ? 9999 : 99;
+      const maxMult = selectedServing?.label === 'Custom (g)' ? 10000 : 99;
       if (isNaN(mult) || mult <= 0 || mult > maxMult) {
         Alert.alert('Invalid amount', `Please enter a value between 1 and ${maxMult}.`);
         return;
@@ -730,6 +740,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
   };
 
   const handleClose = () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     if (hasUnsavedData()) {
       Alert.alert(
         'Discard changes?',
@@ -746,6 +757,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
   };
 
   const handleCloseAfterSave = () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     reset();
     onClose();
   };
@@ -1109,8 +1121,17 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
                 <TouchableOpacity
                   key={fav.id}
                   style={styles.favoriteChip}
-                  onPress={() => handleSelectFavorite(fav)}
-                  onLongPress={() => handleDeleteFavorite(fav)}
+                  onPress={() => {
+                    if (isLongPressingRef.current) return;
+                    handleSelectFavorite(fav);
+                  }}
+                  onLongPress={() => {
+                    isLongPressingRef.current = true;
+                    handleDeleteFavorite(fav);
+                    setTimeout(() => {
+                      isLongPressingRef.current = false;
+                    }, 100);
+                  }}
                   activeOpacity={0.7}
                 >
                   <Text style={styles.favoriteChipName} numberOfLines={1}>
@@ -1201,8 +1222,8 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
                   style={[styles.barcodeBtn, { opacity: manualBarcodeLoading ? 0.5 : 1 }]}
                   disabled={manualBarcodeLoading}
                   onPress={async () => {
-                    if (!/^\d{8,14}$/.test(manualBarcodeValue)) {
-                      setManualBarcodeError('Enter 8-14 digits');
+                    if (!/^\d{6,14}$/.test(manualBarcodeValue)) {
+                      setManualBarcodeError('Enter 6-14 digits');
                       return;
                     }
                     setManualBarcodeLoading(true);
@@ -1262,6 +1283,11 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
                   </Text>
                 </TouchableOpacity>
               ))}
+              {searchResults.length > 15 && (
+                <Text style={styles.truncationText}>
+                  Showing 15 of {searchResults.length} results. Refine your search for more.
+                </Text>
+              )}
             </ScrollView>
           )}
 
@@ -1576,6 +1602,14 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xs,
     lineHeight: typography.lineHeight.xs,
     marginTop: spacing[1],
+  },
+  truncationText: {
+    color: colors.text.muted,
+    fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
+    textAlign: 'center',
+    padding: spacing[2],
+    fontStyle: 'italic',
   },
 
   // ── Multiplier ───────────────────────────────────────────────────────────

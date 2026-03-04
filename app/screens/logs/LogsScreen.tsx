@@ -193,7 +193,7 @@ export function LogsScreen() {
   const handleDeleteNutrition = async (id: string) => {
     try {
       await api.delete(`nutrition/entries/${id}`);
-      setNutritionEntries((prev) => prev.filter((e) => e.id !== id));
+      loadNutritionData();
     } catch { /* ignore */ }
   };
 
@@ -447,7 +447,7 @@ export function LogsScreen() {
                         <Card style={styles.entryCard}>
                           <View style={styles.entryHeader}>
                             <View style={styles.entryNameRow}>
-                              <Text style={styles.entryName}>{entry.meal_name}</Text>
+                              <Text style={styles.entryName}>{entry.food_name || entry.meal_name || 'Unnamed entry'}</Text>
                               {entry.created_at && (
                                 <Text style={styles.entryTimestamp}>
                                   {formatEntryTime(entry.created_at)}

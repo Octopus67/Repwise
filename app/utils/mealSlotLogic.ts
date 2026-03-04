@@ -9,6 +9,7 @@ export type MealSlotName = 'Breakfast' | 'Lunch' | 'Snack' | 'Dinner';
 export interface NutritionEntry {
   id: string;
   meal_name: string;
+  food_name?: string | null;
   calories: number;
   protein_g: number;
   carbs_g: number;
