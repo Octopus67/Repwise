@@ -86,7 +86,7 @@ describe('20.1 Wizard Navigation', () => {
     getState().reset();
 
     expect(getState().goalType).toBeNull();
-    expect(getState().sex).toBe('male');
+    expect(getState().sex).toBeNull();
     expect(getState().weightKg).toBe(70);
     expect(getState().heightCm).toBe(170);
   });
@@ -257,6 +257,8 @@ describe('State Persistence (localStorage)', () => {
 
 describe('Calculation integration with store values', () => {
   test('TDEE breakdown with default store values produces valid result', () => {
+    // Set a valid sex since it's now null by default
+    getState().updateField('sex', 'male');
     const s = getState();
     const age = computeAge(s.birthYear, s.birthMonth);
     const tdee = computeTDEEBreakdown(
@@ -394,7 +396,7 @@ describe('Store field updates (comprehensive)', () => {
     const s = getState();
     expect(s.currentStep).toBe(1);
     expect(s.goalType).toBeNull();
-    expect(s.sex).toBe('male');
+    expect(s.sex).toBeNull();
     expect(s.birthYear).toBeNull();
     expect(s.birthMonth).toBeNull();
     expect(s.weightKg).toBe(70);

@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { useMemo, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { colors, spacing, typography, radius } from '../../../theme/tokens';
 import { Button } from '../../../components/common/Button';
 import { useOnboardingStore, computeAge } from '../../../store/onboardingSlice';
@@ -29,6 +29,7 @@ export function SummaryStep({ onComplete, onEditStep }: Props) {
   const store = useOnboardingStore();
   const age = computeAge(store.birthYear, store.birthMonth);
   const goalType = store.goalType ?? 'maintain';
+  const [submitting, setSubmitting] = useState(false);
 
   const tdee = useMemo(() => {
     if (store.tdeeOverride) return store.tdeeOverride;
@@ -50,6 +51,15 @@ export function SummaryStep({ onComplete, onEditStep }: Props) {
     () => computeMacroSplit(budget.budget, store.weightKg, store.proteinPerKg, store.dietStyle),
     [budget.budget, store.weightKg, store.proteinPerKg, store.dietStyle],
   );
+
+  const handleComplete = async () => {
+    setSubmitting(true);
+    try {
+      await onComplete?.();
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const rows: { label: string; value: string; editStep: number }[] = [
     { label: 'Daily Calories', value: `${budget.budget.toLocaleString()} kcal`, editStep: 6 },
@@ -74,6 +84,9 @@ export function SummaryStep({ onComplete, onEditStep }: Props) {
             style={[styles.row, i < rows.length - 1 && styles.rowBorder]}
             onPress={() => onEditStep?.(row.editStep)}
             activeOpacity={0.6}
+            disabled={submitting}
+            accessibilityLabel={`Edit ${row.label}: ${row.value}`}
+            accessibilityRole="button"
           >
             <Text style={styles.rowLabel}>{row.label}</Text>
             <View style={styles.rowRight}>
@@ -85,7 +98,14 @@ export function SummaryStep({ onComplete, onEditStep }: Props) {
       </View>
 
       {onComplete && (
-        <Button title="Start Your Journey" onPress={onComplete} style={styles.btn} />
+        <View style={styles.btn}>
+          <Button 
+            title={submitting ? "Submitting..." : "Start Your Journey"} 
+            onPress={handleComplete} 
+            disabled={submitting}
+            loading={submitting}
+          />
+        </View>
       )}
     </ScrollView>
   );

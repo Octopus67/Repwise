@@ -27,7 +27,7 @@ async def _register_and_get_headers(client) -> dict[str, str]:
     """Register a new user and return auth headers."""
     resp = await client.post(
         "/api/v1/auth/register",
-        json={"email": "onboard@example.com", "password": "securepass123"},
+        json={"email": "onboard@example.com", "password": "Securepass123"},
     )
     assert resp.status_code == 201
     token = resp.json()["access_token"]
@@ -182,7 +182,7 @@ async def _register_unique_user(client, email: str) -> dict[str, str]:
     """Register a user with a unique email and return auth headers."""
     resp = await client.post(
         "/api/v1/auth/register",
-        json={"email": email, "password": "securepass123"},
+        json={"email": email, "password": "Securepass123"},
     )
     assert resp.status_code == 201
     token = resp.json()["access_token"]

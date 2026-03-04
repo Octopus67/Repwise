@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Types matching the calculation engine
 export type Sex = 'male' | 'female' | 'other';
@@ -67,7 +68,7 @@ interface OnboardingWizardActions {
 const INITIAL_STATE: OnboardingWizardState = {
   currentStep: 1,
   goalType: null,
-  sex: 'male',
+  sex: null as any, // Force explicit selection
   birthYear: null,
   birthMonth: null,
   heightCm: 170,
@@ -98,40 +99,51 @@ const INITIAL_STATE: OnboardingWizardState = {
 const STORAGE_KEY = 'rw_onboarding_wizard_v2';
 
 // Persistence helpers
-function saveState(state: OnboardingWizardState) {
+async function saveState(state: OnboardingWizardState) {
   try {
     const json = JSON.stringify(state);
     if (Platform.OS === 'web') {
       localStorage.setItem(STORAGE_KEY, json);
+    } else {
+      await AsyncStorage.setItem(STORAGE_KEY, json);
     }
-    // Native: SecureStore is async, fire-and-forget
   } catch {}
 }
 
-function loadState(): Partial<OnboardingWizardState> | null {
+async function loadState(): Promise<Partial<OnboardingWizardState> | null> {
   try {
     if (Platform.OS === 'web') {
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : null;
+    } else {
+      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
     }
-    return null;
   } catch {
     return null;
   }
 }
 
-function clearState() {
+async function clearState() {
   try {
     if (Platform.OS === 'web') {
       localStorage.removeItem(STORAGE_KEY);
+    } else {
+      await AsyncStorage.removeItem(STORAGE_KEY);
     }
   } catch {}
 }
 
 export const useOnboardingStore = create<OnboardingWizardState & OnboardingWizardActions>((set, get) => {
-  // Try to restore persisted state
-  const saved = loadState();
-  const initial = saved ? { ...INITIAL_STATE, ...saved } : INITIAL_STATE;
+  // Initial state - will be updated after async load
+  let initial = INITIAL_STATE;
+
+  // Try to restore persisted state asynchronously
+  loadState().then((saved) => {
+    if (saved) {
+      set({ ...INITIAL_STATE, ...saved });
+    }
+  });
 
   return {
     ...initial,

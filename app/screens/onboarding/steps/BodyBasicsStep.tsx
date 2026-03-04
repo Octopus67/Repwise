@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { useMemo, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { colors, spacing, typography, radius } from '../../../theme/tokens';
-import { useOnboardingStore } from '../../../store/onboardingSlice';
+import { useOnboardingStore, computeAge } from '../../../store/onboardingSlice';
 import type { Sex } from '../../../store/onboardingSlice';
 import { Button } from '../../../components/common/Button';
 
@@ -160,11 +160,12 @@ export function BodyBasicsStep({ onNext }: Props) {
     updateField,
   } = useOnboardingStore();
 
-  // Track whether user explicitly chose a sex (store defaults to 'male')
-  const [sexChosen, setSexChosen] = useState(false);
-
   const selectedYear = birthYear ?? DEFAULT_YEAR;
   const selectedMonth = birthMonth ?? (new Date().getMonth() + 1);
+
+  // Calculate age for validation
+  const age = birthYear ? computeAge(birthYear, birthMonth) : 0;
+  const ageValid = age >= 13 && age <= 120;
 
   // ─── Picker data ──────────────────────────────────────────────────────
 
@@ -184,12 +185,11 @@ export function BodyBasicsStep({ onNext }: Props) {
   const handleSexSelect = useCallback(
     (value: Sex) => {
       updateField('sex', value);
-      setSexChosen(true);
     },
     [updateField],
   );
 
-  const canProceed = sexChosen && birthYear !== null && birthYear > 1900;
+  const canProceed = sex !== null && birthYear !== null && birthYear > 1900 && ageValid;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -202,11 +202,13 @@ export function BodyBasicsStep({ onNext }: Props) {
         {SEX_OPTIONS.map((opt) => (
           <TouchableOpacity
             key={opt.value}
-            style={[styles.pill, sex === opt.value && sexChosen && styles.pillActive]}
+            style={[styles.pill, sex === opt.value && styles.pillActive]}
             onPress={() => handleSexSelect(opt.value)}
             activeOpacity={0.7}
+            accessibilityLabel={`Select ${opt.label}`}
+            accessibilityRole="button"
           >
-            <Text style={[styles.pillText, sex === opt.value && sexChosen && styles.pillTextActive]}>
+            <Text style={[styles.pillText, sex === opt.value && styles.pillTextActive]}>
               {opt.label}
             </Text>
           </TouchableOpacity>
@@ -224,6 +226,11 @@ export function BodyBasicsStep({ onNext }: Props) {
           <VerticalPicker data={monthData} selectedValue={selectedMonth} onValueChange={handleMonthChange} />
         </View>
       </View>
+
+      {/* Age validation error */}
+      {birthYear && !ageValid && (
+        <Text style={styles.errorText}>Age must be between 13 and 120 years</Text>
+      )}
 
       {onNext && (
         <Button title="Next" onPress={onNext} disabled={!canProceed} style={styles.nextBtn} />
@@ -245,5 +252,6 @@ const styles = StyleSheet.create({
   pillTextActive: { color: colors.accent.primary, fontWeight: typography.weight.semibold },
   dateRow: { flexDirection: 'row', gap: spacing[3], marginTop: spacing[2] },
   dateCol: { flex: 1 },
+  errorText: { color: colors.semantic.negative, fontSize: typography.size.sm, marginTop: spacing[2], textAlign: 'center', lineHeight: typography.lineHeight.sm },
   nextBtn: { marginTop: spacing[6], width: '100%' },
 });

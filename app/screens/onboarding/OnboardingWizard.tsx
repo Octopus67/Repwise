@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Platform } from
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { colors, spacing, typography, radius, motion } from '../../theme/tokens';
 import { useOnboardingStore } from '../../store/onboardingSlice';
+import { ErrorBoundary } from '../../components/common/ErrorBoundary';
 
 // Step components (will be created in subsequent tasks)
 import { IntentStep } from './steps/IntentStep';
@@ -16,6 +17,7 @@ import { DietStyleStep } from './steps/DietStyleStep';
 import { FoodDNAStep } from './steps/FoodDNAStep';
 import { SummaryStep } from './steps/SummaryStep';
 
+// Total steps - derived from the number of cases in renderStep()
 const TOTAL_STEPS = 10;
 
 interface Props {
@@ -46,9 +48,8 @@ export function OnboardingWizard({ onComplete, onSkip }: Props) {
   }, [currentStep, setStep]);
 
   const goBack = useCallback(() => {
-    if (currentStep > 1) {
-      setStep(currentStep - 1);
-    }
+    if (currentStep <= 1) return; // Guard against going back to step 0
+    setStep(currentStep - 1);
   }, [currentStep, setStep]);
 
   const handleComplete = useCallback(() => {
@@ -84,25 +85,49 @@ export function OnboardingWizard({ onComplete, onSkip }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Progress bar */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressTrack}>
-          <Animated.View style={[styles.progressFill, progressStyle]} />
+      <ErrorBoundary
+        onError={(error, errorInfo) => {
+          console.error('[ErrorBoundary:Onboarding]', error.message);
+          console.error('[ErrorBoundary:Onboarding] Stack:', error.stack);
+        }}
+        fallback={(error, retry) => (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorTitle}>Something went wrong</Text>
+            <Text style={styles.errorMessage}>We encountered an error during onboarding.</Text>
+            <TouchableOpacity 
+              style={styles.restartButton} 
+              onPress={() => {
+                reset();
+                setStep(1);
+              }}
+              accessibilityLabel="Restart onboarding"
+              accessibilityRole="button"
+            >
+              <Text style={styles.restartButtonText}>Restart</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      >
+        {/* Progress bar */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressTrack}>
+            <Animated.View style={[styles.progressFill, progressStyle]} />
+          </View>
+          <Text style={styles.stepCounter}>Step {currentStep} of {TOTAL_STEPS}</Text>
         </View>
-        <Text style={styles.stepCounter}>Step {currentStep} of {TOTAL_STEPS}</Text>
-      </View>
 
-      {/* Back button (hidden on step 1) */}
-      {currentStep > 1 && (
-        <TouchableOpacity onPress={goBack} style={styles.backButton} activeOpacity={0.7}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
-      )}
+        {/* Back button (hidden on step 1) */}
+        {currentStep > 1 && (
+          <TouchableOpacity onPress={goBack} style={styles.backButton} activeOpacity={0.7} accessibilityLabel="Go back" accessibilityRole="button">
+            <Text style={styles.backText}>← Back</Text>
+          </TouchableOpacity>
+        )}
 
-      {/* Current step content */}
-      <View style={styles.content}>
-        {renderStep()}
-      </View>
+        {/* Current step content */}
+        <View style={styles.content}>
+          {renderStep()}
+        </View>
+      </ErrorBoundary>
     </SafeAreaView>
   );
 }
@@ -145,5 +170,35 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: spacing[6],
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing[6],
+  },
+  errorTitle: {
+    color: colors.text.primary,
+    fontSize: typography.size.xl,
+    fontWeight: typography.weight.bold,
+    marginBottom: spacing[2],
+    textAlign: 'center',
+  },
+  errorMessage: {
+    color: colors.text.secondary,
+    fontSize: typography.size.base,
+    textAlign: 'center',
+    marginBottom: spacing[6],
+  },
+  restartButton: {
+    backgroundColor: colors.accent.primary,
+    paddingHorizontal: spacing[6],
+    paddingVertical: spacing[3],
+    borderRadius: radius.md,
+  },
+  restartButtonText: {
+    color: 'white',
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
   },
 });

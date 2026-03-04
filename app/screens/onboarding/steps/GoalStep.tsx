@@ -58,6 +58,9 @@ export function GoalStep({ onNext }: Props) {
     return computeProjectedDate(store.weightKg, store.targetWeightKg, store.rateKgPerWeek);
   }, [store.weightKg, store.targetWeightKg, store.rateKgPerWeek, isMaintain]);
 
+  // Target weight validation
+  const targetWeightValid = store.targetWeightKg === null || (store.targetWeightKg >= 30 && store.targetWeightKg <= 300);
+
   return (
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
       <Text style={styles.heading}>Set Your Pace</Text>
@@ -80,6 +83,8 @@ export function GoalStep({ onNext }: Props) {
                 ]}
                 onPress={() => store.updateField('rateKgPerWeek', r)}
                 activeOpacity={0.7}
+                accessibilityLabel={`Select rate ${r} kg per week`}
+                accessibilityRole="button"
               >
                 <Text style={[styles.rateValue, selected && { color }]}>{r}</Text>
                 <Text style={styles.rateUnit}>kg/wk</Text>
@@ -116,7 +121,7 @@ export function GoalStep({ onNext }: Props) {
         <View style={styles.targetRow}>
           <Text style={styles.targetLabel}>Target weight (optional)</Text>
           <TextInput
-            style={styles.targetInput}
+            style={[styles.targetInput, !targetWeightValid && styles.targetInputError]}
             value={store.targetWeightKg ? String(store.targetWeightKg) : ''}
             onChangeText={(t) => {
               const v = parseFloat(t);
@@ -125,7 +130,11 @@ export function GoalStep({ onNext }: Props) {
             keyboardType="numeric"
             placeholder="kg"
             placeholderTextColor={colors.text.muted}
+            accessibilityLabel="Target weight in kilograms"
           />
+          {!targetWeightValid && (
+            <Text style={styles.errorText}>Target weight must be between 30-300 kg</Text>
+          )}
         </View>
       )}
 
@@ -187,6 +196,15 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: typography.size.md,
     padding: spacing[3],
+  },
+  targetInputError: {
+    borderColor: colors.semantic.negative,
+  },
+  errorText: {
+    color: colors.semantic.negative,
+    fontSize: typography.size.sm,
+    marginTop: spacing[1],
+    lineHeight: typography.lineHeight.sm,
   },
   btn: { marginTop: spacing[2] },
 });

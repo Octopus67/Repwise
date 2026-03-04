@@ -114,7 +114,7 @@ class TestRegistration:
 
     @pytest.mark.asyncio
     async def test_duplicate_registration_rejected(self, override_get_db):
-        """Registering the same email twice returns 409."""
+        """Registering the same email twice returns 201 with empty tokens to prevent email enumeration."""
         c = LifecycleClient()
         try:
             await c.register("dup@test.com", "Password123!")
@@ -122,7 +122,11 @@ class TestRegistration:
                 "/api/v1/auth/register",
                 json={"email": "dup@test.com", "password": "Password123!"},
             )
-            assert resp.status_code == 409
+            assert resp.status_code == 201
+            data = resp.json()
+            assert data["access_token"] == ""
+            assert data["refresh_token"] == ""
+            assert data["expires_in"] == 0
         finally:
             await c.close()
 

@@ -1,3 +1,4 @@
+// DEPRECATED: Use OnboardingWizard instead
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,

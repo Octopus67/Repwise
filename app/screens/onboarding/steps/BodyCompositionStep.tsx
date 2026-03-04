@@ -23,12 +23,12 @@ interface BodyFatRange {
 }
 
 const BODY_FAT_RANGES: BodyFatRange[] = [
-  { min: 10, max: 14, midpoint: 12, label: '10–14%', maleDesc: 'Very lean, visible abs', femaleDesc: 'Very lean, athletic' },
+  { min: 3, max: 14, midpoint: 12, label: '10–14%', maleDesc: 'Very lean, visible abs', femaleDesc: 'Very lean, athletic' },
   { min: 15, max: 19, midpoint: 17, label: '15–19%', maleDesc: 'Lean, some definition', femaleDesc: 'Lean, toned look' },
   { min: 20, max: 24, midpoint: 22, label: '20–24%', maleDesc: 'Average, soft midsection', femaleDesc: 'Fit, healthy range' },
   { min: 25, max: 29, midpoint: 27, label: '25–29%', maleDesc: 'Above average body fat', femaleDesc: 'Average, some softness' },
   { min: 30, max: 34, midpoint: 32, label: '30–34%', maleDesc: 'High body fat', femaleDesc: 'Above average body fat' },
-  { min: 35, max: 50, midpoint: 38, label: '35%+', maleDesc: 'Very high body fat', femaleDesc: 'High body fat' },
+  { min: 35, max: 60, midpoint: 38, label: '35%+', maleDesc: 'Very high body fat', femaleDesc: 'High body fat' },
 ];
 
 export function BodyCompositionStep({ onNext }: Props) {
@@ -49,6 +49,9 @@ export function BodyCompositionStep({ onNext }: Props) {
     return null;
   }, [weightKg, heightCm, sex]);
 
+  // Validation
+  const bodyFatValid = bodyFatPct === null || (bodyFatPct >= 3 && bodyFatPct <= 60);
+
   const handleSelectRange = (midpoint: number) => {
     updateField('bodyFatPct', midpoint);
     updateField('bodyFatSkipped', false);
@@ -63,7 +66,7 @@ export function BodyCompositionStep({ onNext }: Props) {
   };
 
   const isMale = sex === 'male';
-  const canProceed = bodyFatPct !== null;
+  const canProceed = (bodyFatPct !== null && bodyFatValid) || bodyFatSkipped;
 
   const getFillColor = (midpoint: number) => {
     if (midpoint <= 17) return colors.semantic.positive;
@@ -98,6 +101,8 @@ export function BodyCompositionStep({ onNext }: Props) {
               style={[styles.card, isSelected && styles.cardSelected]}
               onPress={() => handleSelectRange(range.midpoint)}
               activeOpacity={0.7}
+              accessibilityLabel={`Select body fat range ${range.label}: ${isMale || sex === 'other' ? range.maleDesc : range.femaleDesc}`}
+              accessibilityRole="button"
             >
               <View style={styles.cardRow}>
                 {/* Vertical fill bar */}
@@ -106,7 +111,7 @@ export function BodyCompositionStep({ onNext }: Props) {
                     style={[
                       styles.barFill,
                       {
-                        height: `${Math.min((range.midpoint / 50) * 100, 100)}%`,
+                        height: `${Math.min((range.midpoint / 60) * 100, 100)}%`,
                         backgroundColor: getFillColor(range.midpoint),
                       },
                     ]}
@@ -127,8 +132,13 @@ export function BodyCompositionStep({ onNext }: Props) {
         })}
       </View>
 
+      {/* Validation error */}
+      {bodyFatPct !== null && !bodyFatValid && (
+        <Text style={styles.errorText}>Body fat must be between 3-60%</Text>
+      )}
+
       {/* Skip / auto-estimate */}
-      <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.7}>
+      <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.7} accessibilityLabel="Skip body fat selection" accessibilityRole="button">
         <Text style={styles.skipText}>Not sure? We'll estimate for you</Text>
       </TouchableOpacity>
 
@@ -252,6 +262,13 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xs,
     marginTop: spacing[2],
     lineHeight: typography.size.xs * typography.lineHeight.normal,
+  },
+  errorText: {
+    color: colors.semantic.negative,
+    fontSize: typography.size.sm,
+    marginTop: spacing[2],
+    textAlign: 'center',
+    lineHeight: typography.lineHeight.sm,
   },
   skipBtn: {
     alignSelf: 'center',

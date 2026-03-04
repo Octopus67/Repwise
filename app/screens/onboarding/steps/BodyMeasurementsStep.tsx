@@ -251,6 +251,10 @@ export function BodyMeasurementsStep({ onNext }: Props) {
     return computeBMR(weightKg, heightCm, age, sex, bodyFatPct ?? undefined);
   }, [weightKg, heightCm, age, sex, bodyFatPct]);
 
+  // Validation
+  const heightValid = heightCm >= 100 && heightCm <= 250;
+  const weightValid = weightKg >= 30 && weightKg <= 300;
+
   // ─── Height / Weight scale config ──────────────────────────────────────
 
   const heightConfig = useMemo(() => {
@@ -275,9 +279,9 @@ export function BodyMeasurementsStep({ onNext }: Props) {
   const handleHeightChange = useCallback(
     (val: number) => {
       if (unitSystem === 'imperial') {
-        updateField('heightCm', Math.round(val * 2.54));
+        updateField('heightCm', Math.round(val * 2.54 * 10000) / 10000); // Higher precision
       } else {
-        updateField('heightCm', Math.round(val));
+        updateField('heightCm', Math.round(val * 10000) / 10000); // Higher precision
       }
     },
     [unitSystem, updateField],
@@ -298,9 +302,9 @@ export function BodyMeasurementsStep({ onNext }: Props) {
   const handleWeightChange = useCallback(
     (val: number) => {
       if (unitSystem === 'imperial') {
-        updateField('weightKg', lbsToKg(val));
+        updateField('weightKg', Math.round(lbsToKg(val) * 10000) / 10000); // Higher precision
       } else {
-        updateField('weightKg', val);
+        updateField('weightKg', Math.round(val * 10000) / 10000); // Higher precision
       }
     },
     [unitSystem, updateField],
@@ -310,7 +314,7 @@ export function BodyMeasurementsStep({ onNext }: Props) {
     updateField('unitSystem', unitSystem === 'metric' ? 'imperial' : 'metric');
   }, [unitSystem, updateField]);
 
-  const canProceed = heightCm > 0 && weightKg > 0;
+  const canProceed = heightCm > 0 && weightKg > 0 && heightValid && weightValid;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -320,7 +324,7 @@ export function BodyMeasurementsStep({ onNext }: Props) {
       {/* ── Height — horizontal scroll scale ─────────────────────────── */}
       <View style={styles.fieldRow}>
         <Text style={styles.label}>Height</Text>
-        <TouchableOpacity onPress={toggleUnits} style={styles.unitToggle}>
+        <TouchableOpacity onPress={toggleUnits} style={styles.unitToggle} accessibilityLabel="Toggle units" accessibilityRole="button">
           <Text style={styles.unitToggleText}>
             {unitSystem === 'metric' ? 'cm → ft/in' : 'ft/in → cm'}
           </Text>
@@ -335,11 +339,14 @@ export function BodyMeasurementsStep({ onNext }: Props) {
         formatLabel={heightConfig.format}
         onValueChange={handleHeightChange}
       />
+      {!heightValid && (
+        <Text style={styles.errorText}>Height must be between 100-250 cm (3'3" - 8'2")</Text>
+      )}
 
       {/* ── Weight — horizontal scroll scale ─────────────────────────── */}
       <View style={styles.fieldRow}>
         <Text style={styles.label}>Weight</Text>
-        <TouchableOpacity onPress={toggleUnits} style={styles.unitToggle}>
+        <TouchableOpacity onPress={toggleUnits} style={styles.unitToggle} accessibilityLabel="Toggle units" accessibilityRole="button">
           <Text style={styles.unitToggleText}>
             {unitSystem === 'metric' ? 'kg → lbs' : 'lbs → kg'}
           </Text>
@@ -354,6 +361,9 @@ export function BodyMeasurementsStep({ onNext }: Props) {
         formatLabel={weightConfig.format}
         onValueChange={handleWeightChange}
       />
+      {!weightValid && (
+        <Text style={styles.errorText}>Weight must be between 30-300 kg (66-660 lbs)</Text>
+      )}
 
       {/* ── Live BMR display ─────────────────────────────────────────── */}
       {liveBMR > 0 && (
@@ -380,6 +390,7 @@ const styles = StyleSheet.create({
   fieldRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing[4], marginBottom: spacing[2] },
   unitToggle: { paddingHorizontal: spacing[3], paddingVertical: spacing[1], borderRadius: radius.full, backgroundColor: colors.accent.primaryMuted },
   unitToggleText: { color: colors.accent.primary, fontSize: typography.size.xs, fontWeight: typography.weight.semibold, lineHeight: typography.lineHeight.xs },
+  errorText: { color: colors.semantic.negative, fontSize: typography.size.sm, marginTop: spacing[2], textAlign: 'center', lineHeight: typography.lineHeight.sm },
   bmrCard: { backgroundColor: colors.bg.surfaceRaised, borderRadius: radius.md, borderWidth: 1, borderColor: colors.accent.primaryMuted, padding: spacing[4], marginTop: spacing[6], alignItems: 'center' },
   bmrLabel: { color: colors.text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.sm },
   bmrValue: { color: colors.accent.primary, fontSize: typography.size.xl, fontWeight: typography.weight.bold, marginTop: spacing[1], fontVariant: ['tabular-nums'], lineHeight: typography.lineHeight.xl },
