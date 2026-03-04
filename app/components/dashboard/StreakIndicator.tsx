@@ -7,9 +7,10 @@ import { Icon } from '../common/Icon';
 
 interface StreakIndicatorProps {
   count: number;
+  type?: 'day' | 'week';
 }
 
-export function StreakIndicator({ count }: StreakIndicatorProps) {
+export function StreakIndicator({ count, type = 'week' }: StreakIndicatorProps) {
   const animatedCount = useCountingValue(count);
 
   // Derive a rounded display value from the shared value
@@ -17,10 +18,12 @@ export function StreakIndicator({ count }: StreakIndicatorProps) {
 
   if (count === 0) return null;
 
+  const streakText = count === 1 ? `${count} ${type} streak` : `${count} ${type} streak`;
+
   return (
     <View style={styles.container}>
       <Icon name="flame" size={18} color={colors.semantic.warning} />
-      <Text style={styles.count}>{count}</Text>
+      <Text style={styles.count}>{streakText}</Text>
     </View>
   );
 }
@@ -34,7 +37,8 @@ const styles = StyleSheet.create({
   fire: {},
   count: {
     color: colors.accent.primary,
-    fontSize: typography.size.md,
+    fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
+    lineHeight: typography.lineHeight.sm,
   },
 });

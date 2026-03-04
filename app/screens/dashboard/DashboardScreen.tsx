@@ -39,6 +39,7 @@ import { WeeklyCheckinCard } from '../../components/coaching/WeeklyCheckinCard';
 import { FatigueAlertCard } from '../../components/dashboard/FatigueAlertCard';
 import { ReadinessGauge } from '../../components/dashboard/ReadinessGauge';
 import { RecompDashboardCard } from '../../components/dashboard/RecompDashboardCard';
+import { WeeklyTrainingCalendar } from '../../components/dashboard/WeeklyTrainingCalendar';
 import { RecoveryCheckinModal } from '../../components/modals/RecoveryCheckinModal';
 import { Icon } from '../../components/common/Icon';
 import { useHaptics } from '../../hooks/useHaptics';
@@ -46,6 +47,8 @@ import { useDailyTargets } from '../../hooks/useDailyTargets';
 import { useHealthData } from '../../hooks/useHealthData';
 import api from '../../services/api';
 import { isPremiumWorkoutLoggerEnabled } from '../../utils/featureFlags';
+import { getWeekDates } from '../../utils/dateScrollerLogic';
+import { calculateWeeklyStreak } from '../../utils/calculateWeeklyStreak';
 
 const DATE_DEBOUNCE_MS = 300;
 
@@ -119,6 +122,8 @@ export function DashboardScreen({ navigation }: any) {
   const [nutritionEntries, setNutritionEntries] = useState<NutritionEntryRaw[]>([]);
   // Training sessions for Today's Workout card
   const [trainingSessions, setTrainingSessions] = useState<any[]>([]);
+  // Weekly training dates for WeeklyTrainingCalendar
+  const [weeklyTrainedDates, setWeeklyTrainedDates] = useState<Set<string>>(new Set());
   // Day classification state
   const [dayClassification, setDayClassification] = useState<{
     isTrainingDay: boolean;
@@ -170,10 +175,17 @@ export function DashboardScreen({ navigation }: any) {
       setDayClassLoading(true);
       setError(null);
 
-      const [nutritionRes, adaptiveRes, trainingRes, articlesRes, bwRes, dayClassRes, streakRes] = await Promise.allSettled([
+      const [nutritionRes, adaptiveRes, trainingRes, weeklyTrainingRes, articlesRes, bwRes, dayClassRes, streakRes] = await Promise.allSettled([
         api.get('nutrition/entries', { params: { start_date: targetDate, end_date: targetDate }, signal }),
         api.get('adaptive/snapshots', { params: { limit: 1 }, signal }),
         api.get('training/sessions', { params: { start_date: targetDate, end_date: targetDate, limit: 10 }, signal }),
+        // Fetch weekly training data
+        (() => {
+          const weekDates = getWeekDates(targetDate);
+          const weekStart = weekDates[0];
+          const weekEnd = weekDates[6];
+          return api.get('training/sessions', { params: { start_date: weekStart, end_date: weekEnd, limit: 100 }, signal });
+        })(),
         api.get('content/articles', { params: { limit: 5, status: 'published' }, signal }),
         api.get('users/bodyweight/history', { params: { limit: 90 }, signal }),
         api.get('training/day-classification', { params: { date: targetDate }, signal }),
@@ -236,6 +248,18 @@ export function DashboardScreen({ navigation }: any) {
         setWorkoutsCompleted(sessions.length);
         setTrainingLogged(sessions.length > 0);
         setTrainingSessions(sessions);
+      }
+
+      // Process weekly training data
+      if (weeklyTrainingRes.status === 'fulfilled') {
+        const weeklySessions = weeklyTrainingRes.value.data.items ?? [];
+        const trainedDates = new Set<string>();
+        weeklySessions.forEach((session: any) => {
+          if (session.session_date) {
+            trainedDates.add(session.session_date);
+          }
+        });
+        setWeeklyTrainedDates(trainedDates);
       }
 
       // Process day classification
@@ -315,26 +339,20 @@ export function DashboardScreen({ navigation }: any) {
         setRecompMetrics(null);
       }
 
-      // Use achievement API streak if available, fall back to client-side calculation
+      // Use achievement API streak if available, fall back to weekly streak calculation
       if (streakRes.status === 'fulfilled' && streakRes.value.data?.current_streak != null) {
         setStreak(streakRes.value.data.current_streak);
       } else {
-        // Fallback: compute streak from all log dates
-        const allDates: string[] = [];
-        if (nutritionRes.status === 'fulfilled') {
-          const entries = nutritionRes.value.data.items ?? [];
-          entries.forEach((e: any) => {
-            if (e.entry_date) allDates.push(e.entry_date);
-          });
-        }
-        if (trainingRes.status === 'fulfilled') {
-          const sessions = trainingRes.value.data.items ?? [];
+        // Fallback: compute weekly streak from training dates
+        const allTrainingDates: string[] = [];
+        if (weeklyTrainingRes.status === 'fulfilled') {
+          const sessions = weeklyTrainingRes.value.data.items ?? [];
           sessions.forEach((s: any) => {
-            if (s.session_date) allDates.push(s.session_date);
+            if (s.session_date) allTrainingDates.push(s.session_date);
           });
         }
         const today = new Date().toISOString().split('T')[0];
-        setStreak(calculateStreak(allDates, today));
+        setStreak(calculateWeeklyStreak(allTrainingDates, today));
       }
     } catch {
       setError('Unable to load dashboard data. Check your connection.');
@@ -466,6 +484,14 @@ export function DashboardScreen({ navigation }: any) {
             loggedDates={loggedDates}
           />
         </Animated.View>
+
+        {/* Weekly Training Calendar */}
+        {!isLoading && (
+          <WeeklyTrainingCalendar
+            selectedDate={selectedDate}
+            trainedDates={weeklyTrainedDates}
+          />
+        )}
 
         {/* Quick Actions — above the fold */}
         <Animated.View style={quickActionsAnim}>

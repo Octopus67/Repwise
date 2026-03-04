@@ -22,6 +22,7 @@ import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { CopyMealsBar } from '../../components/nutrition/CopyMealsBar';
 import { BudgetBar } from '../../components/nutrition/BudgetBar';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
+import { useHaptics } from '../../hooks/useHaptics';
 import { AddNutritionModal } from '../../components/modals/AddNutritionModal';
 import { AddTrainingModal } from '../../components/modals/AddTrainingModal';
 import { formatEntryTime } from '../../utils/timestampFormat';
@@ -66,6 +67,8 @@ function SkeletonCards() {
 
 export function LogsScreen() {
   const navigation = useNavigation<StackNavigationProp<LogsStackParamList>>();
+  const fabAnim = useStaggeredEntrance(0, 200);
+  const { impact } = useHaptics();
   const [tab, setTab] = useState<Tab>('nutrition');
   const [nutritionEntries, setNutritionEntries] = useState<NutritionEntry[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -384,14 +387,14 @@ export function LogsScreen() {
       <View style={styles.tabs}>
         <TouchableOpacity
           style={[styles.tab, tab === 'nutrition' && styles.tabActive]}
-          onPress={() => setTab('nutrition')}
+          onPress={() => { impact('light'); setTab('nutrition'); }}
           testID="logs-nutrition-tab"
         >
           <Text style={[styles.tabText, tab === 'nutrition' && styles.tabTextActive]}>Nutrition</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, tab === 'training' && styles.tabActive]}
-          onPress={() => setTab('training')}
+          onPress={() => { impact('light'); setTab('training'); }}
           testID="logs-training-tab"
         >
           <Text style={[styles.tabText, tab === 'training' && styles.tabTextActive]}>Training</Text>
@@ -570,14 +573,16 @@ export function LogsScreen() {
         )
       )}
 
-      <TouchableOpacity
-        style={styles.fab}
-        activeOpacity={0.8}
-        onPress={openAddModal}
-        testID="logs-add-button"
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      <Animated.View style={[styles.fab, fabAnim]}>
+        <TouchableOpacity
+          style={styles.fabInner}
+          activeOpacity={0.8}
+          onPress={openAddModal}
+          testID="logs-add-button"
+        >
+          <Text style={styles.fabText}>+</Text>
+        </TouchableOpacity>
+      </Animated.View>
 
       <AddNutritionModal
         visible={showNutritionModal}
@@ -711,6 +716,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: spacing[6],
     right: spacing[4],
+  },
+  fabInner: {
     width: 56,
     height: 56,
     borderRadius: 28,
