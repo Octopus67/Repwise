@@ -1,11 +1,13 @@
-import { useEffect, memo } from 'react';
+import { useEffect, memo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import Animated, {
   useSharedValue,
   useAnimatedProps,
+  useAnimatedReaction,
   withSpring,
   withTiming,
+  runOnJS,
   Easing,
 } from 'react-native-reanimated';
 import { Platform } from 'react-native';
@@ -47,6 +49,15 @@ export const ProgressRing = memo(function ProgressRing({
   const reduceMotion = useReduceMotion();
 
   const progress = useSharedValue(0);
+
+  const [animatedValue, setAnimatedValue] = useState(0);
+
+  useAnimatedReaction(
+    () => progress.value,
+    (val) => {
+      runOnJS(setAnimatedValue)(Math.round(val * (target || 1)));
+    },
+  );
 
   useEffect(() => {
     if (animated && !fill.isMissing && !reduceMotion) {
@@ -129,7 +140,7 @@ export const ProgressRing = memo(function ProgressRing({
                 fill.isOvershoot && { color: colors.semantic.warning },
               ]}
             >
-              {ringLabel.centerText}
+              {animated && !reduceMotion ? animatedValue : ringLabel.centerText}
             </Text>
             <Text style={styles.subText}>{ringLabel.subText}</Text>
           </>

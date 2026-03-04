@@ -1,4 +1,5 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Text, TouchableOpacity, StyleSheet } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { colors, spacing, radius, typography } from '../../theme/tokens';
 import { Icon } from './Icon';
 
@@ -40,7 +41,9 @@ export function ErrorBanner({
   const config = variantConfig[variant];
 
   return (
-    <View
+    <Animated.View
+      entering={FadeIn.duration(200)}
+      exiting={FadeOut.duration(150)}
       style={[styles.container, { backgroundColor: config.bg }]}
       accessibilityRole="alert"
       accessibilityLiveRegion="assertive"
@@ -72,7 +75,7 @@ export function ErrorBanner({
           <Icon name="x" size={16} color={colors.text.muted} />
         </TouchableOpacity>
       )}
-    </View>
+    </Animated.View>
   );
 }
 

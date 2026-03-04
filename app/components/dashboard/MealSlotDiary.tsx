@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { colors, spacing, typography } from '../../theme/tokens';
 import {
   groupEntriesBySlot,
@@ -8,10 +9,16 @@ import {
   MealSlotName,
 } from '../../utils/mealSlotLogic';
 import { MealSlotGroup } from './MealSlotGroup';
+import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 
 interface MealSlotDiaryProps {
   entries: NutritionEntry[];
   onAddToSlot: (slotName: MealSlotName) => void;
+}
+
+function MealSlotWrapper({ index, children }: { index: number; children: React.ReactNode }) {
+  const style = useStaggeredEntrance(index, 60);
+  return <Animated.View style={style}>{children}</Animated.View>;
 }
 
 export function MealSlotDiary({ entries, onAddToSlot }: MealSlotDiaryProps) {
@@ -33,8 +40,10 @@ export function MealSlotDiary({ entries, onAddToSlot }: MealSlotDiaryProps) {
       </View>
 
       {/* Meal slot groups */}
-      {slots.map((slot) => (
-        <MealSlotGroup key={slot.name} slot={slot} onAddToSlot={onAddToSlot} />
+      {slots.map((slot, idx) => (
+        <MealSlotWrapper key={slot.name} index={idx}>
+          <MealSlotGroup slot={slot} onAddToSlot={onAddToSlot} />
+        </MealSlotWrapper>
       ))}
     </View>
   );

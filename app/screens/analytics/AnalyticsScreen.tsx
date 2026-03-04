@@ -20,6 +20,7 @@ import { useStore, isPremium } from '../../store';
 import { Icon } from '../../components/common/Icon';
 import api from '../../services/api';
 import { useNavigation } from '@react-navigation/native';
+import { useHaptics } from '../../hooks/useHaptics';
 import { PeriodizationCalendar } from '../../components/periodization/PeriodizationCalendar';
 import { HeatMapCard } from '../../components/analytics/HeatMapCard';
 import { FatigueHeatMapOverlay } from '../../components/analytics/FatigueHeatMapOverlay';
@@ -74,6 +75,7 @@ export function AnalyticsScreen() {
   const premium = isPremium(store);
   const unitSystem = store.unitSystem;
   const navigation = useNavigation<any>();
+  const { impact } = useHaptics();
 
   const [selectedTab, setSelectedTab] = useState<AnalyticsTab>('nutrition');
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
@@ -261,7 +263,7 @@ export function AnalyticsScreen() {
             <TouchableOpacity
               key={t}
               style={[styles.analyticsTab, selectedTab === t && styles.analyticsTabActive]}
-              onPress={() => setSelectedTab(t)}
+              onPress={() => { impact('light'); setSelectedTab(t); }}
               testID={`analytics-tab-${t}`}
             >
               <Text style={[styles.analyticsTabText, selectedTab === t && styles.analyticsTabTextActive]}>

@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { colors, typography, spacing, letterSpacing } from '../../theme/tokens';
 import { Button } from './Button';
 
@@ -21,7 +22,7 @@ export function EmptyState({
   children,
 }: EmptyStateProps) {
   return (
-    <View style={styles.container}>
+    <Animated.View entering={FadeIn.duration(300)} style={styles.container}>
       <View style={styles.iconWrap} accessibilityLabel={`${title} illustration`}>{icon}</View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
@@ -34,7 +35,7 @@ export function EmptyState({
           style={styles.button}
         />
       ) : null}
-    </View>
+    </Animated.View>
   );
 }
 
