@@ -23,7 +23,14 @@ interface BodyHeatMapProps {
 }
 
 export function BodyHeatMap({ muscleVolumes, onMusclePress, isLoading, error }: BodyHeatMapProps) {
-  if (isLoading) {
+  const safeVolumes = Array.isArray(muscleVolumes) ? muscleVolumes : [];
+  const volumeMap = new Map<string, MuscleGroupVolume>(
+    safeVolumes.map((v) => [v.muscle_group, v]),
+  );
+  const hasData = safeVolumes.length > 0 && safeVolumes.some((v) => v.effective_sets > 0);
+
+  // Show skeleton only on initial load with no data
+  if (isLoading && safeVolumes.length === 0) {
     return (
       <View style={styles.skeletonContainer}>
         <Skeleton width="100%" height={300} borderRadius={8} />
@@ -39,12 +46,6 @@ export function BodyHeatMap({ muscleVolumes, onMusclePress, isLoading, error }: 
       </View>
     );
   }
-
-  const safeVolumes = Array.isArray(muscleVolumes) ? muscleVolumes : [];
-  const volumeMap = new Map<string, MuscleGroupVolume>(
-    safeVolumes.map((v) => [v.muscle_group, v]),
-  );
-  const hasData = safeVolumes.length > 0 && safeVolumes.some((v) => v.effective_sets > 0);
 
   const frontRegions = MUSCLE_REGIONS.filter((r) => r.view === 'front');
   const backRegions = MUSCLE_REGIONS.filter((r) => r.view === 'back');

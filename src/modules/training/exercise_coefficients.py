@@ -43,6 +43,11 @@ def get_muscle_coefficients(
         if fallback_muscle != "Other":
             coefficients[fallback_muscle] = 1.0
     
+    # Validate coefficients are between 0.0 and 1.0
+    for muscle, coeff in coefficients.items():
+        if not (0.0 <= coeff <= 1.0):
+            coefficients[muscle] = max(0.0, min(1.0, coeff))
+    
     return coefficients
 
 

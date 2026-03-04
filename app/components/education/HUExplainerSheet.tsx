@@ -107,6 +107,7 @@ export function HUExplainerSheet({ visible, onClose, initialTab = 'hu' }: HUExpl
           onPress={() => setTab('hu')}
           accessibilityRole="tab"
           accessibilityState={{ selected: tab === 'hu' }}
+          accessibilityLabel="Hypertrophy Units tab"
         >
           <Text style={[styles.tabText, tab === 'hu' && styles.tabTextActive]}>Hypertrophy Units</Text>
         </TouchableOpacity>
@@ -115,6 +116,7 @@ export function HUExplainerSheet({ visible, onClose, initialTab = 'hu' }: HUExpl
           onPress={() => setTab('fatigue')}
           accessibilityRole="tab"
           accessibilityState={{ selected: tab === 'fatigue' }}
+          accessibilityLabel="Fatigue Score tab"
         >
           <Text style={[styles.tabText, tab === 'fatigue' && styles.tabTextActive]}>Fatigue Score</Text>
         </TouchableOpacity>

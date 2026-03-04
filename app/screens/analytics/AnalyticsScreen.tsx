@@ -97,16 +97,16 @@ export function AnalyticsScreen() {
   const [fatigueScores, setFatigueScores] = useState<any[]>([]);
   const [selectedFatigueGroup, setSelectedFatigueGroup] = useState<any | null>(null);
 
-  const loadAnalytics = useCallback(async () => {
+  const loadAnalytics = useCallback(async (signal?: AbortSignal) => {
     setError(null);
     try {
       const end = new Date().toISOString().split('T')[0];
       const start = new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0];
 
       const [bwRes, nutritionRes, adaptiveRes] = await Promise.allSettled([
-        api.get('users/bodyweight/history', { params: { limit: 90 } }),
-        api.get('nutrition/entries', { params: { start_date: start, end_date: end, limit: 500 } }),
-        api.get('adaptive/snapshots', { params: { limit: 1 } }),
+        api.get('users/bodyweight/history', { params: { limit: 90 }, signal }),
+        api.get('nutrition/entries', { params: { start_date: start, end_date: end, limit: 500 }, signal }),
+        api.get('adaptive/snapshots', { params: { limit: 1 }, signal }),
       ]);
 
       if (bwRes.status === 'fulfilled') {
@@ -139,14 +139,14 @@ export function AnalyticsScreen() {
 
       if (premium) {
         try {
-          const { data } = await api.get('dietary-analysis/gaps', { params: { window_days: 14 } });
+          const { data } = await api.get('dietary-analysis/gaps', { params: { window_days: 14 }, signal });
           setGaps(data.gaps ?? []);
         } catch { /* ignore */ }
       }
 
       // Fetch fatigue scores
       try {
-        const { data } = await api.get('training/fatigue');
+        const { data } = await api.get('training/fatigue', { signal });
         setFatigueScores(data.scores ?? []);
       } catch {
         setFatigueScores([]);
@@ -205,7 +205,9 @@ export function AnalyticsScreen() {
   }, []);
 
   useEffect(() => {
-    loadAnalytics();
+    const controller = new AbortController();
+    loadAnalytics(controller.signal);
+    return () => controller.abort();
   }, [loadAnalytics]);
 
   useEffect(() => {
@@ -379,13 +381,13 @@ export function AnalyticsScreen() {
                   <View style={styles.comparisonRow}>
                     <ComparisonItem
                       label="Calories"
-                      actual={filteredCalories[filteredCalories.length - 1]?.value ?? 0}
+                      actual={filteredCalories.at(-1)?.value ?? 0}
                       target={adaptiveTarget.calories}
                       unit="kcal"
                     />
                     <ComparisonItem
                       label="Protein"
-                      actual={filteredProtein[filteredProtein.length - 1]?.value ?? 0}
+                      actual={filteredProtein.at(-1)?.value ?? 0}
                       target={adaptiveTarget.protein}
                       unit="g"
                     />

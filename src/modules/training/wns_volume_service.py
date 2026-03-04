@@ -82,9 +82,13 @@ class WNSVolumeService:
 
         try:
             rows = await svc._fetch_sessions(user_id, week_start, week_end)
-        except Exception:
+        except Exception as e:
             logger.exception("Failed to fetch training sessions for user %s", user_id)
-            raise
+            from fastapi import HTTPException
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to calculate volume data. Please try again."
+            ) from e
 
         exercise_lookup = _build_exercise_lookup()
 

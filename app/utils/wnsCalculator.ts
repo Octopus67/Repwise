@@ -11,6 +11,8 @@
 export const MAX_STIM_REPS = 5.0;
 export const DEFAULT_RIR = 3.0; // Assumes RPE 7 when user doesn't log RPE/RIR
 export const DIMINISHING_K = 1.69; // Fitted to Schoenfeld: 6 sets ≈ 2x stimulus of 1 set
+export const DEFAULT_STIMULUS_DURATION_DAYS = 2.0;
+export const DEFAULT_MAINTENANCE_SETS = 3.0;
 
 // ─── Pure Functions ──────────────────────────────────────────────────────────
 

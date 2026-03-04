@@ -55,9 +55,10 @@ export function VolumeIndicatorPill({ muscleGroups, completedSetCounts }: Volume
 
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
     (async () => {
       try {
-        const { data } = await api.get('training/analytics/muscle-volume');
+        const { data } = await api.get('training/analytics/muscle-volume', { signal: controller.signal });
         if (!cancelled && data) {
           const wns = data.engine === 'wns';
           setIsWNS(wns);
@@ -82,7 +83,10 @@ export function VolumeIndicatorPill({ muscleGroups, completedSetCounts }: Volume
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => { 
+      cancelled = true;
+      controller.abort();
+    };
   }, []);
 
   if (loading || muscleGroups.length === 0) return null;
@@ -113,7 +117,7 @@ export function VolumeIndicatorPill({ muscleGroups, completedSetCounts }: Volume
         const estimatedLocalHU = localIncrement > 0 ? localIncrement * 2.0 : 0;
         const label = isWNS && data.hypertrophy_units != null
           ? `${displayName}: ${(data.hypertrophy_units + estimatedLocalHU).toFixed(1)} HU`
-          : `${displayName}: ${totalSets}/${data.mav} sets`;
+          : `${displayName}: ${totalSets}/${data.mav > 0 ? data.mav : 1} sets`;
 
         return (
           <View key={group} style={[styles.pill, { backgroundColor: bgColor }]}>

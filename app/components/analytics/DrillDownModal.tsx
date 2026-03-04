@@ -54,11 +54,13 @@ interface DrillDownModalProps {
 export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVolumes }: DrillDownModalProps) {
   const [data, setData] = useState<DetailData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [explainerVisible, setExplainerVisible] = useState(false);
 
   useEffect(() => {
     if (!visible) {
       setData(null);
+      setError(null);
       return;
     }
     if (!muscleGroup) return;
@@ -69,6 +71,7 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
     );
 
     setLoading(true);
+    setError(null);
     api
       .get(`training/analytics/muscle-volume/${encodeURIComponent(muscleGroup)}/detail`, {
         params: { week_start: weekStart },
@@ -90,7 +93,10 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
         }
         setData(merged);
       })
-      .catch(() => setData(wnsMatch ?? null))
+      .catch(() => {
+        setError('Failed to load detailed muscle data');
+        setData(wnsMatch ?? null);
+      })
       .finally(() => setLoading(false));
   }, [visible, muscleGroup, weekStart, wnsVolumes]);
 
@@ -101,6 +107,11 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
   return (
     <ModalContainer visible={visible} onClose={onClose} title={title}>
       <ScrollView style={styles.scroll}>
+        {error && (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>⚠️ {error}</Text>
+          </View>
+        )}
         {loading ? (
           <ActivityIndicator color={colors.accent.primary} style={{ marginTop: spacing[6] }} />
         ) : !data || data.exercises.length === 0 ? (
@@ -182,6 +193,17 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
 
 const styles = StyleSheet.create({
   scroll: { maxHeight: 400 },
+  errorBanner: {
+    backgroundColor: colors.semantic.warningSubtle,
+    padding: spacing[3],
+    borderRadius: 6,
+    marginBottom: spacing[3],
+  },
+  errorText: {
+    color: colors.semantic.warning,
+    fontSize: typography.size.sm,
+    textAlign: 'center',
+  },
   empty: {
     color: colors.text.muted,
     fontSize: typography.size.sm,

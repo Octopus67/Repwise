@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Card } from '../common/Card';
 import { colors, spacing, typography } from '../../theme/tokens';
 import { WeekNavigator } from './WeekNavigator';
@@ -38,8 +38,8 @@ export function HeatMapCard() {
       const { data } = await api.get('training/analytics/muscle-volume', {
         params: { week_start: ws },
       });
-      setVolumes(data.muscle_groups ?? []);
-      setIsWNS(data.engine === 'wns');
+      setVolumes(data?.muscle_groups ?? []);
+      setIsWNS(data?.engine === 'wns');
     } catch {
       setError(true);
       setVolumes([]);
@@ -85,11 +85,16 @@ export function HeatMapCard() {
           </TouchableOpacity>
         </View>
       ) : (
-        <>
+        <View style={loading ? styles.loadingContainer : undefined}>
+          {loading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="small" color={colors.accent.primary} />
+            </View>
+          )}
           <BodyHeatMap
             muscleVolumes={volumes}
             onMusclePress={handleMusclePress}
-            isLoading={loading}
+            isLoading={false}
           />
 
           {/* Frequency summary */}
@@ -102,7 +107,7 @@ export function HeatMapCard() {
               ))}
             </View>
           )}
-        </>
+        </View>
       )}
 
       <DrillDownModal
@@ -147,5 +152,19 @@ const styles = StyleSheet.create({
   frequencyItem: {
     color: colors.text.secondary,
     fontSize: typography.size.xs,
+  },
+  loadingContainer: {
+    position: 'relative',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
   },
 });
