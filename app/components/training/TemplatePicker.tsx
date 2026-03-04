@@ -61,6 +61,20 @@ export function TemplatePicker({
     return () => { cancelled = true; };
   }, []);
 
+  const deleteTemplate = useCallback(async (id: string) => {
+    try {
+      await api.delete(`training/user-templates/${id}`);
+      setUserTemplates((prev) => prev.filter((t) => t.id !== id));
+    } catch {
+      if (Platform.OS === 'ios') {
+        ActionSheetIOS.showActionSheetWithOptions(
+          { options: ['OK'], cancelButtonIndex: 0, title: 'Failed to delete template. Please try again.' },
+          () => {},
+        );
+      }
+    }
+  }, []);
+
   const handleLongPress = useCallback(
     (template: WorkoutTemplateResponse) => {
       if (template.is_system) return;
@@ -93,20 +107,6 @@ export function TemplatePicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [onSelectTemplate, deleteTemplate],
   );
-
-  const deleteTemplate = useCallback(async (id: string) => {
-    try {
-      await api.delete(`training/user-templates/${id}`);
-      setUserTemplates((prev) => prev.filter((t) => t.id !== id));
-    } catch {
-      if (Platform.OS === 'ios') {
-        ActionSheetIOS.showActionSheetWithOptions(
-          { options: ['OK'], cancelButtonIndex: 0, title: 'Failed to delete template. Please try again.' },
-          () => {},
-        );
-      }
-    }
-  }, []);
 
   const ordered = orderTemplates(userTemplates, systemTemplates);
 
