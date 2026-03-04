@@ -104,6 +104,7 @@ class RecipeIngredient(Base):
 
     __table_args__ = (
         Index("ix_recipe_ingredients_recipe_id", "recipe_id"),
+        Index("ix_recipe_ingredients_food_item_id", "food_item_id"),
     )
 
 

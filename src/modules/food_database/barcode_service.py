@@ -90,6 +90,15 @@ class BarcodeService:
 
     async def _create_food_item(self, data: dict, source: str) -> FoodItem:
         """Create a FoodItem from normalised API response data."""
+        # Check if a food item with this barcode already exists
+        barcode = data.get("barcode")
+        if barcode:
+            existing_stmt = select(FoodItem).where(FoodItem.barcode == barcode)
+            existing_result = await self.db.execute(existing_stmt)
+            existing_item = existing_result.scalar_one_or_none()
+            if existing_item:
+                return existing_item
+
         food_item = FoodItem(
             name=data["name"],
             category="Packaged",
@@ -102,7 +111,7 @@ class BarcodeService:
             fat_g=data.get("fat_g", 0),
             micro_nutrients=data.get("micro_nutrients"),
             source=source,
-            barcode=data.get("barcode"),
+            barcode=barcode,
         )
         self.db.add(food_item)
         await self.db.flush()

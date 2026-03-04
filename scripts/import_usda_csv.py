@@ -73,6 +73,8 @@ NUTRIENT_MAP = {
     "415": "vitamin_b6_mg",
     "417": "folate_mcg",
     "418": "vitamin_b12_mcg",
+    "578": "biotin_mcg",      # Biotin (Vitamin B7)
+    "421": "choline_mg",      # Choline
     "601": "cholesterol_mg",
     # Omega fatty acids (sum of individual components)
     "621": "omega_3_g",   # DHA

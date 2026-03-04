@@ -586,7 +586,7 @@ class TestGetProductByBarcode:
 async def test_barcode_endpoint_invalid_format_returns_422(client, override_get_db):
     """GET /food/barcode/abc → 422 (not numeric)."""
     # Register and get auth headers
-    resp = await client.post("/api/v1/auth/register", json={"email": "bc_test@example.com", "password": "securepass123"})
+    resp = await client.post("/api/v1/auth/register", json={"email": "bc_test@example.com", "password": "Securepass123"})
     token = resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -597,7 +597,7 @@ async def test_barcode_endpoint_invalid_format_returns_422(client, override_get_
 @pytest.mark.asyncio
 async def test_barcode_endpoint_too_short_returns_422(client, override_get_db):
     """GET /food/barcode/123 → 422 (too short, min 8 digits)."""
-    resp = await client.post("/api/v1/auth/register", json={"email": "bc_short@example.com", "password": "securepass123"})
+    resp = await client.post("/api/v1/auth/register", json={"email": "bc_short@example.com", "password": "Securepass123"})
     token = resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -690,7 +690,7 @@ class TestProperty5BarcodeFormatValidationBackend:
         email = f"prop5_inv_{uuid.uuid4().hex[:8]}@test.com"
         resp = await client.post(
             "/api/v1/auth/register",
-            json={"email": email, "password": "securepass123"},
+            json={"email": email, "password": "Securepass123"},
         )
         token = resp.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
@@ -724,7 +724,7 @@ class TestProperty5BarcodeFormatValidationBackend:
         email = f"prop5_val_{uuid.uuid4().hex[:8]}@test.com"
         resp = await client.post(
             "/api/v1/auth/register",
-            json={"email": email, "password": "securepass123"},
+            json={"email": email, "password": "Securepass123"},
         )
         token = resp.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}

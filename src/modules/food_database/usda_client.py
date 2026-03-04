@@ -11,6 +11,7 @@ import httpx
 from typing import Any, Optional
 
 USDA_BASE_URL = "https://api.nal.usda.gov/fdc/v1"
+API_TIMEOUT_SECONDS = 10.0
 
 # USDA nutrient ID → our field name mapping
 NUTRIENT_MAP = {
@@ -115,7 +116,7 @@ async def search_usda_foods(
         "dataType": data_types,
     }
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=API_TIMEOUT_SECONDS) as client:
         try:
             response = await client.get(f"{USDA_BASE_URL}/foods/search", params=params)
             response.raise_for_status()
@@ -134,7 +135,7 @@ async def get_usda_food_details(
     """Get detailed nutrient data for a specific USDA food by FDC ID."""
     key = api_key or "DEMO_KEY"
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=API_TIMEOUT_SECONDS) as client:
         try:
             response = await client.get(
                 f"{USDA_BASE_URL}/food/{fdc_id}",

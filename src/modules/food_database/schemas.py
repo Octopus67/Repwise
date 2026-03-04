@@ -9,6 +9,10 @@ from typing import Any, Literal, Optional
 from pydantic import BaseModel, Field
 
 
+# Valid units for recipe ingredients
+VALID_UNITS = Literal["g", "ml", "oz", "cup", "tbsp", "tsp", "piece", "serving"]
+
+
 # ---------------------------------------------------------------------------
 # Food Items
 # ---------------------------------------------------------------------------
@@ -125,7 +129,7 @@ class RecipeIngredientInput(BaseModel):
 
     food_item_id: uuid.UUID
     quantity: float = Field(gt=0)
-    unit: str = Field(default="g", max_length=20)
+    unit: VALID_UNITS = Field(default="g")
 
 
 class RecipeCreateRequest(BaseModel):
@@ -133,7 +137,7 @@ class RecipeCreateRequest(BaseModel):
 
     name: str = Field(min_length=1, max_length=255)
     description: Optional[str] = None
-    total_servings: float = Field(gt=0, le=1000)
+    total_servings: float = Field(ge=0.25, le=1000)
     ingredients: list[RecipeIngredientInput] = Field(min_length=1)
 
 
@@ -142,7 +146,7 @@ class RecipeUpdateRequest(BaseModel):
 
     name: Optional[str] = Field(default=None, min_length=1, max_length=255)
     description: Optional[str] = None
-    total_servings: Optional[float] = Field(default=None, gt=0, le=1000)
+    total_servings: Optional[float] = Field(default=None, ge=0.25, le=1000)
     ingredients: Optional[list[RecipeIngredientInput]] = None
 
 

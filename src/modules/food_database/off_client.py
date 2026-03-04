@@ -10,6 +10,7 @@ and enforces a 5-second timeout to avoid blocking the barcode lookup chain.
 from __future__ import annotations
 from typing import Optional
 
+import asyncio
 import logging
 import re
 
@@ -18,6 +19,10 @@ import httpx
 logger = logging.getLogger(__name__)
 
 OFF_BASE_URL = "https://world.openfoodfacts.org/api/v2"
+API_TIMEOUT_SECONDS = 5.0
+
+# Rate limiting: max 5 concurrent requests
+_rate_limiter = asyncio.Semaphore(5)
 
 
 def _parse_serving_size(raw: Optional[str]) -> tuple[float, str]:
@@ -61,22 +66,23 @@ async def get_product_by_barcode(barcode: str) -> Optional[dict]:
     Returns ``None`` on 404, timeout, network error, or if required fields
     (name, calories) are missing from the response.
     """
-    async with httpx.AsyncClient(timeout=5.0) as client:
-        try:
-            response = await client.get(
-                f"{OFF_BASE_URL}/product/{barcode}.json",
-                headers={"User-Agent": "Repwise/1.0"},
-            )
+    async with _rate_limiter:
+        async with httpx.AsyncClient(timeout=API_TIMEOUT_SECONDS) as client:
+            try:
+                response = await client.get(
+                    f"{OFF_BASE_URL}/product/{barcode}.json",
+                    headers={"User-Agent": "Repwise/1.0"},
+                )
 
-            if response.status_code == 404:
+                if response.status_code == 404:
+                    return None
+
+                response.raise_for_status()
+                data = response.json()
+
+            except (httpx.HTTPError, httpx.TimeoutException, ValueError):
+                logger.warning("OFF API error for barcode=%s", barcode, exc_info=True)
                 return None
-
-            response.raise_for_status()
-            data = response.json()
-
-        except (httpx.HTTPError, httpx.TimeoutException, ValueError):
-            logger.warning("OFF API error for barcode=%s", barcode, exc_info=True)
-            return None
 
     # OFF returns status=0 when product is not found
     if data.get("status") != 1:

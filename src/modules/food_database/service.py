@@ -58,6 +58,40 @@ class FoodDatabaseService:
         # Fallback: original LIKE-based search
         return await self._search_like(query, pagination, category, region, user_prefs)
 
+    async def _get_popular_items(
+        self,
+        pagination: PaginationParams,
+        category: Optional[str] = None,
+        region: Optional[str] = None,
+        user_prefs: Optional[dict] = None,
+    ) -> PaginatedResult[Any]:
+        """Return popular items (USDA items) for empty queries."""
+        base = select(FoodItem).where(FoodItem.source == "usda")
+        base = FoodItem.not_deleted(base)
+
+        if category:
+            base = base.where(FoodItem.category == category)
+        if region:
+            base = base.where(FoodItem.region == region)
+
+        items_stmt = (
+            base.order_by(FoodItem.name)
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+        )
+        result = await self.db.execute(items_stmt)
+        items = list(result.scalars().all())
+
+        if user_prefs:
+            items = self._personalize_results(items, user_prefs)
+
+        return PaginatedResult(
+            items=items,
+            total_count=-1,  # Don't count for popular items
+            page=pagination.page,
+            limit=pagination.limit,
+        )
+
     async def _has_fts_table(self) -> bool:
         """Check if the FTS5 virtual table exists (cached after first check)."""
         if not hasattr(FoodDatabaseService, "_fts_available"):
@@ -93,9 +127,10 @@ class FoodDatabaseService:
 
         # Sanitize query for FTS5: remove special chars, collapse whitespace
         import re
-        safe_query = re.sub(r'["*(){}\[\]^~<>]', ' ', query).strip()
+        safe_query = re.sub(r'["*(){}\[\]^~<>|+\-]', ' ', query).strip()
         if not safe_query:
-            return PaginatedResult(items=[], total_count=0, page=pagination.page, limit=limit)
+            # Return popular items (USDA items) for empty queries
+            return await self._get_popular_items(pagination, category, region, user_prefs)
 
         # Build FTS MATCH expression: prefix match on each token
         tokens = safe_query.split()
@@ -136,8 +171,9 @@ class FoodDatabaseService:
         if not rowids:
             return PaginatedResult(items=[], total_count=-1, page=pagination.page, limit=limit)
 
-        # Step 3: Fetch full rows by rowid using raw SQL (avoids ORM UUID binding issues on SQLite)
-        ph = ",".join(str(r) for r in rowids)
+        # Step 3: Fetch full rows by rowid using parameterized query
+        from sqlalchemy import bindparam
+        ph = ",".join(f":rowid_{i}" for i in range(len(rowids)))
         fetch_sql = text(f"""
             SELECT id, name, category, region, serving_size, serving_unit,
                    calories, protein_g, carbs_g, fat_g, micro_nutrients,
@@ -145,6 +181,7 @@ class FoodDatabaseService:
                    created_by, deleted_at, created_at, updated_at
             FROM food_items WHERE rowid IN ({ph})
         """)
+        params = {f"rowid_{i}": rowid for i, rowid in enumerate(rowids)}
         if region:
             fetch_sql = text(f"""
                 SELECT id, name, category, region, serving_size, serving_unit,
@@ -153,9 +190,8 @@ class FoodDatabaseService:
                        created_by, deleted_at, created_at, updated_at
                 FROM food_items WHERE rowid IN ({ph}) AND region = :region
             """)
-        fetch_result = await self.db.execute(
-            fetch_sql, {"region": region} if region else {}
-        )
+            params["region"] = region
+        fetch_result = await self.db.execute(fetch_sql, params)
         rows = fetch_result.fetchall()
 
         # Build a map of id→row for ordering
@@ -166,7 +202,7 @@ class FoodDatabaseService:
 
         # Also get rowid→id mapping for ordering
         id_map_sql = text(f"SELECT rowid, id FROM food_items WHERE rowid IN ({ph})")
-        id_result = await self.db.execute(id_map_sql)
+        id_result = await self.db.execute(id_map_sql, params)
         for r in id_result.fetchall():
             rowid_to_id[r[0]] = r[1]
 
@@ -224,7 +260,7 @@ class FoodDatabaseService:
 
         return PaginatedResult(
             items=items,
-            total_count=-1,  # Skip count for FTS — frontend doesn't need it for typeahead
+            total_count=len(items) if len(items) < limit else -1,  # Estimate: if less than limit, that's the total
             page=pagination.page,
             limit=limit,
         )
@@ -379,6 +415,47 @@ class FoodDatabaseService:
         return item
 
     # ------------------------------------------------------------------
+    # Helper methods
+    # ------------------------------------------------------------------
+
+    async def _has_circular_reference(
+        self, recipe_id: uuid.UUID, ingredient_id: uuid.UUID, visited: Optional[set] = None, depth: int = 0
+    ) -> bool:
+        """Check if adding ingredient_id to recipe_id would create a circular reference."""
+        if depth > 10:  # Prevent infinite recursion
+            return True
+        
+        if visited is None:
+            visited = set()
+        
+        if ingredient_id in visited:
+            return True
+        
+        # Check if the ingredient is a recipe
+        stmt = select(FoodItem).where(FoodItem.id == ingredient_id, FoodItem.is_recipe.is_(True))
+        stmt = FoodItem.not_deleted(stmt)
+        result = await self.db.execute(stmt)
+        ingredient_recipe = result.scalar_one_or_none()
+        
+        if ingredient_recipe is None:
+            return False  # Not a recipe, no circular reference possible
+        
+        # If the ingredient recipe contains our original recipe, it's circular
+        if ingredient_id == recipe_id:
+            return True
+        
+        # Check all ingredients of this recipe recursively
+        visited.add(ingredient_id)
+        ing_stmt = select(RecipeIngredient).where(RecipeIngredient.recipe_id == ingredient_id)
+        ing_result = await self.db.execute(ing_stmt)
+        
+        for ing in ing_result.scalars().all():
+            if await self._has_circular_reference(recipe_id, ing.food_item_id, visited.copy(), depth + 1):
+                return True
+        
+        return False
+
+    # ------------------------------------------------------------------
     # Recipe CRUD
     # ------------------------------------------------------------------
 
@@ -423,6 +500,10 @@ class FoodDatabaseService:
         for ing in ingredients:
             if ing.food_item_id == recipe.id:
                 raise ValidationError("A recipe cannot contain itself as an ingredient")
+
+            # Check for circular references recursively
+            if await self._has_circular_reference(recipe.id, ing.food_item_id):
+                raise ValidationError("Adding this ingredient would create a circular reference")
 
             # Verify ingredient exists and is not deleted
             stmt = select(FoodItem).where(FoodItem.id == ing.food_item_id)
@@ -543,6 +624,10 @@ class FoodDatabaseService:
                 if ing.food_item_id == recipe_id:
                     raise ValidationError("A recipe cannot contain itself as an ingredient")
 
+                # Check for circular references recursively
+                if await self._has_circular_reference(recipe_id, ing.food_item_id):
+                    raise ValidationError("Adding this ingredient would create a circular reference")
+
                 food_stmt = select(FoodItem).where(FoodItem.id == ing.food_item_id)
                 food_stmt = FoodItem.not_deleted(food_stmt)
                 food_result = await self.db.execute(food_stmt)
@@ -638,7 +723,7 @@ class FoodDatabaseService:
                 food_item_id=ing.food_item_id,
                 quantity=ing.quantity,
                 unit=ing.unit,
-                food_item=FoodItemResponse.model_validate(ing.food_item) if ing.food_item else None,
+                food_item=FoodItemResponse.model_validate(ing.food_item) if ing.food_item and ing.food_item.deleted_at is None else None,
             )
             for ing in recipe.ingredients
         ]
