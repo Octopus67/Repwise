@@ -40,6 +40,8 @@ import { FatigueAlertCard } from '../../components/dashboard/FatigueAlertCard';
 import { ReadinessGauge } from '../../components/dashboard/ReadinessGauge';
 import { RecompDashboardCard } from '../../components/dashboard/RecompDashboardCard';
 import { WeeklyTrainingCalendar } from '../../components/dashboard/WeeklyTrainingCalendar';
+import NudgeCard from '../../components/dashboard/NudgeCard';
+import GoalProgressPill from '../../components/dashboard/GoalProgressPill';
 import { RecoveryCheckinModal } from '../../components/modals/RecoveryCheckinModal';
 import { Icon } from '../../components/common/Icon';
 import { useHaptics } from '../../hooks/useHaptics';
@@ -144,6 +146,8 @@ export function DashboardScreen({ navigation }: any) {
   const [showCheckin, setShowCheckin] = useState(false);
   // Recomp metrics
   const [recompMetrics, setRecompMetrics] = useState<any>(null);
+  // Nudges
+  const [nudges, setNudges] = useState<any[]>([]);
 
   // Health data hook
   const healthData = useHealthData();
@@ -339,6 +343,14 @@ export function DashboardScreen({ navigation }: any) {
         setRecompMetrics(null);
       }
 
+      // Fetch nudges (fire-and-forget)
+      try {
+        const nudgesRes = await api.get('adaptive/nudges', { signal });
+        setNudges(nudgesRes.data ?? []);
+      } catch {
+        setNudges([]);
+      }
+
       // Use achievement API streak if available, fall back to weekly streak calculation
       if (streakRes.status === 'fulfilled' && streakRes.value.data?.current_streak != null) {
         setStreak(streakRes.value.data.current_streak);
@@ -485,6 +497,16 @@ export function DashboardScreen({ navigation }: any) {
           />
         </Animated.View>
 
+        {/* Goal Progress Pill */}
+        {!isLoading && store.goals?.goalType && (
+          <View style={styles.goalPillContainer}>
+            <GoalProgressPill
+              goalType={store.goals.goalType}
+              targetCalories={targets.calories}
+            />
+          </View>
+        )}
+
         {/* Weekly Training Calendar */}
         {!isLoading && (
           <WeeklyTrainingCalendar
@@ -599,6 +621,21 @@ export function DashboardScreen({ navigation }: any) {
             />
           )}
         </Animated.View>
+
+        {/* Nudge Card */}
+        {!isLoading && nudges.length > 0 && (
+          <NudgeCard
+            nudge={nudges[0]}
+            onDismiss={() => setNudges([])}
+            onAction={(action) => {
+              if (action === 'recalculate') {
+                navigation?.navigate?.('Recalculate');
+              } else if (action === 'edit_goals') {
+                navigation?.navigate?.('Goals');
+              }
+            }}
+          />
+        )}
 
         {/* Today's Workout Card */}
         {!isLoading && (
@@ -987,5 +1024,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: spacing[2],
     lineHeight: typography.lineHeight.sm,
+  },
+  goalPillContainer: {
+    alignItems: 'center',
+    marginTop: spacing[3],
+    marginBottom: spacing[2],
   },
 });

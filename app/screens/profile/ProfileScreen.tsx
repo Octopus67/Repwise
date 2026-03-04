@@ -17,6 +17,7 @@ import { Button } from '../../components/common/Button';
 import { EditableField } from '../../components/common/EditableField';
 import { SectionHeader } from '../../components/common/SectionHeader';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
+import { Skeleton } from '../../components/common/Skeleton';
 import { PremiumBadge } from '../../components/premium/PremiumBadge';
 import { UpgradeModal } from '../../components/premium/UpgradeModal';
 import { FeatureNavItem } from '../../components/profile/FeatureNavItem';
@@ -45,6 +46,7 @@ export function ProfileScreen() {
   const premium = isPremium(store);
   const navigation = useNavigation<any>();
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const headerAnim = useStaggeredEntrance(0, 60);
@@ -56,6 +58,7 @@ export function ProfileScreen() {
   const accountAnim = useStaggeredEntrance(6, 60);
 
   const loadProfile = useCallback(async () => {
+    setIsLoading(true);
     setError(null);
     try {
       const [profileRes, metricsRes, goalsRes] = await Promise.allSettled([
@@ -97,6 +100,8 @@ export function ProfileScreen() {
       }
     } catch {
       setError('Unable to load profile data. Check your connection.');
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -128,6 +133,28 @@ export function ProfileScreen() {
         month: 'short', year: 'numeric',
       })
     : '';
+
+  if (isLoading && !store.profile) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <View style={{ alignItems: 'center', paddingTop: spacing[6] }}>
+            <Skeleton width={80} height={80} variant="circle" />
+            <View style={{ height: spacing[3] }} />
+            <Skeleton width={160} height={20} />
+            <View style={{ height: spacing[2] }} />
+            <Skeleton width={100} height={16} />
+          </View>
+          <View style={{ height: spacing[6] }} />
+          <Skeleton width="100%" height={120} borderRadius={12} />
+          <View style={{ height: spacing[3] }} />
+          <Skeleton width="100%" height={80} borderRadius={12} />
+          <View style={{ height: spacing[3] }} />
+          <Skeleton width="100%" height={200} borderRadius={12} />
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']} testID="profile-screen">
