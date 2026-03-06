@@ -114,7 +114,7 @@ export function WeeklyReportScreen({ navigation }: any) {
     return monday.toISOString().slice(0, 10);
   }, [year, week]);
 
-  const { data: volumeData, isWNS } = useWNSVolume(weekStart);
+  const { data: volumeData, isWNS } = useWNSVolume(weekStart, goals?.goalType);
 
   // Fetch user goals once
   useEffect(() => {

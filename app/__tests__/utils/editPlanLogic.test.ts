@@ -184,10 +184,10 @@ describe('Edit Plan Logic — Property Tests', () => {
           const draft = initializeDraft(metrics, goals, unitSystem);
           const payload = buildRecalculatePayload(draft, unitSystem);
 
-          const weightDiff = Math.abs(payload.metrics.weight_kg - metrics.weightKg);
+          const weightDiff = Math.abs(payload.metrics!.weight_kg - metrics.weightKg);
           if (weightDiff > 0.1) return false;
 
-          const heightDiff = Math.abs(payload.metrics.height_cm - metrics.heightCm);
+          const heightDiff = Math.abs(payload.metrics!.height_cm - metrics.heightCm);
           if (heightDiff > 1) return false;
 
           return true;
@@ -226,9 +226,9 @@ describe('Edit Plan Logic — Property Tests', () => {
         (draft, unitSystem) => {
           const payload = buildRecalculatePayload(draft, unitSystem);
 
-          if (payload.metrics.weight_kg <= 0) return false;
-          if (payload.metrics.height_cm <= 0) return false;
-          if (!ACTIVITY_LEVELS.includes(payload.metrics.activity_level as ActivityLevel)) return false;
+          if (payload.metrics!.weight_kg <= 0) return false;
+          if (payload.metrics!.height_cm <= 0) return false;
+          if (!ACTIVITY_LEVELS.includes(payload.metrics?.activity_level as ActivityLevel)) return false;
           if (!GOAL_TYPES.includes(payload.goals.goal_type as GoalType)) return false;
 
           // When maintaining, target_weight_kg and goal_rate_per_week should be absent

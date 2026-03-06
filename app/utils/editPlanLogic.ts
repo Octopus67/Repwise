@@ -52,7 +52,7 @@ export interface SummaryFields {
 }
 
 export interface RecalculatePayload {
-  metrics: {
+  metrics?: {
     weight_kg: number;
     height_cm: number;
     body_fat_pct?: number;
@@ -327,28 +327,8 @@ export function validateDraft(
 export function buildRecalculatePayload(
   draft: EditDraft,
   unitSystem: UnitSystem,
+  includeMetrics: boolean = true,
 ): RecalculatePayload {
-  // Weight → kg
-  const weight_kg = parseWeightInput(parseFloat(draft.weight), unitSystem);
-
-  // Height → cm
-  const height_cm =
-    unitSystem === 'imperial'
-      ? ftInToCm(parseInt(draft.heightFeet, 10), parseInt(draft.heightInches, 10))
-      : Math.round(parseFloat(draft.heightCm));
-
-  // Metrics
-  const metrics: RecalculatePayload['metrics'] = {
-    weight_kg,
-    height_cm,
-    activity_level: draft.activityLevel,
-  };
-
-  // Body fat — optional
-  if (draft.bodyFatPct.trim() !== '') {
-    metrics.body_fat_pct = parseFloat(draft.bodyFatPct);
-  }
-
   // Goals
   const goals: RecalculatePayload['goals'] = {
     goal_type: draft.goalType,
@@ -369,5 +349,31 @@ export function buildRecalculatePayload(
     goals.goal_rate_per_week = rateKg;
   }
 
-  return { metrics, goals };
+  const payload: RecalculatePayload = { goals };
+
+  if (includeMetrics) {
+    // Weight → kg
+    const weight_kg = parseWeightInput(parseFloat(draft.weight), unitSystem);
+
+    // Height → cm
+    const height_cm =
+      unitSystem === 'imperial'
+        ? ftInToCm(parseInt(draft.heightFeet, 10), parseInt(draft.heightInches, 10))
+        : Math.round(parseFloat(draft.heightCm));
+
+    const metrics: NonNullable<RecalculatePayload['metrics']> = {
+      weight_kg,
+      height_cm,
+      activity_level: draft.activityLevel,
+    };
+
+    // Body fat — optional
+    if (draft.bodyFatPct.trim() !== '') {
+      metrics.body_fat_pct = parseFloat(draft.bodyFatPct);
+    }
+
+    payload.metrics = metrics;
+  }
+
+  return payload;
 }

@@ -101,7 +101,7 @@ export function BodyCompositionStep({ onNext }: Props) {
               style={[styles.card, isSelected && styles.cardSelected]}
               onPress={() => handleSelectRange(range.midpoint)}
               activeOpacity={0.7}
-              accessibilityLabel={`Select body fat range ${range.label}: ${isMale || sex === 'other' ? range.maleDesc : range.femaleDesc}`}
+              accessibilityLabel={`Select body fat range ${range.label}: ${isMale ? range.maleDesc : range.femaleDesc}`}
               accessibilityRole="button"
             >
               <View style={styles.cardRow}>
@@ -123,7 +123,7 @@ export function BodyCompositionStep({ onNext }: Props) {
                     {range.label}
                   </Text>
                   <Text style={[styles.cardDesc, isSelected && styles.cardDescSelected]}>
-                    {isMale || sex === 'other' ? range.maleDesc : range.femaleDesc}
+                    {isMale ? range.maleDesc : range.femaleDesc}
                   </Text>
                 </View>
               </View>

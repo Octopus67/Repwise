@@ -333,8 +333,9 @@ describe('EditPlanPanel — Save button disabled while saving (flow logic)', () 
     expect(validation.valid).toBe(true);
 
     const payload = buildRecalculatePayload(draft, 'metric');
-    expect(payload.metrics.weight_kg).toBeGreaterThan(0);
-    expect(payload.metrics.height_cm).toBeGreaterThan(0);
+    expect(payload.metrics).toBeDefined();
+    expect(payload.metrics?.weight_kg).toBeGreaterThan(0);
+    expect(payload.metrics?.height_cm).toBeGreaterThan(0);
   });
 
   test('invalid draft fails validation (save is blocked)', () => {
@@ -378,7 +379,7 @@ describe('EditPlanPanel — Inline error message when API call rejects', () => {
 
     // Payload is still well-formed for retry
     const payload = buildRecalculatePayload(draft, 'metric');
-    expect(payload.metrics.weight_kg).toBeGreaterThan(0);
+    expect(payload.metrics?.weight_kg).toBeGreaterThan(0);
   });
 
   test('validation error messages are user-friendly strings', () => {
@@ -410,10 +411,10 @@ describe('EditPlanPanel — Successful save maps API response correctly', () => 
 
     const payload = buildRecalculatePayload(draft, 'metric');
 
-    expect(payload.metrics.weight_kg).toBe(80);
-    expect(payload.metrics.height_cm).toBe(180);
-    expect(payload.metrics.body_fat_pct).toBe(16);
-    expect(payload.metrics.activity_level).toBe('moderate');
+    expect(payload.metrics?.weight_kg).toBe(80);
+    expect(payload.metrics?.height_cm).toBe(180);
+    expect(payload.metrics?.body_fat_pct).toBe(16);
+    expect(payload.metrics?.activity_level).toBe('moderate');
     expect(payload.goals.goal_type).toBe('cutting');
     expect(payload.goals.target_weight_kg).toBe(75);
     expect(payload.goals.goal_rate_per_week).toBe(-0.5);
@@ -434,11 +435,11 @@ describe('EditPlanPanel — Successful save maps API response correctly', () => 
     const payload = buildRecalculatePayload(draft, 'imperial');
 
     // Weight should be converted from lbs to kg
-    expect(payload.metrics.weight_kg).toBeCloseTo(80, 0);
+    expect(payload.metrics?.weight_kg).toBeCloseTo(80, 0);
     // Height should be converted from ft/in to cm
-    expect(payload.metrics.height_cm).toBeCloseTo(180, 0);
-    expect(payload.metrics.body_fat_pct).toBe(16);
-    expect(payload.metrics.activity_level).toBe('active');
+    expect(payload.metrics?.height_cm).toBeCloseTo(180, 0);
+    expect(payload.metrics?.body_fat_pct).toBe(16);
+    expect(payload.metrics?.activity_level).toBe('active');
     expect(payload.goals.goal_type).toBe('bulking');
     // Target weight converted from lbs to kg
     expect(payload.goals.target_weight_kg).toBeDefined();
@@ -457,7 +458,7 @@ describe('EditPlanPanel — Successful save maps API response correctly', () => 
 
     const payload = buildRecalculatePayload(draft, 'metric');
 
-    expect(payload.metrics.body_fat_pct).toBeUndefined();
+    expect(payload.metrics?.body_fat_pct).toBeUndefined();
     expect(payload.goals.target_weight_kg).toBeUndefined();
     expect(payload.goals.goal_rate_per_week).toBeUndefined();
   });

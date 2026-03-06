@@ -15,7 +15,7 @@ interface UseWNSVolumeResult {
  * When the backend returns engine='wns', the response includes HU data.
  * When engine='legacy', the response has the old effective_sets format.
  */
-export function useWNSVolume(weekStart: string): UseWNSVolumeResult {
+export function useWNSVolume(weekStart: string, refreshKey?: string | number): UseWNSVolumeResult {
   const [data, setData] = useState<WNSWeeklyResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +34,7 @@ export function useWNSVolume(weekStart: string): UseWNSVolumeResult {
     } finally {
       setLoading(false);
     }
-  }, [weekStart]);
+  }, [weekStart, refreshKey]);
 
   useEffect(() => {
     fetchVolume();

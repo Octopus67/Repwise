@@ -361,26 +361,40 @@ export function PlanEditFlow({
     setError(null);
 
     try {
-      const payload = buildRecalculatePayload(draft, unitSystem);
+      // Only include metrics in payload if they actually changed
+      const initialDraft = initializeDraft(metrics, goals, unitSystem);
+      const metricsChanged =
+        draft.weight !== initialDraft.weight ||
+        draft.heightCm !== initialDraft.heightCm ||
+        draft.heightFeet !== initialDraft.heightFeet ||
+        draft.heightInches !== initialDraft.heightInches ||
+        draft.bodyFatPct !== initialDraft.bodyFatPct ||
+        draft.activityLevel !== initialDraft.activityLevel;
+
+      const payload = buildRecalculatePayload(draft, unitSystem, metricsChanged);
       const { data } = await api.post('users/recalculate', payload);
 
       // Map snake_case response to camelCase — explicit field-by-field
-      const mappedMetrics = {
-        id: data.metrics.id,
-        heightCm: data.metrics.height_cm,
-        weightKg: data.metrics.weight_kg,
-        bodyFatPct: data.metrics.body_fat_pct,
-        activityLevel: data.metrics.activity_level,
-        recordedAt: data.metrics.recorded_at,
-      };
+      const mappedMetrics = data.metrics
+        ? {
+            id: data.metrics.id,
+            heightCm: data.metrics.height_cm,
+            weightKg: data.metrics.weight_kg,
+            bodyFatPct: data.metrics.body_fat_pct,
+            activityLevel: data.metrics.activity_level,
+            recordedAt: data.metrics.recorded_at,
+          }
+        : metrics!;
 
-      const mappedGoals = {
-        id: data.goals.id,
-        userId: data.goals.user_id,
-        goalType: data.goals.goal_type,
-        targetWeightKg: data.goals.target_weight_kg,
-        goalRatePerWeek: data.goals.goal_rate_per_week,
-      };
+      const mappedGoals = data.goals
+        ? {
+            id: data.goals.id,
+            userId: data.goals.user_id,
+            goalType: data.goals.goal_type,
+            targetWeightKg: data.goals.target_weight_kg,
+            goalRatePerWeek: data.goals.goal_rate_per_week,
+          }
+        : goals!;
 
       const mappedTargets = {
         calories: data.targets.calories,
