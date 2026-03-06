@@ -31,21 +31,21 @@ logger = logging.getLogger(__name__)
 # ─── Default WNS Landmarks (in Hypertrophy Units) ────────────────────────────
 
 DEFAULT_WNS_LANDMARKS: dict[str, dict[str, float]] = {
-    "chest":      {"mv": 3, "mev": 8,  "mav_low": 14, "mav_high": 20, "mrv": 28},
-    "lats":       {"mv": 3, "mev": 8,  "mav_low": 14, "mav_high": 22, "mrv": 30},
-    "back":       {"mv": 3, "mev": 8,  "mav_low": 14, "mav_high": 22, "mrv": 30},
-    "erectors":   {"mv": 2, "mev": 5,  "mav_low": 8,  "mav_high": 14, "mrv": 20},
-    "shoulders":  {"mv": 2, "mev": 6,  "mav_low": 10, "mav_high": 16, "mrv": 22},
-    "quads":      {"mv": 3, "mev": 7,  "mav_low": 12, "mav_high": 18, "mrv": 26},
-    "hamstrings": {"mv": 2, "mev": 6,  "mav_low": 10, "mav_high": 16, "mrv": 22},
-    "glutes":     {"mv": 2, "mev": 6,  "mav_low": 10, "mav_high": 16, "mrv": 24},
-    "biceps":     {"mv": 2, "mev": 5,  "mav_low": 8,  "mav_high": 14, "mrv": 20},
-    "triceps":    {"mv": 2, "mev": 5,  "mav_low": 8,  "mav_high": 14, "mrv": 20},
-    "calves":     {"mv": 2, "mev": 5,  "mav_low": 8,  "mav_high": 14, "mrv": 20},
-    "abs":        {"mv": 2, "mev": 5,  "mav_low": 8,  "mav_high": 14, "mrv": 20},
-    "traps":      {"mv": 2, "mev": 5,  "mav_low": 8,  "mav_high": 12, "mrv": 18},
-    "forearms":   {"mv": 1, "mev": 4,  "mav_low": 6,  "mav_high": 10, "mrv": 16},
-    "adductors":  {"mv": 1, "mev": 4,  "mav_low": 6,  "mav_high": 10, "mrv": 16},
+    "chest":      {"mv": 3, "mev": 8,  "mav_low": 16, "mav_high": 24, "mrv": 35},
+    "lats":       {"mv": 3, "mev": 8,  "mav_low": 16, "mav_high": 26, "mrv": 38},
+    "back":       {"mv": 3, "mev": 8,  "mav_low": 16, "mav_high": 26, "mrv": 38},
+    "erectors":   {"mv": 2, "mev": 5,  "mav_low": 10, "mav_high": 16, "mrv": 25},
+    "shoulders":  {"mv": 2, "mev": 6,  "mav_low": 12, "mav_high": 20, "mrv": 28},
+    "quads":      {"mv": 3, "mev": 7,  "mav_low": 14, "mav_high": 22, "mrv": 32},
+    "hamstrings": {"mv": 2, "mev": 6,  "mav_low": 12, "mav_high": 20, "mrv": 28},
+    "glutes":     {"mv": 2, "mev": 6,  "mav_low": 12, "mav_high": 20, "mrv": 30},
+    "biceps":     {"mv": 2, "mev": 5,  "mav_low": 10, "mav_high": 16, "mrv": 25},
+    "triceps":    {"mv": 2, "mev": 5,  "mav_low": 10, "mav_high": 16, "mrv": 25},
+    "calves":     {"mv": 2, "mev": 5,  "mav_low": 10, "mav_high": 16, "mrv": 25},
+    "abs":        {"mv": 2, "mev": 5,  "mav_low": 10, "mav_high": 16, "mrv": 25},
+    "traps":      {"mv": 2, "mev": 5,  "mav_low": 10, "mav_high": 14, "mrv": 22},
+    "forearms":   {"mv": 1, "mev": 4,  "mav_low": 8,  "mav_high": 12, "mrv": 20},
+    "adductors":  {"mv": 1, "mev": 4,  "mav_low": 8,  "mav_high": 12, "mrv": 20},
 }
 
 
@@ -55,8 +55,21 @@ def _build_exercise_lookup() -> dict[str, dict]:
     return {ex["name"].lower().strip(): ex for ex in get_all_exercises()}
 
 
-def _classify_wns_status(net_stimulus: float, landmarks: dict[str, float]) -> VolumeStatus:
-    """Classify WNS status relative to HU landmarks."""
+def _classify_wns_status(net_stimulus: float, landmarks: dict[str, float], frequency: int) -> VolumeStatus:
+    """Classify WNS status relative to HU landmarks.
+    
+    Args:
+        net_stimulus: Weekly net stimulus in HU
+        landmarks: Landmark thresholds for this muscle
+        frequency: Number of sessions per week
+        
+    Returns:
+        Status classification
+    """
+    # Maintenance zone: 1x/week with moderate volume
+    if frequency == 1 and landmarks["mev"] <= net_stimulus <= landmarks["mav_low"]:
+        return "optimal"  # Maintenance is considered optimal for 1x/week
+    
     if net_stimulus < landmarks["mev"]:
         return "below_mev"
     if net_stimulus <= landmarks["mav_high"]:
@@ -155,10 +168,13 @@ class WNSVolumeService:
             exercise_contrib: dict[str, dict] = defaultdict(lambda: {
                 "coefficient": 0.0, "sets_count": 0, "stim_reps_total": 0.0, "hu": 0.0,
             })
+            per_session_cap_exceeded = False
 
             for session_date, sets_list in sessions:
                 weighted_stim_reps = [sr * coeff for sr, coeff, _ in sets_list]
-                session_stim = diminishing_returns(weighted_stim_reps)
+                session_stim, exceeds_cap = diminishing_returns(weighted_stim_reps), len(weighted_stim_reps) > 10
+                if exceeds_cap:
+                    per_session_cap_exceeded = True
                 session_stimuli.append((session_date, session_stim))
 
                 # Track exercise contributions (approximate — attribute proportionally)
@@ -188,7 +204,7 @@ class WNSVolumeService:
                 total_atrophy += atrophy_between_sessions(float(days_since_last))
 
             net = max(0.0, gross - total_atrophy)
-            status = _classify_wns_status(net, lm_dict)
+            status = _classify_wns_status(net, lm_dict, len(session_dates))
 
             # Build exercise contribution list
             ex_contributions = [

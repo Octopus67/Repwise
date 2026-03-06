@@ -9,10 +9,11 @@ from __future__ import annotations
 # ─── Module Constants ─────────────────────────────────────────────────────────
 
 MAX_STIM_REPS: float = 5.0
-DEFAULT_RIR: float = 3.0  # Assumes RPE 7 when user doesn't log RPE/RIR
-DIMINISHING_K: float = 1.69  # Fitted to Schoenfeld meta-analysis: 6 sets ≈ 2x stimulus of 1 set
+DEFAULT_RIR: float = 2.0  # RPE 8 when user doesn't log RPE/RIR (3 stimulating reps)
+DIMINISHING_K: float = 0.96  # Average of Schoenfeld (K=1.69, 6 sets=2x) and Pelland (K=0.24, 6 sets=4x)
 DEFAULT_STIMULUS_DURATION_DAYS: float = 2.0
 DEFAULT_MAINTENANCE_SETS: float = 3.0
+MAX_SETS_PER_SESSION_PER_MUSCLE: int = 10  # Beardsley: above 10 sets/session = negative effects
 
 
 # ─── Pure Functions ───────────────────────────────────────────────────────────
@@ -113,7 +114,7 @@ def compute_session_muscle_stimulus(
     sets_data: list[dict],
     muscle_group: str,
     exercise_coefficients: dict[str, dict[str, float]],
-) -> float:
+) -> tuple[float, bool]:
     """Compute total muscle stimulus for a session.
     
     Args:
@@ -123,7 +124,9 @@ def compute_session_muscle_stimulus(
         exercise_coefficients: Dict mapping exercise_id to muscle coefficients
         
     Returns:
-        Total stimulus for the muscle group after diminishing returns
+        Tuple of (stimulus, exceeds_per_session_cap)
+        - stimulus: Total stimulus for the muscle group after diminishing returns
+        - exceeds_per_session_cap: True if >10 sets per muscle in this session
     """
     stim_reps_list: list[float] = []
     
@@ -151,4 +154,5 @@ def compute_session_muscle_stimulus(
             weighted_stim_reps = stim_reps * coefficient
             stim_reps_list.append(weighted_stim_reps)
     
-    return diminishing_returns(stim_reps_list)
+    exceeds_cap = len(stim_reps_list) > MAX_SETS_PER_SESSION_PER_MUSCLE
+    return diminishing_returns(stim_reps_list), exceeds_cap

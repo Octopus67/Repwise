@@ -33,7 +33,7 @@ class TestRirFromRpe:
         assert rir_from_rpe(6.0) == 4.0
 
     def test_rpe_none_returns_default(self):
-        assert rir_from_rpe(None) == 3.0  # DEFAULT_RIR = 3.0 (RPE 7)
+        assert rir_from_rpe(None) == 2.0  # DEFAULT_RIR = 2.0 (RPE 8)
 
     def test_rpe_clamped_above_10(self):
         """RPE > 10 is clamped to 10, so RIR = 0."""
@@ -91,7 +91,7 @@ class TestStimulatingRepsPerSet:
         assert stimulating_reps_per_set(0, 0.0, 0.75) == 0.0
 
     def test_none_rir_uses_default(self):
-        """None RIR uses DEFAULT_RIR (3.0 = RPE 7) → min(2, reps)."""
+        """None RIR uses DEFAULT_RIR (2.0 = RPE 8) → min(3, reps)."""
         assert stimulating_reps_per_set(10, None, 0.75) == 2.0
 
     def test_none_intensity_uses_default(self):

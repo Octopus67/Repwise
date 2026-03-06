@@ -85,7 +85,7 @@ describe('stimulatingRepsPerSet', () => {
   });
 
   test('null RIR uses default', () => {
-    // DEFAULT_RIR = 3.0 (RPE 7) → min(2.0, 10) = 2.0
+    // DEFAULT_RIR = 2.0 (RPE 8) → min(3.0, 10) = 3.0
     expect(stimulatingRepsPerSet(10, null, 0.75)).toBe(2.0);
   });
 
