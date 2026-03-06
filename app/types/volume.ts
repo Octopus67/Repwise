@@ -32,6 +32,7 @@ export interface WNSMuscleVolume {
   frequency: number;
   landmarks: WNSLandmarks;
   exercises: WNSExerciseContribution[];
+  trend: Array<{ week: string; volume: number }>;
 }
 
 export interface WNSWeeklyResponse {
@@ -39,4 +40,5 @@ export interface WNSWeeklyResponse {
   week_end: string;
   muscle_groups: WNSMuscleVolume[];
   engine: 'wns' | 'legacy';
+  landmark_descriptions: Record<string, string>;
 }

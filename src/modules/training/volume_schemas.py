@@ -121,6 +121,12 @@ class WNSExerciseContribution(BaseModel):
     contribution_hu: float = Field(ge=0)
 
 
+class WNSWeeklyTrendPoint(BaseModel):
+    """Single week's volume in a 4-week trend."""
+    week: date
+    volume: float = Field(ge=0)
+
+
 class WNSMuscleVolume(BaseModel):
     """Weekly Net Stimulus volume for a single muscle group."""
     muscle_group: str
@@ -133,6 +139,15 @@ class WNSMuscleVolume(BaseModel):
     frequency: int = Field(ge=0, le=14)
     landmarks: WNSLandmarks
     exercises: list[WNSExerciseContribution]
+    trend: list[WNSWeeklyTrendPoint] = Field(default_factory=list)
+
+
+LANDMARK_DESCRIPTIONS: dict[str, str] = {
+    "mv": "Maintenance Volume: Lowest dose to maintain current muscle mass",
+    "mev": "Minimum Effective Volume: Threshold where growth begins",
+    "mav": "Maximum Adaptive Volume: Optimal growth zone with manageable fatigue",
+    "mrv": "Maximum Recoverable Volume: Upper limit before overtraining risk",
+}
 
 
 class WNSWeeklyResponse(BaseModel):
@@ -140,4 +155,5 @@ class WNSWeeklyResponse(BaseModel):
     week_start: date
     week_end: date
     muscle_groups: list[WNSMuscleVolume]
+    landmark_descriptions: dict[str, str] = Field(default_factory=lambda: LANDMARK_DESCRIPTIONS)
     engine: Literal["wns"] = "wns"

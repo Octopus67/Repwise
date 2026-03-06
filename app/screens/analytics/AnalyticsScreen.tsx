@@ -26,9 +26,13 @@ import { HeatMapCard } from '../../components/analytics/HeatMapCard';
 import { FatigueHeatMapOverlay } from '../../components/analytics/FatigueHeatMapOverlay';
 import { FatigueBreakdownModal } from '../../components/analytics/FatigueBreakdownModal';
 import { ReadinessTrendChart } from '../../components/analytics/ReadinessTrendChart';
+import { VolumeLandmarksCard } from '../../components/volume/VolumeLandmarksCard';
+import { useFeatureFlag } from '../../hooks/useFeatureFlag';
+import { useRoute } from '@react-navigation/native';
+import type { WNSMuscleVolume } from '../../types/volume';
 
 type TimeRange = '7d' | '14d' | '30d' | '90d';
-type AnalyticsTab = 'nutrition' | 'training' | 'body';
+type AnalyticsTab = 'nutrition' | 'training' | 'body' | 'volume';
 
 interface TrendPoint {
   date: string;
@@ -75,9 +79,10 @@ export function AnalyticsScreen() {
   const premium = isPremium(store);
   const unitSystem = store.unitSystem;
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const { impact } = useHaptics();
 
-  const [selectedTab, setSelectedTab] = useState<AnalyticsTab>('nutrition');
+  const [selectedTab, setSelectedTab] = useState<AnalyticsTab>(route.params?.initialTab ?? 'nutrition');
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +104,9 @@ export function AnalyticsScreen() {
   const [fatigueScores, setFatigueScores] = useState<any[]>([]);
   const [selectedFatigueGroup, setSelectedFatigueGroup] = useState<any | null>(null);
   const [wnsExplainerExpanded, setWnsExplainerExpanded] = useState(false);
+  const [volumeLandmarks, setVolumeLandmarks] = useState<WNSMuscleVolume[]>([]);
+  const [volumeLoading, setVolumeLoading] = useState(false);
+  const { enabled: volumeFlagEnabled } = useFeatureFlag('volume_landmarks');
 
   const loadAnalytics = useCallback(async (signal?: AbortSignal) => {
     setError(null);
@@ -207,6 +215,17 @@ export function AnalyticsScreen() {
     } catch { /* best-effort */ }
   }, []);
 
+  const loadVolumeLandmarks = useCallback(async () => {
+    setVolumeLoading(true);
+    try {
+      const { data } = await api.get('training/analytics/muscle-volume');
+      const groups: WNSMuscleVolume[] = data.muscle_groups ?? data ?? [];
+      groups.sort((a, b) => (b.hypertrophy_units ?? 0) - (a.hypertrophy_units ?? 0));
+      setVolumeLandmarks(groups);
+    } catch { /* best-effort */ }
+    finally { setVolumeLoading(false); }
+  }, []);
+
   useEffect(() => {
     const controller = new AbortController();
     loadAnalytics(controller.signal);
@@ -228,6 +247,10 @@ export function AnalyticsScreen() {
   useEffect(() => {
     loadStrengthStandards();
   }, [loadStrengthStandards]);
+
+  useEffect(() => {
+    if (selectedTab === 'volume') loadVolumeLandmarks();
+  }, [selectedTab, loadVolumeLandmarks]);
 
   const filteredWeight = filterByTimeRange(weightTrend, timeRange);
   const filteredCalories = filterByTimeRange(calorieTrend, timeRange);
@@ -260,7 +283,7 @@ export function AnalyticsScreen() {
 
         {/* Tab Pills */}
         <View style={styles.analyticsTabRow}>
-          {(['nutrition', 'training', 'body'] as const).map((t) => (
+          {(['nutrition', 'training', 'body', 'volume'] as const).map((t) => (
             <TouchableOpacity
               key={t}
               style={[styles.analyticsTab, selectedTab === t && styles.analyticsTabActive]}
@@ -659,6 +682,42 @@ export function AnalyticsScreen() {
                   caloriesByDate={caloriesByDate}
                 />
               </>
+            )}
+          </>
+        )}
+
+        {/* ===== VOLUME TAB ===== */}
+        {selectedTab === 'volume' && (
+          <>
+            {!volumeFlagEnabled ? (
+              <EmptyState
+                icon={<Icon name="chart" />}
+                title="Coming soon"
+                description="Volume landmarks are not yet available for your account"
+              />
+            ) : volumeLoading ? (
+              <View style={{ marginTop: spacing[4], gap: spacing[3] }}>
+                <Skeleton width="100%" height={140} borderRadius={8} />
+                <Skeleton width="100%" height={140} borderRadius={8} />
+                <Skeleton width="100%" height={140} borderRadius={8} />
+              </View>
+            ) : volumeLandmarks.length === 0 ? (
+              <EmptyState
+                icon={<Icon name="chart" />}
+                title="No volume data"
+                description="Start logging workouts to see your volume landmarks"
+              />
+            ) : (
+              volumeLandmarks.map((mg) => (
+                <VolumeLandmarksCard
+                  key={mg.muscle_group}
+                  muscleGroup={mg.muscle_group}
+                  currentVolume={mg.hypertrophy_units ?? mg.net_stimulus ?? 0}
+                  landmarks={mg.landmarks}
+                  trend={mg.trend?.map((t) => ({ week: t.week, volume: t.volume })) ?? []}
+                  status={mg.status}
+                />
+              ))
             )}
           </>
         )}

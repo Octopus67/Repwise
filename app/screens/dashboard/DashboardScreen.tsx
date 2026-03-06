@@ -42,6 +42,7 @@ import { useDailyTargets } from '../../hooks/useDailyTargets';
 import { useHealthData } from '../../hooks/useHealthData';
 import api from '../../services/api';
 import { isPremiumWorkoutLoggerEnabled } from '../../utils/featureFlags';
+import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 
 const DATE_DEBOUNCE_MS = 300;
 
@@ -50,6 +51,12 @@ interface Article {
   title: string;
   module_name: string;
   estimated_read_time_min: number;
+}
+
+interface VolumeSummary {
+  optimal: number;
+  approachingMrv: number;
+  total: number;
 }
 
 interface NutritionEntryRaw {
@@ -126,6 +133,9 @@ export function DashboardScreen({ navigation }: any) {
   const [recompMetrics, setRecompMetrics] = useState<any>(null);
   // Nudges
   const [nudges, setNudges] = useState<any[]>([]);
+  // Volume summary
+  const [volumeSummary, setVolumeSummary] = useState<VolumeSummary | null>(null);
+  const { enabled: volumeFlagEnabled } = useFeatureFlag('volume_landmarks');
 
   // Health data hook
   const healthData = useHealthData();
@@ -290,6 +300,17 @@ export function DashboardScreen({ navigation }: any) {
         setNudges(nudgesRes.data ?? []);
       } catch {
         setNudges([]);
+      }
+
+      // Fetch volume summary (fire-and-forget)
+      try {
+        const volRes = await api.get('training/analytics/muscle-volume', { signal });
+        const groups = volRes.data.muscle_groups ?? volRes.data ?? [];
+        const optimal = groups.filter((g: any) => g.status === 'optimal').length;
+        const approachingMrv = groups.filter((g: any) => g.status === 'approaching_mrv').length;
+        setVolumeSummary(groups.length > 0 ? { optimal, approachingMrv, total: groups.length } : null);
+      } catch {
+        setVolumeSummary(null);
       }
 
       // Use achievement API streak
@@ -712,6 +733,25 @@ export function DashboardScreen({ navigation }: any) {
               suggestions={fatigueSuggestions}
               onPress={() => navigation?.navigate?.('Analytics')}
             />
+        )}
+
+        {/* Volume Insights Card */}
+        {!isLoading && volumeFlagEnabled && volumeSummary && (
+          <TouchableOpacity
+            style={styles.milestoneBanner}
+            onPress={() => navigation?.navigate?.('Analytics', { screen: 'AnalyticsHome', params: { initialTab: 'volume' } })}
+            activeOpacity={0.7}
+            accessibilityLabel="View volume insights"
+            accessibilityRole="button"
+            testID="dashboard-volume-insights"
+          >
+            <Icon name="chart" size={16} color={colors.accent.primary} />
+            <Text style={styles.milestoneText} numberOfLines={1}>
+              {volumeSummary.optimal} muscle{volumeSummary.optimal !== 1 ? 's' : ''} optimal
+              {volumeSummary.approachingMrv > 0 ? `, ${volumeSummary.approachingMrv} approaching MRV` : ''}
+            </Text>
+            <Text style={styles.milestoneChevron}>›</Text>
+          </TouchableOpacity>
         )}
 
         {/* Featured — single tip card with link to all articles */}

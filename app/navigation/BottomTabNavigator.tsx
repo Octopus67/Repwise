@@ -71,7 +71,7 @@ export type LogsStackParamList = {
 };
 
 export type AnalyticsStackParamList = {
-  AnalyticsHome: undefined;
+  AnalyticsHome: { initialTab?: 'nutrition' | 'training' | 'body' | 'volume' } | undefined;
   NutritionReport: undefined;
   MicronutrientDashboard: undefined;
   WeeklyReport: undefined;

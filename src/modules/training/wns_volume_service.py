@@ -16,6 +16,7 @@ from src.modules.training.volume_schemas import (
     WNSExerciseContribution,
     WNSLandmarks,
     WNSMuscleVolume,
+    WNSWeeklyTrendPoint,
 )
 from src.modules.training.wns_engine import (
     DEFAULT_MAINTENANCE_SETS,
@@ -121,6 +122,43 @@ class WNSVolumeService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
+    async def _compute_trend(
+        self, user_id: uuid.UUID, week_start: date,
+    ) -> dict[str, list[WNSWeeklyTrendPoint]]:
+        """Compute 4-week volume trend per muscle group (hard sets per week)."""
+        from src.modules.training.analytics_service import TrainingAnalyticsService
+        from src.modules.training.exercise_mapping import get_muscle_group
+
+        trend_start = week_start - timedelta(weeks=3)
+        trend_end = week_start + timedelta(days=6)
+
+        svc = TrainingAnalyticsService(self.session)
+        rows = await svc._fetch_sessions(user_id, trend_start, trend_end)
+
+        # Aggregate hard sets per (iso_week_monday, muscle_group)
+        weekly: dict[str, dict[date, int]] = defaultdict(lambda: defaultdict(int))
+        for session_date, exercises in rows:
+            week_monday = session_date - timedelta(days=session_date.weekday())
+            for ex in exercises:
+                mg = get_muscle_group(ex.get("exercise_name", ""))
+                if not mg:
+                    continue
+                for s in ex.get("sets", []):
+                    if s.get("set_type", "normal") != "warm-up":
+                        weekly[mg][week_monday] += 1
+
+        # Build sorted trend lists for each muscle
+        result: dict[str, list[WNSWeeklyTrendPoint]] = {}
+        # The 4 week mondays covering the trend window
+        four_weeks = [week_start - timedelta(weeks=w) for w in range(3, -1, -1)]
+
+        for mg, week_data in weekly.items():
+            result[mg] = [
+                WNSWeeklyTrendPoint(week=w, volume=float(week_data.get(w, 0)))
+                for w in four_weeks
+            ]
+        return result
+
     async def get_weekly_muscle_volume(
         self, user_id: uuid.UUID, week_start: date, goal_type: Optional[str] = None, goal_rate: Optional[float] = None
     ) -> list[WNSMuscleVolume]:
@@ -198,6 +236,9 @@ class WNSVolumeService:
         volume_multiplier = 1.0
         if goal_type and goal_rate is not None:
             volume_multiplier = get_volume_multiplier_for_goal(goal_type, goal_rate)
+
+        # Compute 4-week trend data
+        trend_data = await self._compute_trend(user_id, week_start)
 
         for mg, lm_dict in DEFAULT_WNS_LANDMARKS.items():
             sessions = muscle_sessions.get(mg, [])
@@ -279,6 +320,7 @@ class WNSVolumeService:
                     frequency=len(session_dates),
                     landmarks=WNSLandmarks(**{k: round(v, 1) for k, v in adjusted_landmarks.items()}),
                     exercises=ex_contributions,
+                    trend=trend_data.get(mg, []),
                 )
             )
 
