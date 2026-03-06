@@ -23,6 +23,7 @@ import { UpgradeModal } from '../../components/premium/UpgradeModal';
 import { FeatureNavItem } from '../../components/profile/FeatureNavItem';
 import { EditPlanPanel } from '../../components/profile/EditPlanPanel';
 import { PreferencesSection } from '../../components/profile/PreferencesSection';
+import { AdvancedSettingsSection } from '../../components/profile/AdvancedSettingsSection';
 import { AccountSection } from '../../components/profile/AccountSection';
 import { AchievementGrid } from '../../components/achievements/AchievementGrid';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
@@ -52,10 +53,11 @@ export function ProfileScreen() {
   const headerAnim = useStaggeredEntrance(0, 60);
   const planPanelAnim = useStaggeredEntrance(1, 60);
   const preferencesAnim = useStaggeredEntrance(2, 60);
-  const featuresAnim = useStaggeredEntrance(3, 60);
-  const achievementsAnim = useStaggeredEntrance(4, 60);
-  const subscriptionAnim = useStaggeredEntrance(5, 60);
-  const accountAnim = useStaggeredEntrance(6, 60);
+  const advancedSettingsAnim = useStaggeredEntrance(3, 60);
+  const featuresAnim = useStaggeredEntrance(4, 60);
+  const achievementsAnim = useStaggeredEntrance(5, 60);
+  const subscriptionAnim = useStaggeredEntrance(6, 60);
+  const accountAnim = useStaggeredEntrance(7, 60);
 
   const loadProfile = useCallback(async () => {
     setIsLoading(true);
@@ -181,6 +183,9 @@ export function ProfileScreen() {
         </Animated.View>
         <Animated.View style={preferencesAnim} testID="profile-goals">
           {store.profile && <PreferencesSection profile={store.profile} unitSystem={store.unitSystem} coachingMode={store.coachingMode} />}
+        </Animated.View>
+        <Animated.View style={advancedSettingsAnim}>
+          <AdvancedSettingsSection />
         </Animated.View>
         <Animated.View style={featuresAnim}>
           <SectionHeader title="Features" />

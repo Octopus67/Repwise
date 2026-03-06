@@ -131,6 +131,25 @@ async def get_goals(
     """Return the authenticated user's current goals."""
     return await service.get_goals(user.id)
 
+
+@router.delete("/goals", status_code=204)
+async def delete_goals(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Delete user goals to trigger re-onboarding.
+
+    This allows users to retake the setup wizard. Metrics history is preserved.
+    """
+    from src.modules.user.models import UserGoal
+    from src.modules.adaptive.models import AdaptiveSnapshot
+    from sqlalchemy import delete as sql_delete
+
+    # Delete goals and old snapshots for clean re-onboarding
+    await db.execute(sql_delete(UserGoal).where(UserGoal.user_id == user.id))
+    await db.execute(sql_delete(AdaptiveSnapshot).where(AdaptiveSnapshot.user_id == user.id))
+    await db.commit()
+
 # ------------------------------------------------------------------
 # Recalculate
 # ------------------------------------------------------------------

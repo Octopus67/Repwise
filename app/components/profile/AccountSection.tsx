@@ -22,12 +22,35 @@ interface AccountSectionProps {
 
 export function AccountSection({ onLogout }: AccountSectionProps) {
   const store = useStore();
+  const setNeedsOnboarding = useStore((s) => s.setNeedsOnboarding);
   const reduceMotion = useReduceMotion();
   const [dangerZoneExpanded, setDangerZoneExpanded] = useState(false);
 
   const toggleDangerZone = useCallback(() => {
     setDangerZoneExpanded((prev) => !prev);
   }, []);
+
+  const handleRedoOnboarding = useCallback(() => {
+    Alert.alert(
+      'Retake Setup Wizard',
+      'This will reset your goals and preferences. Your training and nutrition history will be preserved. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.delete('users/goals');
+              setNeedsOnboarding(true);
+            } catch {
+              Alert.alert('Error', 'Failed to reset. Please try again.');
+            }
+          },
+        },
+      ],
+    );
+  }, [setNeedsOnboarding]);
 
   const handleDeleteAccount = useCallback(() => {
     Alert.alert(
@@ -60,6 +83,11 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
       {/* Log Out */}
       <View style={styles.logoutRow}>
         <Button title="Log Out" variant="secondary" onPress={onLogout} />
+      </View>
+
+      {/* Retake Setup Wizard */}
+      <View style={styles.redoOnboardingRow}>
+        <Button title="Retake Setup Wizard" variant="secondary" onPress={handleRedoOnboarding} />
       </View>
 
       {/* Legal Links */}
@@ -119,6 +147,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing[2],
   },
   logoutRow: {
+    marginBottom: spacing[4],
+  },
+  redoOnboardingRow: {
     marginBottom: spacing[4],
   },
   legalSection: {
