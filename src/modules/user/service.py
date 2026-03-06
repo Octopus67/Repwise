@@ -7,6 +7,7 @@ and goal management with paginated history queries.
 from __future__ import annotations
 from typing import Optional
 
+import logging
 import time
 import uuid
 from datetime import date, datetime, timedelta
@@ -34,7 +35,11 @@ from src.shared.errors import NotFoundError, ValidationError, RateLimitedError
 from src.shared.pagination import PaginatedResult, PaginationParams
 from src.shared.types import ActivityLevel, GoalType
 
+logger = logging.getLogger(__name__)
+
 # Rate limiting for recalculate: 1 per minute per user
+# TODO: Move to Redis for multi-worker deployments
+# Current limitation: rate limit is per-worker, not global
 _recalculate_attempts: dict[str, float] = {}
 RECALCULATE_COOLDOWN_SECONDS = 60
 
@@ -85,7 +90,10 @@ class UserService:
             # Allow only known preference keys
             allowed_keys = {
                 "age_years", "sex", "theme", "units", "notifications",
-                "unit_system", "rest_timer", "cuisine_preferences"
+                "unit_system", "rest_timer", "cuisine_preferences",
+                "dietary_restrictions", "allergies", "meal_frequency",
+                "diet_style", "protein_per_kg", "exercise_types",
+                "exercise_sessions_per_week",
             }
             unknown_keys = set(prefs.keys()) - allowed_keys
             if unknown_keys:
@@ -252,6 +260,7 @@ class UserService:
         self, user_id: uuid.UUID, data: RecalculateRequest
     ) -> RecalculateResponse:
         """Recalculate adaptive targets after updating metrics and/or goals."""
+        global _recalculate_attempts
 
         # Rate limiting: max 1 recalculate per minute per user
         user_key = str(user_id)
@@ -264,6 +273,11 @@ class UserService:
                 retry_after=remaining
             )
         _recalculate_attempts[user_key] = now
+
+        # Prevent memory leak: clear old entries
+        if len(_recalculate_attempts) > 10000:
+            cutoff = time.time() - RECALCULATE_COOLDOWN_SECONDS * 2
+            _recalculate_attempts = {k: v for k, v in _recalculate_attempts.items() if v > cutoff}
 
         # Step 1: Log metrics if provided
         new_metrics: Optional[UserMetricResponse] = None
@@ -331,9 +345,18 @@ class UserService:
             # Fallback for users who onboarded before age/sex persistence was added.
             # Use reasonable defaults so recalculation isn't blocked.
             age_years = age_years or 30
+            if age_years == 30:
+                logger.warning(f"User {user_id} missing age in preferences, using default 30")
+
             sex = sex or "male"
+            if sex == "male" and not prefs.get("sex"):
+                logger.warning(f"User {user_id} missing sex in preferences, using default male")
 
         # Step 7: Build AdaptiveInput
+        diet_style = prefs.get("diet_style")
+        protein_per_kg = prefs.get("protein_per_kg")
+        body_fat_pct = latest_metrics.body_fat_pct
+
         adaptive_input = AdaptiveInput(
             weight_kg=latest_metrics.weight_kg,
             height_cm=latest_metrics.height_cm,
@@ -344,6 +367,9 @@ class UserService:
             goal_rate_per_week=goal_rate_per_week,
             bodyweight_history=bw_history,
             training_load_score=0.0,
+            diet_style=diet_style,
+            protein_per_kg_override=protein_per_kg,
+            body_fat_pct=body_fat_pct,
         )
 
         # Step 8: Compute snapshot
@@ -455,6 +481,9 @@ class UserService:
                 goal_rate_per_week=goal.goal_rate_per_week or 0.0,
                 bodyweight_history=bw_history,
                 training_load_score=0.0,
+                diet_style=prefs.get("diet_style"),
+                protein_per_kg_override=prefs.get("protein_per_kg"),
+                body_fat_pct=metrics.body_fat_pct,
             )
             
             new_snap = compute_snapshot(adaptive_input)

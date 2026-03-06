@@ -3,8 +3,8 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Types matching the calculation engine
-export type Sex = 'male' | 'female' | 'other';
-export type ActivityLevel = 'sedentary' | 'lightly_active' | 'moderately_active' | 'highly_active';
+export type Sex = 'male' | 'female';
+export type ActivityLevel = 'sedentary' | 'lightly_active' | 'moderately_active' | 'highly_active' | 'very_highly_active';
 export type GoalType = 'lose_fat' | 'build_muscle' | 'maintain' | 'eat_healthier' | 'recomposition';
 export type DietStyle = 'balanced' | 'high_protein' | 'low_carb' | 'keto';
 export type ExerciseType = 'strength' | 'cardio' | 'sports' | 'yoga' | 'walking';
@@ -96,12 +96,13 @@ const INITIAL_STATE: OnboardingWizardState = {
   fastTrackCompleted: false,
 };
 
-const STORAGE_KEY = 'rw_onboarding_wizard_v2';
+const STORAGE_KEY = 'rw_onboarding_wizard_v3';
+const STATE_VERSION = 3;
 
 // Persistence helpers
 async function saveState(state: OnboardingWizardState) {
   try {
-    const json = JSON.stringify(state);
+    const json = JSON.stringify({ version: STATE_VERSION, state });
     if (Platform.OS === 'web') {
       localStorage.setItem(STORAGE_KEY, json);
     } else {
@@ -112,13 +113,20 @@ async function saveState(state: OnboardingWizardState) {
 
 async function loadState(): Promise<Partial<OnboardingWizardState> | null> {
   try {
+    let raw: string | null;
     if (Platform.OS === 'web') {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : null;
+      raw = localStorage.getItem(STORAGE_KEY);
     } else {
-      const raw = await AsyncStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : null;
+      raw = await AsyncStorage.getItem(STORAGE_KEY);
     }
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed.version === STATE_VERSION) {
+      return parsed.state;
+    }
+    // Version mismatch: clear stale state
+    await clearState();
+    return null;
   } catch {
     return null;
   }

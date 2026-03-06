@@ -21,7 +21,6 @@ import { Skeleton } from '../../components/common/Skeleton';
 import { PremiumBadge } from '../../components/premium/PremiumBadge';
 import { UpgradeBanner } from '../../components/premium/UpgradeBanner';
 import { UpgradeModal } from '../../components/premium/UpgradeModal';
-import { SetupBanner } from '../../components/common/SetupBanner';
 import { AddNutritionModal } from '../../components/modals/AddNutritionModal';
 import { AddTrainingModal } from '../../components/modals/AddTrainingModal';
 import { AddBodyweightModal } from '../../components/modals/AddBodyweightModal';
@@ -69,9 +68,6 @@ export function DashboardScreen({ navigation }: any) {
   const store = useStore();
   const { impact } = useHaptics();
   const premium = isPremium(store);
-  const onboardingSkipped = useStore((s) => s.onboardingSkipped);
-  const setNeedsOnboarding = useStore((s) => s.setNeedsOnboarding);
-  const setOnboardingSkipped = useStore((s) => s.setOnboardingSkipped);
   const selectedDate = useStore((s) => s.selectedDate);
   const setSelectedDate = useStore((s) => s.setSelectedDate);
   const adaptiveTargets = useStore((s) => s.adaptiveTargets);
@@ -156,6 +152,8 @@ export function DashboardScreen({ navigation }: any) {
       const targetDate = dateToLoad ?? selectedDate;
       setError(null);
 
+      // TODO: Consider aggregating these into a single /dashboard/summary endpoint
+      // Current: 6 parallel + 4 fire-and-forget = 10 API calls on load
       const [nutritionRes, adaptiveRes, trainingRes, articlesRes, bwRes, streakRes] = await Promise.allSettled([
         api.get('nutrition/entries', { params: { start_date: targetDate, end_date: targetDate }, signal }),
         api.get('adaptive/snapshots', { params: { limit: 1 }, signal }),
@@ -402,15 +400,6 @@ export function DashboardScreen({ navigation }: any) {
             {premium && <PremiumBadge size="md" />}
           </View>
         </Animated.View>
-
-        {onboardingSkipped && (
-          <SetupBanner
-            onPress={() => {
-              setOnboardingSkipped(false);
-              setNeedsOnboarding(true);
-            }}
-          />
-        )}
 
         {/* Error Banner */}
         {error && (

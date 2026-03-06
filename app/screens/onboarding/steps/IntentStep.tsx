@@ -15,14 +15,14 @@ const GOALS: { type: GoalType; icon: IconName; title: string; desc: string }[] =
   { type: 'recomposition', icon: 'scale', title: 'Body Recomposition', desc: 'Calorie cycling — surplus on training days, deficit on rest days' },
 ];
 
-interface Props { onNext: () => void; onSkip: () => void; }
+interface Props { onNext: () => void; }
 
 function GoalCard({ index, children }: { index: number; children: React.ReactNode }) {
   const style = useStaggeredEntrance(index);
   return <Animated.View style={style}>{children}</Animated.View>;
 }
 
-export function IntentStep({ onNext, onSkip }: Props) {
+export function IntentStep({ onNext }: Props) {
   const goalType = useOnboardingStore((s) => s.goalType);
   const updateField = useOnboardingStore((s) => s.updateField);
   const { impact } = useHaptics();
@@ -59,10 +59,6 @@ export function IntentStep({ onNext, onSkip }: Props) {
       ))}
 
       <Button title="Next" onPress={onNext} disabled={!goalType} style={{ marginTop: spacing[4] }} />
-
-      <TouchableOpacity onPress={onSkip} style={styles.skipLink}>
-        <Text style={styles.skipText}>Skip for now</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }

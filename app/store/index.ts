@@ -143,7 +143,6 @@ interface AppActions {
 
   // Onboarding
   setNeedsOnboarding: (needs: boolean) => void;
-  setOnboardingSkipped: (skipped: boolean) => void;
 
   // Unit system
   setUnitSystem: (system: 'metric' | 'imperial') => void;
@@ -251,7 +250,6 @@ export const useStore = create<AppStore>((set) => ({
 
   // Onboarding actions
   setNeedsOnboarding: (needs) => set({ needsOnboarding: needs }),
-  setOnboardingSkipped: (skipped) => set({ onboardingSkipped: skipped }),
 
   // Unit system actions
   setUnitSystem: (system) => set({ unitSystem: system }),

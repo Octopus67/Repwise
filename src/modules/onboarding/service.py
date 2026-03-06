@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import date
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.adaptive.engine import AdaptiveInput, compute_snapshot
@@ -44,8 +45,13 @@ class OnboardingService:
         """
         user_svc = UserService(self.db)
 
-        # Step 1 — conflict guard
-        existing_goal = await user_svc.get_goals(user_id)
+        # Step 1 — conflict guard (row-level lock prevents concurrent onboarding)
+        result = await self.db.execute(
+            select(UserGoal)
+            .where(UserGoal.user_id == user_id)
+            .with_for_update()
+        )
+        existing_goal = result.scalar_one_or_none()
         if existing_goal is not None:
             raise ConflictError("Onboarding already completed")
 
@@ -75,6 +81,9 @@ class OnboardingService:
         prefs["sex"] = data.sex
 
         if prefs != (profile.preferences or {}):
+            # Note: Direct preference mutation bypasses UserService.update_profile validation
+            # This is intentional — onboarding needs to set all fields including those
+            # not in the standard allowlist
             profile.preferences = prefs
             await self.db.flush()
 

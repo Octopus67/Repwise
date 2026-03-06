@@ -25,10 +25,9 @@ const TOTAL_STEPS = 11;
 
 interface Props {
   onComplete: () => void;
-  onSkip: () => void;
 }
 
-export function OnboardingWizard({ onComplete, onSkip }: Props) {
+export function OnboardingWizard({ onComplete }: Props) {
   const currentStep = useOnboardingStore((s) => s.currentStep);
   const setStep = useOnboardingStore((s) => s.setStep);
   const reset = useOnboardingStore((s) => s.reset);
@@ -60,14 +59,8 @@ export function OnboardingWizard({ onComplete, onSkip }: Props) {
   }, [currentStep, setStep, impact]);
 
   const handleComplete = useCallback(() => {
-    reset();
     onComplete();
-  }, [reset, onComplete]);
-
-  const handleSkip = useCallback(() => {
-    reset();
-    onSkip();
-  }, [reset, onSkip]);
+  }, [onComplete]);
 
   // Jump to a specific step (used by Summary screen's edit links)
   const jumpToStep = useCallback((step: number) => {
@@ -76,7 +69,7 @@ export function OnboardingWizard({ onComplete, onSkip }: Props) {
 
   const renderStep = () => {
     switch (currentStep) {
-      case 1: return <IntentStep onNext={goNext} onSkip={handleSkip} />;
+      case 1: return <IntentStep onNext={goNext} />;
       case 2: return <BodyBasicsStep onNext={goNext} onBack={goBack} />;
       case 3: return <BodyMeasurementsStep onNext={goNext} onBack={goBack} />;
       case 4: return <BodyCompositionStep onNext={goNext} onBack={goBack} onSkip={goNext} />;

@@ -3,7 +3,11 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator
 import Animated from 'react-native-reanimated';
 import { colors, spacing, typography, radius } from '../../../theme/tokens';
 import { Button } from '../../../components/common/Button';
+import { ErrorBanner } from '../../../components/common/ErrorBanner';
 import { useOnboardingStore, computeAge } from '../../../store/onboardingSlice';
+import { useStore as useMainStore } from '../../../store';
+import { buildOnboardingPayload } from '../../../utils/onboardingPayloadBuilder';
+import api from '../../../services/api';
 import {
   computeTDEEBreakdown,
   computeCalorieBudget,
@@ -34,9 +38,11 @@ function SummaryRow({ index, children }: { index: number; children: React.ReactN
 
 export function SummaryStep({ onComplete, onEditStep }: Props) {
   const store = useOnboardingStore();
+  const mainStore = useMainStore();
   const age = computeAge(store.birthYear, store.birthMonth);
   const goalType = store.goalType ?? 'maintain';
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const tdee = useMemo(() => {
     if (store.tdeeOverride) return store.tdeeOverride;
@@ -61,8 +67,57 @@ export function SummaryStep({ onComplete, onEditStep }: Props) {
 
   const handleComplete = async () => {
     setSubmitting(true);
+    setError(null);
+
     try {
+      const payload = buildOnboardingPayload(store);
+      const { data } = await api.post('onboarding/complete', payload);
+
+      if (data.snapshot) {
+        mainStore.setAdaptiveTargets({
+          calories: data.snapshot.target_calories,
+          protein_g: data.snapshot.target_protein_g,
+          carbs_g: data.snapshot.target_carbs_g,
+          fat_g: data.snapshot.target_fat_g,
+        });
+      }
+      if (data.goals) {
+        mainStore.setGoals(data.goals);
+      }
+
+      store.reset();
       await onComplete?.();
+    } catch (err: any) {
+      if (err?.response?.status === 409) {
+        try {
+          const [goalsRes, snapshotRes] = await Promise.all([
+            api.get('users/goals'),
+            api.get('adaptive/snapshots', { params: { limit: 1 } }),
+          ]);
+
+          if (snapshotRes.data.items?.[0]) {
+            const snap = snapshotRes.data.items[0];
+            mainStore.setAdaptiveTargets({
+              calories: snap.target_calories,
+              protein_g: snap.target_protein_g,
+              carbs_g: snap.target_carbs_g,
+              fat_g: snap.target_fat_g,
+            });
+          }
+          if (goalsRes.data) {
+            mainStore.setGoals(goalsRes.data);
+          }
+        } catch {
+          // Ignore fetch errors on 409 — dashboard will load data anyway
+        }
+
+        store.reset();
+        await onComplete?.();
+        return;
+      }
+
+      const message = err?.response?.data?.message || 'Failed to save your plan. Please try again.';
+      setError(message);
     } finally {
       setSubmitting(false);
     }
@@ -83,6 +138,8 @@ export function SummaryStep({ onComplete, onEditStep }: Props) {
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
       <Text style={styles.heading}>Your Plan</Text>
       <Text style={styles.subheading}>Review your personalized numbers — tap any row to edit</Text>
+
+      {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
 
       <View style={styles.card}>
         {rows.map((row, i) => (

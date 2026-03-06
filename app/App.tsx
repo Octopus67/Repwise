@@ -86,7 +86,6 @@ export default function App() {
   const setAuth = useStore((s) => s.setAuth);
   const clearAuth = useStore((s) => s.clearAuth);
   const setNeedsOnboarding = useStore((s) => s.setNeedsOnboarding);
-  const setOnboardingSkipped = useStore((s) => s.setOnboardingSkipped);
   const [ready, setReady] = useState(false);
   const navigationRef = useRef<NavigationContainerRef<any>>(null);
 
@@ -131,12 +130,6 @@ export default function App() {
   };
 
   const handleOnboardingComplete = () => {
-    setNeedsOnboarding(false);
-    setOnboardingSkipped(false);
-  };
-
-  const handleOnboardingSkip = () => {
-    setOnboardingSkipped(true);
     setNeedsOnboarding(false);
   };
 
@@ -203,7 +196,6 @@ export default function App() {
               needsOnboarding ? (
                 <OnboardingWizard
                   onComplete={handleOnboardingComplete}
-                  onSkip={handleOnboardingSkip}
                 />
               ) : (
                 <BottomTabNavigator />
