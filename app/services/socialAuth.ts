@@ -29,7 +29,7 @@ export async function signInWithGoogle(): Promise<{
   expires_in: number;
 }> {
   ensureGoogleConfigured();
-  await GoogleSignin.hasPlayServices();
+  if (Platform.OS !== 'ios') await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
   const response = await GoogleSignin.signIn();
   const idToken = response.data?.idToken;
   if (!idToken) throw new Error('No ID token from Google');
