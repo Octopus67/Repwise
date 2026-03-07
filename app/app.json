@@ -58,7 +58,6 @@
       ],
       "@react-native-google-signin/google-signin",
       "expo-apple-authentication",
-      "expo-crypto"
     ],
     "scheme": "repwise",
     "extra": {
