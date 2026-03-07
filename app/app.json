@@ -56,7 +56,12 @@
           "savePhotosPermission": "Allow Repwise to save workout share cards to your photo library."
         }
       ],
-      "@react-native-google-signin/google-signin",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.626243275639-sd7og2jmth1018gtj6eha858o262hf24"
+        }
+      ],
       "expo-apple-authentication",
     ],
     "scheme": "repwise",
