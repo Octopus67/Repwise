@@ -28,10 +28,35 @@ class AdaptiveService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
+    async def _get_recent_body_fat(self, user_id: uuid.UUID) -> float | None:
+        """Return body_fat_pct from the latest measurement within 30 days, or None."""
+        from datetime import timedelta
+        from src.modules.measurements.models import BodyMeasurement
+
+        cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+        stmt = (
+            select(BodyMeasurement)
+            .where(
+                BodyMeasurement.user_id == user_id,
+                BodyMeasurement.body_fat_pct.isnot(None),
+                BodyMeasurement.measured_at >= cutoff,
+            )
+            .order_by(BodyMeasurement.measured_at.desc())
+            .limit(1)
+        )
+        result = await self.session.execute(stmt)
+        row = result.scalar_one_or_none()
+        return row.body_fat_pct if row else None
+
     async def generate_snapshot(
         self, user_id: uuid.UUID, data: SnapshotRequest
     ) -> SnapshotResponse:
         """Compute a new adaptive snapshot and persist it (Requirements 7.1, 7.2)."""
+        # Check for recent body fat measurement (< 30 days)
+        body_fat_pct = getattr(data, 'body_fat_pct', None)
+        if not body_fat_pct:
+            body_fat_pct = await self._get_recent_body_fat(user_id)
+
         # Build the pure-function input
         engine_input = AdaptiveInput(
             weight_kg=data.weight_kg,
@@ -47,7 +72,7 @@ class AdaptiveService:
             training_load_score=data.training_load_score,
             diet_style=getattr(data, 'diet_style', None),
             protein_per_kg_override=getattr(data, 'protein_per_kg_override', None),
-            body_fat_pct=getattr(data, 'body_fat_pct', None),
+            body_fat_pct=body_fat_pct,
         )
 
         # Pure computation — no side effects

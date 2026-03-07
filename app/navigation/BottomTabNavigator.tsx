@@ -20,6 +20,7 @@ import { FounderStoryScreen } from '../screens/founder/FounderStoryScreen';
 
 import { ExercisePickerScreen } from '../screens/exercise-picker/ExercisePickerScreen';
 import { ProgressPhotosScreen } from '../screens/profile/ProgressPhotosScreen';
+import { MeasurementsScreen } from '../screens/measurements/MeasurementsScreen';
 import { NotificationSettingsScreen } from '../screens/settings/NotificationSettingsScreen';
 import { NutritionReportScreen } from '../screens/nutrition/NutritionReportScreen';
 import { MicronutrientDashboardScreen } from '../screens/nutrition/MicronutrientDashboardScreen';
@@ -85,6 +86,7 @@ export type ProfileStackParamList = {
   Community: undefined;
   FounderStory: undefined;
   ProgressPhotos: undefined;
+  Measurements: undefined;
   MealPlan: undefined;
   ShoppingList: { planId: string };
   PrepSunday: undefined;
@@ -102,7 +104,7 @@ export type BottomTabParamList = {
 
 export const TAB_NAMES: (keyof BottomTabParamList)[] = ['Home', 'Log', 'Analytics', 'Profile'];
 export const PROFILE_STACK_ROUTES: (keyof ProfileStackParamList)[] = [
-  'ProfileHome', 'Learn', 'ArticleDetail', 'Coaching', 'Community', 'FounderStory', 'ProgressPhotos', 'MealPlan', 'ShoppingList', 'PrepSunday', 'NotificationSettings',
+  'ProfileHome', 'Learn', 'ArticleDetail', 'Coaching', 'Community', 'FounderStory', 'ProgressPhotos', 'Measurements', 'MealPlan', 'ShoppingList', 'PrepSunday', 'NotificationSettings',
 ];
 
 // ─── Custom card style interpolator ──────────────────────────────────────────
@@ -292,6 +294,7 @@ function ProfileStackScreen() {
       <ProfileStack.Screen name="FounderStory" component={FounderStoryScreen} />
 
       <ProfileStack.Screen name="ProgressPhotos" component={ProgressPhotosScreen} />
+      <ProfileStack.Screen name="Measurements" component={MeasurementsScreen} />
       <ProfileStack.Screen name="MealPlan" component={MealPlanScreen} />
       <ProfileStack.Screen name="ShoppingList" component={ShoppingListView} />
       <ProfileStack.Screen name="PrepSunday" component={PrepSundayFlow} />

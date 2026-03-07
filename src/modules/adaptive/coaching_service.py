@@ -92,6 +92,9 @@ class CoachingService:
         # Calculate training load from recent data or use fallback
         training_load = await self._calculate_training_load(user_id)
 
+        # Query recent body fat from measurements (< 30 days)
+        measured_body_fat = await self._get_recent_body_fat(user_id)
+
         engine_input = AdaptiveInput(
             weight_kg=weight_kg,
             height_cm=height_cm,
@@ -102,9 +105,34 @@ class CoachingService:
             goal_rate_per_week=goal_rate,
             bodyweight_history=bw_entries,
             training_load_score=training_load,
+            body_fat_pct=measured_body_fat,
         )
 
         output = compute_snapshot(engine_input)
+
+        # Adjust TDEE based on measurement weight trend vs target rate
+        measurement_trend = await self._get_measurement_weight_trend(user_id)
+        tdee_adjustment = 0.0
+        if measurement_trend is not None and goal_rate != 0:
+            deviation = abs(measurement_trend - goal_rate) / abs(goal_rate)
+            if deviation > 0.10:
+                # Nudge calories toward target rate
+                tdee_adjustment = (goal_rate - measurement_trend) * 500.0
+                tdee_adjustment = max(-300.0, min(300.0, tdee_adjustment))
+
+        # Apply measurement-based TDEE adjustment if needed
+        if tdee_adjustment != 0.0:
+            from src.modules.adaptive.engine import AdaptiveOutput, _compute_macros, MIN_TARGET_CALORIES
+            adjusted_cals = max(output.target_calories + tdee_adjustment, MIN_TARGET_CALORIES)
+            p, f, c = _compute_macros(weight_kg, adjusted_cals, goal_type)
+            output = AdaptiveOutput(
+                target_calories=round(adjusted_cals, 0),
+                target_protein_g=round(p, 1),
+                target_carbs_g=round(c, 1),
+                target_fat_g=round(f, 1),
+                ema_current=output.ema_current,
+                adjustment_factor=output.adjustment_factor,
+            )
 
         # 5. Compare with previous snapshot
         prev_snapshot = await self._get_latest_snapshot(user_id)
@@ -315,6 +343,58 @@ class CoachingService:
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
+
+    async def _get_recent_body_fat(self, user_id: uuid.UUID) -> Optional[float]:
+        """Return body_fat_pct from the latest measurement within 30 days."""
+        from src.modules.measurements.models import BodyMeasurement
+
+        cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+        stmt = (
+            select(BodyMeasurement)
+            .where(
+                BodyMeasurement.user_id == user_id,
+                BodyMeasurement.body_fat_pct.isnot(None),
+                BodyMeasurement.measured_at >= cutoff,
+            )
+            .order_by(BodyMeasurement.measured_at.desc())
+            .limit(1)
+        )
+        result = await self.db.execute(stmt)
+        row = result.scalar_one_or_none()
+        return row.body_fat_pct if row else None
+
+    async def _get_measurement_weight_trend(
+        self, user_id: uuid.UUID,
+    ) -> Optional[float]:
+        """Average weekly weight change from last 4 weeks of measurements.
+
+        Returns kg/week or None if insufficient data.
+        """
+        from src.modules.measurements.models import BodyMeasurement
+
+        cutoff = datetime.now(timezone.utc) - timedelta(weeks=4)
+        stmt = (
+            select(BodyMeasurement)
+            .where(
+                BodyMeasurement.user_id == user_id,
+                BodyMeasurement.weight_kg.isnot(None),
+                BodyMeasurement.measured_at >= cutoff,
+            )
+            .order_by(BodyMeasurement.measured_at.asc())
+        )
+        result = await self.db.execute(stmt)
+        rows = result.scalars().all()
+
+        if len(rows) < 2:
+            return None
+
+        first, last = rows[0], rows[-1]
+        days_span = (last.measured_at - first.measured_at).total_seconds() / 86400
+        if days_span < 7:
+            return None
+
+        weeks = days_span / 7.0
+        return (last.weight_kg - first.weight_kg) / weeks
 
     async def _get_profile(self, user_id: uuid.UUID) -> Optional[UserProfile]:
         stmt = select(UserProfile).where(UserProfile.user_id == user_id)
