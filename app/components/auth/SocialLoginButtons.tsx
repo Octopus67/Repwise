@@ -15,6 +15,7 @@ import {
   signInWithApple,
   getAppleSignInError,
   isAppleAuthAvailable,
+  isGoogleSignInAvailable,
 } from '../../services/socialAuth';
 
 interface SocialLoginButtonsProps {
@@ -63,26 +64,28 @@ export function SocialLoginButtons({ onSuccess, onError }: SocialLoginButtonsPro
         <View style={[styles.dividerLine, { backgroundColor: c.border.subtle }]} />
       </View>
 
-      <TouchableOpacity
-        testID="google-signin-button"
-        style={[styles.socialBtn, { borderColor: c.border.default }]}
-        onPress={handleGoogle}
-        disabled={isLoading}
-        activeOpacity={0.8}
-        accessibilityRole="button"
-        accessibilityLabel="Continue with Google"
-      >
-        {googleLoading ? (
-          <ActivityIndicator size="small" color={c.text.primary} />
-        ) : (
-          <>
-            <Text style={styles.googleIcon}>G</Text>
-            <Text style={[styles.socialBtnText, { color: c.text.primary }]}>
-              Continue with Google
-            </Text>
-          </>
-        )}
-      </TouchableOpacity>
+      {isGoogleSignInAvailable && (
+        <TouchableOpacity
+          testID="google-signin-button"
+          style={[styles.socialBtn, { borderColor: c.border.default }]}
+          onPress={handleGoogle}
+          disabled={isLoading}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Continue with Google"
+        >
+          {googleLoading ? (
+            <ActivityIndicator size="small" color={c.text.primary} />
+          ) : (
+            <>
+              <Text style={styles.googleIcon}>G</Text>
+              <Text style={[styles.socialBtnText, { color: c.text.primary }]}>
+                Continue with Google
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      )}
 
       {isAppleAuthAvailable && (
         <TouchableOpacity

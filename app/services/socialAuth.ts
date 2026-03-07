@@ -14,8 +14,11 @@ const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '62
 
 let googleConfigured = false;
 
+// Check if Google Sign-In is available (not on web)
+export const isGoogleSignInAvailable = Platform.OS !== 'web';
+
 function ensureGoogleConfigured() {
-  if (googleConfigured) return;
+  if (googleConfigured || Platform.OS === 'web') return;
   GoogleSignin.configure({
     webClientId: GOOGLE_WEB_CLIENT_ID,
     iosClientId: GOOGLE_IOS_CLIENT_ID,
