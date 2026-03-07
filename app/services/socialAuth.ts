@@ -34,7 +34,7 @@ export async function signInWithGoogle(): Promise<{
   const idToken = response.data?.idToken;
   if (!idToken) throw new Error('No ID token from Google');
 
-  const { data } = await api.post('auth/social/google', { id_token: idToken });
+  const { data } = await api.post('auth/oauth/google', { provider: "google", token: idToken });
   return data;
 }
 
@@ -82,7 +82,7 @@ export async function signInWithApple(): Promise<{
 
   if (!credential.identityToken) throw new Error('No identity token from Apple');
 
-  const { data } = await api.post('auth/social/apple', {
+  const { data } = await api.post('auth/oauth/apple', {
     identity_token: credential.identityToken,
     nonce,
     full_name: credential.fullName

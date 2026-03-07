@@ -79,7 +79,7 @@ export function ResetPasswordScreen({ email, onResetSuccess, onBack }: ResetPass
     }
     setLoading(true);
     try {
-      await api.post('auth/reset-password', { email, code, password });
+      await api.post('auth/reset-password', { email, code, new_password: password });
       onResetSuccess();
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to reset password';
