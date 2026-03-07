@@ -13,6 +13,8 @@ import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThem
 import { Button } from '../../components/common/Button';
 import api from '../../services/api';
 import { isValidEmail, trimEmail } from '../../utils/validation';
+import { extractApiError } from '../../utils/extractApiError';
+import { ErrorBanner } from '../../components/common/ErrorBanner';
 import Animated from 'react-native-reanimated';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 
@@ -53,7 +55,7 @@ export function ForgotPasswordScreen({ onNavigateBack, onNavigateResetPassword }
         setSubmitted(true);
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Something went wrong. Please try again.');
+      setError(extractApiError(err, 'Something went wrong. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -98,7 +100,7 @@ export function ForgotPasswordScreen({ onNavigateBack, onNavigateResetPassword }
         </Animated.View>
 
         <Animated.View style={formAnim}>
-        {error ? <Text style={[styles.error, { color: getThemeColors().semantic.negative }]}>{error}</Text> : null}
+        {error ? <ErrorBanner message={error} onDismiss={() => setError('')} /> : null}
 
         <TextInput
           testID="forgot-email-input"

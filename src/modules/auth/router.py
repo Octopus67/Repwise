@@ -1,6 +1,8 @@
 """Auth routes — registration, login, OAuth, token refresh, and logout."""
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+import time
+
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
@@ -14,41 +16,69 @@ from src.modules.auth.schemas import (
     OAuthCallbackRequest,
     RefreshTokenRequest,
     RegisterRequest,
+    RegisterResponse,
     ResetPasswordRequest,
     ResendVerificationRequest,
     VerifyEmailRequest,
 )
 from src.modules.auth.service import AuthService
-from src.shared.errors import UnauthorizedError, ConflictError
+from src.shared.errors import ApiError, RateLimitedError, UnauthorizedError, ValidationError
 
 router = APIRouter()
+
+# In-memory rate limiter for verify-email: user_id -> list of timestamps
+_verify_attempts: dict[str, list[float]] = {}
+VERIFY_MAX_ATTEMPTS = 5
+VERIFY_WINDOW_SECONDS = 900  # 15 minutes
+
+
+def _check_verify_rate_limit(user_id: str) -> None:
+    """Raise RateLimitedError if user exceeded 5 verify attempts in 15 min."""
+    now = time.time()
+    cutoff = now - VERIFY_WINDOW_SECONDS
+    attempts = _verify_attempts.get(user_id, [])
+    attempts = [t for t in attempts if t > cutoff]
+    _verify_attempts[user_id] = attempts
+    if len(attempts) >= VERIFY_MAX_ATTEMPTS:
+        raise RateLimitedError(
+            message="Too many verification attempts. Please try again later.",
+            retry_after=VERIFY_WINDOW_SECONDS,
+        )
+    attempts.append(now)
+    _verify_attempts[user_id] = attempts
+
+
+def clear_verify_attempts() -> None:
+    """Clear all verify rate limit state. Useful for testing."""
+    _verify_attempts.clear()
 
 
 def _get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
     return AuthService(db)
 
 
-@router.post("/register", response_model=AuthTokensResponse, status_code=201)
+@router.post("/register", response_model=RegisterResponse, status_code=201)
 async def register(
     data: RegisterRequest,
     service: AuthService = Depends(_get_auth_service),
-) -> AuthTokensResponse:
-    """Register a new user with email and password."""
-    try:
-        tokens = await service.register_email(email=data.email, password=data.password)
-        return AuthTokensResponse(
-            access_token=tokens.access_token,
-            refresh_token=tokens.refresh_token,
-            expires_in=tokens.expires_in
+) -> RegisterResponse:
+    """Register a new user with email and password.
+
+    Returns tokens on success, or a generic message if the email is taken
+    (to prevent enumeration). An 'account exists' email is sent silently.
+    """
+    tokens = await service.register_email(email=data.email, password=data.password)
+    if tokens is None:
+        # Email already exists — return generic message, no tokens
+        return RegisterResponse(
+            message="If this email is not already registered, a verification code has been sent.",
         )
-    except ConflictError:
-        # Return same success response to prevent email enumeration
-        # In production, could send "account exists" email to the address
-        return AuthTokensResponse(
-            access_token="",
-            refresh_token="", 
-            expires_in=0
-        )
+    return RegisterResponse(
+        access_token=tokens.access_token,
+        refresh_token=tokens.refresh_token,
+        expires_in=tokens.expires_in,
+        message="Registration successful. Please verify your email.",
+    )
 
 
 @router.post("/login", response_model=AuthTokensResponse)
@@ -62,6 +92,9 @@ async def login(
         tokens = await service.login_email(email=data.email, password=data.password)
     except UnauthorizedError:
         record_attempt(data.email)
+        raise
+    except ApiError:
+        # EMAIL_NOT_VERIFIED — don't record as failed attempt
         raise
     # Successful login — clear rate limit counter
     reset_attempts(data.email)
@@ -135,7 +168,7 @@ async def reset_password(
         email=data.email, code=data.code, new_password=data.new_password
     )
     if not success:
-        raise HTTPException(status_code=400, detail="Invalid or expired reset code")
+        raise ValidationError("Invalid or expired reset code")
     return {"message": "Password has been reset"}
 
 
@@ -149,9 +182,11 @@ async def verify_email(
     if user.email_verified:
         return {"message": "Email already verified"}
 
+    _check_verify_rate_limit(str(user.id))
+
     success = await service.verify_email(user_id=user.id, code=data.code)
     if not success:
-        raise HTTPException(status_code=400, detail="Invalid or expired verification code")
+        raise ValidationError("Invalid or expired verification code")
     return {"message": "Email verified successfully"}
 
 

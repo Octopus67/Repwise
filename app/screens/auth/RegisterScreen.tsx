@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 import { Icon } from '../../components/common/Icon';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
@@ -27,6 +28,7 @@ import api from '../../services/api';
 import { useStore } from '../../store';
 import { isValidEmail, trimEmail } from '../../utils/validation';
 import { getPasswordStrength } from '../../utils/passwordStrength';
+import { extractApiError } from '../../utils/extractApiError';
 import { PasswordStrengthMeter } from '../../components/auth/PasswordStrengthMeter';
 import Animated from 'react-native-reanimated';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
@@ -110,7 +112,7 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
       );
       onRegisterSuccess(cleanEmail);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Registration failed';
+      const msg = extractApiError(err, 'Registration failed');
       setError(msg);
     } finally {
       setLoading(false);
@@ -221,7 +223,12 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
           <View style={{ width: 22, height: 22, borderRadius: 4, borderWidth: 1.5, borderColor: tosAccepted ? getThemeColors().accent.primary : getThemeColors().border.default, backgroundColor: tosAccepted ? getThemeColors().accent.primary : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
             {tosAccepted && <Text style={{ color: getThemeColors().text.primary, fontSize: typography.size.base }}>✓</Text>}
           </View>
-          <Text style={{ color: getThemeColors().text.secondary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm, flex: 1 }}>I agree to the Terms of Service and Privacy Policy</Text>
+          <Text style={{ color: getThemeColors().text.secondary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm, flex: 1 }}>
+            I agree to the{' '}
+            <Text style={{ color: getThemeColors().accent.primary, textDecorationLine: 'underline' }} onPress={() => Linking.openURL('https://repwise.app/terms')} accessibilityRole="link">Terms of Service</Text>
+            {' '}and{' '}
+            <Text style={{ color: getThemeColors().accent.primary, textDecorationLine: 'underline' }} onPress={() => Linking.openURL('https://repwise.app/privacy')} accessibilityRole="link">Privacy Policy</Text>
+          </Text>
         </TouchableOpacity>
 
         <Button testID="register-submit-button" title="Register" onPress={handleRegister} loading={loading} disabled={!tosAccepted || loading} style={styles.btn} />

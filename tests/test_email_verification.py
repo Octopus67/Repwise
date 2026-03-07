@@ -18,6 +18,9 @@ from src.services.email_service import EmailService, generate_otp
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
+from src.modules.auth.router import clear_verify_attempts
+
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -25,8 +28,10 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 @pytest.fixture(autouse=True)
 def _clear_rate_limits():
     clear_rate_limits()
+    clear_verify_attempts()
     yield
     clear_rate_limits()
+    clear_verify_attempts()
 
 
 @pytest.fixture
@@ -563,6 +568,11 @@ class TestResetPasswordWithOTP:
         )
         assert resp.status_code == 200
         assert resp.json()["message"] == "Password has been reset"
+
+        # Mark user as verified so login works
+        await db_session.refresh(user)
+        user.email_verified = True
+        await db_session.commit()
 
         # Verify login works with new password
         login_resp = await client.post(

@@ -50,6 +50,17 @@ class EmailService:
         )
         return self._send(to_email, subject, body)
 
+    def send_account_exists_notification(self, to_email: str) -> bool:
+        """Notify the email owner that a registration attempt was made."""
+        subject = f"{settings.APP_NAME} — Sign-in attempt"
+        body = (
+            "Someone tried to create an account with this email address, "
+            "but an account already exists.\n\n"
+            "If this was you, please log in instead. "
+            "If you didn't request this, you can safely ignore this email."
+        )
+        return self._send(to_email, subject, body)
+
     def _send(self, to_email: str, subject: str, body: str) -> bool:
         """Send an email via SES. Returns True on success."""
         try:

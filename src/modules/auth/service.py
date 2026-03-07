@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.settings import settings
 from src.modules.auth.models import User, PasswordResetCode, TokenBlacklist, EmailVerificationCode
-from src.shared.errors import ConflictError, UnauthorizedError, RateLimitedError
+from src.shared.errors import ApiError, ConflictError, UnauthorizedError, RateLimitedError
 from src.shared.types import AuthProvider, UserRole
 
 APPLE_JWKS_URL = "https://appleid.apple.com/auth/keys"
@@ -51,14 +51,18 @@ class AuthService:
     # Public API
     # ------------------------------------------------------------------
 
-    async def register_email(self, email: str, password: str) -> AuthTokens:
+    async def register_email(self, email: str, password: str) -> AuthTokens | None:
         """Register a new user with email/password.
 
-        Raises ConflictError if the email is already taken.
+        Returns None if the email is already taken (caller should return
+        a generic success message to prevent enumeration, while we send
+        an "account already exists" notification to the real owner).
         """
         existing = await self._get_user_by_email(email)
         if existing is not None:
-            raise ConflictError("A user with this email already exists")
+            from src.services.email_service import EmailService
+            EmailService().send_account_exists_notification(email)
+            return None
 
         hashed = _hash_password(password)
         user = User(
@@ -79,10 +83,18 @@ class AuthService:
         """Authenticate with email/password.
 
         Raises UnauthorizedError on invalid credentials.
+        Raises UnauthorizedError with EMAIL_NOT_VERIFIED code if email is unverified.
         """
         user = await self._get_user_by_email(email)
         if user is None or not _verify_password(password, user.hashed_password):
             raise UnauthorizedError("Invalid email or password")
+
+        if not user.email_verified:
+            raise ApiError(
+                status=403,
+                code="EMAIL_NOT_VERIFIED",
+                message="Please verify your email before logging in",
+            )
 
         return _generate_tokens(user.id)
 

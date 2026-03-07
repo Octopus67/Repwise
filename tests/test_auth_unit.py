@@ -6,15 +6,29 @@ Validates: Requirements 1.1, 1.4, 1.5, 1.7, 1.8
 import pytest
 
 from src.middleware.rate_limiter import clear_all, record_attempt
+from src.modules.auth.router import clear_verify_attempts
 from src.config.settings import settings
+from unittest.mock import MagicMock, patch
 
 
 @pytest.fixture(autouse=True)
 def _clear_rate_limiter():
     """Reset rate limiter state before each test."""
     clear_all()
+    clear_verify_attempts()
     yield
     clear_all()
+    clear_verify_attempts()
+
+
+@pytest.fixture
+def mock_ses():
+    """Mock SES client to avoid real AWS calls."""
+    with patch("src.services.email_service._get_ses_client") as mock:
+        client = MagicMock()
+        client.send_email.return_value = {"MessageId": "test-id"}
+        mock.return_value = client
+        yield client
 
 
 # ------------------------------------------------------------------
@@ -22,7 +36,7 @@ def _clear_rate_limiter():
 # ------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_register_email_happy_path(client, override_get_db):
+async def test_register_email_happy_path(client, override_get_db, mock_ses):
     """POST /register with valid email/password → 201, returns tokens."""
     resp = await client.post(
         "/api/v1/auth/register",
@@ -30,10 +44,11 @@ async def test_register_email_happy_path(client, override_get_db):
     )
     assert resp.status_code == 201
     body = resp.json()
-    assert "access_token" in body
-    assert "refresh_token" in body
-    assert "expires_in" in body
+    assert body["access_token"] is not None
+    assert body["refresh_token"] is not None
+    assert body["expires_in"] is not None
     assert body["token_type"] == "bearer"
+    assert "message" in body
 
 
 # ------------------------------------------------------------------
@@ -41,19 +56,20 @@ async def test_register_email_happy_path(client, override_get_db):
 # ------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_register_duplicate_email(client, override_get_db):
-    """Register same email twice → second returns 201 with empty tokens to prevent enumeration."""
+async def test_register_duplicate_email(client, override_get_db, mock_ses):
+    """Register same email twice → second returns 201 with generic message, no tokens."""
     payload = {"email": "dup@example.com", "password": "SecurePass123"}
     first = await client.post("/api/v1/auth/register", json=payload)
     assert first.status_code == 201
 
     second = await client.post("/api/v1/auth/register", json=payload)
     assert second.status_code == 201
-    # Should return empty tokens to prevent email enumeration
     body = second.json()
-    assert body["access_token"] == ""
-    assert body["refresh_token"] == ""
-    assert body["expires_in"] == 0
+    # Should return generic message without tokens to prevent enumeration
+    assert body["access_token"] is None
+    assert body["refresh_token"] is None
+    assert body["expires_in"] is None
+    assert "message" in body
 
 
 # ------------------------------------------------------------------
@@ -61,10 +77,19 @@ async def test_register_duplicate_email(client, override_get_db):
 # ------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_login_correct_credentials(client, override_get_db):
-    """Register, then POST /login → 200, returns tokens."""
+async def test_login_correct_credentials(client, override_get_db, db_session, mock_ses):
+    """Register, verify email, then POST /login → 200, returns tokens."""
     creds = {"email": "login@example.com", "password": "SecurePass123"}
     await client.post("/api/v1/auth/register", json=creds)
+
+    # Mark email as verified so login succeeds
+    from sqlalchemy import select
+    from src.modules.auth.models import User
+    stmt = select(User).where(User.email == "login@example.com")
+    result = await db_session.execute(stmt)
+    user = result.scalar_one()
+    user.email_verified = True
+    await db_session.commit()
 
     resp = await client.post("/api/v1/auth/login", json=creds)
     assert resp.status_code == 200
@@ -79,7 +104,7 @@ async def test_login_correct_credentials(client, override_get_db):
 # ------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_login_incorrect_password(client, override_get_db):
+async def test_login_incorrect_password(client, override_get_db, mock_ses):
     """POST /login with wrong password → 401."""
     creds = {"email": "wrongpw@example.com", "password": "SecurePass123"}
     await client.post("/api/v1/auth/register", json=creds)
@@ -96,7 +121,7 @@ async def test_login_incorrect_password(client, override_get_db):
 # ------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_login_nonexistent_email(client, override_get_db):
+async def test_login_nonexistent_email(client, override_get_db, mock_ses):
     """POST /login with unknown email → 401."""
     resp = await client.post(
         "/api/v1/auth/login",
@@ -110,7 +135,7 @@ async def test_login_nonexistent_email(client, override_get_db):
 # ------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_refresh_valid_token(client, override_get_db):
+async def test_refresh_valid_token(client, override_get_db, mock_ses):
     """Register, extract refresh_token, POST /refresh → 200, new tokens."""
     reg = await client.post(
         "/api/v1/auth/register",
@@ -133,7 +158,7 @@ async def test_refresh_valid_token(client, override_get_db):
 # ------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_refresh_invalid_token(client, override_get_db):
+async def test_refresh_invalid_token(client, override_get_db, mock_ses):
     """POST /refresh with garbage token → 401."""
     resp = await client.post(
         "/api/v1/auth/refresh",
@@ -147,7 +172,7 @@ async def test_refresh_invalid_token(client, override_get_db):
 # ------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_apple_oauth_happy_path(client, override_get_db, monkeypatch):
+async def test_apple_oauth_happy_path(client, override_get_db, monkeypatch, mock_ses):
     """POST /oauth/apple with valid token → 200, returns tokens and creates user."""
     import jwt as pyjwt
     from unittest.mock import MagicMock
@@ -186,7 +211,7 @@ async def test_apple_oauth_happy_path(client, override_get_db, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_apple_oauth_invalid_token(client, override_get_db, monkeypatch):
+async def test_apple_oauth_invalid_token(client, override_get_db, monkeypatch, mock_ses):
     """POST /oauth/apple with invalid token → 401."""
     import jwt as pyjwt
     from unittest.mock import MagicMock
@@ -209,7 +234,7 @@ async def test_apple_oauth_invalid_token(client, override_get_db, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_apple_oauth_not_configured(client, override_get_db, monkeypatch):
+async def test_apple_oauth_not_configured(client, override_get_db, monkeypatch, mock_ses):
     """POST /oauth/apple when APPLE_CLIENT_ID is empty → 401."""
     monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "")
 
@@ -221,7 +246,7 @@ async def test_apple_oauth_not_configured(client, override_get_db, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_apple_oauth_privacy_relay_email(client, override_get_db, monkeypatch):
+async def test_apple_oauth_privacy_relay_email(client, override_get_db, monkeypatch, mock_ses):
     """Apple user with no email gets a privaterelay fallback."""
     from unittest.mock import MagicMock
 
@@ -253,7 +278,7 @@ async def test_apple_oauth_privacy_relay_email(client, override_get_db, monkeypa
 
 
 @pytest.mark.asyncio
-async def test_apple_oauth_existing_user(client, override_get_db, monkeypatch):
+async def test_apple_oauth_existing_user(client, override_get_db, monkeypatch, mock_ses):
     """Second Apple login with same sub returns tokens without creating duplicate."""
     from unittest.mock import MagicMock
 
@@ -297,7 +322,7 @@ async def test_apple_oauth_existing_user(client, override_get_db, monkeypatch):
 # ------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_rate_limiting_after_threshold(client, override_get_db):
+async def test_rate_limiting_after_threshold(client, override_get_db, mock_ses):
     """Make LOGIN_RATE_LIMIT_THRESHOLD failed attempts, then verify 429."""
     email = "ratelimit@example.com"
     bad_creds = {"email": email, "password": "wrongpassword"}
@@ -310,3 +335,125 @@ async def test_rate_limiting_after_threshold(client, override_get_db):
     # Next attempt should be rate-limited
     resp = await client.post("/api/v1/auth/login", json=bad_creds)
     assert resp.status_code == 429
+
+
+# ------------------------------------------------------------------
+# 10. Login with unverified email returns 403
+# ------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_login_unverified_email_returns_403(client, override_get_db, mock_ses):
+    """POST /login with correct creds but unverified email → 403 EMAIL_NOT_VERIFIED."""
+    creds = {"email": "unverified@example.com", "password": "SecurePass123"}
+    await client.post("/api/v1/auth/register", json=creds)
+
+    resp = await client.post("/api/v1/auth/login", json=creds)
+    assert resp.status_code == 403
+    body = resp.json()
+    assert body["code"] == "EMAIL_NOT_VERIFIED"
+
+
+# ------------------------------------------------------------------
+# 11. Verify-email rate limiting (5 attempts per 15 min)
+# ------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_verify_email_rate_limited(client, override_get_db, db_session, mock_ses):
+    """Exceed 5 verify-email attempts → 429."""
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "ratelimitverify@example.com", "password": "SecurePass123"},
+    )
+    token = resp.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 5 attempts should succeed (returning 400 for bad code, not 429)
+    for _ in range(5):
+        r = await client.post(
+            "/api/v1/auth/verify-email",
+            json={"code": "000000"},
+            headers=headers,
+        )
+        assert r.status_code == 400
+
+    # 6th attempt should be rate-limited
+    r = await client.post(
+        "/api/v1/auth/verify-email",
+        json={"code": "000000"},
+        headers=headers,
+    )
+    assert r.status_code == 429
+
+
+# ------------------------------------------------------------------
+# 12. Apple OAuth accepts identity_token field
+# ------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_apple_oauth_identity_token_field(client, override_get_db, monkeypatch, mock_ses):
+    """POST /oauth/apple with identity_token field → 200."""
+    import jwt as pyjwt
+    from unittest.mock import MagicMock
+
+    monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.repwise.app")
+
+    fake_key = MagicMock()
+    decoded_payload = {
+        "sub": "apple-identity-token-user",
+        "email": "identity@example.com",
+        "iss": "https://appleid.apple.com",
+        "aud": "com.repwise.app",
+    }
+
+    monkeypatch.setattr(
+        "src.modules.auth.service._apple_jwk_client.get_signing_key_from_jwt",
+        lambda t: fake_key,
+    )
+    monkeypatch.setattr(
+        "src.modules.auth.service.pyjwt.decode",
+        lambda token, key, **kw: decoded_payload,
+    )
+
+    resp = await client.post(
+        "/api/v1/auth/oauth/apple",
+        json={"provider": "apple", "identity_token": "valid-apple-identity-token"},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "access_token" in body
+
+
+# ------------------------------------------------------------------
+# 13. Register duplicate sends account-exists email
+# ------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_register_duplicate_sends_account_exists_email(client, override_get_db, mock_ses):
+    """Register same email twice → second call sends account-exists notification."""
+    payload = {"email": "exists@example.com", "password": "SecurePass123"}
+    await client.post("/api/v1/auth/register", json=payload)
+    mock_ses.send_email.reset_mock()
+
+    await client.post("/api/v1/auth/register", json=payload)
+    # Should have sent an account-exists notification email
+    assert mock_ses.send_email.called
+    call_args = mock_ses.send_email.call_args
+    assert "already exists" in call_args[1]["Message"]["Body"]["Text"]["Data"]
+
+
+# ------------------------------------------------------------------
+# 14. Error responses use message field (not detail)
+# ------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_error_responses_have_message_field(client, override_get_db, mock_ses):
+    """Error responses should use 'message' field, not 'detail'."""
+    # Bad reset code
+    resp = await client.post(
+        "/api/v1/auth/reset-password",
+        json={"email": "nobody@example.com", "code": "000000", "new_password": "NewSecure1"},
+    )
+    assert resp.status_code == 400
+    body = resp.json()
+    assert "message" in body
+    assert "detail" not in body

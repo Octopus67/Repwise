@@ -2,8 +2,9 @@
 
 import re
 import uuid
+from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 from src.shared.types import UserRole
 
@@ -38,8 +39,18 @@ class LoginRequest(BaseModel):
 class OAuthCallbackRequest(BaseModel):
     """OAuth provider callback payload."""
 
-    provider: str = Field(description="OAuth provider name (google, apple)")
-    token: str = Field(description="OAuth access/id token from provider")
+    provider: str = Field(default="", description="OAuth provider name (google, apple)")
+    token: Optional[str] = Field(default=None, description="OAuth access/id token from provider")
+    identity_token: Optional[str] = Field(default=None, description="Apple identity token (alias for token)")
+
+    @model_validator(mode="after")
+    def resolve_token(self) -> "OAuthCallbackRequest":
+        """Accept either 'token' or 'identity_token', preferring identity_token for Apple."""
+        if self.identity_token and not self.token:
+            self.token = self.identity_token
+        if not self.token:
+            raise ValueError("Either 'token' or 'identity_token' must be provided")
+        return self
 
 
 class AuthTokensResponse(BaseModel):
@@ -49,6 +60,16 @@ class AuthTokensResponse(BaseModel):
     refresh_token: str
     expires_in: int = Field(description="Access token TTL in seconds")
     token_type: str = "bearer"
+
+
+class RegisterResponse(BaseModel):
+    """Registration response — tokens on success, generic message on duplicate."""
+
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
+    expires_in: Optional[int] = None
+    token_type: str = "bearer"
+    message: str
 
 
 class RefreshTokenRequest(BaseModel):
