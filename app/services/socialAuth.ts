@@ -8,8 +8,9 @@ import api from './api';
 
 // ─── Google ──────────────────────────────────────────────────────────────────
 
-const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
-const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '';
+// Google OAuth Client IDs - configured from Google Cloud Console
+const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '626243275639-vh8mmvdbnp4ufgihga0bme2gd2j39ghp.apps.googleusercontent.com';
+const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '626243275639-sd7og2jmth1018gtj6eha858o262hf24.apps.googleusercontent.com';
 
 let googleConfigured = false;
 

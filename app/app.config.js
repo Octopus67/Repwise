@@ -1,0 +1,8 @@
+module.exports = {
+  expo: {
+    extra: {
+      EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: "626243275639-vh8mmvdbnp4ufgihga0bme2gd2j39ghp.apps.googleusercontent.com",
+      EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: "626243275639-sd7og2jmth1018gtj6eha858o262hf24.apps.googleusercontent.com",
+    }
+  }
+};
