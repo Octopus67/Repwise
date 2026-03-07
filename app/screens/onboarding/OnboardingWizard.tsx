@@ -36,6 +36,7 @@ export function OnboardingWizard({ onComplete }: Props) {
   const currentStep = useOnboardingStore((s) => s.currentStep);
   const setStep = useOnboardingStore((s) => s.setStep);
   const reset = useOnboardingStore((s) => s.reset);
+  const goalType = useOnboardingStore((s) => s.goalType);
   const { startTrial, loading: trialLoading } = useTrial();
 
   // Progress bar animation
@@ -91,6 +92,7 @@ export function OnboardingWizard({ onComplete }: Props) {
           onStartTrial={async () => { await startTrial(); handleComplete(); }}
           onSkip={handleComplete}
           loading={trialLoading}
+          goalLabel={goalType === 'lose_fat' ? 'fat loss' : goalType === 'build_muscle' ? 'muscle building' : goalType === 'recomposition' ? 'recomposition' : goalType === 'eat_healthier' ? 'healthier eating' : undefined}
         />
       );
       default: return null;

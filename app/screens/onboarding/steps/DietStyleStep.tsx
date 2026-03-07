@@ -1,16 +1,18 @@
-import { useMemo, useRef, useCallback, useEffect } from 'react';
+import { useMemo, useRef, useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Pressable,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
 import { spacing, typography, radius } from '../../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../../hooks/useThemeColors';
 import { Button } from '../../../components/common/Button';
+import { Icon } from '../../../components/common/Icon';
 import { useOnboardingStore, DietStyle, computeAge } from '../../../store/onboardingSlice';
 import {
   computeTDEEBreakdown,
@@ -29,7 +31,7 @@ interface Props {
 
 const DIET_STYLES: { type: DietStyle; title: string; desc: string }[] = [
   { type: 'balanced', title: 'Balanced', desc: 'Even split of carbs and fats' },
-  { type: 'high_protein', title: 'High Protein', desc: 'Equal carbs and fats, extra protein emphasis' },
+  { type: 'high_protein', title: 'Even Split', desc: 'Even split of carbs and fats, protein set by body weight' },
   { type: 'low_carb', title: 'Low Carb', desc: 'Mostly fats, fewer carbs' },
   { type: 'keto', title: 'Keto', desc: 'Very low carb, high fat' },
 ];
@@ -48,6 +50,7 @@ export function DietStyleStep({ onNext }: Props) {
   const goalType = store.goalType ?? 'maintain';
   const scrollRef = useRef<ScrollView>(null);
   const lastProteinValue = useRef(store.proteinPerKg);
+  const [showProteinTip, setShowProteinTip] = useState(false);
 
   const tdee = useMemo(() => {
     if (store.tdeeOverride) return store.tdeeOverride;
@@ -160,7 +163,24 @@ export function DietStyleStep({ onNext }: Props) {
       </View>
 
       {/* Protein scale */}
-      <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Protein per kg body weight</Text>
+      <View style={styles.proteinLabelRow}>
+        <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Protein per kg body weight</Text>
+        <Pressable
+          onPress={() => setShowProteinTip((v) => !v)}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Protein info"
+        >
+          <Icon name="alert-circle" size={16} color={c.text.muted} />
+        </Pressable>
+      </View>
+      {showProteinTip && (
+        <View style={[styles.tooltip, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
+          <Text style={[styles.tooltipText, { color: c.text.secondary }]}>
+            Protein is based on body weight. Diet styles only change the carb/fat split.
+          </Text>
+        </View>
+      )}
       <Text style={[styles.proteinValueDisplay, { color: c.text.primary }]}>
         {store.proteinPerKg.toFixed(1)} g/kg · {Math.round(store.proteinPerKg * store.weightKg)}g/day
       </Text>
@@ -302,6 +322,22 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
 
   /* Protein scale */
+  proteinLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+    marginBottom: spacing[1],
+  },
+  tooltip: {
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    padding: spacing[3],
+    marginBottom: spacing[2],
+  },
+  tooltipText: {
+    fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
+  },
   sectionLabel: {
     color: c.text.secondary,
     fontSize: typography.size.sm,

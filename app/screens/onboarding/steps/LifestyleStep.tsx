@@ -66,12 +66,14 @@ export function LifestyleStep({ onNext }: Props) {
 
   // Live TDEE activity component
   const age = computeAge(birthYear, birthMonth);
-  const liveActivity = useMemo(() => {
+  const { dailyActivity, perSession } = useMemo(() => {
     const bmr = computeBMR(weightKg, heightCm, age, sex, bodyFatPct ?? undefined);
-    if (bmr <= 0) return 0;
+    if (bmr <= 0) return { dailyActivity: 0, perSession: 0 };
     const neat = computeNEAT(bmr, activityLevel, weightKg);
     const eat = computeEAT(weightKg, exerciseSessionsPerWeek, exerciseTypes);
-    return neat + eat;
+    // Per-session: daily EAT × 7 / sessions (reverse the averaging)
+    const sessionCal = exerciseSessionsPerWeek > 0 ? Math.round((eat * 7) / exerciseSessionsPerWeek) : 0;
+    return { dailyActivity: neat + eat, perSession: sessionCal };
   }, [weightKg, heightCm, age, sex, bodyFatPct, activityLevel, exerciseSessionsPerWeek, exerciseTypes]);
 
   const toggleExerciseType = (type: ExerciseType) => {
@@ -157,10 +159,12 @@ export function LifestyleStep({ onNext }: Props) {
       </View>
 
       {/* Live activity calorie display */}
-      {liveActivity > 0 && (
+      {dailyActivity > 0 && (
         <View style={[styles.activityCalCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.accent.primaryMuted }]}>
-          <Text style={[styles.activityCalLabel, { color: c.text.secondary }]}>Daily activity burn</Text>
-          <Text style={[styles.activityCalValue, { color: c.accent.primary }]}>~{liveActivity.toLocaleString()} kcal</Text>
+          {perSession > 0 && (
+            <Text style={[styles.activityCalValue, { color: c.accent.primary }]}>~{perSession.toLocaleString()} cal per session</Text>
+          )}
+          <Text style={[styles.activityCalLabel, { color: c.text.secondary }]}>~{dailyActivity.toLocaleString()} cal/day average</Text>
           <Text style={[styles.activityCalHint, { color: c.text.muted }]}>From daily movement + exercise</Text>
         </View>
       )}
