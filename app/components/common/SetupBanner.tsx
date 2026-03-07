@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from './Icon';
 
 interface SetupBannerProps {
@@ -8,10 +9,11 @@ interface SetupBannerProps {
 }
 
 export function SetupBanner({ onPress }: SetupBannerProps) {
+  const c = useThemeColors();
   return (
     <TouchableOpacity style={styles.banner} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.content}>
-        <Icon name="lightning" size={18} color={colors.accent.primary} />
+        <Icon name="lightning" size={18} color={c.accent.primary} />
         <View style={styles.textContainer}>
           <Text style={styles.title}>Complete your profile to get personalized targets</Text>
           <Text style={styles.subtitle}>Tap to set up your goals and body stats</Text>

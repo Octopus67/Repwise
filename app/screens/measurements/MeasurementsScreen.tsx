@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { MeasurementInput } from '../../components/measurements/MeasurementInput';
 import { NavyBFCalculator } from '../../components/measurements/NavyBFCalculator';
 import { MeasurementTrendChart } from '../../components/measurements/MeasurementTrendChart';
@@ -24,6 +25,7 @@ type Tab = 'measurements' | 'photos';
 const PHOTO_STORAGE_KEY = 'measurement_photo_paths';
 
 export function MeasurementsScreen() {
+  const c = useThemeColors();
   const navigation = useNavigation();
   const [tab, setTab] = useState<Tab>('measurements');
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>([]);
@@ -100,22 +102,22 @@ export function MeasurementsScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
         <View style={styles.center}>
-          <ActivityIndicator color={colors.accent.primary} size="large" />
+          <ActivityIndicator color={c.accent.primary} size="large" />
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: c.border.subtle }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
-          <Text style={styles.backText}>← Back</Text>
+          <Text style={[styles.backText, { color: c.accent.primary }]}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Body Measurements</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>Body Measurements</Text>
         <View style={styles.backBtn} />
       </View>
 
@@ -141,7 +143,7 @@ export function MeasurementsScreen() {
         <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
           <MeasurementTrendChart measurements={measurements} />
           <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>New Entry</Text>
+            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>New Entry</Text>
             <MeasurementInput
               onSubmit={handleSubmit}
               loading={saving}

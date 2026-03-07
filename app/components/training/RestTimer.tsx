@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import Animated, { Layout } from 'react-native-reanimated';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../common/Icon';
 import { formatTimer } from '../../utils/formatTimer';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
@@ -29,6 +30,7 @@ export function RestTimer({
   onComplete,
   onSettingsChange,
 }: RestTimerProps) {
+  const c = useThemeColors();
   const [remaining, setRemaining] = useState(durationSeconds);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onCompleteRef = useRef(onComplete);
@@ -132,59 +134,59 @@ export function RestTimer({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleSkip}>
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { backgroundColor: c.bg.overlay }]}>
         <View style={styles.container}>
           {/* Header with gear icon */}
           <View style={styles.header}>
-            <Text style={styles.label}>Rest Timer</Text>
+            <Text style={[styles.label, { color: c.text.secondary }]}>Rest Timer</Text>
             {onSettingsChange && (
               <TouchableOpacity
                 style={styles.gearBtn}
                 onPress={toggleSettings}
                 activeOpacity={0.7}
               >
-                <Icon name="gear" size={18} color={colors.text.muted} />
+                <Icon name="gear" size={18} color={c.text.muted} />
               </TouchableOpacity>
             )}
           </View>
 
-          <Text style={styles.countdown}>{formatTimer(remaining)}</Text>
+          <Text style={[styles.countdown, { color: c.accent.primary }]}>{formatTimer(remaining)}</Text>
 
           {/* Inline settings panel */}
           {settingsOpen && (
-            <Animated.View layout={reduceMotion ? undefined : Layout} style={styles.settingsPanel}>
+            <Animated.View layout={reduceMotion ? undefined : Layout} style={[styles.settingsPanel, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
               <View style={styles.settingsRow}>
-                <Text style={styles.settingsLabel}>Compound rest (s)</Text>
+                <Text style={[styles.settingsLabel, { color: c.text.secondary }]}>Compound rest (s)</Text>
                 <TextInput
-                  style={styles.settingsInput}
+                  style={[styles.settingsInput, { color: c.text.primary, backgroundColor: c.bg.surface, borderColor: c.border.default }]}
                   value={compoundDraft}
                   onChangeText={setCompoundDraft}
                   keyboardType="numeric"
-                  placeholderTextColor={colors.text.muted}
+                  placeholderTextColor={c.text.muted}
                 />
               </View>
               <View style={styles.settingsRow}>
-                <Text style={styles.settingsLabel}>Isolation rest (s)</Text>
+                <Text style={[styles.settingsLabel, { color: c.text.secondary }]}>Isolation rest (s)</Text>
                 <TextInput
-                  style={styles.settingsInput}
+                  style={[styles.settingsInput, { color: c.text.primary, backgroundColor: c.bg.surface, borderColor: c.border.default }]}
                   value={isolationDraft}
                   onChangeText={setIsolationDraft}
                   keyboardType="numeric"
-                  placeholderTextColor={colors.text.muted}
+                  placeholderTextColor={c.text.muted}
                 />
               </View>
               <TouchableOpacity
-                style={styles.settingsSaveBtn}
+                style={[styles.settingsSaveBtn, { backgroundColor: c.accent.primary }]}
                 onPress={handleSaveSettings}
                 activeOpacity={0.7}
               >
-                <Text style={styles.settingsSaveText}>Save</Text>
+                <Text style={[styles.settingsSaveText, { color: c.text.primary }]}>Save</Text>
               </TouchableOpacity>
             </Animated.View>
           )}
 
-          <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.7}>
-            <Text style={styles.skipText}>Skip</Text>
+          <TouchableOpacity style={[styles.skipBtn, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]} onPress={handleSkip} activeOpacity={0.7}>
+            <Text style={[styles.skipText, { color: c.text.secondary }]}>Skip</Text>
           </TouchableOpacity>
         </View>
       </View>

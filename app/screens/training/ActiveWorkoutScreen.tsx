@@ -33,6 +33,7 @@ import { useStore } from '../../store';
 import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
 import api from '../../services/api';
 import { colors, spacing, typography, radius, shadows, letterSpacing as ls } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 // Phase 4 components
 import { VolumePills } from '../../components/training/VolumePills';
@@ -70,6 +71,7 @@ function ExerciseCardWrapper({ children, index }: { children: React.ReactNode; i
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export function ActiveWorkoutScreen({ route, navigation }: any) {
+  const c = useThemeColors();
   const { mode, sessionId, templateId, sessionDate } = route.params ?? {};
 
   // ── Store ──
@@ -445,12 +447,12 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   // ── Render ──
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
       {/* Header: date, duration, overflow menu */}
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, { borderBottomColor: c.border.subtle }]}>
         <View style={styles.headerLeft}>
-          <Text style={styles.dateText}>{formattedDate}</Text>
-          <Text style={styles.durationText}>{durationFormatted}</Text>
+          <Text style={[styles.dateText, { color: c.accent.primary }]}>{formattedDate}</Text>
+          <Text style={[styles.durationText, { color: c.text.secondary }]}>{durationFormatted}</Text>
         </View>
         <TouchableOpacity
           onPress={() => setOverflowMenuVisible(!overflowMenuVisible)}
@@ -458,7 +460,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
           accessibilityRole="button"
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Text style={styles.overflowBtn}>•••</Text>
+          <Text style={[styles.overflowBtn, { color: c.text.muted }]}>•••</Text>
         </TouchableOpacity>
       </View>
 
@@ -466,7 +468,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
       {overflowMenuVisible && (
         <>
           <Pressable style={styles.overflowBackdrop} onPress={() => setOverflowMenuVisible(false)} />
-          <View style={styles.overflowMenu}>
+          <View style={[styles.overflowMenu, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
             <TouchableOpacity
               style={styles.overflowMenuItem}
               onPress={() => { 
@@ -481,12 +483,12 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
               accessibilityLabel={showRpeRir ? 'Hide RPE/RIR column' : 'Show RPE/RIR column'}
               accessibilityRole="button"
             >
-              <Text style={styles.overflowMenuItemText}>
+              <Text style={[styles.overflowMenuItemText, { color: c.text.primary }]}>
                 {showRpeRir ? 'Hide RPE/RIR' : 'Show RPE/RIR'}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.overflowMenuItem} onPress={handleDiscard}>
-              <Text style={styles.overflowMenuItemTextDanger}>Discard Workout</Text>
+              <Text style={[styles.overflowMenuItemTextDanger, { color: c.semantic.negative }]}>Discard Workout</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -547,12 +549,12 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
 
         {/* Add Exercise button */}
         <TouchableOpacity
-          style={styles.addExerciseBtn}
+          style={[styles.addExerciseBtn, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
           onPress={() => setExercisePickerVisible(true)}
           accessibilityLabel="Add exercise"
           accessibilityRole="button"
         >
-          <Text style={styles.addExerciseText}>+ Add Exercise</Text>
+          <Text style={[styles.addExerciseText, { color: c.accent.primary }]}>+ Add Exercise</Text>
         </TouchableOpacity>
 
         {/* Bottom spacer for sticky bars */}

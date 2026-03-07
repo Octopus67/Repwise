@@ -6,6 +6,7 @@
 
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { PoseType, POSE_TYPES } from '../../utils/progressPhotoTypes';
 
 interface PoseSelectorProps {
@@ -29,29 +30,30 @@ const POSE_ICONS: Record<PoseType, string> = {
 };
 
 export function PoseSelector({ visible, onSelect, onCancel }: PoseSelectorProps) {
+  const c = useThemeColors();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
-      <View style={styles.backdrop}>
-        <View style={styles.sheet}>
-          <Text style={styles.title}>Select Pose</Text>
-          <Text style={styles.subtitle}>Choose a pose for consistent tracking</Text>
+      <View style={[styles.backdrop, { backgroundColor: c.bg.overlay }]}>
+        <View style={[styles.sheet, { backgroundColor: c.bg.surface }]}>
+          <Text style={[styles.title, { color: c.text.primary }]}>Select Pose</Text>
+          <Text style={[styles.subtitle, { color: c.text.secondary }]}>Choose a pose for consistent tracking</Text>
 
           <View style={styles.grid}>
             {POSE_TYPES.map((pose) => (
               <TouchableOpacity
                 key={pose}
-                style={styles.card}
+                style={[styles.card, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}
                 onPress={() => onSelect(pose)}
                 activeOpacity={0.7}
               >
                 <Text style={styles.icon}>{POSE_ICONS[pose]}</Text>
-                <Text style={styles.label}>{POSE_LABELS[pose]}</Text>
+                <Text style={[styles.label, { color: c.text.primary }]}>{POSE_LABELS[pose]}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
           <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
-            <Text style={styles.cancelText}>Cancel</Text>
+            <Text style={[styles.cancelText, { color: c.text.secondary }]}>Cancel</Text>
           </TouchableOpacity>
         </View>
       </View>

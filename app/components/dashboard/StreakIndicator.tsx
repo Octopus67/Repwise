@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useCountingValue } from '../../hooks/useCountingValue';
 import { useDerivedValue } from 'react-native-reanimated';
 import { colors, typography, spacing } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../common/Icon';
 
 interface StreakIndicatorProps {
@@ -11,6 +12,7 @@ interface StreakIndicatorProps {
 }
 
 export function StreakIndicator({ count, type = 'week' }: StreakIndicatorProps) {
+  const c = useThemeColors();
   const animatedCount = useCountingValue(count);
 
   // Derive a rounded display value from the shared value
@@ -22,8 +24,8 @@ export function StreakIndicator({ count, type = 'week' }: StreakIndicatorProps) 
 
   return (
     <View style={styles.container}>
-      <Icon name="flame" size={18} color={colors.semantic.warning} />
-      <Text style={styles.count}>{streakText}</Text>
+      <Icon name="flame" size={18} color={c.semantic.warning} />
+      <Text style={[styles.count, { color: c.accent.primary }]}>{streakText}</Text>
     </View>
   );
 }

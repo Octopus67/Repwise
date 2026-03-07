@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Button } from '../../components/common/Button';
 import api from '../../services/api';
 import { isValidEmail, trimEmail } from '../../utils/validation';
@@ -20,6 +21,7 @@ interface ForgotPasswordScreenProps {
 }
 
 export function ForgotPasswordScreen({ onNavigateBack }: ForgotPasswordScreenProps) {
+  const c = useThemeColors();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -54,21 +56,21 @@ export function ForgotPasswordScreen({ onNavigateBack }: ForgotPasswordScreenPro
   if (submitted) {
     return (
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: c.bg.base }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <Animated.View style={titleAnim}>
-            <Text style={styles.title}>Check Your Email</Text>
+            <Text style={[styles.title, { color: c.text.primary }]}>Check Your Email</Text>
           </Animated.View>
           <Animated.View style={subtitleAnim}>
-            <Text style={styles.successMessage}>
+            <Text style={[styles.successMessage, { color: c.text.secondary }]}>
               If an account with that email exists, we've sent a reset link.
             </Text>
           </Animated.View>
           <Animated.View style={formAnim}>
             <TouchableOpacity onPress={onNavigateBack} style={styles.backLink}>
-              <Text style={styles.backLinkText}>← Back to Sign In</Text>
+              <Text style={[styles.backLinkText, { color: c.accent.primary }]}>← Back to Sign In</Text>
             </TouchableOpacity>
           </Animated.View>
         </ScrollView>
@@ -78,25 +80,25 @@ export function ForgotPasswordScreen({ onNavigateBack }: ForgotPasswordScreenPro
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: c.bg.base }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Animated.View style={titleAnim}>
-          <Text style={styles.title}>Reset Password</Text>
+          <Text style={[styles.title, { color: c.text.primary }]}>Reset Password</Text>
         </Animated.View>
         <Animated.View style={subtitleAnim}>
-          <Text style={styles.subtitle}>Enter your email and we'll send a reset link.</Text>
+          <Text style={[styles.subtitle, { color: c.text.secondary }]}>Enter your email and we'll send a reset link.</Text>
         </Animated.View>
 
         <Animated.View style={formAnim}>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error ? <Text style={[styles.error, { color: c.semantic.negative }]}>{error}</Text> : null}
 
         <TextInput
           testID="forgot-email-input"
-          style={styles.input}
+          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}
           placeholder="Email"
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
           keyboardType="email-address"
           autoCapitalize="none"
           value={email}
@@ -114,7 +116,7 @@ export function ForgotPasswordScreen({ onNavigateBack }: ForgotPasswordScreenPro
         />
 
         <TouchableOpacity onPress={onNavigateBack} style={styles.backLink}>
-          <Text style={styles.backLinkText}>← Back to Sign In</Text>
+          <Text style={[styles.backLinkText, { color: c.accent.primary }]}>← Back to Sign In</Text>
         </TouchableOpacity>
         </Animated.View>
       </ScrollView>

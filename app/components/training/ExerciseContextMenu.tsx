@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from 'react-native';
 import { colors, radius, spacing, typography, shadows } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 export interface ExerciseContextMenuProps {
   visible: boolean;
@@ -26,6 +27,7 @@ export function ExerciseContextMenu({
   onGenerateWarmUp,
   onDismiss,
 }: ExerciseContextMenuProps) {
+  const c = useThemeColors();
   if (!visible) return null;
 
   const items: { label: string; onPress: () => void }[] = [
@@ -49,7 +51,7 @@ export function ExerciseContextMenu({
         <View style={styles.backdrop} />
       </TouchableWithoutFeedback>
 
-      <View style={styles.menu}>
+      <View style={[styles.menu, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
         {items.map((item, index) => (
           <TouchableOpacity
             key={item.label}
@@ -57,7 +59,7 @@ export function ExerciseContextMenu({
             onPress={() => handleItemPress(item.onPress)}
             activeOpacity={0.7}
           >
-            <Text style={styles.menuItemText}>{item.label}</Text>
+            <Text style={[styles.menuItemText, { color: c.text.primary }]}>{item.label}</Text>
           </TouchableOpacity>
         ))}
       </View>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, typography, spacing } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface SectionHeaderProps {
   title: string;
@@ -11,12 +12,13 @@ interface SectionHeaderProps {
 }
 
 export function SectionHeader({ title, action }: SectionHeaderProps) {
+  const c = useThemeColors();
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title, { color: c.text.primary }]}>{title}</Text>
       {action ? (
         <TouchableOpacity onPress={action.onPress} activeOpacity={0.7}>
-          <Text style={styles.actionLabel}>{action.label}</Text>
+          <Text style={[styles.actionLabel, { color: c.accent.primary }]}>{action.label}</Text>
         </TouchableOpacity>
       ) : null}
     </View>

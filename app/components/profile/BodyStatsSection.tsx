@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { colors, radius, spacing, typography, opacityScale } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import { EditableField } from '../common/EditableField';
 import { EmptyState } from '../common/EmptyState';
@@ -93,6 +94,7 @@ function ActivityLevelPicker({
 }
 
 export function BodyStatsSection({ metrics, unitSystem }: BodyStatsSectionProps) {
+  const c = useThemeColors();
   const navigation = useNavigation<any>();
   const store = useStore();
 
@@ -348,7 +350,7 @@ export function BodyStatsSection({ metrics, unitSystem }: BodyStatsSectionProps)
     return (
       <Card>
         <EmptyState
-          icon={<Icon name="chart" size={28} color={colors.accent.primary} />}
+          icon={<Icon name="chart" size={28} color={c.accent.primary} />}
           title="Body Stats"
           description="Add your body stats to get personalized targets"
           actionLabel="Add Stats"

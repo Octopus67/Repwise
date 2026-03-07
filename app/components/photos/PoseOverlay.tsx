@@ -8,6 +8,7 @@
 import { View, Image, StyleSheet } from 'react-native';
 import { PoseType } from '../../utils/progressPhotoTypes';
 import { computeOverlayDimensions, poseToAssetPath } from '../../utils/poseOverlayLogic';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface PoseOverlayProps {
   poseType: PoseType;
@@ -19,6 +20,7 @@ interface PoseOverlayProps {
 const ASSET_ASPECT_RATIO = 0.5;
 
 export function PoseOverlay({ poseType, containerWidth, containerHeight }: PoseOverlayProps) {
+  const c = useThemeColors();
   const { width, height } = computeOverlayDimensions(
     containerWidth,
     containerHeight,

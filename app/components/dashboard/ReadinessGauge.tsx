@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { colors, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { clampScore, getReadinessColor, getReadinessLabel, safeNormalized } from '../../utils/readinessScoreLogic';
 
 interface Factor {
@@ -23,13 +24,14 @@ const CIRCUMFERENCE = 2 * Math.PI * R;
 const CENTER = SIZE / 2;
 
 export function ReadinessGauge({ score, factors, onPress }: Props) {
+  const c = useThemeColors();
   if (score === null || score === undefined || Number.isNaN(score)) {
     return (
-      <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
+      <TouchableOpacity style={[styles.container, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]} onPress={onPress} activeOpacity={0.7}>
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>💤</Text>
-          <Text style={styles.emptyText}>Tap to check in</Text>
-          <Text style={styles.emptySubtext}>Log your recovery</Text>
+          <Text style={[styles.emptyText, { color: c.accent.primary }]}>Tap to check in</Text>
+          <Text style={[styles.emptySubtext, { color: c.text.muted }]}>Log your recovery</Text>
         </View>
       </TouchableOpacity>
     );
@@ -44,13 +46,13 @@ export function ReadinessGauge({ score, factors, onPress }: Props) {
   const presentFactors = (factors ?? []).filter((f) => f.present);
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity style={[styles.container, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.gaugeRow}>
         <View style={styles.gaugeWrapper}>
           <Svg width={SIZE} height={SIZE}>
             <Circle
               cx={CENTER} cy={CENTER} r={R}
-              stroke={colors.bg.surfaceRaised}
+              stroke={c.bg.surfaceRaised}
               strokeWidth={STROKE} fill="none"
             />
             <Circle
@@ -65,7 +67,7 @@ export function ReadinessGauge({ score, factors, onPress }: Props) {
           </Svg>
           <View style={styles.scoreOverlay}>
             <Text style={[styles.scoreText, { color }]}>{clamped}</Text>
-            <Text style={styles.labelText}>{label}</Text>
+            <Text style={[styles.labelText, { color: c.text.secondary }]}>{label}</Text>
           </View>
         </View>
 
@@ -77,8 +79,8 @@ export function ReadinessGauge({ score, factors, onPress }: Props) {
               const pct = Math.round(norm * 100);
               return (
                 <View key={f.name} style={styles.factorRow}>
-                  <Text style={styles.factorName}>{formatFactorName(f.name)}</Text>
-                  <View style={styles.factorBar}>
+                  <Text style={[styles.factorName, { color: c.text.secondary }]}>{formatFactorName(f.name)}</Text>
+                  <View style={[styles.factorBar, { backgroundColor: c.bg.surfaceRaised }]}>
                     <View style={[styles.factorFill, { width: `${pct}%`, backgroundColor: getReadinessColor(pct) }]} />
                   </View>
                 </View>

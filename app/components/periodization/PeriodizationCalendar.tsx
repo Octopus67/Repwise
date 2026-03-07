@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import { EmptyState } from '../common/EmptyState';
 import { Icon } from '../common/Icon';
@@ -16,6 +17,7 @@ import {
 import api from '../../services/api';
 
 export function PeriodizationCalendar() {
+  const c = useThemeColors();
   const [blocks, setBlocks] = useState<TrainingBlock[]>([]);
   const [sessionDates, setSessionDates] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,26 +52,26 @@ export function PeriodizationCalendar() {
     <View>
       {/* Header row */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBtn} onPress={() => setShowTemplate(true)}>
-          <Text style={styles.headerBtnText}>Templates</Text>
+        <TouchableOpacity style={[styles.headerBtn, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]} onPress={() => setShowTemplate(true)}>
+          <Text style={[styles.headerBtnText, { color: c.text.secondary }]}>Templates</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.fab} onPress={() => { setEditBlock(null); setShowCreate(true); }}>
-          <Text style={styles.fabText}>+ Block</Text>
+        <TouchableOpacity style={[styles.fab, { backgroundColor: c.accent.primaryMuted, borderColor: c.accent.primary }]} onPress={() => { setEditBlock(null); setShowCreate(true); }}>
+          <Text style={[styles.fabText, { color: c.accent.primary }]}>+ Block</Text>
         </TouchableOpacity>
       </View>
 
       {/* Deload suggestion banner */}
       {showDeloadBanner && (
-        <View style={styles.deloadBanner}>
+        <View style={[styles.deloadBanner, { backgroundColor: c.semantic.warningSubtle }]}>
           <Icon name="alert" />
-          <Text style={styles.deloadText}>Consider scheduling a deload week</Text>
+          <Text style={[styles.deloadText, { color: c.semantic.warning }]}>Consider scheduling a deload week</Text>
         </View>
       )}
 
       {/* Calendar rows */}
       {loading ? (
         <Card>
-          <ActivityIndicator color={colors.accent.primary} style={{ marginVertical: spacing[4] }} />
+          <ActivityIndicator color={c.accent.primary} style={{ marginVertical: spacing[4] }} />
         </Card>
       ) : rows.length === 0 ? (
         <Card>
@@ -88,20 +90,20 @@ export function PeriodizationCalendar() {
               <View style={[styles.phaseBand, { backgroundColor: row.phaseColor ?? 'transparent' }]} />
               <View style={styles.weekContent}>
                 <View style={styles.weekTop}>
-                  <Text style={styles.blockName} numberOfLines={1}>{row.blockName}</Text>
+                  <Text style={[styles.blockName, { color: c.text.primary }]} numberOfLines={1}>{row.blockName}</Text>
                   {row.nutritionLabel && (
-                    <View style={styles.nutritionBadge}>
-                      <Text style={styles.nutritionText}>{row.nutritionLabel}</Text>
+                    <View style={[styles.nutritionBadge, { backgroundColor: c.bg.surfaceRaised }]}>
+                      <Text style={[styles.nutritionText, { color: c.text.secondary }]}>{row.nutritionLabel}</Text>
                     </View>
                   )}
                 </View>
-                <Text style={styles.weekLabel}>
+                <Text style={[styles.weekLabel, { color: c.text.muted }]}>
                   Week {row.weekNumber}/{row.totalWeeks} · {row.weekStart}
                 </Text>
                 {row.sessionDates.length > 0 && (
                   <View style={styles.dots}>
                     {row.sessionDates.map((d) => (
-                      <View key={d} style={styles.dot} />
+                      <View key={d} style={[styles.dot, { backgroundColor: c.accent.primary }]} />
                     ))}
                   </View>
                 )}

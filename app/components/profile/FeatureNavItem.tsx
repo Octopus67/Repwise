@@ -3,6 +3,7 @@ import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { usePressAnimation } from '../../hooks/usePressAnimation';
 import { colors, typography, spacing } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface FeatureNavItemProps {
   icon: ReactNode;
@@ -13,6 +14,7 @@ interface FeatureNavItemProps {
 }
 
 export function FeatureNavItem({ icon, label, description, onPress, testID }: FeatureNavItemProps) {
+  const c = useThemeColors();
   const { animatedStyle, onPressIn, onPressOut } = usePressAnimation();
 
   return (
@@ -27,10 +29,10 @@ export function FeatureNavItem({ icon, label, description, onPress, testID }: Fe
       >
         <View style={styles.iconWrap}>{icon}</View>
         <View style={styles.content}>
-          <Text style={styles.label}>{label}</Text>
-          <Text style={styles.description}>{description}</Text>
+          <Text style={[styles.label, { color: c.text.primary }]}>{label}</Text>
+          <Text style={[styles.description, { color: c.text.muted }]}>{description}</Text>
         </View>
-        <Text style={styles.chevron}>›</Text>
+        <Text style={[styles.chevron, { color: c.text.muted }]}>›</Text>
       </TouchableOpacity>
     </Animated.View>
   );

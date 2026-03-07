@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Skeleton } from '../common/Skeleton';
 import { colors, spacing, radius, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import type { QuickRelogItem } from '../../utils/quickRelogLogic';
 
 interface QuickRelogRowProps {
@@ -11,6 +12,7 @@ interface QuickRelogRowProps {
 }
 
 export function QuickRelogRow({ items, onTapItem, loading }: QuickRelogRowProps) {
+  const c = useThemeColors();
   // AC7: Hidden entirely for brand-new users with no logging history
   if (items.length === 0 && !loading) {
     return null;
@@ -18,7 +20,7 @@ export function QuickRelogRow({ items, onTapItem, loading }: QuickRelogRowProps)
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionLabel}>⚡ Quick Re-log</Text>
+      <Text style={[styles.sectionLabel, { color: c.text.primary }]}>⚡ Quick Re-log</Text>
 
       {loading ? (
         <View style={styles.skeletonRow}>
@@ -35,14 +37,14 @@ export function QuickRelogRow({ items, onTapItem, loading }: QuickRelogRowProps)
           {items.map((item, index) => (
             <TouchableOpacity
               key={`${item.name}-${index}`}
-              style={styles.chip}
+              style={[styles.chip, { backgroundColor: c.bg.surfaceRaised }]}
               onPress={() => onTapItem(item)}
               activeOpacity={0.7}
             >
-              <Text style={styles.chipName} numberOfLines={1}>
+              <Text style={[styles.chipName, { color: c.text.primary }]} numberOfLines={1}>
                 {item.name.slice(0, 12)}
               </Text>
-              <Text style={styles.chipCalories}>
+              <Text style={[styles.chipCalories, { color: c.text.secondary }]}>
                 {Math.round(item.calories) + ' cal'}
               </Text>
             </TouchableOpacity>

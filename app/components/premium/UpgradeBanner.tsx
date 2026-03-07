@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../common/Icon';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 
@@ -16,6 +17,7 @@ interface UpgradeBannerProps {
 }
 
 export function UpgradeBanner({ onPress }: UpgradeBannerProps) {
+  const c = useThemeColors();
   const reduceMotion = useReduceMotion();
   const pulseOpacity = useSharedValue(1);
 
@@ -36,16 +38,16 @@ export function UpgradeBanner({ onPress }: UpgradeBannerProps) {
   }));
 
   return (
-    <TouchableOpacity style={styles.banner} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity style={[styles.banner, { backgroundColor: c.accent.primaryMuted, borderColor: c.accent.primary }]} onPress={onPress} activeOpacity={0.8}>
       <Animated.View style={[styles.content, pulseStyle]}>
-        <Icon name="star" size={16} color={colors.premium.gold} />
+        <Icon name="star" size={16} color={c.premium.gold} />
         <View style={styles.textContainer}>
-          <Text style={styles.title}>Unlock Premium</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: c.text.primary }]}>Unlock Premium</Text>
+          <Text style={[styles.subtitle, { color: c.text.secondary }]}>
             Coaching, advanced analytics & more
           </Text>
         </View>
-        <Text style={styles.arrow}>→</Text>
+        <Text style={[styles.arrow, { color: c.accent.primary }]}>→</Text>
       </Animated.View>
     </TouchableOpacity>
   );

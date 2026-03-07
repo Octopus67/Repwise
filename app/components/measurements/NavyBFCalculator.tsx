@@ -5,6 +5,7 @@
 import { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { ModalContainer } from '../common/ModalContainer';
 import { Button } from '../common/Button';
 import { useStore } from '../../store';
@@ -17,6 +18,7 @@ interface NavyBFCalculatorProps {
 }
 
 export function NavyBFCalculator({ visible, onClose, onResult }: NavyBFCalculatorProps) {
+  const c = useThemeColors();
   const unitSystem = useStore((s) => s.unitSystem);
   const heightCm = useStore((s) => s.latestMetrics?.heightCm ?? 0);
   const isImperial = unitSystem === 'imperial';
@@ -74,7 +76,7 @@ export function NavyBFCalculator({ visible, onClose, onResult }: NavyBFCalculato
     <ModalContainer visible={visible} onClose={onClose} title="Navy BF Calculator" testID="navy-bf-modal">
       <ScrollView keyboardShouldPersistTaps="handled">
         {/* Sex selector */}
-        <View style={styles.segmentRow}>
+        <View style={[styles.segmentRow, { backgroundColor: c.bg.surfaceRaised }]}>
           {(['male', 'female'] as const).map((s) => (
             <TouchableOpacity
               key={s}
@@ -92,52 +94,52 @@ export function NavyBFCalculator({ visible, onClose, onResult }: NavyBFCalculato
 
         {/* Inputs */}
         <View style={styles.field}>
-          <Text style={styles.label}>Height ({lengthUnit})</Text>
+          <Text style={[styles.label, { color: c.text.muted }]}>Height ({lengthUnit})</Text>
           <TextInput
-            style={styles.input} value={height} onChangeText={setHeight}
+            style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]} value={height} onChangeText={setHeight}
             keyboardType="decimal-pad" placeholder={isImperial ? '70' : '178'}
-            placeholderTextColor={colors.text.muted} accessibilityLabel={`Height in ${lengthUnit}`}
+            placeholderTextColor={c.text.muted} accessibilityLabel={`Height in ${lengthUnit}`}
           />
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Waist ({lengthUnit})</Text>
+          <Text style={[styles.label, { color: c.text.muted }]}>Waist ({lengthUnit})</Text>
           <TextInput
-            style={styles.input} value={waist} onChangeText={setWaist}
+            style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]} value={waist} onChangeText={setWaist}
             keyboardType="decimal-pad" placeholder={isImperial ? '34' : '86'}
-            placeholderTextColor={colors.text.muted} accessibilityLabel={`Waist in ${lengthUnit}`}
+            placeholderTextColor={c.text.muted} accessibilityLabel={`Waist in ${lengthUnit}`}
           />
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Neck ({lengthUnit})</Text>
+          <Text style={[styles.label, { color: c.text.muted }]}>Neck ({lengthUnit})</Text>
           <TextInput
-            style={styles.input} value={neck} onChangeText={setNeck}
+            style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]} value={neck} onChangeText={setNeck}
             keyboardType="decimal-pad" placeholder={isImperial ? '15' : '38'}
-            placeholderTextColor={colors.text.muted} accessibilityLabel={`Neck in ${lengthUnit}`}
+            placeholderTextColor={c.text.muted} accessibilityLabel={`Neck in ${lengthUnit}`}
           />
         </View>
 
         {sex === 'female' && (
           <View style={styles.field}>
-            <Text style={styles.label}>Hips ({lengthUnit})</Text>
+            <Text style={[styles.label, { color: c.text.muted }]}>Hips ({lengthUnit})</Text>
             <TextInput
-              style={styles.input} value={hips} onChangeText={setHips}
+              style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]} value={hips} onChangeText={setHips}
               keyboardType="decimal-pad" placeholder={isImperial ? '38' : '96'}
-              placeholderTextColor={colors.text.muted} accessibilityLabel={`Hips in ${lengthUnit}`}
+              placeholderTextColor={c.text.muted} accessibilityLabel={`Hips in ${lengthUnit}`}
             />
           </View>
         )}
 
-        {error && <Text style={styles.errorText}>{error}</Text>}
+        {error && <Text style={[styles.errorText, { color: c.semantic.negative }]}>{error}</Text>}
 
         <Button title="Calculate" onPress={handleCalculate} style={styles.calcBtn} testID="navy-bf-calculate-btn" />
 
         {/* Result */}
         {result !== null && (
-          <View style={styles.resultCard}>
-            <Text style={styles.resultLabel}>Estimated Body Fat</Text>
-            <Text style={styles.resultValue}>{result.toFixed(1)}%</Text>
+          <View style={[styles.resultCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.accent.primaryMuted }]}>
+            <Text style={[styles.resultLabel, { color: c.text.secondary }]}>Estimated Body Fat</Text>
+            <Text style={[styles.resultValue, { color: c.accent.primary }]}>{result.toFixed(1)}%</Text>
             {onResult && (
               <Button
                 title="Use This Value"

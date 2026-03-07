@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated from 'react-native-reanimated';
 import { colors, spacing, typography, radius, letterSpacing } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { calculateStreak } from '../../utils/calculateStreak';
@@ -72,6 +73,7 @@ interface NutritionEntryRaw {
 }
 
 export function DashboardScreen({ navigation }: any) {
+  const c = useThemeColors();
   const store = useStore();
   const { impact } = useHaptics();
   const premium = isPremium(store);
@@ -402,7 +404,7 @@ export function DashboardScreen({ navigation }: any) {
       };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
       <ScrollView
         testID="dashboard-screen"
         style={styles.container}
@@ -411,7 +413,7 @@ export function DashboardScreen({ navigation }: any) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={colors.accent.primary}
+            tintColor={c.accent.primary}
           />
         }
       >
@@ -465,7 +467,7 @@ export function DashboardScreen({ navigation }: any) {
                 <QuickActionButton
                   icon="utensils"
                   label="Log Food"
-                  accentColor={colors.macro.calories}
+                  accentColor={c.macro.calories}
                   completed={nutritionLogged}
                   onPress={() => handleQuickAction(() => setShowNutrition(true))}
                   accessibilityLabel="Log food"
@@ -476,7 +478,7 @@ export function DashboardScreen({ navigation }: any) {
                 <QuickActionButton
                   icon="lunchbox"
                   label="Build Meal"
-                  accentColor={colors.accent.primary}
+                  accentColor={c.accent.primary}
                   completed={false}
                   onPress={() => handleQuickAction(() => setShowMealBuilder(true))}
                   accessibilityLabel="Build meal"
@@ -487,7 +489,7 @@ export function DashboardScreen({ navigation }: any) {
                 <QuickActionButton
                   icon="dumbbell"
                   label="Training"
-                  accentColor={colors.macro.protein}
+                  accentColor={c.macro.protein}
                   completed={trainingLogged}
                   onPress={() => handleQuickAction(() => {
                     if (isPremiumWorkoutLoggerEnabled()) {
@@ -521,8 +523,8 @@ export function DashboardScreen({ navigation }: any) {
                 fat={{ value: totalFat, target: targets.fat_g }}
               />
               {dateLoading && (
-                <View style={styles.dateLoadingOverlay}>
-                  <ActivityIndicator size="small" color={colors.accent.primary} />
+                <View style={[styles.dateLoadingOverlay, { backgroundColor: c.bg.overlay }]}>
+                  <ActivityIndicator size="small" color={c.accent.primary} />
                 </View>
               )}
             </View>
@@ -612,7 +614,7 @@ export function DashboardScreen({ navigation }: any) {
           if (weightHistory.length === 0) {
             return (
               <TouchableOpacity style={styles.trendSection} onPress={() => setShowBodyweight(true)} activeOpacity={0.7}>
-                <Text style={styles.emptyStateText}>Tap to log your first weigh-in</Text>
+                <Text style={[styles.emptyStateText, { color: c.text.muted }]}>Tap to log your first weigh-in</Text>
               </TouchableOpacity>
             );
           }
@@ -628,18 +630,18 @@ export function DashboardScreen({ navigation }: any) {
             : (trendWeight * 2.20462).toFixed(1);
 
           // Determine badge color based on weight change direction
-          let badgeColor: string = colors.text.secondary;
+          let badgeColor: string = c.text.secondary;
           if (weeklyChange !== null) {
-            if (weeklyChange < 0) badgeColor = colors.semantic.positive;
-            else if (weeklyChange > 0) badgeColor = colors.accent.primary;
+            if (weeklyChange < 0) badgeColor = c.semantic.positive;
+            else if (weeklyChange > 0) badgeColor = c.accent.primary;
           }
 
           return (
             <TouchableOpacity style={styles.trendSection} onPress={() => setShowBodyweight(true)} activeOpacity={0.7} accessibilityLabel="Log bodyweight" accessibilityRole="button">
               <View style={styles.trendRow}>
-                <Text style={styles.trendLabel}>Trend: {displayWeight}{unit}</Text>
+                <Text style={[styles.trendLabel, { color: c.text.secondary }]}>Trend: {displayWeight}{unit}</Text>
                 <Text style={[styles.trendBadge, { color: badgeColor }]}>{changeText}</Text>
-                <Text style={styles.trendLogHint}>+ Log</Text>
+                <Text style={[styles.trendLogHint, { color: c.accent.primary }]}>+ Log</Text>
               </View>
             </TouchableOpacity>
           );
@@ -647,50 +649,50 @@ export function DashboardScreen({ navigation }: any) {
 
         {/* Milestone Banner */}
         {isLoading ? (
-          <View style={styles.milestoneBanner}>
+          <View style={[styles.milestoneBanner, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
             <Skeleton width={16} height={16} variant="circle" />
             <Skeleton width="70%" height={16} />
             <Skeleton width={16} height={16} />
           </View>
         ) : milestoneMessage && (
           <TouchableOpacity
-            style={styles.milestoneBanner}
+            style={[styles.milestoneBanner, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
             onPress={() => navigation?.navigate?.('Analytics')}
             activeOpacity={0.7}
             accessibilityLabel="View milestone progress"
             accessibilityRole="button"
           >
-            <Icon name="dumbbell" size={16} color={colors.accent.primary} />
-            <Text style={styles.milestoneText} numberOfLines={1}>{milestoneMessage}</Text>
-            <Text style={styles.milestoneChevron}>›</Text>
+            <Icon name="dumbbell" size={16} color={c.accent.primary} />
+            <Text style={[styles.milestoneText, { color: c.text.primary }]} numberOfLines={1}>{milestoneMessage}</Text>
+            <Text style={[styles.milestoneChevron, { color: c.accent.primary }]}>›</Text>
           </TouchableOpacity>
         )}
 
         {/* Readiness — compact inline badge */}
         {!isLoading && readinessScore !== null && !Number.isNaN(readinessScore) && (
           <TouchableOpacity
-            style={styles.readinessBadge}
+            style={[styles.readinessBadge, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
             onPress={() => setShowCheckin(true)}
             activeOpacity={0.7}
             accessibilityLabel={`Readiness score ${readinessScore}`}
             accessibilityRole="button"
           >
             <Text style={styles.readinessEmoji}>⚡</Text>
-            <Text style={styles.readinessText}>Readiness: {readinessScore}/100</Text>
-            <Text style={styles.milestoneChevron}>›</Text>
+            <Text style={[styles.readinessText, { color: c.text.primary }]}>Readiness: {readinessScore}/100</Text>
+            <Text style={[styles.milestoneChevron, { color: c.accent.primary }]}>›</Text>
           </TouchableOpacity>
         )}
         {!isLoading && (readinessScore === null || Number.isNaN(readinessScore ?? NaN)) && (
           <TouchableOpacity
-            style={styles.readinessBadge}
+            style={[styles.readinessBadge, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
             onPress={() => setShowCheckin(true)}
             activeOpacity={0.7}
             accessibilityLabel="Log recovery check-in"
             accessibilityRole="button"
           >
             <Text style={styles.readinessEmoji}>💤</Text>
-            <Text style={styles.readinessText}>Tap to log recovery</Text>
-            <Text style={styles.milestoneChevron}>›</Text>
+            <Text style={[styles.readinessText, { color: c.text.primary }]}>Tap to log recovery</Text>
+            <Text style={[styles.milestoneChevron, { color: c.accent.primary }]}>›</Text>
           </TouchableOpacity>
         )}
 
@@ -738,19 +740,19 @@ export function DashboardScreen({ navigation }: any) {
         {/* Volume Insights Card */}
         {!isLoading && volumeFlagEnabled && volumeSummary && (
           <TouchableOpacity
-            style={styles.milestoneBanner}
+            style={[styles.milestoneBanner, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
             onPress={() => navigation?.navigate?.('Analytics', { screen: 'AnalyticsHome', params: { initialTab: 'volume' } })}
             activeOpacity={0.7}
             accessibilityLabel="View volume insights"
             accessibilityRole="button"
             testID="dashboard-volume-insights"
           >
-            <Icon name="chart" size={16} color={colors.accent.primary} />
-            <Text style={styles.milestoneText} numberOfLines={1}>
+            <Icon name="chart" size={16} color={c.accent.primary} />
+            <Text style={[styles.milestoneText, { color: c.text.primary }]} numberOfLines={1}>
               {volumeSummary.optimal} muscle{volumeSummary.optimal !== 1 ? 's' : ''} optimal
               {volumeSummary.approachingMrv > 0 ? `, ${volumeSummary.approachingMrv} approaching MRV` : ''}
             </Text>
-            <Text style={styles.milestoneChevron}>›</Text>
+            <Text style={[styles.milestoneChevron, { color: c.accent.primary }]}>›</Text>
           </TouchableOpacity>
         )}
 
@@ -758,15 +760,15 @@ export function DashboardScreen({ navigation }: any) {
         {!isLoading && articles.length > 0 && (
           <Animated.View style={featuredAnim}>
             <TouchableOpacity
-              style={styles.milestoneBanner}
+              style={[styles.milestoneBanner, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
               onPress={() => handleArticlePress(articles[0].id)}
               activeOpacity={0.7}
               accessibilityLabel={`Read: ${articles[0].title}`}
               accessibilityRole="button"
             >
-              <Icon name="book" size={16} color={colors.accent.primary} />
-              <Text style={styles.milestoneText} numberOfLines={1}>{articles[0].title}</Text>
-              <Text style={styles.milestoneChevron}>›</Text>
+              <Icon name="book" size={16} color={c.accent.primary} />
+              <Text style={[styles.milestoneText, { color: c.text.primary }]} numberOfLines={1}>{articles[0].title}</Text>
+              <Text style={[styles.milestoneChevron, { color: c.accent.primary }]}>›</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => navigation.navigate('Learn')}
@@ -775,7 +777,7 @@ export function DashboardScreen({ navigation }: any) {
               accessibilityLabel="See all articles"
               accessibilityRole="button"
             >
-              <Text style={styles.seeAllText}>See all articles →</Text>
+              <Text style={[styles.seeAllText, { color: c.accent.primary }]}>See all articles →</Text>
             </TouchableOpacity>
           </Animated.View>
         )}

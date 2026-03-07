@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing, typography, letterSpacing } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../../components/common/Card';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Skeleton } from '../../components/common/Skeleton';
@@ -75,6 +76,7 @@ function ChartSkeleton() {
 }
 
 export function AnalyticsScreen() {
+  const c = useThemeColors();
   const store = useStore();
   const premium = isPremium(store);
   const unitSystem = store.unitSystem;
@@ -268,9 +270,9 @@ export function AnalyticsScreen() {
   const weightSuffix = unitSystem === 'metric' ? ' kg' : ' lbs';
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']} testID="analytics-screen">
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="analytics-screen">
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Analytics</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>Analytics</Text>
 
         {/* Error Banner */}
         {error && (
@@ -282,7 +284,7 @@ export function AnalyticsScreen() {
         )}
 
         {/* Tab Pills */}
-        <View style={styles.analyticsTabRow}>
+        <View style={[styles.analyticsTabRow, { backgroundColor: c.bg.surface }]}>
           {(['nutrition', 'training', 'body', 'volume'] as const).map((t) => (
             <TouchableOpacity
               key={t}
@@ -300,11 +302,11 @@ export function AnalyticsScreen() {
         {/* Weekly Intelligence Report link — visible on ALL tabs */}
         <TouchableOpacity
           testID="analytics-weekly-report-link"
-          style={styles.nutritionReportBtn}
+          style={[styles.nutritionReportBtn, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
           onPress={() => navigation.navigate('WeeklyReport')}
         >
-          <Text style={styles.nutritionReportText}><Icon name="chart" /> Weekly Intelligence Report</Text>
-          <Text style={styles.nutritionReportArrow}>›</Text>
+          <Text style={[styles.nutritionReportText, { color: c.accent.primary }]}><Icon name="chart" /> Weekly Intelligence Report</Text>
+          <Text style={[styles.nutritionReportArrow, { color: c.accent.primary }]}>›</Text>
         </TouchableOpacity>
 
         {/* Time Range Selector — visible on ALL tabs */}
@@ -318,25 +320,25 @@ export function AnalyticsScreen() {
             {/* Nutrition Report link */}
             <TouchableOpacity
               testID="analytics-nutrition-report-link"
-              style={styles.nutritionReportBtn}
+              style={[styles.nutritionReportBtn, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
               onPress={() => navigation.navigate('NutritionReport')}
             >
-              <Text style={styles.nutritionReportText}><Icon name="salad" /> Nutrition Report (27 nutrients)</Text>
-              <Text style={styles.nutritionReportArrow}>›</Text>
+              <Text style={[styles.nutritionReportText, { color: c.accent.primary }]}><Icon name="salad" /> Nutrition Report (27 nutrients)</Text>
+              <Text style={[styles.nutritionReportArrow, { color: c.accent.primary }]}>›</Text>
             </TouchableOpacity>
 
             {/* Micronutrient Dashboard link */}
             <TouchableOpacity
               testID="analytics-micro-dashboard-link"
-              style={styles.nutritionReportBtn}
+              style={[styles.nutritionReportBtn, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
               onPress={() => navigation.navigate('MicronutrientDashboard')}
             >
-              <Text style={styles.nutritionReportText}><Icon name="salad" /> Micronutrient Dashboard</Text>
-              <Text style={styles.nutritionReportArrow}>›</Text>
+              <Text style={[styles.nutritionReportText, { color: c.accent.primary }]}><Icon name="salad" /> Micronutrient Dashboard</Text>
+              <Text style={[styles.nutritionReportArrow, { color: c.accent.primary }]}>›</Text>
             </TouchableOpacity>
 
             {/* Calorie trend */}
-            <Text style={styles.sectionTitle}>Calorie Trend</Text>
+            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Calorie Trend</Text>
             <View testID="analytics-calorie-chart">
             <Card>
               {isLoading ? (
@@ -350,7 +352,7 @@ export function AnalyticsScreen() {
               ) : (
                 <TrendLineChart
                   data={filteredCalories}
-                  color={colors.chart.calories}
+                  color={c.chart.calories}
                   suffix=" kcal"
                   targetLine={adaptiveTarget?.calories}
                   emptyMessage="No calorie data for this period"
@@ -362,7 +364,7 @@ export function AnalyticsScreen() {
             {/* Weekly Summary Card */}
             {!isLoading && (
               <>
-                <Text style={styles.sectionTitle}>Weekly Summary</Text>
+                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Weekly Summary</Text>
                 <WeeklySummaryCard
                   entries={calorieTrend.map((p) => ({
                     entry_date: p.date,
@@ -378,7 +380,7 @@ export function AnalyticsScreen() {
             )}
 
             {/* Protein trend */}
-            <Text style={styles.sectionTitle}>Protein Trend</Text>
+            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Protein Trend</Text>
             <Card>
               {isLoading ? (
                 <ChartSkeleton />
@@ -391,7 +393,7 @@ export function AnalyticsScreen() {
               ) : (
                 <TrendLineChart
                   data={filteredProtein}
-                  color={colors.semantic.positive}
+                  color={c.semantic.positive}
                   suffix="g"
                   targetLine={adaptiveTarget?.protein}
                   emptyMessage="No protein data for this period"
@@ -402,7 +404,7 @@ export function AnalyticsScreen() {
             {/* Target vs Actual */}
             {adaptiveTarget && filteredCalories.length > 0 && (
               <>
-                <Text style={styles.sectionTitle}>Target vs Actual (Today)</Text>
+                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Target vs Actual (Today)</Text>
                 <Card>
                   <View style={styles.comparisonRow}>
                     <ComparisonItem
@@ -425,12 +427,12 @@ export function AnalyticsScreen() {
             {/* Dietary gap summary (premium) */}
             {premium && gaps.length > 0 && (
               <>
-                <Text style={styles.sectionTitle}>Dietary Gaps</Text>
+                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Dietary Gaps</Text>
                 <Card>
                   {gaps.map((gap) => (
                     <View key={gap.nutrient} style={styles.gapRow}>
-                      <Text style={styles.gapNutrient}>{gap.nutrient}</Text>
-                      <View style={styles.gapBar}>
+                      <Text style={[styles.gapNutrient, { color: c.text.secondary }]}>{gap.nutrient}</Text>
+                      <View style={[styles.gapBar, { backgroundColor: c.bg.surfaceRaised }]}>
                         <View
                           style={[
                             styles.gapFill,
@@ -438,15 +440,15 @@ export function AnalyticsScreen() {
                               width: `${Math.min((gap.average / gap.recommended) * 100, 100)}%`,
                               backgroundColor:
                                 gap.deficit_pct > 30
-                                  ? colors.semantic.negative
+                                  ? c.semantic.negative
                                   : gap.deficit_pct > 10
-                                    ? colors.semantic.warning
-                                    : colors.semantic.positive,
+                                    ? c.semantic.warning
+                                    : c.semantic.positive,
                             },
                           ]}
                         />
                       </View>
-                      <Text style={styles.gapPct}>-{Math.round(gap.deficit_pct)}%</Text>
+                      <Text style={[styles.gapPct, { color: c.semantic.negative }]}>-{Math.round(gap.deficit_pct)}%</Text>
                     </View>
                   ))}
                 </Card>
@@ -461,39 +463,39 @@ export function AnalyticsScreen() {
             {/* WNS Explainer Card */}
             <TouchableOpacity
               onPress={() => setWnsExplainerExpanded(!wnsExplainerExpanded)}
-              style={styles.explainerCard}
+              style={[styles.explainerCard, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
               testID="wns-explainer-card"
               activeOpacity={0.7}
             >
               <View style={styles.explainerHeader}>
-                <Text style={styles.explainerTitle}>🧠 Why Repwise Tracks Hypertrophy Units (HU)</Text>
-                <Text style={styles.chevron}>{wnsExplainerExpanded ? '▼' : '▶'}</Text>
+                <Text style={[styles.explainerTitle, { color: c.text.primary }]}>🧠 Why Repwise Tracks Hypertrophy Units (HU)</Text>
+                <Text style={[styles.chevron, { color: c.text.muted }]}>{wnsExplainerExpanded ? '▼' : '▶'}</Text>
               </View>
               {wnsExplainerExpanded && (
                 <View style={styles.explainerContent}>
-                  <Text style={styles.explainerSubhead}>Traditional Apps</Text>
-                  <Text style={styles.explainerText}>Count total sets — treats every set equally regardless of effort or fatigue.</Text>
+                  <Text style={[styles.explainerSubhead, { color: c.accent.primary }]}>Traditional Apps</Text>
+                  <Text style={[styles.explainerText, { color: c.text.secondary }]}>Count total sets — treats every set equally regardless of effort or fatigue.</Text>
 
-                  <Text style={styles.explainerSubhead}>Repwise (HU)</Text>
-                  <Text style={styles.explainerText}>Counts effective stimulus by weighing each set based on:</Text>
+                  <Text style={[styles.explainerSubhead, { color: c.accent.primary }]}>Repwise (HU)</Text>
+                  <Text style={[styles.explainerText, { color: c.text.secondary }]}>Counts effective stimulus by weighing each set based on:</Text>
 
-                  <Text style={styles.explainerBullet}>• <Text style={styles.explainerBold}>Intensity</Text> — harder sets score higher</Text>
-                  <Text style={styles.explainerBullet}>• <Text style={styles.explainerBold}>Diminishing returns</Text> — junk volume is discounted</Text>
-                  <Text style={styles.explainerBullet}>• <Text style={styles.explainerBold}>Frequency</Text> — spreading work across days is rewarded</Text>
-                  <Text style={styles.explainerBullet}>• <Text style={styles.explainerBold}>Goal adjustment</Text> — targets adapt to your training phase</Text>
+                  <Text style={[styles.explainerBullet, { color: c.text.secondary }]}>• <Text style={[styles.explainerBold, { color: c.text.primary }]}>Intensity</Text> — harder sets score higher</Text>
+                  <Text style={[styles.explainerBullet, { color: c.text.secondary }]}>• <Text style={[styles.explainerBold, { color: c.text.primary }]}>Diminishing returns</Text> — junk volume is discounted</Text>
+                  <Text style={[styles.explainerBullet, { color: c.text.secondary }]}>• <Text style={[styles.explainerBold, { color: c.text.primary }]}>Frequency</Text> — spreading work across days is rewarded</Text>
+                  <Text style={[styles.explainerBullet, { color: c.text.secondary }]}>• <Text style={[styles.explainerBold, { color: c.text.primary }]}>Goal adjustment</Text> — targets adapt to your training phase</Text>
 
                   <TouchableOpacity
                     onPress={() => navigation.navigate('HUExplainer')}
                     style={styles.learnMoreBtn}
                   >
-                    <Text style={styles.learnMoreText}>Learn More →</Text>
+                    <Text style={[styles.learnMoreText, { color: c.accent.primary }]}>Learn More →</Text>
                   </TouchableOpacity>
                 </View>
               )}
             </TouchableOpacity>
 
             {/* Training Volume */}
-            <Text style={styles.sectionTitle}>Training Volume</Text>
+            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Training Volume</Text>
             <Card>
               {isLoading ? (
                 <ChartSkeleton />
@@ -506,7 +508,7 @@ export function AnalyticsScreen() {
               ) : (
                 <TrendLineChart
                   data={volumeTrend}
-                  color={colors.accent.primary}
+                  color={c.accent.primary}
                   suffix=" kg"
                   emptyMessage="No training volume data for this period"
                 />
@@ -514,13 +516,13 @@ export function AnalyticsScreen() {
             </Card>
 
             {/* Muscle Volume Heat Map */}
-            <Text style={styles.sectionTitle}>Muscle Volume Heat Map</Text>
+            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Muscle Volume Heat Map</Text>
             <HeatMapCard />
 
             {/* Muscle Fatigue */}
             {fatigueScores.length > 0 && (
               <>
-                <Text style={styles.sectionTitle}>Muscle Fatigue</Text>
+                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Muscle Fatigue</Text>
                 <Card>
                   <FatigueHeatMapOverlay
                     scores={fatigueScores}
@@ -540,7 +542,7 @@ export function AnalyticsScreen() {
             />
 
             {/* Strength Progression */}
-            <Text style={styles.sectionTitle}>Strength Progression</Text>
+            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Strength Progression</Text>
             <Card>
               <View style={styles.exerciseSelector}>
                 {EXERCISE_OPTIONS.map((ex) => (
@@ -571,7 +573,7 @@ export function AnalyticsScreen() {
                     date: p.date,
                     value: Number(formatWeight(p.value, unitSystem).split(' ')[0]),
                   }))}
-                  color={colors.semantic.positive}
+                  color={c.semantic.positive}
                   suffix={weightSuffix}
                   emptyMessage={`No data for ${selectedExercise} in this period`}
                 />
@@ -581,7 +583,7 @@ export function AnalyticsScreen() {
             {/* e1RM Trend, Strength Standards, Strength Leaderboard */}
             {!isLoading && (
               <>
-                <Text style={styles.sectionTitle}>e1RM Trend</Text>
+                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>e1RM Trend</Text>
                 <Card>
                   <View style={styles.exerciseSelector}>
                     {E1RM_EXERCISE_OPTIONS.map((ex) => (
@@ -609,19 +611,19 @@ export function AnalyticsScreen() {
                       date: p.date,
                       value: Number(formatWeight(p.value, unitSystem).split(' ')[0]),
                     }))}
-                    color={colors.accent.primary}
+                    color={c.accent.primary}
                     suffix={weightSuffix}
                     emptyMessage={`No e1RM data for ${selectedE1RMExercise} in this period`}
                   />
                 </Card>
 
-                <Text style={styles.sectionTitle}>Strength Standards</Text>
+                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Strength Standards</Text>
                 <StrengthStandardsCard
                   classifications={strengthStandards?.classifications ?? []}
                   bodyweightKg={strengthStandards?.bodyweight_kg ?? null}
                 />
 
-                <Text style={styles.sectionTitle}>Strength Leaderboard</Text>
+                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Strength Leaderboard</Text>
                 <StrengthLeaderboard
                   classifications={strengthStandards?.classifications ?? []}
                 />
@@ -634,15 +636,15 @@ export function AnalyticsScreen() {
         {selectedTab === 'body' && (
           <>
             {/* Periodization Calendar */}
-            <Text style={styles.sectionTitle}>Periodization</Text>
+            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Periodization</Text>
             <PeriodizationCalendar />
 
             {/* Readiness Trend */}
-            <Text style={styles.sectionTitle}>Readiness Trend</Text>
+            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Readiness Trend</Text>
             <ReadinessTrendChart timeRange={timeRange} />
 
             {/* Bodyweight trend */}
-            <Text style={styles.sectionTitle}>Bodyweight Trend</Text>
+            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Bodyweight Trend</Text>
             <View testID="analytics-bodyweight-chart">
             <Card>
               {isLoading ? (
@@ -659,7 +661,7 @@ export function AnalyticsScreen() {
                     date: p.date,
                     value: Number(formatWeight(p.value, unitSystem).split(' ')[0]),
                   }))}
-                  color={colors.chart.calories}
+                  color={c.chart.calories}
                   suffix={weightSuffix}
                   emptyMessage="No bodyweight data for this period"
                   primaryAsDots={weightEMA.length > 0}
@@ -667,7 +669,7 @@ export function AnalyticsScreen() {
                     date: p.date,
                     value: Number(formatWeight(p.value, unitSystem).split(' ')[0]),
                   })) : undefined}
-                  secondaryColor={colors.accent.primary}
+                  secondaryColor={c.accent.primary}
                 />
               )}
             </Card>
@@ -676,7 +678,7 @@ export function AnalyticsScreen() {
             {/* Expenditure Trend (TDEE) */}
             {!isLoading && (
               <>
-                <Text style={styles.sectionTitle}>Expenditure Trend (TDEE)</Text>
+                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Expenditure Trend (TDEE)</Text>
                 <ExpenditureTrendCard
                   weightHistory={weightTrend.map((p) => ({ date: p.date, weight_kg: p.value }))}
                   caloriesByDate={caloriesByDate}

@@ -3,6 +3,7 @@ import { Text, TouchableOpacity, StyleSheet, ActionSheetIOS, Platform } from 're
 import type { SetType } from '../../types/training';
 import { SET_TYPE_ABBREVIATIONS, SET_TYPE_LABELS } from '../../utils/setTypeLabels';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 // Re-export for consumers that import from the component
 export { SET_TYPE_ABBREVIATIONS } from '../../utils/setTypeLabels';
@@ -22,6 +23,7 @@ const SET_TYPE_COLORS: Record<SetType, string> = {
 };
 
 export function SetTypeSelector({ value, onChange }: SetTypeSelectorProps) {
+  const c = useThemeColors();
   const handlePress = useCallback(() => {
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(

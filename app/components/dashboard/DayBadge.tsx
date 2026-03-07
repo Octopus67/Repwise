@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Skeleton } from '../common/Skeleton';
 import { Icon } from '../common/Icon';
 
@@ -11,6 +12,7 @@ interface DayBadgeProps {
 }
 
 export function DayBadge({ isTrainingDay, muscleGroups, isLoading }: DayBadgeProps) {
+  const c = useThemeColors();
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -22,11 +24,11 @@ export function DayBadge({ isTrainingDay, muscleGroups, isLoading }: DayBadgePro
   if (isTrainingDay) {
     return (
       <View style={styles.container}>
-        <Icon name="dumbbell" size={16} color={colors.accent.primary} />
-        <Text style={styles.trainingText}>Training Day</Text>
+        <Icon name="dumbbell" size={16} color={c.accent.primary} />
+        <Text style={[styles.trainingText, { color: c.accent.primary }]}>Training Day</Text>
         {muscleGroups.map((group) => (
-          <View key={group} style={styles.chip}>
-            <Text style={styles.chipText}>{group}</Text>
+          <View key={group} style={[styles.chip, { backgroundColor: c.accent.primaryMuted }]}>
+            <Text style={[styles.chipText, { color: c.accent.primary }]}>{group}</Text>
           </View>
         ))}
       </View>
@@ -35,8 +37,8 @@ export function DayBadge({ isTrainingDay, muscleGroups, isLoading }: DayBadgePro
 
   return (
     <View style={styles.container}>
-      <Icon name="moon" size={16} color={colors.text.muted} />
-      <Text style={styles.restText}>Rest Day</Text>
+      <Icon name="moon" size={16} color={c.text.muted} />
+      <Text style={[styles.restText, { color: c.text.muted }]}>Rest Day</Text>
     </View>
   );
 }

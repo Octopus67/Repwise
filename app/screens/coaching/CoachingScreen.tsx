@@ -5,6 +5,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -38,6 +39,7 @@ const openTelegramLink = () => {
 };
 
 export function CoachingScreen() {
+  const c = useThemeColors();
   const navigation = useNavigation();
   const [requests, setRequests] = useState<CoachingRequest[]>([]);
   const [sessions, setSessions] = useState<CoachingSession[]>([]);
@@ -90,28 +92,28 @@ export function CoachingScreen() {
     switch (status) {
       case 'approved':
       case 'completed':
-        return colors.semantic.positive;
+        return c.semantic.positive;
       case 'pending':
       case 'scheduled':
-        return colors.semantic.warning;
+        return c.semantic.warning;
       case 'rejected':
       case 'cancelled':
-        return colors.semantic.negative;
+        return c.semantic.negative;
       default:
-        return colors.text.muted;
+        return c.text.muted;
     }
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']} testID="coaching-screen">
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="coaching-screen">
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {navigation.canGoBack() && (
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} activeOpacity={0.7}>
-            <Text style={styles.backButtonText}>← Back</Text>
+            <Text style={[styles.backButtonText, { color: c.accent.primary }]}>← Back</Text>
           </TouchableOpacity>
         )}
         <View style={styles.header}>
-          <Text style={styles.title}>Coaching</Text>
+          <Text style={[styles.title, { color: c.text.primary }]}>Coaching</Text>
           <PremiumBadge size="md" />
         </View>
 
@@ -119,29 +121,29 @@ export function CoachingScreen() {
 
         {/* 1:1 Coaching */}
         <Card style={styles.coachingCard}>
-          <Text style={styles.coachingTitle}>1:1 Personal Coaching</Text>
-          <Text style={styles.coachingDesc}>
+          <Text style={[styles.coachingTitle, { color: c.text.primary }]}>1:1 Personal Coaching</Text>
+          <Text style={[styles.coachingDesc, { color: c.text.secondary }]}>
             Get personalized training and nutrition guidance from an experienced coach. Available for premium members.
           </Text>
           <TouchableOpacity
             onPress={openTelegramLink}
-            style={styles.dmButton}
+            style={[styles.dmButton, { backgroundColor: c.accent.primaryMuted }]}
             activeOpacity={0.8}
           >
-            <Icon name="chat" size={18} color={colors.accent.primary} />
-            <Text style={styles.dmButtonText}>Message on Telegram</Text>
+            <Icon name="chat" size={18} color={c.accent.primary} />
+            <Text style={[styles.dmButtonText, { color: c.accent.primary }]}>Message on Telegram</Text>
           </TouchableOpacity>
-          <Text style={styles.comingSoonNote}>Full in-app messaging — coming soon</Text>
+          <Text style={[styles.comingSoonNote, { color: c.text.muted }]}>Full in-app messaging — coming soon</Text>
         </Card>
 
         {/* Request form */}
-        <Text style={styles.sectionTitle}>New Request</Text>
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>New Request</Text>
         <Card>
-          <Text style={styles.label}>What are your coaching goals?</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>What are your coaching goals?</Text>
           <TextInput
-            style={styles.textArea}
+            style={[styles.textArea, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}
             placeholder="Describe your goals, current progress, and what you'd like help with..."
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
             multiline
             numberOfLines={4}
             value={goals}
@@ -153,7 +155,7 @@ export function CoachingScreen() {
         </Card>
 
         {/* Request history */}
-        <Text style={styles.sectionTitle}>Requests</Text>
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Requests</Text>
         {requests.length === 0 ? (
           <EmptyState icon={<Icon name="target" />} title="No coaching requests" description="Submit a request to get started" />
         ) : (
@@ -163,17 +165,17 @@ export function CoachingScreen() {
                 <Text style={[styles.status, { color: statusColor(req.status) }]}>
                   {req.status.toUpperCase()}
                 </Text>
-                <Text style={styles.date}>
+                <Text style={[styles.date, { color: c.text.muted }]}>
                   {new Date(req.created_at).toLocaleDateString()}
                 </Text>
               </View>
-              <Text style={styles.goalsText} numberOfLines={2}>{req.goals}</Text>
+              <Text style={[styles.goalsText, { color: c.text.secondary }]} numberOfLines={2}>{req.goals}</Text>
             </Card>
           ))
         )}
 
         {/* Session history */}
-        <Text style={styles.sectionTitle}>Sessions</Text>
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Sessions</Text>
         {sessions.length === 0 ? (
           <EmptyState icon={<Icon name="calendar" />} title="No coaching sessions" description="Sessions will appear here after your request is reviewed" />
         ) : (
@@ -183,14 +185,14 @@ export function CoachingScreen() {
                 <Text style={[styles.status, { color: statusColor(session.status) }]}>
                   {session.status.toUpperCase()}
                 </Text>
-                <Text style={styles.date}>
+                <Text style={[styles.date, { color: c.text.muted }]}>
                   {session.scheduled_at
                     ? new Date(session.scheduled_at).toLocaleDateString()
                     : '—'}
                 </Text>
               </View>
               {session.notes && (
-                <Text style={styles.notesText} numberOfLines={3}>{session.notes}</Text>
+                <Text style={[styles.notesText, { color: c.text.secondary }]} numberOfLines={3}>{session.notes}</Text>
               )}
             </Card>
           ))

@@ -4,6 +4,7 @@ import Animated, { useSharedValue, withTiming, withSequence, useAnimatedProps } 
 import { AnatomicalRegion, BodyOutline, VIEWBOX } from './anatomicalPaths';
 import { getHeatMapColor } from '../../utils/muscleVolumeLogic';
 import { colors } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 
 interface MuscleGroupVolume {
@@ -73,6 +74,7 @@ function AnimatedRegion({
 }
 
 export function BodySilhouette({ view, regions, outline, volumeMap, onRegionPress }: BodySilhouetteProps) {
+  const c = useThemeColors();
   const reduceMotion = useReduceMotion();
 
   return (
@@ -81,7 +83,7 @@ export function BodySilhouette({ view, regions, outline, volumeMap, onRegionPres
       <Path
         d={outline.path}
         fill="none"
-        stroke={colors.heatmap.silhouetteStroke}
+        stroke={c.heatmap.silhouetteStroke}
         strokeWidth={1}
       />
 
@@ -99,7 +101,7 @@ export function BodySilhouette({ view, regions, outline, volumeMap, onRegionPres
               key={region.id}
               region={region}
               color={color}
-              baseOpacity={colors.heatmap.regionOpacity}
+              baseOpacity={c.heatmap.regionOpacity}
               onPress={onRegionPress}
               reduceMotion={reduceMotion}
             />
@@ -114,7 +116,7 @@ export function BodySilhouette({ view, regions, outline, volumeMap, onRegionPres
             key={`border-${region.id}`}
             d={region.path}
             fill="none"
-            stroke={colors.heatmap.regionBorder}
+            stroke={c.heatmap.regionBorder}
             strokeWidth={0.8}
           />
         ))}

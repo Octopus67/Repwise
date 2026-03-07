@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { colors, typography, spacing, letterSpacing } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Button } from './Button';
 
 interface EmptyStateProps {
@@ -21,11 +22,12 @@ export function EmptyState({
   onAction,
   children,
 }: EmptyStateProps) {
+  const c = useThemeColors();
   return (
     <Animated.View entering={FadeIn.duration(300)} style={styles.container}>
       <View style={styles.iconWrap} accessibilityLabel={`${title} illustration`}>{icon}</View>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.description}>{description}</Text>
+      <Text style={[styles.title, { color: c.text.secondary }]}>{title}</Text>
+      <Text style={[styles.description, { color: c.text.muted }]}>{description}</Text>
       {children}
       {actionLabel ? (
         <Button

@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { colors, spacing, typography, radius } from '../../../theme/tokens';
+import { useThemeColors } from '../../../hooks/useThemeColors';
 import { useOnboardingStore } from '../../../store/onboardingSlice';
 import { Button } from '../../../components/common/Button';
 import { Icon } from '../../../components/common/Icon';
@@ -20,6 +21,7 @@ const CUISINES = [
 interface Props { onNext: () => void; onBack: () => void; onSkip: () => void; }
 
 export function FoodDNAStep({ onNext, onBack, onSkip }: Props) {
+  const c = useThemeColors();
   const store = useOnboardingStore();
   const { impact } = useHaptics();
 
@@ -36,10 +38,10 @@ export function FoodDNAStep({ onNext, onBack, onSkip }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-      <Text style={styles.heading}>Your Food DNA</Text>
-      <Text style={styles.subheading}>Help us personalize your food search from day one</Text>
+      <Text style={[styles.heading, { color: c.text.primary }]}>Your Food DNA</Text>
+      <Text style={[styles.subheading, { color: c.text.secondary }]}>Help us personalize your food search from day one</Text>
 
-      <Text style={styles.sectionLabel}>Dietary Identity</Text>
+      <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Dietary Identity</Text>
       <View style={styles.chipRow}>
         {DIETS.map((d) => (
           <TouchableOpacity
@@ -53,7 +55,7 @@ export function FoodDNAStep({ onNext, onBack, onSkip }: Props) {
         ))}
       </View>
 
-      <Text style={styles.sectionLabel}>Allergies / Intolerances</Text>
+      <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Allergies / Intolerances</Text>
       <View style={styles.chipRow}>
         {ALLERGIES.map((a) => (
           <TouchableOpacity
@@ -67,24 +69,24 @@ export function FoodDNAStep({ onNext, onBack, onSkip }: Props) {
         ))}
       </View>
 
-      <Text style={styles.sectionLabel}>Cuisines You Eat Most</Text>
+      <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Cuisines You Eat Most</Text>
       <View style={styles.chipRow}>
-        {CUISINES.map((c) => (
+        {CUISINES.map((cuisine) => (
           <TouchableOpacity
-            key={c.value}
-            style={[styles.chip, styles.cuisineChip, store.cuisinePreferences.includes(c.value) && styles.chipActive]}
-            onPress={() => toggleChip(store.cuisinePreferences, c.value, 'cuisinePreferences')}
+            key={cuisine.value}
+            style={[styles.chip, styles.cuisineChip, store.cuisinePreferences.includes(cuisine.value) && styles.chipActive]}
+            onPress={() => toggleChip(store.cuisinePreferences, cuisine.value, 'cuisinePreferences')}
             activeOpacity={0.7}
           >
-            <View style={styles.cuisineBadge}>
-              <Text style={styles.cuisineBadgeText}>{c.code}</Text>
+            <View style={[styles.cuisineBadge, { backgroundColor: c.accent.primaryMuted }]}>
+              <Text style={[styles.cuisineBadgeText, { color: c.accent.primary }]}>{cuisine.code}</Text>
             </View>
-            <Text style={[styles.chipText, store.cuisinePreferences.includes(c.value) && styles.chipTextActive]}>{c.label}</Text>
+            <Text style={[styles.chipText, store.cuisinePreferences.includes(cuisine.value) && styles.chipTextActive]}>{cuisine.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <Text style={styles.sectionLabel}>Meals Per Day</Text>
+      <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Meals Per Day</Text>
       <View style={styles.stepperRow}>
         {[2, 3, 4, 5, 6].map((n) => (
           <TouchableOpacity
@@ -100,7 +102,7 @@ export function FoodDNAStep({ onNext, onBack, onSkip }: Props) {
 
       <Button title="Continue" onPress={onNext} style={styles.btn} />
       <TouchableOpacity onPress={handleSkip} style={styles.skipLink}>
-        <Text style={styles.skipText}>Set this up later</Text>
+        <Text style={[styles.skipText, { color: c.text.muted }]}>Set this up later</Text>
       </TouchableOpacity>
     </ScrollView>
   );

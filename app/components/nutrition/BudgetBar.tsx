@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import {
   computeRemaining,
   computeProgressRatio,
@@ -14,6 +15,7 @@ interface BudgetBarProps {
 }
 
 export function BudgetBar({ consumed, targets }: BudgetBarProps) {
+  const c = useThemeColors();
   const safeConsumed: MacroValues = {
     calories: Number.isFinite(consumed?.calories) ? consumed.calories : 0,
     protein_g: Number.isFinite(consumed?.protein_g) ? consumed.protein_g : 0,
@@ -24,8 +26,8 @@ export function BudgetBar({ consumed, targets }: BudgetBarProps) {
   // No targets set
   if (!targets || targets.calories <= 0) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.noTargetsText}>Set targets in profile</Text>
+      <View style={[styles.container, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
+        <Text style={[styles.noTargetsText, { color: c.text.muted }]}>Set targets in profile</Text>
       </View>
     );
   }
@@ -33,28 +35,28 @@ export function BudgetBar({ consumed, targets }: BudgetBarProps) {
   const remaining = computeRemaining(targets, safeConsumed);
   const progressRatio = computeProgressRatio(safeConsumed.calories, targets.calories);
   const isOver = remaining.calories < 0;
-  const calorieColor = getOverTargetColor(safeConsumed.calories, targets.calories, colors.text.primary);
+  const calorieColor = getOverTargetColor(safeConsumed.calories, targets.calories, c.text.primary);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
       {/* Remaining calories */}
       <View style={styles.calorieRow}>
         <Text style={[styles.calorieNumber, { color: calorieColor }]}>
           {Math.round(remaining.calories)}
         </Text>
-        <Text style={styles.calorieLabel}>
+        <Text style={[styles.calorieLabel, { color: c.text.secondary }]}>
           {isOver ? 'kcal over' : 'kcal remaining'}
         </Text>
       </View>
 
       {/* Progress bar */}
-      <View style={styles.progressTrack}>
+      <View style={[styles.progressTrack, { backgroundColor: c.bg.surfaceRaised }]}>
         <View
           style={[
             styles.progressFill,
             {
               width: `${progressRatio * 100}%`,
-              backgroundColor: isOver ? colors.semantic.overTarget : colors.accent.primary,
+              backgroundColor: isOver ? c.semantic.overTarget : c.accent.primary,
             },
           ]}
         />
@@ -80,7 +82,7 @@ function MacroChip({ label, value, unit, consumed, target }: {
   const chipColor = getOverTargetColor(consumed, target, colors.text.secondary);
   return (
     <View style={styles.macroChip}>
-      <Text style={styles.macroLabel}>{label}</Text>
+      <Text style={[styles.macroLabel, { color: colors.text.muted }]}>{label}</Text>
       <Text style={[styles.macroValue, { color: chipColor }]}>
         {Math.round(value)}{unit}
       </Text>

@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from './Icon';
 
 interface EditableFieldProps {
@@ -24,6 +25,7 @@ export function EditableField({
   onSave,
   editable = true,
 }: EditableFieldProps) {
+  const c = useThemeColors();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const [saving, setSaving] = useState(false);
@@ -63,11 +65,11 @@ export function EditableField({
           value={draft}
           onChangeText={setDraft}
           autoFocus
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
         />
         <View style={styles.actions}>
           {saving ? (
-            <ActivityIndicator color={colors.accent.primary} size="small" />
+            <ActivityIndicator color={c.accent.primary} size="small" />
           ) : (
             <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.7}>
               <Text style={styles.saveBtnText}>Save</Text>
@@ -90,7 +92,7 @@ export function EditableField({
         <Text style={styles.label}>{label}</Text>
         <View style={styles.viewRow}>
           <Text style={styles.value} numberOfLines={1}>{value || '—'}</Text>
-          <Icon name="lock" size={14} color={colors.text.muted} />
+          <Icon name="lock" size={14} color={c.text.muted} />
         </View>
       </View>
     );
@@ -102,7 +104,7 @@ export function EditableField({
       <Text style={styles.label}>{label}</Text>
       <View style={styles.viewRow}>
         <Text style={styles.value} numberOfLines={1}>{value || '—'}</Text>
-        <Icon name="edit" size={14} color={colors.text.muted} />
+        <Icon name="edit" size={14} color={c.text.muted} />
       </View>
     </TouchableOpacity>
   );

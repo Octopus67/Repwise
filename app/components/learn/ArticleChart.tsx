@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Rect, Text as SvgText, Line } from 'react-native-svg';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -344,13 +345,14 @@ function ComparisonChart({ data }: { data: ComparisonDatum[] }) {
 // ─── Main component ──────────────────────────────────────────────────────────
 
 export function ArticleChart({ chartId }: ArticleChartProps) {
+  const c = useThemeColors();
   const config = CHART_REGISTRY[chartId];
   if (!config) return null;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{config.title}</Text>
-      {config.subtitle && <Text style={styles.subtitle}>{config.subtitle}</Text>}
+    <View style={[styles.container, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
+      <Text style={[styles.title, { color: c.text.primary }]}>{config.title}</Text>
+      {config.subtitle && <Text style={[styles.subtitle, { color: c.text.muted }]}>{config.subtitle}</Text>}
 
       <View style={styles.chartArea}>
         {config.type === 'bar' && (

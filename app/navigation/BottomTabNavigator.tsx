@@ -6,6 +6,7 @@ import Svg, { Path, Circle, Rect, Line } from 'react-native-svg';
 import { colors, typography, spacing, motion } from '../theme/tokens';
 import { triggerHaptic } from '../hooks/useHaptics';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 // Screen imports
 import { DashboardScreen } from '../screens/dashboard/DashboardScreen';
@@ -353,19 +354,20 @@ function TabSvgIcon({ name, color }: { name: keyof BottomTabParamList; color: st
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
 export function BottomTabNavigator() {
+  const themeColors = useThemeColors();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: colors.accent.primary,
-        tabBarInactiveTintColor: colors.text.muted,
+        tabBarStyle: [styles.tabBar, { backgroundColor: themeColors.bg.surface, borderTopColor: themeColors.border.subtle }],
+        tabBarActiveTintColor: themeColors.accent.primary,
+        tabBarInactiveTintColor: themeColors.text.muted,
         tabBarLabelStyle: styles.tabLabel,
         tabBarIcon: ({ focused }) => (
-          <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+          <View style={[styles.iconWrap, focused && { backgroundColor: themeColors.accent.primaryMuted }]}>
             <TabSvgIcon
               name={route.name as keyof BottomTabParamList}
-              color={focused ? colors.accent.primary : colors.text.muted}
+              color={focused ? themeColors.accent.primary : themeColors.text.muted}
             />
           </View>
         ),

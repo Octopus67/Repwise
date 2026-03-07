@@ -12,6 +12,7 @@ import {
 import { ModalContainer } from '../common/ModalContainer';
 import { AddNutritionModal } from '../modals/AddNutritionModal';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { useStore } from '../../store';
 import { Icon } from '../common/Icon';
 import api from '../../services/api';
@@ -33,6 +34,7 @@ interface Props {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function MealBuilder({ visible, onClose, onSuccess }: Props) {
+  const c = useThemeColors();
   const selectedDate = useStore((s) => s.selectedDate);
   const [state, dispatch] = useReducer(mealBuilderReducer, undefined, createInitialState);
   const [showFoodSearch, setShowFoodSearch] = useState(false);
@@ -138,30 +140,30 @@ export function MealBuilder({ visible, onClose, onSuccess }: Props) {
 
   const renderItem = useCallback(
     ({ item }: { item: MealBuilderItem }) => (
-      <View style={styles.itemRow}>
+      <View style={[styles.itemRow, { borderBottomColor: c.border.default }]}>
         <View style={styles.itemInfo}>
-          <Text style={styles.itemName} numberOfLines={1}>
+          <Text style={[styles.itemName, { color: c.text.primary }]} numberOfLines={1}>
             {item.foodName}
           </Text>
-          <Text style={styles.itemMacros}>
+          <Text style={[styles.itemMacros, { color: c.text.secondary }]}>
             {Math.round(item.scaledMacros.calories)} cal · {Math.round(item.scaledMacros.protein_g)}P ·{' '}
             {Math.round(item.scaledMacros.carbs_g)}C · {Math.round(item.scaledMacros.fat_g)}F
           </Text>
         </View>
         <View style={styles.itemActions}>
           <TextInput
-            style={styles.servingInput}
+            style={[styles.servingInput, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
             value={String(item.servingMultiplier)}
             onChangeText={(text) => handleUpdateServing(item.tempId, text)}
             keyboardType="numeric"
             selectTextOnFocus
           />
-          <Text style={styles.servingLabel}>×</Text>
+          <Text style={[styles.servingLabel, { color: c.text.muted }]}>×</Text>
           <TouchableOpacity
             onPress={() => handleRemoveItem(item.tempId)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Text style={styles.removeBtn}>✕</Text>
+            <Text style={[styles.removeBtn, { color: c.semantic.negative }]}>✕</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -176,26 +178,26 @@ export function MealBuilder({ visible, onClose, onSuccess }: Props) {
       <ModalContainer visible={visible} onClose={handleClose} title="Build Meal">
         {/* Meal Name Input */}
         <TextInput
-          style={styles.mealNameInput}
+          style={[styles.mealNameInput, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
           value={state.mealName}
           onChangeText={(text) => dispatch({ type: 'SET_MEAL_NAME', payload: text })}
           placeholder="Meal name"
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
         />
 
         {/* Running Totals Bar */}
-        <View style={styles.totalsBar}>
+        <View style={[styles.totalsBar, { backgroundColor: c.bg.surfaceRaised }]}>
           <View style={styles.totalItemRow}>
-            <Icon name="flame" size={14} color={colors.text.secondary} />
-            <Text style={styles.totalItem}> {Math.round(runningTotals.calories)}</Text>
+            <Icon name="flame" size={14} color={c.text.secondary} />
+            <Text style={[styles.totalItem, { color: c.text.primary }]}> {Math.round(runningTotals.calories)}</Text>
           </View>
-          <Text style={[styles.totalItem, { color: colors.macro.protein }]}>
+          <Text style={[styles.totalItem, { color: c.macro.protein }]}>
             P {Math.round(runningTotals.protein_g)}g
           </Text>
-          <Text style={[styles.totalItem, { color: colors.macro.carbs }]}>
+          <Text style={[styles.totalItem, { color: c.macro.carbs }]}>
             C {Math.round(runningTotals.carbs_g)}g
           </Text>
-          <Text style={[styles.totalItem, { color: colors.macro.fat ?? colors.text.secondary }]}>
+          <Text style={[styles.totalItem, { color: c.macro.fat ?? c.text.secondary }]}>
             F {Math.round(runningTotals.fat_g)}g
           </Text>
         </View>
@@ -203,7 +205,7 @@ export function MealBuilder({ visible, onClose, onSuccess }: Props) {
         {/* Meal Item List */}
         {state.items.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No items yet. Tap "Add Item" to start building your meal.</Text>
+            <Text style={[styles.emptyText, { color: c.text.muted }]}>No items yet. Tap "Add Item" to start building your meal.</Text>
           </View>
         ) : (
           <FlatList
@@ -216,11 +218,11 @@ export function MealBuilder({ visible, onClose, onSuccess }: Props) {
 
         {/* Add Item Button */}
         <TouchableOpacity
-          style={styles.addItemBtn}
+          style={[styles.addItemBtn, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
           onPress={() => setShowFoodSearch(true)}
           activeOpacity={0.7}
         >
-          <Text style={styles.addItemBtnText}>+ Add Item</Text>
+          <Text style={[styles.addItemBtnText, { color: c.accent.primary }]}>+ Add Item</Text>
         </TouchableOpacity>
 
         {/* Action Buttons */}
@@ -232,9 +234,9 @@ export function MealBuilder({ visible, onClose, onSuccess }: Props) {
             activeOpacity={0.7}
           >
             {saving ? (
-              <ActivityIndicator color={colors.text.primary} />
+              <ActivityIndicator color={c.text.primary} />
             ) : (
-              <Text style={styles.saveBtnText}>Save Meal</Text>
+              <Text style={[styles.saveBtnText, { color: c.text.primary }]}>Save Meal</Text>
             )}
           </TouchableOpacity>
 
@@ -245,9 +247,9 @@ export function MealBuilder({ visible, onClose, onSuccess }: Props) {
             activeOpacity={0.7}
           >
             {savingFavorite ? (
-              <ActivityIndicator color={colors.text.primary} />
+              <ActivityIndicator color={c.text.primary} />
             ) : (
-              <Text style={styles.favBtnText}>⭐ Save as Favorite</Text>
+              <Text style={[styles.favBtnText, { color: c.text.primary }]}>⭐ Save as Favorite</Text>
             )}
           </TouchableOpacity>
         </View>

@@ -5,6 +5,7 @@ import Animated, {
   ZoomIn,
 } from 'react-native-reanimated';
 import { colors, spacing, typography, radius, letterSpacing as ls } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Button } from '../common/Button';
 import { Icon } from '../common/Icon';
 
@@ -27,6 +28,7 @@ export function CelebrationModal({
   visible,
   onDismiss,
 }: CelebrationModalProps) {
+  const c = useThemeColors();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Reset index when modal opens so it always starts from the first achievement
@@ -55,18 +57,18 @@ export function CelebrationModal({
       <Pressable style={styles.backdrop} onPress={onDismiss}>
         <Animated.View
           entering={ZoomIn.duration(300)}
-          style={styles.card}
+          style={[styles.card, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
         >
           <Pressable onPress={(e) => e.stopPropagation()}>
             <Animated.View entering={FadeIn.delay(100)} style={styles.content}>
-              <View style={styles.iconCircle}>
-                <Icon name="trophy" size={32} color={colors.accent.primary} />
+              <View style={[styles.iconCircle, { backgroundColor: c.accent.primaryMuted }]}>
+                <Icon name="trophy" size={32} color={c.accent.primary} />
               </View>
-              <Text style={styles.congrats}>Achievement Unlocked!</Text>
-              <Text style={styles.title}>{current.title}</Text>
-              <Text style={styles.description}>{current.description}</Text>
+              <Text style={[styles.congrats, { color: c.accent.primary }]}>Achievement Unlocked!</Text>
+              <Text style={[styles.title, { color: c.text.primary }]}>{current.title}</Text>
+              <Text style={[styles.description, { color: c.text.secondary }]}>{current.description}</Text>
               {achievements.length > 1 && (
-                <Text style={styles.counter}>
+                <Text style={[styles.counter, { color: c.text.muted }]}>
                   {currentIndex + 1} of {achievements.length}
                 </Text>
               )}

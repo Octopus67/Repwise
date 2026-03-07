@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { colors, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { formatWeight } from '../../utils/unitConversion';
 import { useStore } from '../../store';
 import { useSkeletonPulse } from '../../hooks/useSkeletonPulse';
@@ -19,6 +20,7 @@ interface PreviousPerformanceData {
 }
 
 export function PreviousPerformance({ exerciseName }: PreviousPerformanceProps) {
+  const c = useThemeColors();
   const unitSystem = useStore((s) => s.unitSystem);
   const [data, setData] = useState<PreviousPerformanceData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,7 +65,7 @@ export function PreviousPerformance({ exerciseName }: PreviousPerformanceProps) 
   if (!data) {
     return (
       <View style={styles.container}>
-        <Text style={styles.firstTime}>First time</Text>
+        <Text style={[styles.firstTime, { color: c.text.muted }]}>First time</Text>
       </View>
     );
   }
@@ -72,7 +74,7 @@ export function PreviousPerformance({ exerciseName }: PreviousPerformanceProps) 
 
   return (
     <View style={styles.container}>
-      <Text style={styles.previousText}>{formatted}</Text>
+      <Text style={[styles.previousText, { color: c.text.secondary }]}>{formatted}</Text>
     </View>
   );
 }

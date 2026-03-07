@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, useAnimatedReaction, withTiming, withDelay, Easing, runOnJS, type SharedValue } from 'react-native-reanimated';
 import { colors, spacing, typography, radius, motion } from '../../../theme/tokens';
+import { useThemeColors } from '../../../hooks/useThemeColors';
 import { Button } from '../../../components/common/Button';
 import { useOnboardingStore, computeAge } from '../../../store/onboardingSlice';
 import { computeTDEEBreakdown } from '../../../utils/onboardingCalculations';
@@ -37,7 +38,7 @@ function AnimatedTDEEText({ value }: { value: SharedValue<number> }) {
     [value],
   );
   return (
-    <Text style={styles.totalValue}>~{display.toLocaleString()} kcal/day</Text>
+    <Text style={[styles.totalValue, { color: colors.text.primary }]}>~{display.toLocaleString()} kcal/day</Text>
   );
 }
 
@@ -56,6 +57,7 @@ function AnimatedBar({ widthPct, color, delay }: { widthPct: number; color: stri
 }
 
 export function TDEERevealStep({ onNext }: Props) {
+  const c = useThemeColors();
   const store = useOnboardingStore();
   const reduceMotion = useReduceMotion();
   const [showOverride, setShowOverride] = useState(false);
@@ -108,15 +110,15 @@ export function TDEERevealStep({ onNext }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
       <Animated.View style={headingAnim}>
-        <Text style={styles.heading}>Your Daily Energy</Text>
-        <Text style={styles.subheading}>Here's how your body uses calories each day</Text>
+        <Text style={[styles.heading, { color: c.text.primary }]}>Your Daily Energy</Text>
+        <Text style={[styles.subheading, { color: c.text.secondary }]}>Here's how your body uses calories each day</Text>
       </Animated.View>
 
       {/* Total TDEE */}
       <Animated.View style={[styles.totalCard, totalCardAnim]}>
-        <Text style={styles.totalLabel}>Your body burns</Text>
+        <Text style={[styles.totalLabel, { color: c.text.secondary }]}>Your body burns</Text>
         {reduceMotion ? (
-          <Text style={styles.totalValue}>~{effectiveTDEE.toLocaleString()} kcal/day</Text>
+          <Text style={[styles.totalValue, { color: c.text.primary }]}>~{effectiveTDEE.toLocaleString()} kcal/day</Text>
         ) : (
           <AnimatedTDEEText value={animatedTDEE} />
         )}
@@ -129,9 +131,9 @@ export function TDEERevealStep({ onNext }: Props) {
           return (
             <View key={key} style={styles.barRow}>
               <View style={styles.barLabelCol}>
-                <Text style={styles.barLabel}>{BAR_LABELS[key].label}</Text>
+                <Text style={[styles.barLabel, { color: c.text.secondary }]}>{BAR_LABELS[key].label}</Text>
               </View>
-              <View style={styles.barTrack}>
+              <View style={[styles.barTrack, { backgroundColor: c.bg.surface }]}>
                 {reduceMotion ? (
                   <View style={[styles.barFill, { width: `${widthPct}%`, backgroundColor: BAR_COLORS[key] }]} />
                 ) : (
@@ -139,8 +141,8 @@ export function TDEERevealStep({ onNext }: Props) {
                 )}
               </View>
               <View style={styles.barValueCol}>
-                <Text style={styles.barValue}>{value.toLocaleString()}</Text>
-                <Text style={styles.barDesc}>{BAR_LABELS[key].desc}</Text>
+                <Text style={[styles.barValue, { color: c.text.primary }]}>{value.toLocaleString()}</Text>
+                <Text style={[styles.barDesc, { color: c.text.muted }]}>{BAR_LABELS[key].desc}</Text>
               </View>
             </View>
           );
@@ -150,19 +152,19 @@ export function TDEERevealStep({ onNext }: Props) {
       {/* Override link */}
       {!showOverride ? (
         <TouchableOpacity onPress={() => setShowOverride(true)} style={styles.overrideLink} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Text style={styles.overrideLinkText}>I already know my TDEE</Text>
+          <Text style={[styles.overrideLinkText, { color: c.accent.primary }]}>I already know my TDEE</Text>
         </TouchableOpacity>
       ) : (
         <View style={styles.overrideContainer}>
-          <Text style={styles.overrideLabel}>Enter your known TDEE (kcal/day)</Text>
+          <Text style={[styles.overrideLabel, { color: c.text.secondary }]}>Enter your known TDEE (kcal/day)</Text>
           <TextInput
-            style={styles.overrideInput}
+            style={[styles.overrideInput, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
             value={overrideText}
             onChangeText={setOverrideText}
             onBlur={handleOverrideSubmit}
             keyboardType="numeric"
             placeholder="e.g. 2500"
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
             returnKeyType="done"
             onSubmitEditing={handleOverrideSubmit}
             accessibilityLabel="TDEE override"
@@ -176,14 +178,14 @@ export function TDEERevealStep({ onNext }: Props) {
                 setShowOverride(false);
               }}
             >
-              <Text style={styles.clearOverride}>Clear override</Text>
+              <Text style={[styles.clearOverride, { color: c.semantic.negative }]}>Clear override</Text>
             </TouchableOpacity>
           )}
         </View>
       )}
 
       {/* Educational note */}
-      <Text style={styles.note}>
+      <Text style={[styles.note, { color: c.text.muted }]}>
         This will get more accurate as you log food and weight
       </Text>
 

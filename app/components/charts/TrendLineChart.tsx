@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableWithoutFeedback } from 'react-native';
 import Svg, { Line, Polyline, Circle, Text as SvgText } from 'react-native-svg';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 const CHART_WIDTH = Dimensions.get('window').width - spacing[4] * 2 - spacing[4] * 2; // screen padding + card padding
 const CHART_HEIGHT = 160;
@@ -36,6 +37,7 @@ export function TrendLineChart({
   secondaryColor,
   primaryAsDots,
 }: TrendLineChartProps) {
+  const c = useThemeColors();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const { points, yMin, yMax, xLabels, yLabels, plotWidth, plotHeight } = useMemo(() => {
@@ -107,8 +109,8 @@ export function TrendLineChart({
 
   if (data.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>{emptyMessage || 'No data for this period'}</Text>
+      <View style={[styles.emptyContainer]}>
+        <Text style={[styles.emptyText, { color: c.text.muted }]}>{emptyMessage || 'No data for this period'}</Text>
       </View>
     );
   }
@@ -148,7 +150,7 @@ export function TrendLineChart({
               x={PADDING.left - 6}
               y={tick.y + 4}
               textAnchor="end"
-              fill={colors.text.muted}
+              fill={c.text.muted}
               fontSize={10}
             >
               {tick.label}
@@ -163,7 +165,7 @@ export function TrendLineChart({
               y1={tick.y}
               x2={PADDING.left + plotWidth}
               y2={tick.y}
-              stroke={colors.border.subtle}
+              stroke={c.border.subtle}
               strokeWidth={1}
             />
           ))}
@@ -175,7 +177,7 @@ export function TrendLineChart({
               y1={targetY}
               x2={PADDING.left + plotWidth}
               y2={targetY}
-              stroke={colors.semantic.warning}
+              stroke={c.semantic.warning}
               strokeWidth={1.5}
               strokeDasharray="6,4"
             />
@@ -234,7 +236,7 @@ export function TrendLineChart({
           {selectedIndex != null && (
             <>
               <Circle cx={selectedX} cy={selectedY} r={5} fill={color} />
-              <Circle cx={selectedX} cy={selectedY} r={3} fill={colors.bg.surface} />
+              <Circle cx={selectedX} cy={selectedY} r={3} fill={c.bg.surface} />
             </>
           )}
 
@@ -245,7 +247,7 @@ export function TrendLineChart({
               x={tick.x}
               y={CHART_HEIGHT - 4}
               textAnchor="middle"
-              fill={colors.text.muted}
+              fill={c.text.muted}
               fontSize={10}
             >
               {tick.label}
@@ -257,7 +259,7 @@ export function TrendLineChart({
       {/* Tooltip */}
       {selectedPoint && (
         <View style={styles.tooltip}>
-          <Text style={styles.tooltipDate}>
+          <Text style={[styles.tooltipDate, { color: c.text.secondary }]}>
             {new Date(selectedPoint.date + 'T00:00:00').toLocaleDateString()}
           </Text>
           <Text style={[styles.tooltipValue, { color }]}>

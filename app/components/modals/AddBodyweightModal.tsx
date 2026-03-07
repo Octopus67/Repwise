@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { ModalContainer } from '../common/ModalContainer';
 import { useStore } from '../../store';
 import { kgToLbs, lbsToKg, parseWeightToKg } from '../../utils/unitConversion';
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export function AddBodyweightModal({ visible, onClose, onSuccess }: Props) {
+  const c = useThemeColors();
   const unitSystem = useStore((s) => s.unitSystem);
   const selectedDate = useStore((s) => s.selectedDate);
   const [weight, setWeight] = useState('');
@@ -82,7 +84,7 @@ export function AddBodyweightModal({ visible, onClose, onSuccess }: Props) {
       <View>
       <View style={styles.field}>
         <View style={styles.labelRow}>
-          <Text style={styles.label}>{`Weight (${unit})`}</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>{`Weight (${unit})`}</Text>
           <SegmentedControl
             options={[
               { label: 'kg', value: 'kg' },
@@ -93,12 +95,12 @@ export function AddBodyweightModal({ visible, onClose, onSuccess }: Props) {
           />
         </View>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
           value={weight}
           onChangeText={setWeight}
           keyboardType="numeric"
           placeholder={unit === 'kg' ? 'e.g. 82.5' : 'e.g. 181.9'}
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
           testID="bodyweight-weight-input"
         />
       </View>
@@ -111,9 +113,9 @@ export function AddBodyweightModal({ visible, onClose, onSuccess }: Props) {
         testID="bodyweight-submit-button"
       >
         {loading ? (
-          <ActivityIndicator color={colors.text.primary} />
+          <ActivityIndicator color={c.text.primary} />
         ) : (
-          <Text style={styles.submitText}>Save</Text>
+          <Text style={[styles.submitText, { color: c.text.primary }]}>Save</Text>
         )}
       </TouchableOpacity>
       </View>

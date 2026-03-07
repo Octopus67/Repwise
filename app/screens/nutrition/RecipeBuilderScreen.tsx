@@ -24,6 +24,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import api from '../../services/api';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -100,6 +101,7 @@ function nextTempId(): string {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
+  const c = useThemeColors();
   const [step, setStep] = useState<Step>('NAMING');
 
   // NAMING state
@@ -266,15 +268,15 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: c.bg.base }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: c.bg.surfaceRaised }]}>
         <TouchableOpacity onPress={handleClose} activeOpacity={0.7}>
-          <Ionicons name="close" size={24} color={colors.text.primary} />
+          <Ionicons name="close" size={24} color={c.text.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
+        <Text style={[styles.headerTitle, { color: c.text.primary }]}>
           {step === 'NAMING' && 'New Recipe'}
           {step === 'ADDING_INGREDIENTS' && 'Add Ingredients'}
           {step === 'REVIEW' && 'Review Recipe'}
@@ -286,35 +288,35 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
       {/* Step: NAMING */}
       {step === 'NAMING' && (
         <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={styles.label}>Recipe Name</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>Recipe Name</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised }]}
             value={recipeName}
             onChangeText={setRecipeName}
             placeholder="e.g. Chicken Fried Rice"
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
             maxLength={255}
           />
 
-          <Text style={styles.label}>Description (optional)</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>Description (optional)</Text>
           <TextInput
             style={[styles.input, styles.multiline]}
             value={description}
             onChangeText={setDescription}
             placeholder="Notes about this recipe"
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
             multiline
             numberOfLines={3}
           />
 
-          <Text style={styles.label}>Total Servings</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>Total Servings</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised }]}
             value={totalServings}
             onChangeText={setTotalServings}
             keyboardType="numeric"
             placeholder="1"
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
           />
 
           <TouchableOpacity
@@ -323,7 +325,7 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
             disabled={!recipeName.trim()}
             activeOpacity={0.7}
           >
-            <Text style={styles.primaryBtnText}>Next: Add Ingredients</Text>
+            <Text style={[styles.primaryBtnText, { color: c.text.primary }]}>Next: Add Ingredients</Text>
           </TouchableOpacity>
         </ScrollView>
       )}
@@ -332,9 +334,9 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
       {step === 'ADDING_INGREDIENTS' && (
         <View style={styles.content}>
           {/* Running totals bar */}
-          <View style={styles.totalsBar}>
-            <Text style={styles.totalsLabel}>Per Serving:</Text>
-            <Text style={styles.totalsValue}>
+          <View style={[styles.totalsBar, { backgroundColor: c.bg.surfaceRaised }]}>
+            <Text style={[styles.totalsLabel, { color: c.text.secondary }]}>Per Serving:</Text>
+            <Text style={[styles.totalsValue, { color: c.text.primary }]}>
               {Math.round(perServing.calories)} kcal · {Math.round(perServing.protein_g)}g P ·{' '}
               {Math.round(perServing.carbs_g)}g C · {Math.round(perServing.fat_g)}g F
             </Text>
@@ -347,44 +349,44 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
               value={searchQuery}
               onChangeText={handleSearchChange}
               placeholder="Search foods..."
-              placeholderTextColor={colors.text.muted}
+              placeholderTextColor={c.text.muted}
             />
             <View style={styles.qtyInputRow}>
               <TextInput
-                style={styles.qtyInput}
+                style={[styles.qtyInput, { color: c.text.primary, backgroundColor: c.bg.base }]}
                 value={quantityInput}
                 onChangeText={setQuantityInput}
                 keyboardType="numeric"
                 placeholder="100"
-                placeholderTextColor={colors.text.muted}
+                placeholderTextColor={c.text.muted}
               />
-              <Text style={styles.qtyUnit}>g</Text>
+              <Text style={[styles.qtyUnit, { color: c.text.muted }]}>g</Text>
             </View>
           </View>
 
           {/* Search results */}
           {searchLoading && (
-            <ActivityIndicator color={colors.accent.primary} style={{ marginVertical: spacing[2] }} />
+            <ActivityIndicator color={c.accent.primary} style={{ marginVertical: spacing[2] }} />
           )}
           {searchResults.length > 0 && (
             <View style={styles.searchResultsContainer}>
               <FlatList
                 data={searchResults.slice(0, 10)}
                 keyExtractor={(item) => item.id}
-                style={styles.searchResults}
+                style={[styles.searchResults, { backgroundColor: c.bg.surfaceRaised }]}
                 renderItem={({ item }) => (
                   <TouchableOpacity
-                    style={styles.searchResultRow}
+                    style={[styles.searchResultRow, { borderBottomColor: c.bg.base }]}
                     onPress={() => handleAddIngredient(item)}
                     activeOpacity={0.7}
                   >
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.foodName} numberOfLines={1}>{item.name}</Text>
-                      <Text style={styles.foodMacros}>
+                      <Text style={[styles.foodName, { color: c.text.primary }]} numberOfLines={1}>{item.name}</Text>
+                      <Text style={[styles.foodMacros, { color: c.text.muted }]}>
                         {Math.round(item.calories)} kcal · {item.serving_size}{item.serving_unit}
                       </Text>
                     </View>
-                    <Ionicons name="add-circle" size={24} color={colors.accent.primary} />
+                    <Ionicons name="add-circle" size={24} color={c.accent.primary} />
                   </TouchableOpacity>
                 )}
               />
@@ -392,7 +394,7 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
           )}
 
           {/* Current ingredients list */}
-          <Text style={styles.sectionTitle}>
+          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>
             Ingredients ({ingredients.length})
           </Text>
           <FlatList
@@ -400,38 +402,38 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
             keyExtractor={(item) => item.tempId}
             style={{ flex: 1 }}
             renderItem={({ item }) => (
-              <View style={styles.ingredientRow}>
+              <View style={[styles.ingredientRow, { borderBottomColor: c.bg.surfaceRaised }]}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.foodName} numberOfLines={1}>{item.foodItem.name}</Text>
-                  <Text style={styles.foodMacros}>
+                  <Text style={[styles.foodName, { color: c.text.primary }]} numberOfLines={1}>{item.foodItem.name}</Text>
+                  <Text style={[styles.foodMacros, { color: c.text.muted }]}>
                     {Math.round(item.foodItem.calories * (item.quantity / item.foodItem.serving_size))} kcal
                   </Text>
                 </View>
                 <TextInput
-                  style={styles.qtyInputSmall}
+                  style={[styles.qtyInputSmall, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised }]}
                   defaultValue={String(item.quantity)}
                   onEndEditing={(e) => handleUpdateQuantity(item.tempId, e.nativeEvent.text)}
                   keyboardType="numeric"
                 />
-                <Text style={styles.qtyUnit}>g</Text>
+                <Text style={[styles.qtyUnit, { color: c.text.muted }]}>g</Text>
                 <TouchableOpacity onPress={() => handleRemoveIngredient(item.tempId)}>
-                  <Ionicons name="trash-outline" size={20} color={colors.semantic.negative} />
+                  <Ionicons name="trash-outline" size={20} color={c.semantic.negative} />
                 </TouchableOpacity>
               </View>
             )}
             ListEmptyComponent={
-              <Text style={styles.emptyText}>Search and add ingredients above.</Text>
+              <Text style={[styles.emptyText, { color: c.text.muted }]}>Search and add ingredients above.</Text>
             }
           />
 
           {/* Navigation buttons */}
           <View style={styles.navRow}>
             <TouchableOpacity
-              style={styles.secondaryBtn}
+              style={[styles.secondaryBtn, { backgroundColor: c.bg.surfaceRaised }]}
               onPress={() => setStep('NAMING')}
               activeOpacity={0.7}
             >
-              <Text style={styles.secondaryBtnText}>Back</Text>
+              <Text style={[styles.secondaryBtnText, { color: c.text.secondary }]}>Back</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.primaryBtn, ingredients.length === 0 && styles.btnDisabled]}
@@ -439,7 +441,7 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
               disabled={ingredients.length === 0}
               activeOpacity={0.7}
             >
-              <Text style={styles.primaryBtnText}>Review</Text>
+              <Text style={[styles.primaryBtnText, { color: c.text.primary }]}>Review</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -448,63 +450,63 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
       {/* Step: REVIEW */}
       {step === 'REVIEW' && (
         <ScrollView style={styles.content}>
-          <Text style={styles.recipeTitlePreview}>{recipeName}</Text>
+          <Text style={[styles.recipeTitlePreview, { color: c.text.primary }]}>{recipeName}</Text>
           {description ? (
-            <Text style={styles.recipeDescPreview}>{description}</Text>
+            <Text style={[styles.recipeDescPreview, { color: c.text.secondary }]}>{description}</Text>
           ) : null}
-          <Text style={styles.servingsPreview}>
+          <Text style={[styles.servingsPreview, { color: c.text.muted }]}>
             {servingsNum} serving{servingsNum !== 1 ? 's' : ''}
           </Text>
 
           {/* Nutrition summary */}
-          <View style={styles.nutritionCard}>
-            <Text style={styles.nutritionTitle}>Total Nutrition</Text>
-            <Text style={styles.nutritionRow}>
+          <View style={[styles.nutritionCard, { backgroundColor: c.bg.surfaceRaised }]}>
+            <Text style={[styles.nutritionTitle, { color: c.text.primary }]}>Total Nutrition</Text>
+            <Text style={[styles.nutritionRow, { color: c.text.secondary }]}>
               Calories: {Math.round(total.calories)} kcal
             </Text>
-            <Text style={styles.nutritionRow}>
+            <Text style={[styles.nutritionRow, { color: c.text.secondary }]}>
               Protein: {Math.round(total.protein_g * 10) / 10}g
             </Text>
-            <Text style={styles.nutritionRow}>
+            <Text style={[styles.nutritionRow, { color: c.text.secondary }]}>
               Carbs: {Math.round(total.carbs_g * 10) / 10}g
             </Text>
-            <Text style={styles.nutritionRow}>
+            <Text style={[styles.nutritionRow, { color: c.text.secondary }]}>
               Fat: {Math.round(total.fat_g * 10) / 10}g
             </Text>
 
-            <View style={styles.divider} />
-            <Text style={styles.nutritionTitle}>Per Serving</Text>
-            <Text style={styles.nutritionRow}>
+            <View style={[styles.divider, { backgroundColor: c.bg.base }]} />
+            <Text style={[styles.nutritionTitle, { color: c.text.primary }]}>Per Serving</Text>
+            <Text style={[styles.nutritionRow, { color: c.text.secondary }]}>
               Calories: {Math.round(perServing.calories)} kcal
             </Text>
-            <Text style={styles.nutritionRow}>
+            <Text style={[styles.nutritionRow, { color: c.text.secondary }]}>
               Protein: {Math.round(perServing.protein_g * 10) / 10}g
             </Text>
-            <Text style={styles.nutritionRow}>
+            <Text style={[styles.nutritionRow, { color: c.text.secondary }]}>
               Carbs: {Math.round(perServing.carbs_g * 10) / 10}g
             </Text>
-            <Text style={styles.nutritionRow}>
+            <Text style={[styles.nutritionRow, { color: c.text.secondary }]}>
               Fat: {Math.round(perServing.fat_g * 10) / 10}g
             </Text>
           </View>
 
           {/* Ingredients list */}
-          <Text style={styles.sectionTitle}>Ingredients ({ingredients.length})</Text>
+          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Ingredients ({ingredients.length})</Text>
           {ingredients.map((ing) => (
-            <View key={ing.tempId} style={styles.reviewIngRow}>
-              <Text style={styles.foodName} numberOfLines={1}>{ing.foodItem.name}</Text>
-              <Text style={styles.foodMacros}>{ing.quantity}g</Text>
+            <View key={ing.tempId} style={[styles.reviewIngRow, { borderBottomColor: c.bg.surfaceRaised }]}>
+              <Text style={[styles.foodName, { color: c.text.primary }]} numberOfLines={1}>{ing.foodItem.name}</Text>
+              <Text style={[styles.foodMacros, { color: c.text.muted }]}>{ing.quantity}g</Text>
             </View>
           ))}
 
           {/* Actions */}
           <View style={styles.navRow}>
             <TouchableOpacity
-              style={styles.secondaryBtn}
+              style={[styles.secondaryBtn, { backgroundColor: c.bg.surfaceRaised }]}
               onPress={() => setStep('ADDING_INGREDIENTS')}
               activeOpacity={0.7}
             >
-              <Text style={styles.secondaryBtnText}>Edit</Text>
+              <Text style={[styles.secondaryBtnText, { color: c.text.secondary }]}>Edit</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.primaryBtn, saving && styles.btnDisabled]}
@@ -513,9 +515,9 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
               activeOpacity={0.7}
             >
               {saving ? (
-                <ActivityIndicator color={colors.text.primary} />
+                <ActivityIndicator color={c.text.primary} />
               ) : (
-                <Text style={styles.primaryBtnText}>Save Recipe</Text>
+                <Text style={[styles.primaryBtnText, { color: c.text.primary }]}>Save Recipe</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -525,17 +527,17 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
       {/* Step: SAVED */}
       {step === 'SAVED' && (
         <View style={[styles.content, styles.centeredContent]}>
-          <Ionicons name="checkmark-circle" size={64} color={colors.semantic.positive} />
-          <Text style={styles.savedTitle}>Recipe Saved!</Text>
-          <Text style={styles.savedSubtitle}>
+          <Ionicons name="checkmark-circle" size={64} color={c.semantic.positive} />
+          <Text style={[styles.savedTitle, { color: c.text.primary }]}>Recipe Saved!</Text>
+          <Text style={[styles.savedSubtitle, { color: c.text.secondary }]}>
             "{recipeName}" is now available in food search.
           </Text>
           <TouchableOpacity
-            style={styles.primaryBtn}
+            style={[styles.primaryBtn, { backgroundColor: c.accent.primary }]}
             onPress={handleDone}
             activeOpacity={0.7}
           >
-            <Text style={styles.primaryBtnText}>Done</Text>
+            <Text style={[styles.primaryBtnText, { color: c.text.primary }]}>Done</Text>
           </TouchableOpacity>
         </View>
       )}

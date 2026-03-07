@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Card } from '../common/Card';
 import { colors, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { WeekNavigator } from './WeekNavigator';
 import { BodyHeatMap } from './BodyHeatMap';
 import { DrillDownModal } from './DrillDownModal';
@@ -23,6 +24,7 @@ interface MuscleGroupVolume {
 }
 
 export function HeatMapCard() {
+  const c = useThemeColors();
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const [volumes, setVolumes] = useState<MuscleGroupVolume[]>([]);
   const [isWNS, setIsWNS] = useState(false);
@@ -79,16 +81,16 @@ export function HeatMapCard() {
 
       {error ? (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Failed to load volume data.</Text>
-          <TouchableOpacity onPress={() => fetchVolume(weekStart)} style={styles.retryButton}>
-            <Text style={styles.retryText}>Retry</Text>
+          <Text style={[styles.errorText, { color: c.semantic.negative }]}>Failed to load volume data.</Text>
+          <TouchableOpacity onPress={() => fetchVolume(weekStart)} style={[styles.retryButton, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
+            <Text style={[styles.retryText, { color: c.text.primary }]}>Retry</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <View style={loading ? styles.loadingContainer : undefined}>
           {loading && (
             <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="small" color={colors.accent.primary} />
+              <ActivityIndicator size="small" color={c.accent.primary} />
             </View>
           )}
           <BodyHeatMap
@@ -101,7 +103,7 @@ export function HeatMapCard() {
           {!loading && activeGroups.length > 0 && (
             <View style={styles.frequencyList}>
               {activeGroups.map((v) => (
-                <Text key={v.muscle_group} style={styles.frequencyItem}>
+                <Text key={v.muscle_group} style={[styles.frequencyItem, { color: c.text.secondary }]}>
                   {formatSummary(v)}
                 </Text>
               ))}

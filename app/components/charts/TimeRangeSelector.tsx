@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 const OPTIONS = ['7d', '14d', '30d', '90d'] as const;
 
@@ -10,20 +11,21 @@ interface TimeRangeSelectorProps {
 }
 
 export function TimeRangeSelector({ selected, onSelect }: TimeRangeSelectorProps) {
+  const c = useThemeColors();
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.bg.surfaceRaised }]}>
       {OPTIONS.map((option) => {
         const isActive = selected === option;
         return (
           <TouchableOpacity
             key={option}
-            style={[styles.segment, isActive && styles.segmentActive]}
+            style={[styles.segment, isActive && { backgroundColor: c.accent.primary }]}
             onPress={() => onSelect(option)}
             accessibilityRole="button"
             accessibilityState={{ selected: isActive }}
             accessibilityLabel={`${option} time range`}
           >
-            <Text style={[styles.label, isActive && styles.labelActive]}>
+            <Text style={[styles.label, { color: isActive ? c.text.inverse : c.text.secondary }]}>
               {option}
             </Text>
           </TouchableOpacity>

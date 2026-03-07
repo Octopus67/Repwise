@@ -2,6 +2,7 @@ import { useRef, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform, Modal, Pressable } from 'react-native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import type { WorkoutSummaryResult } from '../../utils/workoutSummary';
 import type { PersonalRecordResponse } from '../../types/training';
 
@@ -22,6 +23,7 @@ export function FinishConfirmationSheet({
   onSaveAsTemplate,
   onCancel,
 }: FinishConfirmationSheetProps) {
+  const c = useThemeColors();
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   useEffect(() => {
@@ -47,31 +49,31 @@ export function FinishConfirmationSheet({
   // ── Shared content (used by both native bottom sheet and web modal) ──
   const sheetContent = (
     <>
-      <Text style={styles.title}>Workout Summary</Text>
+      <Text style={[styles.title, { color: c.text.primary }]}>Workout Summary</Text>
 
       {/* Stats */}
-      <View style={styles.statsRow}>
+      <View style={[styles.statsRow, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{summary.exerciseCount}</Text>
-          <Text style={styles.statLabel}>Exercises</Text>
+          <Text style={[styles.statValue, { color: c.text.primary }]}>{summary.exerciseCount}</Text>
+          <Text style={[styles.statLabel, { color: c.text.muted }]}>Exercises</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{summary.setCount}</Text>
-          <Text style={styles.statLabel}>Sets</Text>
+          <Text style={[styles.statValue, { color: c.text.primary }]}>{summary.setCount}</Text>
+          <Text style={[styles.statLabel, { color: c.text.muted }]}>Sets</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{volumeDisplay}</Text>
-          <Text style={styles.statLabel}>Volume</Text>
+          <Text style={[styles.statValue, { color: c.text.primary }]}>{volumeDisplay}</Text>
+          <Text style={[styles.statLabel, { color: c.text.muted }]}>Volume</Text>
         </View>
       </View>
 
       {/* PRs */}
       {prs.length > 0 && (
         <View style={styles.prSection}>
-          <Text style={styles.prTitle}>🏆 Personal Records</Text>
+          <Text style={[styles.prTitle, { color: c.premium.gold }]}>🏆 Personal Records</Text>
           <ScrollView style={styles.prList} nestedScrollEnabled>
             {prs.map((pr, i) => (
-              <Text key={`${pr.exercise_name}-${i}`} style={styles.prItem}>
+              <Text key={`${pr.exercise_name}-${i}`} style={[styles.prItem, { color: c.text.secondary }]}>
                 {pr.exercise_name}: {pr.new_weight_kg}kg × {pr.reps}
               </Text>
             ))}
@@ -82,23 +84,23 @@ export function FinishConfirmationSheet({
       {/* Actions */}
       <View style={styles.actions}>
         <TouchableOpacity
-          style={styles.templateBtn}
+          style={[styles.templateBtn, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
           onPress={onSaveAsTemplate}
           accessibilityLabel="Save as Template"
           accessibilityRole="button"
           activeOpacity={0.7}
         >
-          <Text style={styles.templateBtnText}>Save as Template</Text>
+          <Text style={[styles.templateBtnText, { color: c.text.secondary }]}>Save as Template</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.confirmBtn}
+          style={[styles.confirmBtn, { backgroundColor: c.accent.primary }]}
           onPress={onConfirm}
           accessibilityLabel="Confirm and save workout"
           accessibilityRole="button"
           activeOpacity={0.7}
         >
-          <Text style={styles.confirmBtnText}>Confirm</Text>
+          <Text style={[styles.confirmBtnText, { color: c.text.primary }]}>Confirm</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -108,7 +110,7 @@ export function FinishConfirmationSheet({
           accessibilityRole="button"
           activeOpacity={0.7}
         >
-          <Text style={styles.cancelBtnText}>Cancel</Text>
+          <Text style={[styles.cancelBtnText, { color: c.text.muted }]}>Cancel</Text>
         </TouchableOpacity>
       </View>
     </>
@@ -124,7 +126,7 @@ export function FinishConfirmationSheet({
         onRequestClose={onCancel}
       >
         <Pressable style={styles.webOverlay} onPress={onCancel}>
-          <Pressable style={styles.webSheet} onPress={(e) => e.stopPropagation()}>
+          <Pressable style={[styles.webSheet, { backgroundColor: c.bg.surfaceRaised }]} onPress={(e) => e.stopPropagation()}>
             {sheetContent}
           </Pressable>
         </Pressable>

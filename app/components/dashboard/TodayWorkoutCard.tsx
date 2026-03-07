@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card } from '../common/Card';
 import { Icon } from '../common/Icon';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import type { TrainingSessionResponse } from '../../types/training';
 
 interface TodayWorkoutCardProps {
@@ -50,6 +51,7 @@ function TodayWorkoutCardComponent({
         </View>
         
         {sessions.map((session, index) => {
+  const c = useThemeColors();
           const duration = session.start_time && session.end_time 
             ? Math.round((new Date(session.end_time).getTime() - new Date(session.start_time).getTime()) / (1000 * 60))
             : null;

@@ -8,6 +8,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert,
 } from 'react-native';
 import { colors, radius, spacing, typography, opacityScale } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Button } from '../common/Button';
 import { useStore } from '../../store';
 import { lbsToKg, kgToLbs } from '../../utils/unitConversion';
@@ -40,6 +41,7 @@ function todayISO(): string {
 }
 
 export function MeasurementInput({ onSubmit, loading, onOpenNavyCalc, bodyFatPctFromCalc }: MeasurementInputProps) {
+  const c = useThemeColors();
   const unitSystem = useStore((s) => s.unitSystem);
   const isImperial = unitSystem === 'imperial';
   const weightUnit = isImperial ? 'lbs' : 'kg';
@@ -100,17 +102,17 @@ export function MeasurementInput({ onSubmit, loading, onOpenNavyCalc, bodyFatPct
     placeholder: string,
   ) => (
     <View style={styles.field} key={key}>
-      <Text style={styles.label}>{label} ({unit})</Text>
+      <Text style={[styles.label, { color: c.text.muted }]}>{label} ({unit})</Text>
       <TextInput
         style={[styles.input, errors[key] ? styles.inputError : undefined]}
         value={form[key]}
         onChangeText={(v) => updateField(key, v)}
         keyboardType="decimal-pad"
         placeholder={placeholder}
-        placeholderTextColor={colors.text.muted}
+        placeholderTextColor={c.text.muted}
         accessibilityLabel={`${label} in ${unit}`}
       />
-      {errors[key] ? <Text style={styles.errorText}>{errors[key]}</Text> : null}
+      {errors[key] ? <Text style={[styles.errorText, { color: c.semantic.negative }]}>{errors[key]}</Text> : null}
     </View>
   );
 
@@ -118,16 +120,16 @@ export function MeasurementInput({ onSubmit, loading, onOpenNavyCalc, bodyFatPct
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       {/* Date */}
       <View style={styles.field}>
-        <Text style={styles.label}>Date</Text>
+        <Text style={[styles.label, { color: c.text.muted }]}>Date</Text>
         <TextInput
           style={[styles.input, errors.measuredAt ? styles.inputError : undefined]}
           value={form.measuredAt}
           onChangeText={(v) => updateField('measuredAt', v)}
           placeholder="YYYY-MM-DD"
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
           accessibilityLabel="Measurement date"
         />
-        {errors.measuredAt ? <Text style={styles.errorText}>{errors.measuredAt}</Text> : null}
+        {errors.measuredAt ? <Text style={[styles.errorText, { color: c.semantic.negative }]}>{errors.measuredAt}</Text> : null}
       </View>
 
       {/* Weight */}
@@ -136,10 +138,10 @@ export function MeasurementInput({ onSubmit, loading, onOpenNavyCalc, bodyFatPct
       {/* Body Fat */}
       <View style={styles.field}>
         <View style={styles.labelRow}>
-          <Text style={styles.label}>Body Fat (%)</Text>
+          <Text style={[styles.label, { color: c.text.muted }]}>Body Fat (%)</Text>
           {onOpenNavyCalc && (
             <TouchableOpacity onPress={onOpenNavyCalc} accessibilityRole="button" accessibilityLabel="Open Navy BF calculator">
-              <Text style={styles.calcLink}>Navy Calculator →</Text>
+              <Text style={[styles.calcLink, { color: c.accent.primary }]}>Navy Calculator →</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -149,10 +151,10 @@ export function MeasurementInput({ onSubmit, loading, onOpenNavyCalc, bodyFatPct
           onChangeText={(v) => updateField('bodyFatPct', v)}
           keyboardType="decimal-pad"
           placeholder="e.g. 16"
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
           accessibilityLabel="Body fat percentage"
         />
-        {errors.bodyFatPct ? <Text style={styles.errorText}>{errors.bodyFatPct}</Text> : null}
+        {errors.bodyFatPct ? <Text style={[styles.errorText, { color: c.semantic.negative }]}>{errors.bodyFatPct}</Text> : null}
       </View>
 
       {/* Circumference fields */}
@@ -162,13 +164,13 @@ export function MeasurementInput({ onSubmit, loading, onOpenNavyCalc, bodyFatPct
 
       {/* Notes */}
       <View style={styles.field}>
-        <Text style={styles.label}>Notes</Text>
+        <Text style={[styles.label, { color: c.text.muted }]}>Notes</Text>
         <TextInput
           style={[styles.input, styles.notesInput]}
           value={form.notes}
           onChangeText={(v) => updateField('notes', v)}
           placeholder="Optional notes..."
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
           multiline
           numberOfLines={3}
           accessibilityLabel="Measurement notes"

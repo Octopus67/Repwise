@@ -11,6 +11,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { colors, spacing, typography, radius, springs } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 import { useHaptics } from '../../hooks/useHaptics';
 
@@ -34,6 +35,7 @@ const PR_TYPE_LABELS: Record<string, string> = {
 };
 
 export function PRBanner({ prs, visible, onDismiss }: PRBannerProps) {
+  const c = useThemeColors();
   const scale = useSharedValue(0);
   const reduceMotion = useReduceMotion();
   const { notification: hapticNotification } = useHaptics();
@@ -85,14 +87,14 @@ export function PRBanner({ prs, visible, onDismiss }: PRBannerProps) {
     >
       <Animated.View style={[styles.banner, animatedStyle]}>
         <Text style={styles.trophy}>🏆</Text>
-        <Text style={styles.title}>New Personal Record!</Text>
+        <Text style={[styles.title, { color: c.premium.gold }]}>New Personal Record!</Text>
         {prs.map((pr, i) => (
           <View key={i} style={styles.prRow}>
-            <Text style={styles.prType}>
+            <Text style={[styles.prType, { color: c.text.secondary }]}>
               {PR_TYPE_LABELS[pr.type] ?? pr.type}
             </Text>
-            <Text style={styles.prExercise}>{pr.exerciseName}</Text>
-            <Text style={styles.prValue}>{pr.value}</Text>
+            <Text style={[styles.prExercise, { color: c.text.primary }]}>{pr.exerciseName}</Text>
+            <Text style={[styles.prValue, { color: c.premium.gold }]}>{pr.value}</Text>
           </View>
         ))}
       </Animated.View>

@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../../components/common/Card';
 import { FilterPill } from '../../components/common/FilterPill';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -139,22 +140,22 @@ function AnimatedArticleCard({
                   </Text>
                 </View>
               )}
-              <View style={styles.readTimePill}>
-                <Text style={styles.readTimeIcon}>◷</Text>
-                <Text style={styles.readTimeText}>{item.estimated_read_time_min} min</Text>
+              <View style={[styles.readTimePill, { backgroundColor: colors.bg.surfaceRaised, borderColor: colors.border.subtle }]}>
+                <Text style={[styles.readTimeIcon, { color: colors.text.muted }]}>◷</Text>
+                <Text style={[styles.readTimeText, { color: colors.text.secondary }]}>{item.estimated_read_time_min} min</Text>
               </View>
             </View>
             {item.is_premium && (
-              <View style={styles.lockBadge}>
+              <View style={[styles.lockBadge, { backgroundColor: colors.premium.goldSubtle }]}>
                 <Icon name="lock" size={14} />
               </View>
             )}
           </View>
 
-          <Text style={styles.articleTitle}>{item.title}</Text>
+          <Text style={[styles.articleTitle, { color: colors.text.primary }]}>{item.title}</Text>
 
           {preview ? (
-            <Text style={styles.articlePreview} numberOfLines={2}>
+            <Text style={[styles.articlePreview, { color: colors.text.secondary }]} numberOfLines={2}>
               {preview}
             </Text>
           ) : null}
@@ -162,11 +163,11 @@ function AnimatedArticleCard({
           <View style={styles.articleFooter}>
             <View style={styles.tags}>
               {item.tags?.slice(0, 3).map((tag) => (
-                <Text key={tag} style={styles.tag}>{tag}</Text>
+                <Text key={tag} style={[styles.tag, { color: colors.text.muted, backgroundColor: colors.bg.surfaceRaised, borderColor: colors.border.subtle }]}>{tag}</Text>
               ))}
             </View>
             <View style={styles.footerRight}>
-              <Text style={styles.readIndicator}>Read →</Text>
+              <Text style={[styles.readIndicator, { color: colors.accent.primary }]}>Read →</Text>
               <TouchableOpacity onPress={onToggleFavorite} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
                 <Text style={[styles.favIcon, isFavorite && styles.favActive]}>
                   {isFavorite ? <Icon name="star" /> : <Icon name="star-outline" />}
@@ -181,6 +182,7 @@ function AnimatedArticleCard({
 }
 
 export function LearnScreen() {
+  const c = useThemeColors();
   const navigation = useNavigation<StackNavigationProp<ProfileStackParamList>>();
   const [articles, setArticles] = useState<Article[]>([]);
   const [category, setCategory] = useState('All');
@@ -281,15 +283,15 @@ export function LearnScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']} testID="learn-screen">
-      <Text style={styles.title}>Learn</Text>
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="learn-screen">
+      <Text style={[styles.title, { color: c.text.primary }]}>Learn</Text>
 
       {error && <ErrorBanner message={error} onRetry={loadArticles} onDismiss={() => setError(null)} />}
 
       <TextInput
-        style={styles.searchInput}
+        style={[styles.searchInput, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
         placeholder="Search articles..."
-        placeholderTextColor={colors.text.muted}
+        placeholderTextColor={c.text.muted}
         value={searchQuery}
         onChangeText={setSearchQuery}
         returnKeyType="search"
@@ -322,7 +324,7 @@ export function LearnScreen() {
           />
         }
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.accent.primary} />
         }
         ListEmptyComponent={
           <View testID="learn-empty-state">

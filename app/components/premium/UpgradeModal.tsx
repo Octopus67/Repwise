@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../common/Icon';
 import { Button } from '../common/Button';
 import api from '../../services/api';
@@ -33,6 +34,7 @@ const FEATURES = [
 ];
 
 export function UpgradeModal({ visible, onClose }: UpgradeModalProps) {
+  const c = useThemeColors();
   const [selectedPlan, setSelectedPlan] = React.useState<'monthly' | 'yearly'>('yearly');
   const [loading, setLoading] = React.useState(false);
 
@@ -69,13 +71,13 @@ export function UpgradeModal({ visible, onClose }: UpgradeModalProps) {
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.sheet}>
-          <View style={styles.handle} />
+      <View style={[styles.overlay, { backgroundColor: c.bg.overlay }]}>
+        <View style={[styles.sheet, { backgroundColor: c.bg.surface }]}>
+          <View style={[styles.handle, { backgroundColor: c.border.default }]} />
 
           <ScrollView showsVerticalScrollIndicator={false}>
-            <Text style={styles.title}>Upgrade to Premium</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, { color: c.text.primary }]}>Upgrade to Premium</Text>
+            <Text style={[styles.subtitle, { color: c.text.secondary }]}>
               Unlock the full Repwise experience
             </Text>
 
@@ -90,10 +92,10 @@ export function UpgradeModal({ visible, onClose }: UpgradeModalProps) {
                   onPress={() => setSelectedPlan(plan.key)}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.planLabel}>{plan.label}</Text>
-                  <Text style={styles.planPrice}>{plan.price}</Text>
+                  <Text style={[styles.planLabel, { color: c.text.secondary }]}>{plan.label}</Text>
+                  <Text style={[styles.planPrice, { color: c.text.primary }]}>{plan.price}</Text>
                   {plan.savings ? (
-                    <Text style={styles.planSavings}>{plan.savings}</Text>
+                    <Text style={[styles.planSavings, { color: c.semantic.positive }]}>{plan.savings}</Text>
                   ) : null}
                 </TouchableOpacity>
               ))}
@@ -102,8 +104,8 @@ export function UpgradeModal({ visible, onClose }: UpgradeModalProps) {
             <View style={styles.features}>
               {FEATURES.map((feature) => (
                 <View key={feature} style={styles.featureRow}>
-                  <Icon name="check" size={16} color={colors.semantic.positive} />
-                  <Text style={styles.featureText}>{feature}</Text>
+                  <Icon name="check" size={16} color={c.semantic.positive} />
+                  <Text style={[styles.featureText, { color: c.text.primary }]}>{feature}</Text>
                 </View>
               ))}
             </View>
@@ -115,7 +117,7 @@ export function UpgradeModal({ visible, onClose }: UpgradeModalProps) {
               style={styles.cta}
             />
             <TouchableOpacity onPress={onClose} style={styles.cancelBtn}>
-              <Text style={styles.cancelText}>Maybe later</Text>
+              <Text style={[styles.cancelText, { color: c.text.muted }]}>Maybe later</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>

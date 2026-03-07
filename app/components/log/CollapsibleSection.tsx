@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import Animated, { Layout } from 'react-native-reanimated';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 
 interface CollapsibleSectionProps {
@@ -22,6 +23,7 @@ export function CollapsibleSection({
   defaultExpanded,
   children,
 }: CollapsibleSectionProps) {
+  const c = useThemeColors();
   const [expanded, setExpanded] = useState(defaultExpanded ?? true);
   const reduceMotion = useReduceMotion();
 
@@ -30,7 +32,7 @@ export function CollapsibleSection({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.bg.surface }]}>
       <TouchableOpacity
         style={styles.header}
         onPress={toggle}
@@ -41,9 +43,9 @@ export function CollapsibleSection({
       >
         <View style={styles.headerLeft}>
           {icon && <View style={styles.icon}>{icon}</View>}
-          <Text style={styles.title}>{title}</Text>
+          <Text style={[styles.title, { color: c.text.primary }]}>{title}</Text>
         </View>
-        <Text style={styles.chevron}>{expanded ? '▾' : '▸'}</Text>
+        <Text style={[styles.chevron, { color: c.text.muted }]}>{expanded ? '▾' : '▸'}</Text>
       </TouchableOpacity>
 
       {expanded && <Animated.View layout={reduceMotion ? undefined : Layout} style={styles.body}>{children}</Animated.View>}

@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { getRpeBadgeColor, RpeBadgeColor } from '../../utils/rpeBadgeColor';
 import { colors, radius, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface RPEBadgeProps {
   rpeValue: number;
@@ -15,6 +16,7 @@ const colorMap: Record<Exclude<RpeBadgeColor, 'none'>, { text: string; bg: strin
 };
 
 export function RPEBadge({ rpeValue, mode }: RPEBadgeProps) {
+  const c = useThemeColors();
   if (!rpeValue || isNaN(rpeValue)) return null;
 
   const badgeColor = getRpeBadgeColor(rpeValue);

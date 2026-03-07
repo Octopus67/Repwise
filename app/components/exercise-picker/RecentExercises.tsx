@@ -3,6 +3,7 @@ import { FlatList, TouchableOpacity, Text, View, StyleSheet } from 'react-native
 import { Exercise } from '../../types/exercise';
 import { getMuscleGroupConfig } from '../../config/muscleGroups';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { MuscleGroupIcon } from './MuscleGroupIcon';
 
 interface RecentExercisesProps {
@@ -11,13 +12,14 @@ interface RecentExercisesProps {
 }
 
 export function RecentExercises({ exercises, onPress }: RecentExercisesProps) {
+  const c = useThemeColors();
   if (exercises.length === 0) return null;
 
   const renderItem = ({ item }: { item: Exercise }) => {
     const config = getMuscleGroupConfig(item.muscle_group);
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, { backgroundColor: c.bg.surfaceRaised }]}
         onPress={() => onPress(item)}
         activeOpacity={0.7}
         accessibilityLabel={`Recent: ${item.name}`}
@@ -26,14 +28,14 @@ export function RecentExercises({ exercises, onPress }: RecentExercisesProps) {
         <View style={[styles.abbrevCircle, { backgroundColor: config?.color ?? '#2563EB' }]}>
           <MuscleGroupIcon muscleGroup={item.muscle_group} size={18} color="#FFFFFF" />
         </View>
-        <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
+        <Text style={[styles.name, { color: c.text.primary }]} numberOfLines={2}>{item.name}</Text>
       </TouchableOpacity>
     );
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Recent</Text>
+      <Text style={[styles.header, { color: c.text.secondary }]}>Recent</Text>
       <FlatList
         data={exercises}
         renderItem={renderItem}

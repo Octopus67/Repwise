@@ -19,6 +19,7 @@ import {
   SectionList,
 } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { useMicroDashboard, NutrientSummary, DeficiencyAlert } from '../../hooks/useMicroDashboard';
 import {
   getStatusColor,
@@ -38,14 +39,14 @@ function NutrientRow({ nutrient }: { nutrient: NutrientSummary }) {
   return (
     <View style={styles.nutrientRow}>
       <View style={styles.nutrientHeader}>
-        <Text style={styles.nutrientLabel}>{nutrient.label}</Text>
-        <Text style={styles.nutrientValue}>
+        <Text style={[styles.nutrientLabel, { color: colors.text.primary }]}>{nutrient.label}</Text>
+        <Text style={[styles.nutrientValue, { color: colors.text.muted }]}>
           {hasData
             ? `${formatNutrientValue(nutrient.daily_average, nutrient.unit)} / ${formatNutrientValue(nutrient.rda, nutrient.unit)}`
             : 'No data'}
         </Text>
       </View>
-      <View style={styles.barBg}>
+      <View style={[styles.barBg, { backgroundColor: colors.bg.surfaceRaised }]}>
         <View style={[styles.barFill, { width: `${barWidth}%`, backgroundColor: barColor }]} />
       </View>
       <Text style={[styles.rdaPct, { color: barColor }]}>
@@ -57,11 +58,11 @@ function NutrientRow({ nutrient }: { nutrient: NutrientSummary }) {
 
 function DeficiencyCard({ alert }: { alert: DeficiencyAlert }) {
   return (
-    <View style={styles.deficiencyCard}>
-      <View style={styles.deficiencyDot} />
+    <View style={[styles.deficiencyCard, { backgroundColor: colors.semantic.negativeSubtle }]}>
+      <View style={[styles.deficiencyDot, { backgroundColor: colors.semantic.negative }]} />
       <View style={styles.deficiencyContent}>
-        <Text style={styles.deficiencyLabel}>{alert.label}</Text>
-        <Text style={styles.deficiencyDetail}>
+        <Text style={[styles.deficiencyLabel, { color: colors.text.primary }]}>{alert.label}</Text>
+        <Text style={[styles.deficiencyDetail, { color: colors.text.muted }]}>
           {alert.deficit_pct.toFixed(0)}% below RDA · {alert.days_below_50pct}/{alert.total_days} days deficient
         </Text>
       </View>
@@ -70,6 +71,7 @@ function DeficiencyCard({ alert }: { alert: DeficiencyAlert }) {
 }
 
 export function MicronutrientDashboardScreen() {
+  const c = useThemeColors();
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const weekEnd = useMemo(() => {
     const d = new Date(weekStart + 'T00:00:00');
@@ -99,7 +101,7 @@ export function MicronutrientDashboardScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={colors.accent.primary} />
+        <ActivityIndicator color={c.accent.primary} />
       </View>
     );
   }
@@ -107,7 +109,7 @@ export function MicronutrientDashboardScreen() {
   if (error || !data) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>{error ?? 'No data available'}</Text>
+        <Text style={[styles.errorText, { color: c.semantic.negative }]}>{error ?? 'No data available'}</Text>
       </View>
     );
   }
@@ -115,12 +117,12 @@ export function MicronutrientDashboardScreen() {
   // Empty state — no nutrition data logged this week
   if (data.days_with_data === 0) {
     return (
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]} contentContainerStyle={styles.content}>
         <View style={styles.weekNav}>
           <TouchableOpacity onPress={() => setWeekStart(getAdjacentWeek(weekStart, 'prev'))}>
-            <Text style={styles.navArrow}>‹</Text>
+            <Text style={[styles.navArrow, { color: c.accent.primary }]}>‹</Text>
           </TouchableOpacity>
-          <Text style={styles.weekLabel}>{formatWeekRange(weekStart)}</Text>
+          <Text style={[styles.weekLabel, { color: c.text.primary }]}>{formatWeekRange(weekStart)}</Text>
           <TouchableOpacity
             onPress={() => setWeekStart(getAdjacentWeek(weekStart, 'next'))}
             disabled={isCurrentOrFutureWeek(getAdjacentWeek(weekStart, 'next'))}
@@ -129,8 +131,8 @@ export function MicronutrientDashboardScreen() {
           </TouchableOpacity>
         </View>
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>No nutrition data this week</Text>
-          <Text style={styles.emptySubtext}>
+          <Text style={[styles.emptyTitle, { color: c.text.primary }]}>No nutrition data this week</Text>
+          <Text style={[styles.emptySubtext, { color: c.text.muted }]}>
             Log your meals to see micronutrient insights, deficiency alerts, and your Nutrient Quality Score.
           </Text>
         </View>
@@ -142,13 +144,13 @@ export function MicronutrientDashboardScreen() {
   const scoreLabel = getScoreLabel(data.nutrient_score);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]} contentContainerStyle={styles.content}>
       {/* Week Navigator */}
       <View style={styles.weekNav}>
         <TouchableOpacity onPress={() => setWeekStart(getAdjacentWeek(weekStart, 'prev'))}>
-          <Text style={styles.navArrow}>‹</Text>
+          <Text style={[styles.navArrow, { color: c.accent.primary }]}>‹</Text>
         </TouchableOpacity>
-        <Text style={styles.weekLabel}>{formatWeekRange(weekStart)}</Text>
+        <Text style={[styles.weekLabel, { color: c.text.primary }]}>{formatWeekRange(weekStart)}</Text>
         <TouchableOpacity
           onPress={() => setWeekStart(getAdjacentWeek(weekStart, 'next'))}
           disabled={isCurrentOrFutureWeek(getAdjacentWeek(weekStart, 'next'))}
@@ -158,13 +160,13 @@ export function MicronutrientDashboardScreen() {
       </View>
 
       {/* Score Card */}
-      <View style={styles.scoreCard}>
+      <View style={[styles.scoreCard, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
         <View style={[styles.scoreRing, { borderColor: scoreColor }]}>
           <Text style={[styles.scoreNumber, { color: scoreColor }]}>{data.nutrient_score.toFixed(0)}</Text>
         </View>
         <View style={styles.scoreInfo}>
           <Text style={[styles.scoreLabel, { color: scoreColor }]}>{scoreLabel}</Text>
-          <Text style={styles.scoreSubtext}>
+          <Text style={[styles.scoreSubtext, { color: c.text.muted }]}>
             Nutrient Quality Score · {data.days_with_data}/{data.days_tracked} days tracked
             {data.nutrients_with_data != null && ` · ${data.nutrients_with_data}/${data.total_nutrients} nutrients tracked`}
           </Text>
@@ -174,7 +176,7 @@ export function MicronutrientDashboardScreen() {
       {/* Deficiency Alerts */}
       {data.deficiencies.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>⚠️ Deficiency Alerts</Text>
+          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>⚠️ Deficiency Alerts</Text>
           {data.deficiencies.slice(0, 5).map(a => (
             <DeficiencyCard key={a.key} alert={a} />
           ))}
@@ -183,18 +185,18 @@ export function MicronutrientDashboardScreen() {
 
       {/* Top & Worst */}
       <View style={styles.topWorstRow}>
-        <View style={styles.topWorstCol}>
-          <Text style={styles.sectionTitle}>✅ Best</Text>
+        <View style={[styles.topWorstCol, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
+          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>✅ Best</Text>
           {data.top_nutrients.map(n => (
-            <Text key={n.key} style={styles.topWorstItem}>
+            <Text key={n.key} style={[styles.topWorstItem, { color: c.text.secondary }]}>
               {n.label}: {n.rda_pct.toFixed(0)}%
             </Text>
           ))}
         </View>
-        <View style={styles.topWorstCol}>
-          <Text style={styles.sectionTitle}>🔻 Needs Work</Text>
+        <View style={[styles.topWorstCol, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
+          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>🔻 Needs Work</Text>
           {data.worst_nutrients.map(n => (
-            <Text key={n.key} style={styles.topWorstItem}>
+            <Text key={n.key} style={[styles.topWorstItem, { color: c.text.secondary }]}>
               {n.label}: {n.rda_pct.toFixed(0)}%
             </Text>
           ))}
@@ -205,7 +207,7 @@ export function MicronutrientDashboardScreen() {
       <Text style={[styles.sectionTitle, { marginTop: spacing[4] }]}>Full Breakdown</Text>
       {sections.map(section => (
         <View key={section.title} style={styles.groupSection}>
-          <Text style={styles.groupTitle}>{section.title}</Text>
+          <Text style={[styles.groupTitle, { color: c.text.muted }]}>{section.title}</Text>
           {section.data.map(n => <NutrientRow key={n.key} nutrient={n} />)}
         </View>
       ))}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import {
   computeWeeklySummary,
@@ -13,14 +14,15 @@ interface WeeklySummaryCardProps {
 }
 
 export function WeeklySummaryCard({ entries, targetCalories }: WeeklySummaryCardProps) {
+  const c = useThemeColors();
   const summary = computeWeeklySummary(entries, targetCalories);
 
   // Insufficient data
   if (summary.daysLogged < 2) {
     return (
       <Card variant="flat">
-        <Text style={styles.title}>Weekly Summary</Text>
-        <Text style={styles.emptyText}>
+        <Text style={[styles.title, { color: c.text.primary }]}>Weekly Summary</Text>
+        <Text style={[styles.emptyText, { color: c.text.muted }]}>
           Log more days to see weekly patterns. ({summary.daysLogged} of 7 days logged)
         </Text>
       </Card>
@@ -29,8 +31,8 @@ export function WeeklySummaryCard({ entries, targetCalories }: WeeklySummaryCard
 
   return (
     <Card variant="flat">
-      <Text style={styles.title}>Weekly Summary</Text>
-      <Text style={styles.daysLogged}>{summary.daysLogged} of 7 days logged</Text>
+      <Text style={[styles.title, { color: c.text.primary }]}>Weekly Summary</Text>
+      <Text style={[styles.daysLogged, { color: c.text.muted }]}>{summary.daysLogged} of 7 days logged</Text>
 
       {/* Averages */}
       <View style={styles.avgRow}>
@@ -41,21 +43,21 @@ export function WeeklySummaryCard({ entries, targetCalories }: WeeklySummaryCard
       </View>
 
       {/* Adherence */}
-      <View style={styles.adherenceRow}>
+      <View style={[styles.adherenceRow, { borderTopColor: c.border.subtle }]}>
         {summary.bestDay && (
           <View style={styles.adherenceBlock}>
-            <Text style={styles.adherenceLabel}>Best Day</Text>
-            <Text style={styles.adherenceDate}>{summary.bestDay.date}</Text>
-            <Text style={styles.adherenceDeviation}>
+            <Text style={[styles.adherenceLabel, { color: c.text.muted }]}>Best Day</Text>
+            <Text style={[styles.adherenceDate, { color: c.text.primary }]}>{summary.bestDay.date}</Text>
+            <Text style={[styles.adherenceDeviation, { color: c.text.secondary }]}>
               ±{Math.round(summary.bestDay.deviation)} kcal
             </Text>
           </View>
         )}
         {summary.worstDay && (
           <View style={styles.adherenceBlock}>
-            <Text style={styles.adherenceLabel}>Worst Day</Text>
-            <Text style={styles.adherenceDate}>{summary.worstDay.date}</Text>
-            <Text style={styles.adherenceDeviation}>
+            <Text style={[styles.adherenceLabel, { color: c.text.muted }]}>Worst Day</Text>
+            <Text style={[styles.adherenceDate, { color: c.text.primary }]}>{summary.worstDay.date}</Text>
+            <Text style={[styles.adherenceDeviation, { color: c.text.secondary }]}>
               ±{Math.round(summary.worstDay.deviation)} kcal
             </Text>
           </View>
@@ -64,9 +66,9 @@ export function WeeklySummaryCard({ entries, targetCalories }: WeeklySummaryCard
 
       {/* Water */}
       {summary.totalWaterMl > 0 && (
-        <View style={styles.waterRow}>
-          <Text style={styles.waterLabel}>Total Water</Text>
-          <Text style={styles.waterValue}>{Math.round(summary.totalWaterMl)} ml</Text>
+        <View style={[styles.waterRow, { borderTopColor: c.border.subtle }]}>
+          <Text style={[styles.waterLabel, { color: c.text.muted }]}>Total Water</Text>
+          <Text style={[styles.waterValue, { color: c.text.primary }]}>{Math.round(summary.totalWaterMl)} ml</Text>
         </View>
       )}
     </Card>
@@ -76,10 +78,10 @@ export function WeeklySummaryCard({ entries, targetCalories }: WeeklySummaryCard
 function StatBlock({ label, value, unit }: { label: string; value: string; unit: string }) {
   return (
     <View style={styles.statBlock}>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>
+      <Text style={[styles.statLabel, { color: colors.text.muted }]}>{label}</Text>
+      <Text style={[styles.statValue, { color: colors.text.primary }]}>
         {value}
-        <Text style={styles.statUnit}> {unit}</Text>
+        <Text style={[styles.statUnit, { color: colors.text.secondary }]}> {unit}</Text>
       </Text>
     </View>
   );

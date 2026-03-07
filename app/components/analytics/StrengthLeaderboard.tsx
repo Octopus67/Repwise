@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import { Icon } from '../common/Icon';
 
@@ -31,6 +32,7 @@ function formatExerciseName(name: string): string {
 }
 
 export function StrengthLeaderboard({ classifications }: StrengthLeaderboardProps) {
+  const c = useThemeColors();
   // Separate lifts with data from those without
   const withData = [...classifications].sort((a, b) => b.bodyweight_ratio - a.bodyweight_ratio);
   const withDataNames = new Set(withData.map((c) => c.exercise_name.toLowerCase()));
@@ -40,8 +42,8 @@ export function StrengthLeaderboard({ classifications }: StrengthLeaderboardProp
     return (
       <Card>
         <View style={styles.emptyContainer}>
-          <Icon name="chart" size={24} color={colors.text.muted} />
-          <Text style={styles.emptyText}>No strength data yet</Text>
+          <Icon name="chart" size={24} color={c.text.muted} />
+          <Text style={[styles.emptyText, { color: c.text.muted }]}>No strength data yet</Text>
         </View>
       </Card>
     );
@@ -69,13 +71,13 @@ export function StrengthLeaderboard({ classifications }: StrengthLeaderboardProp
               <Text style={[styles.exerciseName, highlightColor ? { color: highlightColor } : undefined]}>
                 {formatExerciseName(c.exercise_name)}
               </Text>
-              <Text style={styles.level}>
+              <Text style={[styles.level, { color: colors.text.secondary }]}>
                 {c.level.charAt(0).toUpperCase() + c.level.slice(1)}
               </Text>
             </View>
             <View style={styles.statsCol}>
-              <Text style={styles.e1rm}>{Math.round(c.e1rm_kg)} kg</Text>
-              <Text style={styles.ratio}>{c.bodyweight_ratio.toFixed(2)}×</Text>
+              <Text style={[styles.e1rm, { color: colors.text.primary }]}>{Math.round(c.e1rm_kg)} kg</Text>
+              <Text style={[styles.ratio, { color: colors.text.secondary }]}>{c.bodyweight_ratio.toFixed(2)}×</Text>
             </View>
           </View>
         );
@@ -85,13 +87,13 @@ export function StrengthLeaderboard({ classifications }: StrengthLeaderboardProp
       {noData.map((lift) => (
         <View key={lift} style={[styles.row, styles.rowBorder]}>
           <View style={styles.rankCol}>
-            <Text style={styles.rankMuted}>—</Text>
+            <Text style={[styles.rankMuted, { color: c.text.muted }]}>—</Text>
           </View>
           <View style={styles.nameCol}>
-            <Text style={styles.exerciseNameMuted}>{formatExerciseName(lift)}</Text>
+            <Text style={[styles.exerciseNameMuted, { color: c.text.muted }]}>{formatExerciseName(lift)}</Text>
           </View>
           <View style={styles.statsCol}>
-            <Text style={styles.noData}>No data</Text>
+            <Text style={[styles.noData, { color: c.text.muted }]}>No data</Text>
           </View>
         </View>
       ))}

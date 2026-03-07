@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../common/Icon';
 
 interface SearchBarProps {
@@ -11,15 +12,16 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ value, onChangeText, onClear, resultCount }: SearchBarProps) {
+  const c = useThemeColors();
   return (
-    <View style={styles.container}>
-      <View style={styles.inputRow}>
+    <View style={[styles.container, { backgroundColor: c.bg.base }]}>
+      <View style={[styles.inputRow, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: c.text.primary }]}
           value={value}
           onChangeText={onChangeText}
           placeholder="Search exercises..."
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
           autoCorrect={false}
           returnKeyType="search"
           accessibilityLabel="Search exercises"
@@ -31,12 +33,12 @@ export function SearchBar({ value, onChangeText, onClear, resultCount }: SearchB
             accessibilityLabel="Clear search"
             accessibilityRole="button"
           >
-            <Icon name="close" size={16} color={colors.text.muted} />
+            <Icon name="close" size={16} color={c.text.muted} />
           </TouchableOpacity>
         )}
       </View>
       {resultCount != null && resultCount > 0 && (
-        <Text style={styles.resultCount}>{resultCount} exercises</Text>
+        <Text style={[styles.resultCount, { color: c.text.muted }]}>{resultCount} exercises</Text>
       )}
     </View>
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface GoalProgressPillProps {
   goalType: string;
@@ -8,6 +9,7 @@ interface GoalProgressPillProps {
 }
 
 export default function GoalProgressPill({ goalType, targetCalories }: GoalProgressPillProps) {
+  const c = useThemeColors();
   const getGoalLabel = (type: string) => {
     switch (type) {
       case 'cutting': return 'Cutting';
@@ -19,8 +21,8 @@ export default function GoalProgressPill({ goalType, targetCalories }: GoalProgr
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>
+    <View style={[styles.container, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
+      <Text style={[styles.text, { color: c.text.secondary }]}>
         {getGoalLabel(goalType)} · {targetCalories} cal
       </Text>
     </View>

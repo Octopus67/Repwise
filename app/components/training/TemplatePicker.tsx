@@ -14,6 +14,7 @@ import api from '../../services/api';
 import { orderTemplates } from '../../utils/templateConversion';
 import type { WorkoutTemplateResponse } from '../../types/training';
 import { colors, spacing, typography, radius, shadows, letterSpacing as ls } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface TemplatePickerProps {
   onSelectTemplate: (templateId: string, isSystem: boolean) => void;
@@ -26,6 +27,7 @@ export function TemplatePicker({
   onCopyLast,
   onStartEmpty,
 }: TemplatePickerProps) {
+  const c = useThemeColors();
   const [userTemplates, setUserTemplates] = useState<WorkoutTemplateResponse[]>([]);
   const [systemTemplates, setSystemTemplates] = useState<WorkoutTemplateResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,7 +115,7 @@ export function TemplatePicker({
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator color={colors.accent.primary} />
+        <ActivityIndicator color={c.accent.primary} />
       </View>
     );
   }
@@ -121,18 +123,18 @@ export function TemplatePicker({
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Quick actions */}
-      <TouchableOpacity style={styles.quickAction} onPress={onCopyLast} activeOpacity={0.7}>
-        <Text style={styles.quickActionText}>📋 Copy Last Workout</Text>
+      <TouchableOpacity style={[styles.quickAction, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]} onPress={onCopyLast} activeOpacity={0.7}>
+        <Text style={[styles.quickActionText, { color: c.text.primary }]}>📋 Copy Last Workout</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.quickAction} onPress={onStartEmpty} activeOpacity={0.7}>
-        <Text style={styles.quickActionText}>➕ Start Empty Workout</Text>
+      <TouchableOpacity style={[styles.quickAction, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]} onPress={onStartEmpty} activeOpacity={0.7}>
+        <Text style={[styles.quickActionText, { color: c.text.primary }]}>➕ Start Empty Workout</Text>
       </TouchableOpacity>
 
       {/* My Templates */}
       {userTemplates.length > 0 && (
         <>
-          <Text style={styles.sectionTitle}>My Templates</Text>
+          <Text style={[styles.sectionTitle, { color: c.text.secondary }]}>My Templates</Text>
           {userTemplates.map((t) => (
             <TemplateCard
               key={t.id}
@@ -147,7 +149,7 @@ export function TemplatePicker({
       {/* System Templates */}
       {systemTemplates.length > 0 && (
         <>
-          <Text style={styles.sectionTitle}>System Templates</Text>
+          <Text style={[styles.sectionTitle, { color: c.text.secondary }]}>System Templates</Text>
           {systemTemplates.map((t) => (
             <TemplateCard
               key={t.id}
@@ -172,18 +174,18 @@ function TemplateCard({
 }) {
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, { backgroundColor: colors.bg.surfaceRaised, borderColor: colors.border.default }]}
       onPress={onPress}
       onLongPress={onLongPress}
       activeOpacity={0.7}
     >
-      <Text style={styles.cardName}>{template.name}</Text>
+      <Text style={[styles.cardName, { color: colors.text.primary }]}>{template.name}</Text>
       {template.description ? (
-        <Text style={styles.cardDesc} numberOfLines={1}>
+        <Text style={[styles.cardDesc, { color: colors.text.secondary }]} numberOfLines={1}>
           {template.description}
         </Text>
       ) : null}
-      <Text style={styles.cardMeta}>
+      <Text style={[styles.cardMeta, { color: colors.text.muted }]}>
         {template.exercises.length} exercise{template.exercises.length !== 1 ? 's' : ''}
       </Text>
     </TouchableOpacity>

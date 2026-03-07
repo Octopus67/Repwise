@@ -1,6 +1,7 @@
 import { Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { colors, spacing, radius, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from './Icon';
 
 type ErrorBannerVariant = 'error' | 'warning' | 'info';
@@ -38,6 +39,7 @@ export function ErrorBanner({
   variant = 'error',
   testID,
 }: ErrorBannerProps) {
+  const c = useThemeColors();
   const config = variantConfig[variant];
 
   return (
@@ -50,7 +52,7 @@ export function ErrorBanner({
       testID={testID}
     >
       <Icon name={config.icon as any} size={20} color={config.accent} />
-      <Text style={styles.message} numberOfLines={3}>
+      <Text style={[styles.message, { color: c.text.secondary }]} numberOfLines={3}>
         {message}
       </Text>
       {onRetry && (
@@ -61,7 +63,7 @@ export function ErrorBanner({
           accessibilityRole="button"
           accessibilityLabel="Retry"
         >
-          <Text style={styles.retryText}>Retry</Text>
+          <Text style={[styles.retryText, { color: c.accent.primary }]}>Retry</Text>
         </TouchableOpacity>
       )}
       {onDismiss && (
@@ -72,7 +74,7 @@ export function ErrorBanner({
           accessibilityRole="button"
           accessibilityLabel="Dismiss"
         >
-          <Icon name="x" size={16} color={colors.text.muted} />
+          <Icon name="x" size={16} color={c.text.muted} />
         </TouchableOpacity>
       )}
     </Animated.View>

@@ -12,6 +12,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-na
 import { RestTimerRing } from './RestTimerRing';
 import { formatRestTimer } from '../../utils/durationFormat';
 import { colors, spacing, typography, shadows, radius, springs } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -35,6 +36,7 @@ export function RestTimerBar({
   onSkip,
   onExpand,
 }: RestTimerBarProps) {
+  const c = useThemeColors();
   const slideAnim = useSharedValue(56); // start off-screen (bar height)
   const reduceMotion = useReduceMotion();
 
@@ -55,8 +57,8 @@ export function RestTimerBar({
     : formatRestTimer(remainingSeconds);
 
   const timeLabelColor = completed
-    ? colors.semantic.positive
-    : colors.text.primary;
+    ? c.semantic.positive
+    : c.text.primary;
 
   return (
     <Animated.View style={[styles.bar, animatedBarStyle]}>
@@ -85,7 +87,7 @@ export function RestTimerBar({
         accessibilityRole="button"
         accessibilityLabel="Skip rest timer"
       >
-        <Text style={styles.skipText}>Skip</Text>
+        <Text style={[styles.skipText, { color: c.text.muted }]}>Skip</Text>
       </TouchableOpacity>
     </Animated.View>
   );

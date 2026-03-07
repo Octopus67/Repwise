@@ -21,6 +21,7 @@ async function secureSet(key: string, value: string) {
   }
 }
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Button } from '../../components/common/Button';
 import api from '../../services/api';
 import { useStore } from '../../store';
@@ -44,6 +45,7 @@ interface RegisterScreenProps {
 }
 
 export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterScreenProps) {
+  const c = useThemeColors();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -111,15 +113,15 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: c.bg.base }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Animated.View style={titleAnim}>
-          <Text style={styles.title}>Create Account</Text>
+          <Text style={[styles.title, { color: c.text.primary }]}>Create Account</Text>
         </Animated.View>
         <Animated.View style={subtitleAnim}>
-          <Text style={styles.subtitle}>Start your optimization journey</Text>
+          <Text style={[styles.subtitle, { color: c.text.secondary }]}>Start your optimization journey</Text>
         </Animated.View>
 
         <Animated.View style={formAnim}>
@@ -127,9 +129,9 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
 
         <TextInput
           testID="register-email-input"
-          style={styles.input}
+          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}
           placeholder="Email"
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
           keyboardType="email-address"
           autoCapitalize="none"
           value={email}
@@ -139,13 +141,13 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
           accessibilityLabel="Email address"
           accessibilityHint="Enter your email to create an account"
         />
-        {emailError ? <Text style={styles.emailError}>{emailError}</Text> : null}
+        {emailError ? <Text style={[styles.emailError, { color: c.semantic.negative }]}>{emailError}</Text> : null}
         <View style={{ position: 'relative' }}>
           <TextInput
             testID="register-password-input"
             style={[styles.input, { paddingRight: spacing[10] }]}
             placeholder="Password"
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
             secureTextEntry={!showPassword}
             value={password}
             onChangeText={setPassword}
@@ -162,7 +164,7 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
             accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
             accessibilityRole="button"
           >
-            <Icon name={showPassword ? 'eye-off' : 'eye'} size={20} color={colors.text.muted} />
+            <Icon name={showPassword ? 'eye-off' : 'eye'} size={20} color={c.text.muted} />
           </TouchableOpacity>
         </View>
         <View style={{ position: 'relative' }}>
@@ -170,7 +172,7 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
             testID="register-confirm-password-input"
             style={[styles.input, { paddingRight: spacing[10] }]}
             placeholder="Confirm Password"
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
             secureTextEntry={!showConfirm}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
@@ -187,17 +189,17 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
             accessibilityLabel={showConfirm ? 'Hide password confirmation' : 'Show password confirmation'}
             accessibilityRole="button"
           >
-            <Icon name={showConfirm ? 'eye-off' : 'eye'} size={20} color={colors.text.muted} />
+            <Icon name={showConfirm ? 'eye-off' : 'eye'} size={20} color={c.text.muted} />
           </TouchableOpacity>
         </View>
         </Animated.View>
 
         <Animated.View style={buttonAnim}>
         <TouchableOpacity testID="register-tos-checkbox" onPress={() => setTosAccepted(!tosAccepted)} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing[3], gap: spacing[2], minHeight: 44 }} accessibilityRole="checkbox" accessibilityState={{ checked: tosAccepted }} accessibilityLabel="Accept Terms of Service and Privacy Policy">
-          <View style={{ width: 22, height: 22, borderRadius: 4, borderWidth: 1.5, borderColor: tosAccepted ? colors.accent.primary : colors.border.default, backgroundColor: tosAccepted ? colors.accent.primary : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
-            {tosAccepted && <Text style={{ color: colors.text.primary, fontSize: typography.size.base }}>✓</Text>}
+          <View style={{ width: 22, height: 22, borderRadius: 4, borderWidth: 1.5, borderColor: tosAccepted ? c.accent.primary : c.border.default, backgroundColor: tosAccepted ? c.accent.primary : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+            {tosAccepted && <Text style={{ color: c.text.primary, fontSize: typography.size.base }}>✓</Text>}
           </View>
-          <Text style={{ color: colors.text.secondary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm, flex: 1 }}>I agree to the Terms of Service and Privacy Policy</Text>
+          <Text style={{ color: c.text.secondary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm, flex: 1 }}>I agree to the Terms of Service and Privacy Policy</Text>
         </TouchableOpacity>
 
         <Button testID="register-submit-button" title="Register" onPress={handleRegister} loading={loading} disabled={!tosAccepted || loading} style={styles.btn} />
@@ -205,8 +207,8 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
 
         <Animated.View style={linkAnim}>
         <TouchableOpacity testID="register-login-link" onPress={onNavigateLogin} style={styles.link}>
-          <Text style={styles.linkText}>
-            Already have an account? <Text style={styles.linkAccent}>Sign In</Text>
+          <Text style={[styles.linkText, { color: c.text.secondary }]}>
+            Already have an account? <Text style={[styles.linkAccent, { color: c.accent.primary }]}>Sign In</Text>
           </Text>
         </TouchableOpacity>
         </Animated.View>

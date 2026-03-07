@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../common/Icon';
 
 interface DayIndicatorProps {
@@ -16,11 +17,12 @@ export function DayIndicator({
   isOverride,
   isLoading,
 }: DayIndicatorProps) {
+  const c = useThemeColors();
   if (isLoading || !dayClassification) return null;
 
   const isTraining = dayClassification === 'training' || dayClassification === 'training_day';
   const label = isTraining ? 'Training Day' : 'Rest Day';
-  const pillColor = isTraining ? colors.accent.primary : colors.text.muted;
+  const pillColor = isTraining ? c.accent.primary : c.text.muted;
 
   return (
     <View style={styles.container}>
@@ -28,11 +30,11 @@ export function DayIndicator({
         <View style={[styles.dot, { backgroundColor: pillColor }]} />
         <Text style={[styles.label, { color: pillColor }]}>{label}</Text>
         {isOverride && (
-          <Icon name="edit" size={12} color={colors.semantic.warning} />
+          <Icon name="edit" size={12} color={c.semantic.warning} />
         )}
       </View>
       {explanation ? (
-        <Text style={styles.explanation} numberOfLines={1}>
+        <Text style={[styles.explanation, { color: c.text.secondary }]} numberOfLines={1}>
           {explanation}
         </Text>
       ) : null}

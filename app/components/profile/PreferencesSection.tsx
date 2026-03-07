@@ -7,11 +7,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import { EditableField } from '../common/EditableField';
 import { CoachingModeSelector, type CoachingMode } from '../coaching/CoachingModeSelector';
 import { useStore, type UserProfile } from '../../store';
 import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
+import { useThemeStore } from '../../store/useThemeStore';
 import api from '../../services/api';
 
 // ─── SegmentedControl (inline) ───────────────────────────────────────────────
@@ -70,9 +72,12 @@ function detectTimezone(): string {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function PreferencesSection({ profile, unitSystem, coachingMode }: PreferencesSectionProps) {
+  const c = useThemeColors();
   const store = useStore();
   const showRpeRirTooltip = useWorkoutPreferencesStore((s) => s.showRpeRirTooltip);
   const dismissRpeRirTooltip = useWorkoutPreferencesStore((s) => s.dismissRpeRirTooltip);
+  const themeMode = useThemeStore((s) => s.theme);
+  const setTheme = useThemeStore((s) => s.setTheme);
   const [savingUnit, setSavingUnit] = useState(false);
   const [savingTimezone, setSavingTimezone] = useState(false);
   const [savingCoaching, setSavingCoaching] = useState(false);
@@ -196,14 +201,14 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
 
   return (
     <Card>
-      <Text style={styles.sectionTitle}>Preferences</Text>
+      <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Preferences</Text>
 
       {/* 1. Unit System — SegmentedControl */}
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>Unit System</Text>
+      <View style={[styles.row, { borderBottomColor: c.border.subtle }]}>
+        <Text style={[styles.rowLabel, { color: c.text.muted }]}>Unit System</Text>
         <View style={styles.rowControl}>
           {savingUnit ? (
-            <ActivityIndicator color={colors.accent.primary} size="small" />
+            <ActivityIndicator color={c.accent.primary} size="small" />
           ) : (
             <SegmentedControl
               options={[
@@ -217,14 +222,29 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
         </View>
       </View>
 
+      {/* 1.5 Theme */}
+      <View style={[styles.row, { borderBottomColor: c.border.subtle }]}>
+        <Text style={[styles.rowLabel, { color: c.text.muted }]}>Appearance</Text>
+        <View style={styles.rowControl}>
+          <SegmentedControl
+            options={[
+              { value: 'dark', label: 'Dark' },
+              { value: 'light', label: 'Light' },
+            ]}
+            selected={themeMode}
+            onChange={(v) => setTheme(v as 'dark' | 'light')}
+          />
+        </View>
+      </View>
+
       {/* 2. Timezone */}
-      <View style={styles.row}>
+      <View style={[styles.row, { borderBottomColor: c.border.subtle }]}>
         <EditableField
           label="Timezone"
           value={timezoneDisplay}
           onSave={handleTimezoneSave}
         />
-        {savingTimezone && <ActivityIndicator color={colors.accent.primary} size="small" style={{ position: 'absolute', right: 0 }} />}
+        {savingTimezone && <ActivityIndicator color={c.accent.primary} size="small" style={{ position: 'absolute', right: 0 }} />}
       </View>
 
       {/* 3. Region */}
@@ -244,8 +264,8 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
       {/* 5. Coaching Mode */}
       <View style={styles.coachingContainer}>
         {savingCoaching && (
-          <View style={styles.coachingOverlay}>
-            <ActivityIndicator color={colors.accent.primary} size="small" />
+          <View style={[styles.coachingOverlay, { backgroundColor: c.bg.overlay }]}>
+            <ActivityIndicator color={c.accent.primary} size="small" />
           </View>
         )}
         <CoachingModeSelector
@@ -256,21 +276,21 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
 
       {/* 6. Reset RPE/RIR Guide */}
       {!showRpeRirTooltip && (
-        <View style={styles.row}>
-          <Text style={styles.rowLabel}>RPE/RIR Guide</Text>
+        <View style={[styles.row, { borderBottomColor: c.border.subtle }]}>
+          <Text style={[styles.rowLabel, { color: c.text.muted }]}>RPE/RIR Guide</Text>
           <TouchableOpacity
             onPress={handleResetRpeTooltip}
-            style={styles.resetButton}
+            style={[styles.resetButton, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
             accessibilityLabel="Reset RPE/RIR guide"
             accessibilityRole="button"
           >
-            <Text style={styles.resetButtonText}>Reset</Text>
+            <Text style={[styles.resetButtonText, { color: c.text.secondary }]}>Reset</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {/* Inline error */}
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && <Text style={[styles.error, { color: c.semantic.negative }]}>{error}</Text>}
     </Card>
   );
 }

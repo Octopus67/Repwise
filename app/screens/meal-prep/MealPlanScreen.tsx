@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { colors, typography, spacing } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../../components/common/Card';
 import { computeDaySummary, computeWeeklySummary } from '../../utils/mealPrepLogic';
 import type { MacroSummary, MealAssignment } from '../../utils/mealPrepLogic';
@@ -26,6 +27,7 @@ interface GeneratedPlan {
 }
 
 export function MealPlanScreen({ navigation }: any) {
+  const c = useThemeColors();
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -76,24 +78,24 @@ export function MealPlanScreen({ navigation }: any) {
   const weeklySummary = daySummaries.length > 0 ? computeWeeklySummary(daySummaries) : null;
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Meal Prep</Text>
+    <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]}>
+      <Text style={[styles.title, { color: c.text.primary }]}>Meal Prep</Text>
 
       {weeklySummary && (
         <Card style={styles.weeklyCard}>
-          <Text style={styles.weeklyLabel}>Weekly Totals</Text>
-          <Text style={styles.macroText}>
+          <Text style={[styles.weeklyLabel, { color: c.text.muted }]}>Weekly Totals</Text>
+          <Text style={[styles.macroText, { color: c.text.primary }]}>
             {weeklySummary.calories} cal · {weeklySummary.protein_g}g P ·{' '}
             {weeklySummary.carbs_g}g C · {weeklySummary.fat_g}g F
           </Text>
         </Card>
       )}
 
-      {loading && <ActivityIndicator size="large" color={colors.accent.primary} />}
+      {loading && <ActivityIndicator size="large" color={c.accent.primary} />}
       {error && (
-        <TouchableOpacity onPress={() => setError(null)} style={styles.errorRow}>
-          <Text style={styles.error}>{error}</Text>
-          <Text style={styles.errorDismiss}>✕</Text>
+        <TouchableOpacity onPress={() => setError(null)} style={[styles.errorRow, { backgroundColor: c.semantic.negativeSubtle }]}>
+          <Text style={[styles.error, { color: c.semantic.negative }]}>{error}</Text>
+          <Text style={[styles.errorDismiss, { color: c.semantic.negative }]}>✕</Text>
         </TouchableOpacity>
       )}
 
@@ -101,21 +103,21 @@ export function MealPlanScreen({ navigation }: any) {
         const summary = computeDaySummary(day.assignments);
         return (
           <Card key={day.day_index} style={styles.dayCard}>
-            <Text style={styles.dayLabel}>{DAY_LABELS[day.day_index] ?? `Day ${day.day_index + 1}`}</Text>
+            <Text style={[styles.dayLabel, { color: c.text.primary }]}>{DAY_LABELS[day.day_index] ?? `Day ${day.day_index + 1}`}</Text>
             {day.assignments.map((a, i) => (
               <View key={i} style={styles.slotRow}>
-                <Text style={styles.slotName}>{a.slot}</Text>
-                <Text style={styles.foodName}>{a.name}</Text>
-                <Text style={styles.slotCal}>{a.calories} cal</Text>
+                <Text style={[styles.slotName, { color: c.text.muted }]}>{a.slot}</Text>
+                <Text style={[styles.foodName, { color: c.text.primary }]}>{a.name}</Text>
+                <Text style={[styles.slotCal, { color: c.text.secondary }]}>{a.calories} cal</Text>
               </View>
             ))}
             {day.unfilled_slots.map((s) => (
               <View key={s} style={styles.slotRow}>
-                <Text style={styles.slotName}>{s}</Text>
-                <Text style={styles.unfilled}>Unfilled</Text>
+                <Text style={[styles.slotName, { color: c.text.muted }]}>{s}</Text>
+                <Text style={[styles.unfilled, { color: c.semantic.negative }]}>Unfilled</Text>
               </View>
             ))}
-            <Text style={styles.daySummary}>
+            <Text style={[styles.daySummary, { color: c.text.muted }]}>
               {summary.calories} cal · {summary.protein_g}g P · {summary.carbs_g}g C · {summary.fat_g}g F
             </Text>
           </Card>
@@ -129,9 +131,9 @@ export function MealPlanScreen({ navigation }: any) {
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator color={colors.text.primary} size="small" />
+            <ActivityIndicator color={c.text.primary} size="small" />
           ) : (
-            <Text style={styles.btnText}>Generate Plan</Text>
+            <Text style={[styles.btnText, { color: c.text.primary }]}>Generate Plan</Text>
           )}
         </TouchableOpacity>
         {plan && (
@@ -142,16 +144,16 @@ export function MealPlanScreen({ navigation }: any) {
               disabled={saving}
             >
               {saving ? (
-                <ActivityIndicator color={colors.text.primary} size="small" />
+                <ActivityIndicator color={c.text.primary} size="small" />
               ) : (
-                <Text style={styles.btnText}>Save Plan</Text>
+                <Text style={[styles.btnText, { color: c.text.primary }]}>Save Plan</Text>
               )}
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.btnSecondary}
+              style={[styles.btnSecondary, { backgroundColor: c.bg.surface }]}
               onPress={() => navigation?.navigate?.('ShoppingList')}
             >
-              <Text style={styles.btnText}>Shopping List</Text>
+              <Text style={[styles.btnText, { color: c.text.primary }]}>Shopping List</Text>
             </TouchableOpacity>
           </>
         )}

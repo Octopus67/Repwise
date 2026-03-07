@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { getFatigueColor, getFatigueLabel } from '../../utils/fatigueColorMapping';
 
 interface FatigueScore {
@@ -22,16 +23,17 @@ function BarRow({ label, value }: { label: string; value: number }) {
   const pct = Math.min(value * 100, 100);
   return (
     <View style={styles.barRow}>
-      <Text style={styles.barLabel}>{label}</Text>
-      <View style={styles.barTrack}>
+      <Text style={[styles.barLabel, { color: colors.text.secondary }]}>{label}</Text>
+      <View style={[styles.barTrack, { backgroundColor: colors.bg.surfaceRaised }]}>
         <View style={[styles.barFill, { width: `${pct}%` }]} />
       </View>
-      <Text style={styles.barValue}>{(value * 100).toFixed(0)}%</Text>
+      <Text style={[styles.barValue, { color: colors.text.secondary }]}>{(value * 100).toFixed(0)}%</Text>
     </View>
   );
 }
 
 export function FatigueBreakdownModal({ visible, score, onClose }: Props) {
+  const c = useThemeColors();
   if (!score) return null;
 
   const color = getFatigueColor(score.score);
@@ -40,11 +42,11 @@ export function FatigueBreakdownModal({ visible, score, onClose }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { backgroundColor: c.bg.surface }]}>
           <View style={styles.header}>
-            <Text style={styles.title}>{score.muscle_group}</Text>
+            <Text style={[styles.title, { color: c.text.primary }]}>{score.muscle_group}</Text>
             <TouchableOpacity onPress={onClose}>
-              <Text style={styles.close}>✕</Text>
+              <Text style={[styles.close, { color: c.text.muted }]}>✕</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.scoreRow}>

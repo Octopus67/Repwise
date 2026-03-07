@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, typography, spacing } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../common/Icon';
 
 interface TodaySummaryRowProps {
@@ -9,6 +10,7 @@ interface TodaySummaryRowProps {
 }
 
 export function TodaySummaryRow({ mealsLogged, workoutsCompleted }: TodaySummaryRowProps) {
+  const c = useThemeColors();
   return (
     <View style={styles.container}>
       <SummaryItem icon={<Icon name="utensils" />} count={mealsLogged} label="meals" />
@@ -24,7 +26,7 @@ function SummaryItem({ icon, count, label }: { icon: React.ReactNode; count: num
       <Text style={[styles.count, { color: count > 0 ? colors.semantic.positive : colors.text.muted }]}>
         {count}
       </Text>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: colors.text.secondary }]}>{label}</Text>
     </View>
   );
 }

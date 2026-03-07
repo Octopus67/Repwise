@@ -12,6 +12,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import type { OverloadSuggestion, UnitSystem } from '../../types/training';
 import { convertWeight } from '../../utils/unitConversion';
 import { colors, typography, spacing, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 export interface OverloadBadgeProps {
   suggestion: OverloadSuggestion | null;
@@ -30,11 +31,12 @@ export const OverloadBadge: React.FC<OverloadBadgeProps> = ({
   unitSystem,
   onApply,
 }) => {
+  const c = useThemeColors();
   if (!suggestion) return null;
 
   const displayWeight = convertWeight(suggestion.suggested_weight_kg, unitSystem);
   const unit = unitSystem === 'metric' ? 'kg' : 'lbs';
-  const dotColor = CONFIDENCE_COLORS[suggestion.confidence] ?? colors.text.muted;
+  const dotColor = CONFIDENCE_COLORS[suggestion.confidence] ?? c.text.muted;
 
   return (
     <TouchableOpacity

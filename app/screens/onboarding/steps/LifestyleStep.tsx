@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { colors, spacing, typography, radius } from '../../../theme/tokens';
+import { useThemeColors } from '../../../hooks/useThemeColors';
 import { useOnboardingStore, computeAge } from '../../../store/onboardingSlice';
 import type { ActivityLevel, ExerciseType } from '../../../store/onboardingSlice';
 import { computeBMR, computeNEAT, computeEAT } from '../../../utils/onboardingCalculations';
@@ -47,6 +48,7 @@ const EXERCISE_CHIPS: ExerciseChip[] = [
 ];
 
 export function LifestyleStep({ onNext }: Props) {
+  const c = useThemeColors();
   const {
     activityLevel,
     exerciseSessionsPerWeek,
@@ -85,11 +87,11 @@ export function LifestyleStep({ onNext }: Props) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Lifestyle</Text>
-      <Text style={styles.subtitle}>Help us understand your daily activity</Text>
+      <Text style={[styles.title, { color: c.text.primary }]}>Lifestyle</Text>
+      <Text style={[styles.subtitle, { color: c.text.secondary }]}>Help us understand your daily activity</Text>
 
       {/* Activity level */}
-      <Text style={styles.sectionLabel}>What does a typical day look like?</Text>
+      <Text style={[styles.sectionLabel, { color: c.text.primary }]}>What does a typical day look like?</Text>
       <View style={styles.activityGrid}>
         {ACTIVITY_OPTIONS.map((opt) => {
           const isSelected = activityLevel === opt.value;
@@ -113,7 +115,7 @@ export function LifestyleStep({ onNext }: Props) {
       </View>
 
       {/* Exercise sessions per week */}
-      <Text style={styles.sectionLabel}>How many times per week do you exercise?</Text>
+      <Text style={[styles.sectionLabel, { color: c.text.primary }]}>How many times per week do you exercise?</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sessionRow}>
         {SESSION_COUNTS.map((n) => {
           const isSelected = exerciseSessionsPerWeek === n;
@@ -134,7 +136,7 @@ export function LifestyleStep({ onNext }: Props) {
       </ScrollView>
 
       {/* Exercise types */}
-      <Text style={styles.sectionLabel}>What kind?</Text>
+      <Text style={[styles.sectionLabel, { color: c.text.primary }]}>What kind?</Text>
       <View style={styles.chipRow}>
         {EXERCISE_CHIPS.map((chip) => {
           const isSelected = exerciseTypes.includes(chip.value);
@@ -155,10 +157,10 @@ export function LifestyleStep({ onNext }: Props) {
 
       {/* Live activity calorie display */}
       {liveActivity > 0 && (
-        <View style={styles.activityCalCard}>
-          <Text style={styles.activityCalLabel}>Daily activity burn</Text>
-          <Text style={styles.activityCalValue}>~{liveActivity.toLocaleString()} kcal</Text>
-          <Text style={styles.activityCalHint}>From daily movement + exercise</Text>
+        <View style={[styles.activityCalCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.accent.primaryMuted }]}>
+          <Text style={[styles.activityCalLabel, { color: c.text.secondary }]}>Daily activity burn</Text>
+          <Text style={[styles.activityCalValue, { color: c.accent.primary }]}>~{liveActivity.toLocaleString()} kcal</Text>
+          <Text style={[styles.activityCalHint, { color: c.text.muted }]}>From daily movement + exercise</Text>
         </View>
       )}
 

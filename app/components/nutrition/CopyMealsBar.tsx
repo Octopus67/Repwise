@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { colors, spacing, typography, radius, opacityScale } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import api from '../../services/api';
 
 interface CopyMealsBarProps {
@@ -17,6 +18,7 @@ interface CopyMealsBarProps {
 }
 
 export function CopyMealsBar({ targetDate, onCopyComplete }: CopyMealsBarProps) {
+  const c = useThemeColors();
   const [loading, setLoading] = useState(false);
   const [showDateInput, setShowDateInput] = useState(false);
   const [sourceDate, setSourceDate] = useState('');
@@ -74,9 +76,9 @@ export function CopyMealsBar({ targetDate, onCopyComplete }: CopyMealsBarProps) 
           activeOpacity={0.7}
         >
           {loading && !showDateInput ? (
-            <ActivityIndicator color={colors.text.primary} size="small" />
+            <ActivityIndicator color={c.text.primary} size="small" />
           ) : (
-            <Text style={styles.buttonText}>Copy Yesterday</Text>
+            <Text style={[styles.buttonText, { color: c.text.primary }]}>Copy Yesterday</Text>
           )}
         </TouchableOpacity>
 
@@ -86,18 +88,18 @@ export function CopyMealsBar({ targetDate, onCopyComplete }: CopyMealsBarProps) 
           disabled={loading}
           activeOpacity={0.7}
         >
-          <Text style={styles.buttonText}>Copy from Date</Text>
+          <Text style={[styles.buttonText, { color: c.text.primary }]}>Copy from Date</Text>
         </TouchableOpacity>
       </View>
 
       {showDateInput && (
         <View style={styles.dateInputRow}>
           <TextInput
-            style={styles.dateInput}
+            style={[styles.dateInput, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
             value={sourceDate}
             onChangeText={setSourceDate}
             placeholder="YYYY-MM-DD"
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
             autoFocus
           />
           <TouchableOpacity
@@ -107,9 +109,9 @@ export function CopyMealsBar({ targetDate, onCopyComplete }: CopyMealsBarProps) 
             activeOpacity={0.7}
           >
             {loading ? (
-              <ActivityIndicator color={colors.text.primary} size="small" />
+              <ActivityIndicator color={c.text.primary} size="small" />
             ) : (
-              <Text style={styles.goButtonText}>Copy</Text>
+              <Text style={[styles.goButtonText, { color: c.text.primary }]}>Copy</Text>
             )}
           </TouchableOpacity>
         </View>

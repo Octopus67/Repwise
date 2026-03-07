@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography, letterSpacing as ls } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import { Icon } from '../common/Icon';
 import { Button } from '../common/Button';
@@ -36,7 +37,7 @@ const DASH = '—';
 function LabelValue({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.labelValue}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: colors.text.muted }]}>{label}</Text>
       <Text style={[styles.value, value === DASH && styles.valueMuted]}>
         {value}
       </Text>
@@ -51,14 +52,15 @@ export function PlanSummaryCard({
   unitSystem,
   onEdit,
 }: PlanSummaryCardProps) {
+  const c = useThemeColors();
   const fields = formatSummaryFields(metrics, goals, adaptiveTargets, unitSystem);
 
   return (
     <Card>
       {/* Section header */}
       <View style={styles.header}>
-        <Icon name="clipboard" size={20} color={colors.accent.primary} />
-        <Text style={styles.sectionTitle}>My Plan</Text>
+        <Icon name="clipboard" size={20} color={c.accent.primary} />
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>My Plan</Text>
       </View>
 
       {/* Body stats row */}
@@ -77,32 +79,32 @@ export function PlanSummaryCard({
       </View>
 
       {/* TDEE targets grid */}
-      <View style={styles.divider} />
-      <Text style={styles.targetsHeader}>TDEE Targets</Text>
+      <View style={[styles.divider, { backgroundColor: c.border.subtle }]} />
+      <Text style={[styles.targetsHeader, { color: c.text.secondary }]}>TDEE Targets</Text>
       <View style={styles.targetsGrid}>
         <View style={styles.targetItem}>
-          <Text style={[styles.targetValue, { color: colors.macro.calories }, fields.calories === DASH && styles.valueMuted]}>
+          <Text style={[styles.targetValue, { color: c.macro.calories }, fields.calories === DASH && styles.valueMuted]}>
             {fields.calories}
           </Text>
-          <Text style={styles.targetLabel}>kcal</Text>
+          <Text style={[styles.targetLabel, { color: c.text.muted }]}>kcal</Text>
         </View>
         <View style={styles.targetItem}>
-          <Text style={[styles.targetValue, { color: colors.macro.protein }, fields.protein === DASH && styles.valueMuted]}>
+          <Text style={[styles.targetValue, { color: c.macro.protein }, fields.protein === DASH && styles.valueMuted]}>
             {fields.protein}
           </Text>
-          <Text style={styles.targetLabel}>protein</Text>
+          <Text style={[styles.targetLabel, { color: c.text.muted }]}>protein</Text>
         </View>
         <View style={styles.targetItem}>
-          <Text style={[styles.targetValue, { color: colors.macro.carbs }, fields.carbs === DASH && styles.valueMuted]}>
+          <Text style={[styles.targetValue, { color: c.macro.carbs }, fields.carbs === DASH && styles.valueMuted]}>
             {fields.carbs}
           </Text>
-          <Text style={styles.targetLabel}>carbs</Text>
+          <Text style={[styles.targetLabel, { color: c.text.muted }]}>carbs</Text>
         </View>
         <View style={styles.targetItem}>
-          <Text style={[styles.targetValue, { color: colors.macro.fat }, fields.fat === DASH && styles.valueMuted]}>
+          <Text style={[styles.targetValue, { color: c.macro.fat }, fields.fat === DASH && styles.valueMuted]}>
             {fields.fat}
           </Text>
-          <Text style={styles.targetLabel}>fat</Text>
+          <Text style={[styles.targetLabel, { color: c.text.muted }]}>fat</Text>
         </View>
       </View>
 

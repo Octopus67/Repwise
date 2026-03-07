@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 export type CoachingMode = 'coached' | 'collaborative' | 'manual';
 
@@ -32,10 +33,11 @@ const MODES: { key: CoachingMode; label: string; description: string; icon: keyo
 ];
 
 export function CoachingModeSelector({ value, onChange }: CoachingModeSelectorProps) {
+  const c = useThemeColors();
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Coaching Mode</Text>
-      <Text style={styles.subheading}>Choose how the app manages your nutrition targets</Text>
+      <Text style={[styles.heading, { color: c.text.primary }]}>Coaching Mode</Text>
+      <Text style={[styles.subheading, { color: c.text.secondary }]}>Choose how the app manages your nutrition targets</Text>
       {MODES.map((mode) => {
         const isSelected = value === mode.key;
         return (
@@ -51,17 +53,17 @@ export function CoachingModeSelector({ value, onChange }: CoachingModeSelectorPr
               <Ionicons
                 name={mode.icon}
                 size={22}
-                color={isSelected ? colors.accent.primary : colors.text.muted}
+                color={isSelected ? c.accent.primary : c.text.muted}
               />
               <View style={styles.optionText}>
                 <Text style={[styles.optionLabel, isSelected && styles.optionLabelSelected]}>
                   {mode.label}
                 </Text>
-                <Text style={styles.optionDescription}>{mode.description}</Text>
+                <Text style={[styles.optionDescription, { color: c.text.muted }]}>{mode.description}</Text>
               </View>
             </View>
             <View style={[styles.radio, isSelected && styles.radioSelected]}>
-              {isSelected && <View style={styles.radioDot} />}
+              {isSelected && <View style={[styles.radioDot, { backgroundColor: c.accent.primary }]} />}
             </View>
           </TouchableOpacity>
         );

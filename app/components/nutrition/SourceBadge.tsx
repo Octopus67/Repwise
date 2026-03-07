@@ -6,6 +6,7 @@ import {
   getSourceTooltip,
   type FoodSource,
 } from '../../utils/sourceBadgeLogic';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 export type { FoodSource } from '../../utils/sourceBadgeLogic';
 export { getSourceBadgeColor, getSourceBadgeIcon, getSourceTooltip } from '../../utils/sourceBadgeLogic';
@@ -18,6 +19,7 @@ interface SourceBadgeProps {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function SourceBadge({ source, size = 16 }: SourceBadgeProps) {
+  const c = useThemeColors();
   const color = getSourceBadgeColor(source);
   const icon = getSourceBadgeIcon(source);
 

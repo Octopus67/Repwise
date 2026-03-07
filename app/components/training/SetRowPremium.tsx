@@ -23,6 +23,7 @@ import type { ActiveSet } from '../../types/training';
 import type { UnitSystem } from '../../utils/unitConversion';
 import { convertWeight } from '../../utils/unitConversion';
 import { colors, typography, spacing, radius, springs } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { useHaptics } from '../../hooks/useHaptics';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 
@@ -56,6 +57,7 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
   onUpdateField,
   onWeightStep,
 }) => {
+  const c = useThemeColors();
   const weightRef = useRef<TextInput>(null);
   const rpeRef = useRef<TextInput>(null);
   const rirRef = useRef<TextInput>(null);
@@ -144,7 +146,7 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
         keyboardType="number-pad"
         returnKeyType="next"
         placeholder="Reps"
-        placeholderTextColor={colors.text.muted}
+        placeholderTextColor={c.text.muted}
         accessibilityLabel={`Reps for set ${setIndex + 1}`}
         blurOnSubmit={false}
         maxLength={4}
@@ -171,7 +173,7 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
           keyboardType="decimal-pad"
           returnKeyType={showRpeRir ? 'next' : 'done'}
           placeholder={unitSystem === 'metric' ? 'kg' : 'lbs'}
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
           accessibilityLabel={`Weight for set ${setIndex + 1}`}
           blurOnSubmit={false}
           maxLength={6}
@@ -199,7 +201,7 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
           keyboardType="decimal-pad"
           returnKeyType="next"
           placeholder="RPE"
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
           accessibilityLabel={`RPE for set ${setIndex + 1}`}
           blurOnSubmit={false}
           maxLength={4}
@@ -217,7 +219,7 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
           keyboardType="number-pad"
           returnKeyType="done"
           placeholder="RIR"
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
           accessibilityLabel={`RIR for set ${setIndex + 1}`}
           blurOnSubmit={false}
           maxLength={2}

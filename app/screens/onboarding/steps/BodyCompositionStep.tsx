@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { colors, spacing, typography, radius } from '../../../theme/tokens';
+import { useThemeColors } from '../../../hooks/useThemeColors';
 import { useOnboardingStore } from '../../../store/onboardingSlice';
 import { estimateBodyFat } from '../../../utils/onboardingCalculations';
 import { Button } from '../../../components/common/Button';
@@ -32,6 +33,7 @@ const BODY_FAT_RANGES: BodyFatRange[] = [
 ];
 
 export function BodyCompositionStep({ onNext }: Props) {
+  const c = useThemeColors();
   const {
     sex,
     bodyFatPct,
@@ -69,24 +71,24 @@ export function BodyCompositionStep({ onNext }: Props) {
   const canProceed = (bodyFatPct !== null && bodyFatValid) || bodyFatSkipped;
 
   const getFillColor = (midpoint: number) => {
-    if (midpoint <= 17) return colors.semantic.positive;
-    if (midpoint <= 27) return colors.semantic.warning;
-    return colors.semantic.negative;
+    if (midpoint <= 17) return c.semantic.positive;
+    if (midpoint <= 27) return c.semantic.warning;
+    return c.semantic.negative;
   };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Body Composition</Text>
-      <Text style={styles.subtitle}>
+      <Text style={[styles.title, { color: c.text.primary }]}>Body Composition</Text>
+      <Text style={[styles.subtitle, { color: c.text.secondary }]}>
         Select the range that best describes your current physique
       </Text>
 
       {/* Educational info card */}
-      <View style={styles.infoCard}>
-        <Text style={styles.infoText}>
+      <View style={[styles.infoCard, { backgroundColor: c.bg.surfaceRaised }]}>
+        <Text style={[styles.infoText, { color: c.text.secondary }]}>
           Body fat percentage is the proportion of your total weight that comes from fat tissue. Knowing your approximate body fat helps us calculate your lean mass for more accurate calorie targets.
         </Text>
-        <Text style={styles.infoHint}>
+        <Text style={[styles.infoHint, { color: c.text.muted }]}>
           Don't worry about being exact — an estimate within 5% is perfectly fine.
         </Text>
       </View>
@@ -106,7 +108,7 @@ export function BodyCompositionStep({ onNext }: Props) {
             >
               <View style={styles.cardRow}>
                 {/* Vertical fill bar */}
-                <View style={styles.barTrack}>
+                <View style={[styles.barTrack, { backgroundColor: c.border.subtle }]}>
                   <View
                     style={[
                       styles.barFill,
@@ -134,20 +136,20 @@ export function BodyCompositionStep({ onNext }: Props) {
 
       {/* Validation error */}
       {bodyFatPct !== null && !bodyFatValid && (
-        <Text style={styles.errorText}>Body fat must be between 3-60%</Text>
+        <Text style={[styles.errorText, { color: c.semantic.negative }]}>Body fat must be between 3-60%</Text>
       )}
 
       {/* Skip / auto-estimate */}
-      <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.7} accessibilityLabel="Skip body fat selection" accessibilityRole="button">
-        <Text style={styles.skipText}>Not sure? We'll estimate for you</Text>
+      <TouchableOpacity style={[styles.skipBtn, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]} onPress={handleSkip} activeOpacity={0.7} accessibilityLabel="Skip body fat selection" accessibilityRole="button">
+        <Text style={[styles.skipText, { color: c.text.secondary }]}>Not sure? We'll estimate for you</Text>
       </TouchableOpacity>
 
       {/* Show auto-estimate if skipped */}
       {bodyFatSkipped && autoEstimate && (
-        <View style={styles.estimateCard}>
-          <Text style={styles.estimateLabel}>Based on your profile, we estimate</Text>
-          <Text style={styles.estimateValue}>~{autoEstimate.estimate}%</Text>
-          <Text style={styles.estimateRange}>
+        <View style={[styles.estimateCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.accent.primaryMuted }]}>
+          <Text style={[styles.estimateLabel, { color: c.text.secondary }]}>Based on your profile, we estimate</Text>
+          <Text style={[styles.estimateValue, { color: c.accent.primary }]}>~{autoEstimate.estimate}%</Text>
+          <Text style={[styles.estimateRange, { color: c.text.muted }]}>
             Range: {autoEstimate.low}% – {autoEstimate.high}%
           </Text>
         </View>

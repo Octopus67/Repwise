@@ -6,7 +6,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SecureStore from 'expo-secure-store';
 import { Platform, Alert, View, Text, ActivityIndicator } from 'react-native';
-import { colors } from './theme/tokens';
+import { useThemeColors } from './hooks/useThemeColors';
+import { useThemeStore } from './store/useThemeStore';
 import { BottomTabNavigator } from './navigation/BottomTabNavigator';
 import { LoginScreen, initTokenProvider } from './screens/auth/LoginScreen';
 import { RegisterScreen } from './screens/auth/RegisterScreen';
@@ -37,18 +38,6 @@ type AuthStackParamList = {
 };
 
 const AuthStack = createStackNavigator<AuthStackParamList>();
-
-const navTheme = {
-  dark: true as const,
-  colors: {
-    primary: colors.accent.primary,
-    background: colors.bg.base,
-    card: colors.bg.surface,
-    text: colors.text.primary,
-    border: colors.border.subtle,
-    notification: colors.semantic.negative,
-  },
-};
 
 function AuthNavigator() {
   return (
@@ -89,6 +78,20 @@ export default function App() {
   const setNeedsOnboarding = useStore((s) => s.setNeedsOnboarding);
   const [ready, setReady] = useState(false);
   const navigationRef = useRef<NavigationContainerRef<any>>(null);
+  const themeMode = useThemeStore((s) => s.theme);
+  const themeColors = useThemeColors();
+
+  const navTheme = {
+    dark: themeMode === 'dark',
+    colors: {
+      primary: themeColors.accent.primary,
+      background: themeColors.bg.base,
+      card: themeColors.bg.surface,
+      text: themeColors.text.primary,
+      border: themeColors.border.subtle,
+      notification: themeColors.semantic.negative,
+    },
+  };
 
   useEffect(() => {
     initTokenProvider(clearAuth);
@@ -196,9 +199,9 @@ export default function App() {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
-          <View style={{ flex: 1, backgroundColor: colors.bg.base, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ color: colors.text.primary, fontSize: 28, fontWeight: '700' }}>Repwise</Text>
-            <ActivityIndicator size="large" color={colors.accent.primary} style={{ marginTop: 24 }} />
+          <View style={{ flex: 1, backgroundColor: themeColors.bg.base, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ color: themeColors.text.primary, fontSize: 28, fontWeight: '700' }}>Repwise</Text>
+            <ActivityIndicator size="large" color={themeColors.accent.primary} style={{ marginTop: 24 }} />
           </View>
         </SafeAreaProvider>
       </GestureHandlerRootView>
@@ -209,7 +212,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <NavigationContainer ref={navigationRef} theme={navTheme}>
-          <StatusBar style="light" />
+          <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
           <ErrorBoundary onError={(error, errorInfo) => {
             console.error('[ErrorBoundary:Root]', error.message);
             console.error('[ErrorBoundary:Root] Stack:', error.stack);

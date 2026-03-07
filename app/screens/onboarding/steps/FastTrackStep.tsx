@@ -1,6 +1,7 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { colors, spacing, typography, radius } from '../../../theme/tokens';
+import { useThemeColors } from '../../../hooks/useThemeColors';
 import { useOnboardingStore, GoalType } from '../../../store/onboardingSlice';
 import { Button } from '../../../components/common/Button';
 
@@ -14,6 +15,7 @@ const GOAL_OPTIONS: { type: GoalType; label: string }[] = [
 interface Props { onComplete: () => void; onBack: () => void; }
 
 export function FastTrackStep({ onComplete, onBack }: Props) {
+  const c = useThemeColors();
   const store = useOnboardingStore();
   const [calories, setCalories] = useState(store.manualCalories?.toString() ?? '');
   const [protein, setProtein] = useState(store.manualProtein?.toString() ?? '');
@@ -33,10 +35,10 @@ export function FastTrackStep({ onComplete, onBack }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-      <Text style={styles.heading}>Fast Track Setup</Text>
-      <Text style={styles.subheading}>Already know your numbers? Enter them directly.</Text>
+      <Text style={[styles.heading, { color: c.text.primary }]}>Fast Track Setup</Text>
+      <Text style={[styles.subheading, { color: c.text.secondary }]}>Already know your numbers? Enter them directly.</Text>
 
-      <Text style={styles.sectionLabel}>Your Goal</Text>
+      <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Your Goal</Text>
       <View style={styles.goalRow}>
         {GOAL_OPTIONS.map((g) => (
           <TouchableOpacity
@@ -50,59 +52,59 @@ export function FastTrackStep({ onComplete, onBack }: Props) {
         ))}
       </View>
 
-      <Text style={styles.sectionLabel}>Daily Targets</Text>
+      <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Daily Targets</Text>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Calories (kcal)</Text>
+        <Text style={[styles.inputLabel, { color: c.text.secondary }]}>Calories (kcal)</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
           value={calories}
           onChangeText={setCalories}
           keyboardType="numeric"
           placeholder="e.g. 2200"
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
         />
       </View>
 
       <View style={styles.macroRow}>
         <View style={styles.macroInput}>
-          <Text style={styles.inputLabel}>Protein (g)</Text>
+          <Text style={[styles.inputLabel, { color: c.text.secondary }]}>Protein (g)</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
             value={protein}
             onChangeText={setProtein}
             keyboardType="numeric"
             placeholder="150"
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
           />
         </View>
         <View style={styles.macroInput}>
-          <Text style={styles.inputLabel}>Carbs (g)</Text>
+          <Text style={[styles.inputLabel, { color: c.text.secondary }]}>Carbs (g)</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
             value={carbs}
             onChangeText={setCarbs}
             keyboardType="numeric"
             placeholder="220"
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
           />
         </View>
         <View style={styles.macroInput}>
-          <Text style={styles.inputLabel}>Fat (g)</Text>
+          <Text style={[styles.inputLabel, { color: c.text.secondary }]}>Fat (g)</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
             value={fat}
             onChangeText={setFat}
             keyboardType="numeric"
             placeholder="70"
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
           />
         </View>
       </View>
 
       <Button title="Done" onPress={handleDone} disabled={!canSubmit} style={styles.btn} />
       <TouchableOpacity onPress={onBack} style={styles.backLink}>
-        <Text style={styles.backText}>← Go back to guided setup</Text>
+        <Text style={[styles.backText, { color: c.text.muted }]}>← Go back to guided setup</Text>
       </TouchableOpacity>
     </ScrollView>
   );

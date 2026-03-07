@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { getWeekDates, formatDayCell } from '../../utils/dateScrollerLogic';
 import { Icon } from '../common/Icon';
 
@@ -10,6 +11,7 @@ interface WeeklyTrainingCalendarProps {
 }
 
 export function WeeklyTrainingCalendar({ selectedDate, trainedDates }: WeeklyTrainingCalendarProps) {
+  const c = useThemeColors();
   const weekDates = getWeekDates(selectedDate);
   const today = new Date().toISOString().split('T')[0];
 
@@ -48,7 +50,7 @@ export function WeeklyTrainingCalendar({ selectedDate, trainedDates }: WeeklyTra
                   <Icon
                     name="check"
                     size={12}
-                    color={colors.bg.base}
+                    color={c.bg.base}
                   />
                 </View>
               )}

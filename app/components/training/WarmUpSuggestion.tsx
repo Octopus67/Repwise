@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { generateWarmUpSets, WarmUpSet } from '../../utils/warmUpGenerator';
 import { colors, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface WarmUpSuggestionProps {
   workingWeightKg: number;
@@ -10,6 +11,7 @@ interface WarmUpSuggestionProps {
 }
 
 export function WarmUpSuggestion({ workingWeightKg, barWeightKg, onGenerate }: WarmUpSuggestionProps) {
+  const c = useThemeColors();
   const [generated, setGenerated] = useState(false);
 
   if (generated || workingWeightKg <= barWeightKg) return null;
@@ -22,7 +24,7 @@ export function WarmUpSuggestion({ workingWeightKg, barWeightKg, onGenerate }: W
 
   return (
     <TouchableOpacity onPress={handlePress} style={styles.button}>
-      <Text style={styles.text}>Generate Warm-Up →</Text>
+      <Text style={[styles.text, { color: c.accent.primary }]}>Generate Warm-Up →</Text>
     </TouchableOpacity>
   );
 }

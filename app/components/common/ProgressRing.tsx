@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Platform } from 'react-native';
 import { colors, typography, springs, spacing } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { computeRingFill, formatRingLabel } from '../../utils/progressRingLogic';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography, letterSpacing } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import { TrendLineChart } from '../charts/TrendLineChart';
 import {
@@ -16,6 +17,7 @@ interface ExpenditureTrendCardProps {
 const MIN_DATA_DAYS = 14;
 
 export function ExpenditureTrendCard({ weightHistory, caloriesByDate }: ExpenditureTrendCardProps) {
+  const c = useThemeColors();
   const estimate = computeTDEEEstimate(weightHistory, caloriesByDate);
 
   // Build trend data points for the chart from calorie data
@@ -32,13 +34,13 @@ export function ExpenditureTrendCard({ weightHistory, caloriesByDate }: Expendit
 
     return (
       <Card variant="flat">
-        <Text style={styles.title}>Expenditure Trend</Text>
-        <Text style={styles.emptyText}>
+        <Text style={[styles.title, { color: c.text.primary }]}>Expenditure Trend</Text>
+        <Text style={[styles.emptyText, { color: c.text.muted }]}>
           {daysNeeded > 0
             ? `${daysNeeded} more day${daysNeeded === 1 ? '' : 's'} needed`
             : 'Insufficient data for TDEE estimation'}
         </Text>
-        <Text style={styles.emptySubtext}>
+        <Text style={[styles.emptySubtext, { color: c.text.muted }]}>
           Log bodyweight and nutrition daily for accurate estimates.
         </Text>
       </Card>
@@ -47,21 +49,21 @@ export function ExpenditureTrendCard({ weightHistory, caloriesByDate }: Expendit
 
   return (
     <Card variant="flat">
-      <Text style={styles.title}>Expenditure Trend</Text>
+      <Text style={[styles.title, { color: c.text.primary }]}>Expenditure Trend</Text>
 
       {/* Prominent TDEE number */}
       <View style={styles.tdeeRow}>
-        <Text style={styles.tdeeValue}>{Math.round(estimate.tdee)}</Text>
-        <Text style={styles.tdeeUnit}>kcal/day</Text>
+        <Text style={[styles.tdeeValue, { color: c.text.primary }]}>{Math.round(estimate.tdee)}</Text>
+        <Text style={[styles.tdeeUnit, { color: c.text.secondary }]}>kcal/day</Text>
       </View>
-      <Text style={styles.tdeeLabel}>Estimated TDEE ({estimate.windowDays}-day window)</Text>
+      <Text style={[styles.tdeeLabel, { color: c.text.muted }]}>Estimated TDEE ({estimate.windowDays}-day window)</Text>
 
       {/* Trend line chart */}
       {chartData.length > 1 && (
         <View style={styles.chartContainer}>
           <TrendLineChart
             data={chartData}
-            color={colors.chart.calories}
+            color={c.chart.calories}
             targetLine={estimate.tdee}
             suffix=" kcal"
           />

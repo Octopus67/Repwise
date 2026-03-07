@@ -7,6 +7,7 @@ import Animated, {
   interpolateColor,
 } from 'react-native-reanimated';
 import { colors, radius, spacing, typography, motion } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { usePressAnimation } from '../../hooks/usePressAnimation';
 import { useHoverState } from '../../hooks/useHoverState';
 
@@ -42,6 +43,7 @@ export function getFilterPillStyles(active: boolean): {
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 export function FilterPill({ label, active, onPress }: FilterPillProps) {
+  const c = useThemeColors();
   const progress = useSharedValue(active ? 1 : 0);
   const { animatedStyle: pressStyle, onPressIn, onPressOut } = usePressAnimation();
   const { isHovered, hoverProps } = useHoverState();
@@ -54,12 +56,12 @@ export function FilterPill({ label, active, onPress }: FilterPillProps) {
     const backgroundColor = interpolateColor(
       progress.value,
       [0, 1],
-      [colors.bg.surface, colors.accent.primaryMuted],
+      [c.bg.surface, c.accent.primaryMuted],
     );
     const borderColor = interpolateColor(
       progress.value,
       [0, 1],
-      [colors.border.subtle, colors.accent.primary],
+      [c.border.subtle, c.accent.primary],
     );
     return { backgroundColor, borderColor };
   });
@@ -68,13 +70,13 @@ export function FilterPill({ label, active, onPress }: FilterPillProps) {
     const color = interpolateColor(
       progress.value,
       [0, 1],
-      [colors.text.muted, colors.accent.primary],
+      [c.text.muted, c.accent.primary],
     );
     return { color };
   });
 
   const hoverBorderStyle = Platform.OS === 'web' && isHovered
-    ? { borderColor: colors.accent.primary }
+    ? { borderColor: c.accent.primary }
     : undefined;
 
   return (

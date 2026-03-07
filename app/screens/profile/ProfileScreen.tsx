@@ -5,12 +5,15 @@ import {
   StyleSheet,
   ScrollView,
   Platform,
+  Switch,
 } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Animated from 'react-native-reanimated';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeStore } from '../../store/useThemeStore';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../../components/common/Icon';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -43,12 +46,15 @@ async function secureClear() {
 }
 
 export function ProfileScreen() {
+  const c = useThemeColors();
   const store = useStore();
   const premium = isPremium(store);
   const navigation = useNavigation<any>();
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const themeMode = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
 
   const headerAnim = useStaggeredEntrance(0, 60);
   const planPanelAnim = useStaggeredEntrance(1, 60);
@@ -138,7 +144,7 @@ export function ProfileScreen() {
 
   if (isLoading && !store.profile) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
         <ScrollView contentContainerStyle={styles.content}>
           <View style={{ alignItems: 'center', paddingTop: spacing[6] }}>
             <Skeleton width={80} height={80} variant="circle" />
@@ -159,21 +165,21 @@ export function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']} testID="profile-screen">
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="profile-screen">
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {error && (
           <ErrorBanner message={error} onRetry={loadProfile} onDismiss={() => setError(null)} />
         )}
         <Animated.View style={headerAnim}>
           <Card style={styles.profileCard}>
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarText}>{avatarInitial}</Text>
+            <View style={[styles.avatarCircle, { backgroundColor: c.accent.primaryMuted }]}>
+              <Text style={[styles.avatarText, { color: c.accent.primary }]}>{avatarInitial}</Text>
             </View>
             {premium && <PremiumBadge size="md" />}
             <View style={styles.fieldsContainer}>
               <EditableField label="Display Name" value={store.profile?.displayName || 'Set your name'} onSave={handleSaveDisplayName} />
               <EditableField label="Email" value={store.user?.email ?? '—'} onSave={async () => {}} editable={false} />
-              {memberSince ? <Text style={styles.memberSince}>Member since {memberSince}</Text> : null}
+              {memberSince ? <Text style={[styles.memberSince, { color: c.text.muted }]}>Member since {memberSince}</Text> : null}
             </View>
           </Card>
         </Animated.View>
@@ -187,17 +193,33 @@ export function ProfileScreen() {
         <Animated.View style={advancedSettingsAnim}>
           <AdvancedSettingsSection />
         </Animated.View>
+
+        <SectionHeader title="Appearance" />
+        <Card>
+          <View style={styles.subRow}>
+            <Text style={[styles.subLabel, { color: c.text.primary }]}>Dark Mode</Text>
+            <Switch
+              value={themeMode === 'dark'}
+              onValueChange={toggleTheme}
+              trackColor={{ false: c.border.default, true: c.accent.primary }}
+              thumbColor="#FFFFFF"
+              accessibilityLabel="Toggle dark mode"
+              accessibilityRole="switch"
+            />
+          </View>
+        </Card>
+
         <Animated.View style={featuresAnim}>
           <SectionHeader title="Features" />
           <Card>
-            <FeatureNavItem icon={<Icon name="target" size={22} color={colors.text.secondary} />} label="Coaching" description="AI-powered training guidance" onPress={() => navigation.navigate('Coaching')} />
-            <FeatureNavItem icon={<Icon name="chat" size={22} color={colors.text.secondary} />} label="Community" description="Connect with other lifters" onPress={() => navigation.navigate('Community')} />
-            <FeatureNavItem icon={<Icon name="dumbbell" size={22} color={colors.text.secondary} />} label="Founder's Story" description="The story behind Repwise" onPress={() => navigation.navigate('FounderStory')} />
+            <FeatureNavItem icon={<Icon name="target" size={22} color={c.text.secondary} />} label="Coaching" description="AI-powered training guidance" onPress={() => navigation.navigate('Coaching')} />
+            <FeatureNavItem icon={<Icon name="chat" size={22} color={c.text.secondary} />} label="Community" description="Connect with other lifters" onPress={() => navigation.navigate('Community')} />
+            <FeatureNavItem icon={<Icon name="dumbbell" size={22} color={c.text.secondary} />} label="Founder's Story" description="The story behind Repwise" onPress={() => navigation.navigate('FounderStory')} />
 
-            <FeatureNavItem icon={<Icon name="book" size={22} color={colors.text.secondary} />} label="Learn" description="Articles and educational content" onPress={() => navigation.navigate('Learn')} testID="profile-learn-link" />
-            <FeatureNavItem icon={<Icon name="camera" size={22} color={colors.text.secondary} />} label="Progress Photos" description="Track your transformation visually" onPress={() => navigation.navigate('ProgressPhotos')} testID="profile-photos-link" />
-            <FeatureNavItem icon={<Icon name="scale" size={22} color={colors.text.secondary} />} label="Body Measurements" description="Track weight, body fat, and circumferences" onPress={() => navigation.navigate('Measurements')} testID="profile-measurements-link" />
-            <FeatureNavItem icon={<Icon name="mail" size={22} color={colors.text.secondary} />} label="Notifications" description="Manage push notification preferences" onPress={() => navigation.navigate('NotificationSettings')} testID="profile-notifications-link" />
+            <FeatureNavItem icon={<Icon name="book" size={22} color={c.text.secondary} />} label="Learn" description="Articles and educational content" onPress={() => navigation.navigate('Learn')} testID="profile-learn-link" />
+            <FeatureNavItem icon={<Icon name="camera" size={22} color={c.text.secondary} />} label="Progress Photos" description="Track your transformation visually" onPress={() => navigation.navigate('ProgressPhotos')} testID="profile-photos-link" />
+            <FeatureNavItem icon={<Icon name="scale" size={22} color={c.text.secondary} />} label="Body Measurements" description="Track weight, body fat, and circumferences" onPress={() => navigation.navigate('Measurements')} testID="profile-measurements-link" />
+            <FeatureNavItem icon={<Icon name="mail" size={22} color={c.text.secondary} />} label="Notifications" description="Manage push notification preferences" onPress={() => navigation.navigate('NotificationSettings')} testID="profile-notifications-link" />
           </Card>
         </Animated.View>
 
@@ -210,15 +232,15 @@ export function ProfileScreen() {
           <SectionHeader title="Subscription" />
           <Card>
             <View style={styles.subRow}>
-              <Text style={styles.subLabel}>Status</Text>
+              <Text style={[styles.subLabel, { color: c.text.secondary }]}>Status</Text>
               <Text style={[styles.subValue, premium && styles.subActive]}>
                 {store.subscription?.status ?? 'Free'}
               </Text>
             </View>
             {store.subscription?.currentPeriodEnd && (
               <View style={styles.subRow}>
-                <Text style={styles.subLabel}>Renews</Text>
-                <Text style={styles.subValue}>
+                <Text style={[styles.subLabel, { color: c.text.secondary }]}>Renews</Text>
+                <Text style={[styles.subValue, { color: c.text.primary }]}>
                   {new Date(store.subscription.currentPeriodEnd).toLocaleDateString()}
                 </Text>
               </View>

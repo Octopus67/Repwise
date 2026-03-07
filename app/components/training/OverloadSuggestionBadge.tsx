@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import api from '../../services/api';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { formatSuggestionText, OverloadSuggestionData } from '../../utils/intelligenceLayerLogic';
 
 interface OverloadSuggestionBadgeProps {
@@ -23,6 +24,7 @@ interface OverloadSuggestionBadgeProps {
 }
 
 export function OverloadSuggestionBadge({ exerciseName, unitSystem }: OverloadSuggestionBadgeProps) {
+  const c = useThemeColors();
   const [suggestion, setSuggestion] = useState<OverloadSuggestionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(false);
@@ -55,7 +57,7 @@ export function OverloadSuggestionBadge({ exerciseName, unitSystem }: OverloadSu
   if (loading) {
     return (
       <View style={styles.skeleton}>
-        <View style={styles.skeletonBar} />
+        <View style={[styles.skeletonBar, { backgroundColor: c.bg.surfaceRaised }]} />
       </View>
     );
   }
@@ -66,14 +68,14 @@ export function OverloadSuggestionBadge({ exerciseName, unitSystem }: OverloadSu
   const text = formatSuggestionText(suggestion, unitSystem);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text} numberOfLines={1}>{text}</Text>
+    <View style={[styles.container, { backgroundColor: c.accent.primaryMuted }]}>
+      <Text style={[styles.text, { color: c.accent.primary }]} numberOfLines={1}>{text}</Text>
       <TouchableOpacity
         style={styles.dismissBtn}
         onPress={() => setDismissed(true)}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <Text style={styles.dismissText}>✕</Text>
+        <Text style={[styles.dismissText, { color: c.text.muted }]}>✕</Text>
       </TouchableOpacity>
     </View>
   );

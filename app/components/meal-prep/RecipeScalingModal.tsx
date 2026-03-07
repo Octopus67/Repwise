@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { ModalContainer } from '../common/ModalContainer';
 import { colors, typography, spacing } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { computeScaleFactor, scaleIngredients } from '../../utils/mealPrepLogic';
 import type { Ingredient } from '../../utils/mealPrepLogic';
 
@@ -29,6 +30,7 @@ export function RecipeScalingModal({
   ingredients,
   onConfirm,
 }: Props) {
+  const c = useThemeColors();
   const [targetValue, setTargetValue] = useState('');
   const [targetMacro, setTargetMacro] = useState<string>('calories');
 
@@ -70,7 +72,7 @@ export function RecipeScalingModal({
   return (
     <ModalContainer visible={visible} onClose={onClose} title="Scale Recipe">
       <View style={styles.content}>
-        <Text style={styles.label}>Target Macro</Text>
+        <Text style={[styles.label, { color: c.text.muted }]}>Target Macro</Text>
         <View style={styles.macroRow}>
           {MACRO_OPTIONS.map((m) => (
             <TouchableOpacity
@@ -85,28 +87,28 @@ export function RecipeScalingModal({
           ))}
         </View>
 
-        <Text style={styles.label}>Target Value</Text>
+        <Text style={[styles.label, { color: c.text.muted }]}>Target Value</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surface }]}
           keyboardType="numeric"
           value={targetValue}
           onChangeText={setTargetValue}
           placeholder="e.g. 500"
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
         />
 
         {preview && (
-          <View style={styles.preview}>
-            <Text style={styles.previewTitle}>Preview (×{preview.factor.toFixed(2)})</Text>
-            <Text style={styles.previewMacros}>
+          <View style={[styles.preview, { backgroundColor: c.bg.surface }]}>
+            <Text style={[styles.previewTitle, { color: c.accent.primary }]}>Preview (×{preview.factor.toFixed(2)})</Text>
+            <Text style={[styles.previewMacros, { color: c.text.primary }]}>
               {preview.calories} cal · {preview.protein_g}g P · {preview.carbs_g}g C · {preview.fat_g}g F
             </Text>
           </View>
         )}
 
         <View style={styles.row}>
-          <Text style={styles.origLabel}>Original</Text>
-          <Text style={styles.origValue}>
+          <Text style={[styles.origLabel, { color: c.text.muted }]}>Original</Text>
+          <Text style={[styles.origValue, { color: c.text.secondary }]}>
             {originalCalories} cal · {originalProtein}g P · {originalCarbs}g C · {originalFat}g F
           </Text>
         </View>
@@ -119,7 +121,7 @@ export function RecipeScalingModal({
             if (val > 0) onConfirm(val, targetMacro);
           }}
         >
-          <Text style={styles.confirmText}>Apply Scaling</Text>
+          <Text style={[styles.confirmText, { color: c.text.primary }]}>Apply Scaling</Text>
         </TouchableOpacity>
       </View>
     </ModalContainer>

@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { colors, radius, spacing, typography, letterSpacing } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import { EditableField } from '../common/EditableField';
 import { EmptyState } from '../common/EmptyState';
@@ -117,6 +118,7 @@ function MacroTargets({
 }
 
 export function GoalsSection({ goals, adaptiveTargets, unitSystem }: GoalsSectionProps) {
+  const c = useThemeColors();
   const store = useStore();
 
   const [editingGoalType, setEditingGoalType] = useState(false);
@@ -223,7 +225,7 @@ export function GoalsSection({ goals, adaptiveTargets, unitSystem }: GoalsSectio
     return (
       <Card>
         <EmptyState
-          icon={<Icon name="target" size={28} color={colors.accent.primary} />}
+          icon={<Icon name="target" size={28} color={c.accent.primary} />}
           title="Goals"
           description="Set your first goal to get personalized calorie and macro targets"
           actionLabel="Set Goal"
@@ -241,7 +243,7 @@ export function GoalsSection({ goals, adaptiveTargets, unitSystem }: GoalsSectio
                 activeOpacity={0.7}
               >
                 {savingGoalType ? (
-                  <ActivityIndicator color={colors.text.primary} size="small" />
+                  <ActivityIndicator color={c.text.primary} size="small" />
                 ) : (
                   <Text style={editStyles.saveBtnText}>Save</Text>
                 )}
@@ -290,7 +292,7 @@ export function GoalsSection({ goals, adaptiveTargets, unitSystem }: GoalsSectio
               activeOpacity={0.7}
             >
               {savingGoalType ? (
-                <ActivityIndicator color={colors.text.primary} size="small" />
+                <ActivityIndicator color={c.text.primary} size="small" />
               ) : (
                 <Text style={editStyles.saveBtnText}>Save</Text>
               )}
@@ -307,7 +309,7 @@ export function GoalsSection({ goals, adaptiveTargets, unitSystem }: GoalsSectio
           <Text style={styles.goalTypeLabel}>Goal Type</Text>
           <View style={styles.goalTypeValueRow}>
             <Text style={styles.goalTypeValue}>{goalTypeLabel}</Text>
-            <Icon name="edit" size={14} color={colors.text.muted} />
+            <Icon name="edit" size={14} color={c.text.muted} />
           </View>
         </TouchableOpacity>
       )}

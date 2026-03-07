@@ -9,6 +9,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { G, Line as SvgLine, Circle, Text as SvgText, Polyline } from 'react-native-svg';
 import { colors, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import type { WNSLandmarks } from '../../types/volume';
 
 export interface TrendPoint {
@@ -39,10 +40,11 @@ function formatWeekLabel(week: string): string {
 }
 
 export function VolumeTrendChart({ trend, landmarks }: VolumeTrendChartProps) {
+  const c = useThemeColors();
   if (!trend.length) {
     return (
       <View style={styles.empty} accessibilityLabel="Not enough data for trend chart">
-        <Text style={styles.emptyText}>Not enough data yet</Text>
+        <Text style={[styles.emptyText, { color: c.text.muted }]}>Not enough data yet</Text>
       </View>
     );
   }
@@ -96,7 +98,7 @@ export function VolumeTrendChart({ trend, landmarks }: VolumeTrendChartProps) {
         <Polyline
           points={points}
           fill="none"
-          stroke={colors.accent.primary}
+          stroke={c.accent.primary}
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -109,7 +111,7 @@ export function VolumeTrendChart({ trend, landmarks }: VolumeTrendChartProps) {
             cx={xScale(i)}
             cy={yScale(t.volume)}
             r={3}
-            fill={colors.accent.primary}
+            fill={c.accent.primary}
           />
         ))}
 
@@ -120,7 +122,7 @@ export function VolumeTrendChart({ trend, landmarks }: VolumeTrendChartProps) {
             x={xScale(i)}
             y={CHART_H - 4}
             textAnchor="middle"
-            fill={colors.text.muted}
+            fill={c.text.muted}
             fontSize={8}
           >
             {formatWeekLabel(t.week)}
@@ -134,7 +136,7 @@ export function VolumeTrendChart({ trend, landmarks }: VolumeTrendChartProps) {
             x={PAD.left - 4}
             y={yScale(v) + 3}
             textAnchor="end"
-            fill={colors.text.muted}
+            fill={c.text.muted}
             fontSize={8}
           >
             {v}

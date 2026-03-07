@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface ReportCardProps {
   report: {
@@ -14,6 +15,7 @@ interface ReportCardProps {
 }
 
 export const ReportCard = forwardRef<View, ReportCardProps>(({ report }, ref) => {
+  const c = useThemeColors();
   const topRec = (report.recommendations ?? [])[0] ?? '';
   const trend = report.body?.weight_trend_kg ?? null;
   const trendStr = trend != null ? `${trend > 0 ? '+' : ''}${trend.toFixed(1)} kg` : '—';
@@ -35,6 +37,7 @@ export const ReportCard = forwardRef<View, ReportCardProps>(({ report }, ref) =>
 });
 
 function StatBox({ label, value }: { label: string; value: string }) {
+  const c = useThemeColors();
   return (
     <View style={styles.statBox}>
       <Text style={styles.statValue}>{value}</Text>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { MealSlotData, MealSlotName } from '../../utils/mealSlotLogic';
 import { formatEntryTime, sortEntriesChronologically } from '../../utils/timestampFormat';
 
@@ -10,6 +11,7 @@ interface MealSlotGroupProps {
 }
 
 export function MealSlotGroup({ slot, onAddToSlot }: MealSlotGroupProps) {
+  const c = useThemeColors();
   const [expanded, setExpanded] = useState(true);
   const hasEntries = slot.entries.length > 0;
   const sorted = hasEntries ? sortEntriesChronologically(slot.entries) : [];
@@ -18,17 +20,17 @@ export function MealSlotGroup({ slot, onAddToSlot }: MealSlotGroupProps) {
     <View style={styles.container}>
       {/* Header */}
       <TouchableOpacity
-        style={styles.header}
+        style={[styles.header, { backgroundColor: c.bg.surfaceRaised }]}
         onPress={() => hasEntries && setExpanded(!expanded)}
         activeOpacity={hasEntries ? 0.7 : 1}
       >
         <View style={styles.headerLeft}>
-          <Text style={styles.slotName}>{slot.name}</Text>
+          <Text style={[styles.slotName, { color: c.text.primary }]}>{slot.name}</Text>
           {hasEntries && (
-            <Text style={styles.chevron}>{expanded ? '▾' : '▸'}</Text>
+            <Text style={[styles.chevron, { color: c.text.muted }]}>{expanded ? '▾' : '▸'}</Text>
           )}
         </View>
-        <Text style={styles.slotCalories}>
+        <Text style={[styles.slotCalories, { color: c.text.secondary }]}>
           {Math.round(slot.totals.calories)} kcal
         </Text>
       </TouchableOpacity>
@@ -39,16 +41,16 @@ export function MealSlotGroup({ slot, onAddToSlot }: MealSlotGroupProps) {
           {sorted.map((entry) => {
             const time = formatEntryTime(entry.created_at);
             return (
-              <View key={entry.id} style={styles.entryRow}>
+              <View key={entry.id} style={[styles.entryRow, { borderBottomColor: c.border.subtle }]}>
                 <View style={styles.entryInfo}>
-                  <Text style={styles.entryName} numberOfLines={1}>
+                  <Text style={[styles.entryName, { color: c.text.primary }]} numberOfLines={1}>
                     {entry.meal_name}
                   </Text>
                   {time !== '' && (
-                    <Text style={styles.entryTime}>{time}</Text>
+                    <Text style={[styles.entryTime, { color: c.text.muted }]}>{time}</Text>
                   )}
                 </View>
-                <Text style={styles.entryCal}>{Math.round(entry.calories)} kcal</Text>
+                <Text style={[styles.entryCal, { color: c.text.secondary }]}>{Math.round(entry.calories)} kcal</Text>
               </View>
             );
           })}
@@ -61,7 +63,7 @@ export function MealSlotGroup({ slot, onAddToSlot }: MealSlotGroupProps) {
         onPress={() => onAddToSlot(slot.name)}
         activeOpacity={0.7}
       >
-        <Text style={styles.addButtonText}>+</Text>
+        <Text style={[styles.addButtonText, { color: c.accent.primary }]}>+</Text>
       </TouchableOpacity>
     </View>
   );

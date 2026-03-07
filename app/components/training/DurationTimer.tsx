@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Text, StyleSheet, Platform } from 'react-native';
 import { formatDuration } from '../../utils/durationFormat';
 import { colors, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface DurationTimerProps {
   startedAt: string; // ISO timestamp
@@ -12,6 +13,7 @@ interface DurationTimerProps {
  * Recalculates from the start timestamp each tick so it survives backgrounding.
  */
 export function DurationTimer({ startedAt }: DurationTimerProps) {
+  const c = useThemeColors();
   const [elapsed, setElapsed] = useState(() => calcElapsed(startedAt));
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -31,7 +33,7 @@ export function DurationTimer({ startedAt }: DurationTimerProps) {
     };
   }, [startedAt]);
 
-  return <Text style={styles.timer}>{formatDuration(elapsed)}</Text>;
+  return <Text style={[styles.timer, { color: c.text.primary }]}>{formatDuration(elapsed)}</Text>;
 }
 
 function calcElapsed(startedAt: string): number {

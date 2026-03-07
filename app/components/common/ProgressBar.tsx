@@ -7,6 +7,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { colors, spacing, typography, motion } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { computeBarFill } from '../../utils/progressBarLogic';
 
 interface ProgressBarProps {
@@ -26,6 +27,7 @@ export function ProgressBar({
   showPercentage = true,
   height = 6,
 }: ProgressBarProps) {
+  const c = useThemeColors();
   const fill = computeBarFill(value, target, color);
   const widthProgress = useSharedValue(0);
 
@@ -53,7 +55,7 @@ export function ProgressBar({
           />
         </View>
         {showPercentage && (
-          <Text style={styles.label}>{fill.label}</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>{fill.label}</Text>
         )}
       </View>
     </View>

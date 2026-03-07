@@ -10,6 +10,7 @@ import {
   PanResponder,
 } from 'react-native';
 import { colors, radius, spacing, typography, opacityScale } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 const STORAGE_KEY = 'progress_photo_paths';
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -34,6 +35,7 @@ interface PhotoComparisonProps {
 }
 
 export function PhotoComparison({ photos, pathMap }: PhotoComparisonProps) {
+  const c = useThemeColors();
   const sortedDates = useMemo(() => {
     const unique = [...new Set(photos.map((p) => p.capture_date))];
     return unique.sort();
@@ -75,7 +77,7 @@ export function PhotoComparison({ photos, pathMap }: PhotoComparisonProps) {
   if (sortedDates.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No photos to compare yet.</Text>
+        <Text style={[styles.emptyText, { color: c.text.muted }]}>No photos to compare yet.</Text>
       </View>
     );
   }
@@ -88,7 +90,7 @@ export function PhotoComparison({ photos, pathMap }: PhotoComparisonProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Compare</Text>
+      <Text style={[styles.title, { color: c.text.primary }]}>Compare</Text>
       <View style={styles.row}>
         <ComparisonSide
           date={leftDate}
@@ -172,17 +174,17 @@ function ComparisonSide({
   );
 
   return (
-    <View style={styles.side} {...panResponder.panHandlers}>
+    <View style={[styles.side, { backgroundColor: colors.bg.surface }]} {...panResponder.panHandlers}>
       {fileUri && !hasImageError ? (
         <Image
           source={{ uri: fileUri }}
-          style={styles.photo}
+          style={[styles.photo, { backgroundColor: colors.bg.surfaceRaised }]}
           resizeMode="cover"
           onError={() => photo && onImageError(photo.id)}
         />
       ) : (
         <View style={[styles.photo, styles.placeholder]}>
-          <Text style={styles.placeholderText}>
+          <Text style={[styles.placeholderText, { color: colors.text.muted }]}>
             {hasImageError ? 'Failed to load photo' : 'No photo for this date'}
           </Text>
         </View>
@@ -196,8 +198,8 @@ function ComparisonSide({
           <Text style={[styles.navText, !canGoBack && styles.navDisabled]}>‹</Text>
         </TouchableOpacity>
         <View style={styles.dateInfo}>
-          <Text style={styles.dateText}>{dateLabel}</Text>
-          {weightLabel && <Text style={styles.weightText}>{weightLabel}</Text>}
+          <Text style={[styles.dateText, { color: colors.text.primary }]}>{dateLabel}</Text>
+          {weightLabel && <Text style={[styles.weightText, { color: colors.accent.primary }]}>{weightLabel}</Text>}
         </View>
         <TouchableOpacity
           onPress={() => onNavigate(1)}

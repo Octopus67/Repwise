@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon, IconName } from '../common/Icon';
 
 /** Map achievement icon strings from the backend to available Icon names and colors */
@@ -40,6 +41,7 @@ export function AchievementCard({
   progress,
   onPress,
 }: AchievementCardProps) {
+  const c = useThemeColors();
   const categoryColor = getAchievementColor(definition.icon);
   const progressPct = Math.min(Math.max((progress ?? 0) * 100, 0), 100);
 
@@ -56,18 +58,18 @@ export function AchievementCard({
         <Icon
           name={getAchievementIcon(definition.icon)}
           size={20}
-          color={unlocked ? categoryColor : colors.text.muted}
+          color={unlocked ? categoryColor : c.text.muted}
         />
       </View>
       <Text style={[styles.title, !unlocked && styles.titleLocked]} numberOfLines={1}>
         {definition.title}
       </Text>
       {unlocked && unlockedAt ? (
-        <Text style={styles.date}>
+        <Text style={[styles.date, { color: c.text.muted }]}>
           {new Date(unlockedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
         </Text>
       ) : (
-        <View style={styles.progressTrack}>
+        <View style={[styles.progressTrack, { backgroundColor: c.bg.surfaceRaised }]}>
           <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
         </View>
       )}

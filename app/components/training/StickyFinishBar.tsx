@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, radius, spacing, typography, shadows } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface StickyFinishBarProps {
   exerciseCount: number;
@@ -18,11 +19,12 @@ export function StickyFinishBar({
   loading,
   disabled,
 }: StickyFinishBarProps) {
+  const c = useThemeColors();
   const summaryText = `${exerciseCount} exercise${exerciseCount !== 1 ? 's' : ''} · ${setCount} set${setCount !== 1 ? 's' : ''} · ${durationFormatted}`;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.summary} numberOfLines={1} accessibilityRole="text" accessibilityLabel={summaryText}>{summaryText}</Text>
+    <View style={[styles.container, { backgroundColor: c.bg.surfaceRaised, borderTopColor: c.border.default }]}>
+      <Text style={[styles.summary, { color: c.text.secondary }]} numberOfLines={1} accessibilityRole="text" accessibilityLabel={summaryText}>{summaryText}</Text>
       <TouchableOpacity
         style={[styles.finishBtn, loading && styles.finishBtnDisabled]}
         onPress={onFinish}
@@ -31,7 +33,7 @@ export function StickyFinishBar({
         accessibilityRole="button"
         activeOpacity={0.7}
       >
-        <Text style={styles.finishText}>
+        <Text style={[styles.finishText, { color: c.text.primary }]}>
           {loading ? 'Saving…' : 'Finish Workout'}
         </Text>
       </TouchableOpacity>

@@ -5,6 +5,7 @@
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { ModalContainer } from '../common/ModalContainer';
 import { colors, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 export type LandmarkKey = 'mv' | 'mev' | 'mav' | 'mrv';
 
@@ -62,6 +63,7 @@ const LANDMARK_INFO: Record<LandmarkKey, LandmarkInfo> = {
 };
 
 export function LandmarkExplainer({ landmark, onClose, visible }: LandmarkExplainerProps) {
+  const c = useThemeColors();
   const info = LANDMARK_INFO[landmark];
 
   return (
@@ -76,13 +78,13 @@ export function LandmarkExplainer({ landmark, onClose, visible }: LandmarkExplai
           <Text style={[styles.colorBadgeText, { color: info.color }]}>{info.title}</Text>
         </View>
 
-        <Text style={styles.sectionTitle}>What is it?</Text>
-        <Text style={styles.body}>{info.description}</Text>
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>What is it?</Text>
+        <Text style={[styles.body, { color: c.text.secondary }]}>{info.description}</Text>
 
-        <Text style={styles.sectionTitle}>Practical Advice</Text>
-        <Text style={styles.body}>{info.advice}</Text>
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Practical Advice</Text>
+        <Text style={[styles.body, { color: c.text.secondary }]}>{info.advice}</Text>
 
-        <Text style={styles.citation}>{info.citation}</Text>
+        <Text style={[styles.citation, { color: c.text.muted, borderTopColor: c.border.subtle }]}>{info.citation}</Text>
       </ScrollView>
     </ModalContainer>
   );

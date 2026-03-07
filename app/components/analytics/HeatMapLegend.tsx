@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 const LEGEND_ITEMS = [
   { color: colors.heatmap.untrained, label: 'Untrained' },
@@ -10,12 +11,13 @@ const LEGEND_ITEMS = [
 ];
 
 export function HeatMapLegend() {
+  const c = useThemeColors();
   return (
     <View style={styles.container}>
       {LEGEND_ITEMS.map((item) => (
         <View key={item.label} style={styles.item}>
           <View style={[styles.dot, { backgroundColor: item.color }]} />
-          <Text style={styles.label}>{item.label}</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>{item.label}</Text>
         </View>
       ))}
     </View>

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, Touchable
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../../components/common/Card';
 import api from '../../services/api';
 
@@ -16,6 +17,7 @@ interface FounderContent {
 }
 
 export function FounderStoryScreen() {
+  const c = useThemeColors();
   const navigation = useNavigation();
   const [content, setContent] = useState<FounderContent | null>(null);
 
@@ -55,78 +57,78 @@ export function FounderStoryScreen() {
 
   if (!content) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        <ActivityIndicator size="large" color={colors.accent.primary} />
+      <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
+        <ActivityIndicator size="large" color={c.accent.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']} testID="founder-story-screen">
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="founder-story-screen">
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {navigation.canGoBack() && (
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.7}>
-            <Text style={styles.backText}>← Back</Text>
+            <Text style={[styles.backText, { color: c.accent.primary }]}>← Back</Text>
           </TouchableOpacity>
         )}
-        <Text style={styles.title}>Founder's Story</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>Founder's Story</Text>
 
         {/* Narrative */}
         <Card style={styles.narrativeCard}>
-          <Text style={styles.narrative}>{content.narrative}</Text>
+          <Text style={[styles.narrative, { color: c.text.primary }]}>{content.narrative}</Text>
         </Card>
 
         {/* Before / After metrics */}
-        <Text style={styles.sectionTitle}>Transformation</Text>
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Transformation</Text>
         <View style={styles.metricsRow}>
           <Card style={styles.metricsCard}>
-            <Text style={styles.metricsLabel}>Before</Text>
+            <Text style={[styles.metricsLabel, { color: c.text.secondary }]}>Before</Text>
             {Object.entries(content.before_metrics).map(([key, val]) => (
               <View key={key} style={styles.metricItem}>
-                <Text style={styles.metricKey}>{key}</Text>
-                <Text style={styles.metricVal}>{val}</Text>
+                <Text style={[styles.metricKey, { color: c.text.muted }]}>{key}</Text>
+                <Text style={[styles.metricVal, { color: c.text.primary }]}>{val}</Text>
               </View>
             ))}
           </Card>
           <Card style={styles.metricsCard}>
-            <Text style={[styles.metricsLabel, { color: colors.semantic.positive }]}>After</Text>
+            <Text style={[styles.metricsLabel, { color: c.semantic.positive }]}>After</Text>
             {Object.entries(content.after_metrics).map(([key, val]) => (
               <View key={key} style={styles.metricItem}>
-                <Text style={styles.metricKey}>{key}</Text>
-                <Text style={[styles.metricVal, { color: colors.semantic.positive }]}>{val}</Text>
+                <Text style={[styles.metricKey, { color: c.text.muted }]}>{key}</Text>
+                <Text style={[styles.metricVal, { color: c.semantic.positive }]}>{val}</Text>
               </View>
             ))}
           </Card>
         </View>
 
         {/* Timeline */}
-        <Text style={styles.sectionTitle}>Timeline</Text>
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Timeline</Text>
         <Card>
           {content.timeline.map((item, i) => (
             <View key={i} style={styles.timelineItem}>
-              <View style={styles.timelineDot} />
-              {i < content.timeline.length - 1 && <View style={styles.timelineLine} />}
+              <View style={[styles.timelineDot, { backgroundColor: c.accent.primary }]} />
+              {i < content.timeline.length - 1 && <View style={[styles.timelineLine, { backgroundColor: c.border.default }]} />}
               <View style={styles.timelineContent}>
-                <Text style={styles.timelineYear}>{item.year}</Text>
-                <Text style={styles.timelineEvent}>{item.event}</Text>
+                <Text style={[styles.timelineYear, { color: c.accent.primary }]}>{item.year}</Text>
+                <Text style={[styles.timelineEvent, { color: c.text.primary }]}>{item.event}</Text>
               </View>
             </View>
           ))}
         </Card>
 
         {/* Philosophy */}
-        <Text style={styles.sectionTitle}>Philosophy</Text>
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Philosophy</Text>
         <Card>
-          <Text style={styles.philosophy}>{content.philosophy}</Text>
+          <Text style={[styles.philosophy, { color: c.text.secondary }]}>{content.philosophy}</Text>
         </Card>
 
         {/* Media gallery */}
         {content.media_gallery.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>Gallery</Text>
+            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Gallery</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.gallery}>
               {content.media_gallery.map((url, i) => (
-                <Image key={i} source={{ uri: url }} style={styles.galleryImage} accessibilityLabel={`Gallery photo ${i + 1}`} />
+                <Image key={i} source={{ uri: url }} style={[styles.galleryImage, { backgroundColor: c.bg.surface }]} accessibilityLabel={`Gallery photo ${i + 1}`} />
               ))}
             </ScrollView>
           </>

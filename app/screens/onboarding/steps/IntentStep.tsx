@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { colors, spacing, typography, radius } from '../../../theme/tokens';
+import { useThemeColors } from '../../../hooks/useThemeColors';
 import { useOnboardingStore, GoalType } from '../../../store/onboardingSlice';
 import { Icon, IconName } from '../../../components/common/Icon';
 import { Button } from '../../../components/common/Button';
@@ -23,6 +24,7 @@ function GoalCard({ index, children }: { index: number; children: React.ReactNod
 }
 
 export function IntentStep({ onNext }: Props) {
+  const c = useThemeColors();
   const goalType = useOnboardingStore((s) => s.goalType);
   const updateField = useOnboardingStore((s) => s.updateField);
   const { impact } = useHaptics();
@@ -34,8 +36,8 @@ export function IntentStep({ onNext }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-      <Text style={styles.heading}>What's your mission?</Text>
-      <Text style={styles.subheading}>We'll build a plan tailored to your goal</Text>
+      <Text style={[styles.heading, { color: c.text.primary }]}>What's your mission?</Text>
+      <Text style={[styles.subheading, { color: c.text.secondary }]}>We'll build a plan tailored to your goal</Text>
 
       {GOALS.map((g, i) => (
         <GoalCard key={g.type} index={i}>
@@ -45,14 +47,14 @@ export function IntentStep({ onNext }: Props) {
             activeOpacity={0.7}
           >
             <View style={styles.iconWrap}>
-              <Icon name={g.icon} size={24} color={colors.accent.primary} />
+              <Icon name={g.icon} size={24} color={c.accent.primary} />
             </View>
             <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{g.title}</Text>
-              <Text style={styles.cardDesc}>{g.desc}</Text>
+              <Text style={[styles.cardTitle, { color: c.text.primary }]}>{g.title}</Text>
+              <Text style={[styles.cardDesc, { color: c.text.secondary }]}>{g.desc}</Text>
             </View>
             {goalType === g.type && (
-              <Icon name="check" size={16} color={colors.accent.primary} />
+              <Icon name="check" size={16} color={c.accent.primary} />
             )}
           </TouchableOpacity>
         </GoalCard>

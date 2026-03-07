@@ -11,6 +11,7 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import type { MuscleVolumeEntry } from '../../utils/volumeAggregator';
 import { colors, typography, spacing, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 export interface VolumePillsProps {
   muscleVolumes: MuscleVolumeEntry[];
@@ -27,6 +28,7 @@ function getPillColor(current: number, mavLow: number, mavHigh: number) {
 }
 
 export const VolumePills: React.FC<VolumePillsProps> = ({ muscleVolumes, goalMultiplier }) => {
+  const c = useThemeColors();
   if (!muscleVolumes.length) return null;
 
   return (

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing, typography, opacityScale } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { groupMicroFields, MicroField } from '../../utils/microNutrientSerializer';
 import { getRDA, computeRDAPercentage, rdaColor, Sex } from '../../utils/rdaValues';
 import { useStore } from '../../store';
@@ -79,20 +80,20 @@ function NutrientRow({
 
   return (
     <TouchableOpacity
-      style={styles.nutrientRow}
+      style={[styles.nutrientRow, { backgroundColor: colors.bg.surface }]}
       onPress={() => setExpanded(!expanded)}
       activeOpacity={0.7}
     >
       <View style={styles.nutrientHeader}>
-        <Text style={styles.nutrientLabel}>{field.label}</Text>
+        <Text style={[styles.nutrientLabel, { color: colors.text.primary }]}>{field.label}</Text>
         <View style={styles.nutrientValues}>
           {hasData ? (
             <>
-              <Text style={styles.intakeText}>
+              <Text style={[styles.intakeText, { color: colors.text.secondary }]}>
                 {intake.toFixed(1)} {field.unit}
               </Text>
               {rda > 0 && (
-                <Text style={styles.rdaActual}>/ {rda.toFixed(0)}{field.unit}</Text>
+                <Text style={[styles.rdaActual, { color: colors.text.muted }]}>/ {rda.toFixed(0)}{field.unit}</Text>
               )}
               {rda > 0 && (
                 <Text style={[styles.rdaPct, { color: barColor }]}>
@@ -101,13 +102,13 @@ function NutrientRow({
               )}
             </>
           ) : (
-            <Text style={styles.noDataText}>—</Text>
+            <Text style={[styles.noDataText, { color: colors.text.muted }]}>—</Text>
           )}
         </View>
       </View>
 
       {/* Progress bar */}
-      <View style={styles.barTrack}>
+      <View style={[styles.barTrack, { backgroundColor: colors.bg.surfaceRaised }]}>
         {hasData && rda > 0 && (
           <View
             style={[
@@ -120,16 +121,16 @@ function NutrientRow({
 
       {/* Expanded: top contributing foods */}
       {expanded && hasData && contributions.length > 0 && (
-        <View style={styles.contributionList}>
+        <View style={[styles.contributionList, { borderTopColor: colors.border.subtle }]}>
           {contributions.map((c, i) => (
             <View key={i} style={styles.contributionRow}>
-              <Text style={styles.contributionName} numberOfLines={1}>
+              <Text style={[styles.contributionName, { color: colors.text.secondary }]} numberOfLines={1}>
                 {c.foodName}
               </Text>
-              <Text style={styles.contributionAmount}>
+              <Text style={[styles.contributionAmount, { color: colors.text.muted }]}>
                 {c.amount.toFixed(1)} {field.unit}
               </Text>
-              <Text style={styles.contributionPct}>
+              <Text style={[styles.contributionPct, { color: colors.text.muted }]}>
                 {Math.round(c.percentage)}%
               </Text>
             </View>
@@ -141,6 +142,7 @@ function NutrientRow({
 }
 
 export function NutritionReportScreen({ navigation }: { navigation?: any }) {
+  const c = useThemeColors();
   const store = useStore();
   const birthYear = useOnboardingStore((s) => s.birthYear);
   const birthMonth = useOnboardingStore((s) => s.birthMonth);
@@ -212,7 +214,7 @@ export function NutritionReportScreen({ navigation }: { navigation?: any }) {
 
   const renderSectionHeader = ({ section }: { section: { title: string } }) => (
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{section.title}</Text>
+      <Text style={[styles.sectionTitle, { color: c.text.primary }]}>{section.title}</Text>
     </View>
   );
 
@@ -223,23 +225,23 @@ export function NutritionReportScreen({ navigation }: { navigation?: any }) {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
         {navigation && (
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={styles.backText}>←</Text>
+            <Text style={[styles.backText, { color: c.accent.primary }]}>←</Text>
           </TouchableOpacity>
         )}
-        <Text style={styles.title}>Nutrition Report</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>Nutrition Report</Text>
       </View>
 
       {/* Date selector */}
       <View style={styles.dateRow}>
         <TouchableOpacity onPress={() => changeDate(-1)} style={styles.dateArrow}>
-          <Text style={styles.dateArrowText}>‹</Text>
+          <Text style={[styles.dateArrowText, { color: c.accent.primary }]}>‹</Text>
         </TouchableOpacity>
-        <Text style={styles.dateText}>{formatDisplayDate(selectedDate)}</Text>
+        <Text style={[styles.dateText, { color: c.text.primary }]}>{formatDisplayDate(selectedDate)}</Text>
         <TouchableOpacity
           onPress={() => canGoForward && changeDate(1)}
           style={styles.dateArrow}
@@ -260,15 +262,15 @@ export function NutritionReportScreen({ navigation }: { navigation?: any }) {
 
       {/* RDA defaults warning */}
       {profileIncomplete && (
-        <View style={styles.rdaWarningBanner}>
-          <Text style={styles.rdaWarningText}>
+        <View style={[styles.rdaWarningBanner, { backgroundColor: c.semantic.warningSubtle }]}>
+          <Text style={[styles.rdaWarningText, { color: c.semantic.warning }]}>
             <Icon name="warning" /> RDA values use defaults (age 30, male). Set your profile for accurate values.
           </Text>
           <TouchableOpacity
             onPress={() => navigation?.navigate?.('Profile')}
             activeOpacity={0.7}
           >
-            <Text style={styles.rdaWarningLink}>Set Profile →</Text>
+            <Text style={[styles.rdaWarningLink, { color: c.semantic.warning }]}>Set Profile →</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -276,13 +278,13 @@ export function NutritionReportScreen({ navigation }: { navigation?: any }) {
       {/* Content */}
       {isLoading ? (
         <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color={colors.accent.primary} />
+          <ActivityIndicator size="large" color={c.accent.primary} />
         </View>
       ) : !hasAnyData ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}><Icon name="salad" /></Text>
-          <Text style={styles.emptyTitle}>No nutrient data</Text>
-          <Text style={styles.emptyText}>Log food to see your nutrition report</Text>
+          <Text style={[styles.emptyTitle, { color: c.text.primary }]}>No nutrient data</Text>
+          <Text style={[styles.emptyText, { color: c.text.muted }]}>Log food to see your nutrition report</Text>
         </View>
       ) : (
         <SectionList

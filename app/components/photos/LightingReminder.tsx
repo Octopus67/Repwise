@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Switch } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import {
   shouldShowReminder,
   setLightingReminderDismissed,
@@ -20,6 +21,7 @@ interface LightingReminderProps {
 }
 
 export function LightingReminder({ visible, onDismiss, onDontShowAgain }: LightingReminderProps) {
+  const c = useThemeColors();
   const [dontShow, setDontShow] = useState(false);
   const [shouldRender, setShouldRender] = useState(true);
 
@@ -49,27 +51,27 @@ export function LightingReminder({ visible, onDismiss, onDontShowAgain }: Lighti
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleDismiss}>
-      <View style={styles.backdrop}>
-        <View style={styles.card}>
+      <View style={[styles.backdrop, { backgroundColor: c.bg.overlay }]}>
+        <View style={[styles.card, { backgroundColor: c.bg.surface }]}>
           <Text style={styles.icon}>💡</Text>
-          <Text style={styles.title}>Lighting Tip</Text>
-          <Text style={styles.body}>
+          <Text style={[styles.title, { color: c.text.primary }]}>Lighting Tip</Text>
+          <Text style={[styles.body, { color: c.text.secondary }]}>
             For the best comparison results, try to use the same room, same time of day, and prefer
             natural light for each photo session.
           </Text>
 
           <View style={styles.toggleRow}>
-            <Text style={styles.toggleLabel}>Don't show again</Text>
+            <Text style={[styles.toggleLabel, { color: c.text.secondary }]}>Don't show again</Text>
             <Switch
               value={dontShow}
               onValueChange={setDontShow}
-              trackColor={{ false: colors.bg.surfaceRaised, true: colors.accent.primary }}
-              thumbColor={colors.text.primary}
+              trackColor={{ false: c.bg.surfaceRaised, true: c.accent.primary }}
+              thumbColor={c.text.primary}
             />
           </View>
 
-          <TouchableOpacity style={styles.button} onPress={handleDismiss} activeOpacity={0.8}>
-            <Text style={styles.buttonText}>Got it</Text>
+          <TouchableOpacity style={[styles.button, { backgroundColor: c.accent.primary }]} onPress={handleDismiss} activeOpacity={0.8}>
+            <Text style={[styles.buttonText, { color: c.text.inverse }]}>Got it</Text>
           </TouchableOpacity>
         </View>
       </View>

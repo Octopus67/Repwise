@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { formatMiniSummary } from '../../utils/workoutSummaryFormatter';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface FinishBarProps {
   exerciseCount: number;
@@ -19,6 +20,7 @@ export const FinishBar = ({
   isEditMode,
   onFinish,
 }: FinishBarProps) => {
+  const c = useThemeColors();
   const summary = formatMiniSummary({
     exerciseCount,
     completedSetCount,

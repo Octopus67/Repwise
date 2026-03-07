@@ -13,6 +13,7 @@ import { Icon } from '../../components/common/Icon';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
 import * as SecureStore from 'expo-secure-store';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Button } from '../../components/common/Button';
 import api, { setTokenProvider } from '../../services/api';
 import { useStore } from '../../store';
@@ -70,6 +71,7 @@ interface LoginScreenProps {
 }
 
 export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForgotPassword }: LoginScreenProps) {
+  const c = useThemeColors();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -119,15 +121,15 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: c.bg.base }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Animated.View style={titleAnim}>
-          <Text style={styles.title}>Repwise</Text>
+          <Text style={[styles.title, { color: c.text.primary }]}>Repwise</Text>
         </Animated.View>
         <Animated.View style={subtitleAnim}>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
+          <Text style={[styles.subtitle, { color: c.text.secondary }]}>Sign in to continue</Text>
         </Animated.View>
 
         <Animated.View style={formAnim}>
@@ -135,9 +137,9 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
 
         <TextInput
           testID="login-email-input"
-          style={styles.input}
+          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}
           placeholder="Email"
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
           keyboardType="email-address"
           autoCapitalize="none"
           value={email}
@@ -147,14 +149,14 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
           accessibilityLabel="Email address"
           accessibilityHint="Enter your email to sign in"
         />
-        {emailError ? <Text style={styles.emailError}>{emailError}</Text> : null}
+        {emailError ? <Text style={[styles.emailError, { color: c.semantic.negative }]}>{emailError}</Text> : null}
         <View style={{ position: 'relative' }}>
           <TextInput
             ref={passwordRef}
             testID="login-password-input"
             style={[styles.input, { paddingRight: spacing[10], marginBottom: 0 }]}
             placeholder="Password"
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
             secureTextEntry={!showPassword}
             value={password}
             onChangeText={setPassword}
@@ -170,7 +172,7 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
             accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
             accessibilityRole="button"
           >
-            <Icon name={showPassword ? 'eye-off' : 'eye'} size={20} color={colors.text.muted} />
+            <Icon name={showPassword ? 'eye-off' : 'eye'} size={20} color={c.text.muted} />
           </TouchableOpacity>
         </View>
         <View style={{ marginBottom: spacing[3] }} />
@@ -179,7 +181,7 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
         <Animated.View style={buttonAnim}>
         {onNavigateForgotPassword ? (
           <TouchableOpacity testID="forgot-password-link" onPress={onNavigateForgotPassword} style={{ alignItems: 'flex-end', marginBottom: spacing[3], minHeight: 44, justifyContent: 'center' }}>
-            <Text style={{ color: colors.accent.primary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm }}>Forgot Password?</Text>
+            <Text style={{ color: c.accent.primary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm }}>Forgot Password?</Text>
           </TouchableOpacity>
         ) : null}
 
@@ -188,8 +190,8 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
 
         <Animated.View style={linkAnim}>
         <TouchableOpacity testID="login-register-link" onPress={onNavigateRegister} style={styles.link}>
-          <Text style={styles.linkText}>
-            Don't have an account? <Text style={styles.linkAccent}>Register</Text>
+          <Text style={[styles.linkText, { color: c.text.secondary }]}>
+            Don't have an account? <Text style={[styles.linkAccent, { color: c.accent.primary }]}>Register</Text>
           </Text>
         </TouchableOpacity>
         </Animated.View>

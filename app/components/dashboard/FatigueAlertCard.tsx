@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { getFatigueColor } from '../../utils/fatigueColorMapping';
 import { Icon } from '../common/Icon';
 
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function FatigueAlertCard({ suggestions, onPress }: Props) {
+  const c = useThemeColors();
   if (!Array.isArray(suggestions) || suggestions.length === 0) return null;
 
   // Filter out malformed entries before sorting
@@ -46,14 +48,14 @@ export function FatigueAlertCard({ suggestions, onPress }: Props) {
     >
       <View style={styles.header}>
         <Icon name="alert-triangle" size={16} color={borderColor} />
-        <Text style={styles.title}>Fatigue Alert</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>Fatigue Alert</Text>
       </View>
-      <Text style={styles.muscle}>{top.muscle_group}</Text>
-      <Text style={styles.message} numberOfLines={2}>
+      <Text style={[styles.muscle, { color: c.text.primary }]}>{top.muscle_group}</Text>
+      <Text style={[styles.message, { color: c.text.secondary }]} numberOfLines={2}>
         {top.message || 'Consider reducing volume for this muscle group.'}
       </Text>
       {valid.length > 1 && (
-        <Text style={styles.more}>+{valid.length - 1} more muscle groups</Text>
+        <Text style={[styles.more, { color: c.text.muted }]}>+{valid.length - 1} more muscle groups</Text>
       )}
     </TouchableOpacity>
   );

@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { colors, spacing, typography, radius, letterSpacing as ls } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../common/Icon';
 import { Button } from '../common/Button';
 
@@ -19,6 +20,7 @@ export function ShareableCard({
   unlockedAt,
   onShare,
 }: ShareableCardProps) {
+  const c = useThemeColors();
   const cardRef = useRef<View>(null);
 
   const handleShare = async () => {
@@ -31,18 +33,18 @@ export function ShareableCard({
 
   return (
     <View>
-      <View ref={cardRef} style={styles.card}>
-        <View style={styles.iconCircle}>
-          <Icon name="trophy" size={28} color={colors.accent.primary} />
+      <View ref={cardRef} style={[styles.card, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}>
+        <View style={[styles.iconCircle, { backgroundColor: c.accent.primaryMuted }]}>
+          <Icon name="trophy" size={28} color={c.accent.primary} />
         </View>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.description}>{description}</Text>
-        <Text style={styles.date}>
+        <Text style={[styles.title, { color: c.text.primary }]}>{title}</Text>
+        <Text style={[styles.description, { color: c.text.secondary }]}>{description}</Text>
+        <Text style={[styles.date, { color: c.text.muted }]}>
           Unlocked {new Date(unlockedAt).toLocaleDateString(undefined, {
             month: 'long', day: 'numeric', year: 'numeric',
           })}
         </Text>
-        <Text style={styles.branding}>Repwise</Text>
+        <Text style={[styles.branding, { color: c.accent.primary }]}>Repwise</Text>
       </View>
       {Platform.OS !== 'web' && onShare && (
         <Button title="Share" onPress={handleShare} style={styles.shareBtn} />

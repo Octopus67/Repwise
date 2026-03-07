@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Card } from '../common/Card';
 import { colors, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface TrendData {
   slope_per_week: number;
@@ -49,7 +50,7 @@ function formatTrend(trend: TrendData | null, label: string, invertGood = false)
   const sign = slope >= 0 ? '+' : '';
   return (
     <View style={styles.trendRow}>
-      <Text style={styles.trendLabel}>{label}</Text>
+      <Text style={[styles.trendLabel, { color: colors.text.secondary }]}>{label}</Text>
       <Text style={[styles.trendValue, { color: trendColor(trend.direction, invertGood) }]}>
         {sign}{slope.toFixed(1)} cm/wk
       </Text>
@@ -58,13 +59,14 @@ function formatTrend(trend: TrendData | null, label: string, invertGood = false)
 }
 
 export function RecompDashboardCard({ metrics, loading = false, error = null }: Props) {
+  const c = useThemeColors();
   if (loading) {
     return (
       <Card variant="flat" style={styles.card}>
-        <Text style={styles.title}>Body Recomposition</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>Body Recomposition</Text>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color={colors.accent.primary} />
-          <Text style={styles.loadingText}>Loading metrics…</Text>
+          <ActivityIndicator size="small" color={c.accent.primary} />
+          <Text style={[styles.loadingText, { color: c.text.secondary }]}>Loading metrics…</Text>
         </View>
       </Card>
     );
@@ -73,16 +75,16 @@ export function RecompDashboardCard({ metrics, loading = false, error = null }: 
   if (error) {
     return (
       <Card variant="flat" style={styles.card}>
-        <Text style={styles.title}>Body Recomposition</Text>
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>Body Recomposition</Text>
+        <Text style={[styles.errorText, { color: c.semantic.negative }]}>{error}</Text>
       </Card>
     );
   }
   if (!metrics || !metrics.has_sufficient_data) {
     return (
       <Card variant="flat" style={styles.card}>
-        <Text style={styles.title}>Body Recomposition</Text>
-        <Text style={styles.prompt}>Log waist, arm, and chest measurements to track your recomp progress</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>Body Recomposition</Text>
+        <Text style={[styles.prompt, { color: c.text.secondary }]}>Log waist, arm, and chest measurements to track your recomp progress</Text>
       </Card>
     );
   }
@@ -91,14 +93,14 @@ export function RecompDashboardCard({ metrics, loading = false, error = null }: 
 
   return (
     <Card variant="flat" style={styles.card}>
-      <Text style={styles.title}>Body Recomposition</Text>
+      <Text style={[styles.title, { color: c.text.primary }]}>Body Recomposition</Text>
       {formatTrend(metrics.waist_trend, 'Waist')}
       {formatTrend(metrics.arm_trend, 'Arms', true)}
       {formatTrend(metrics.chest_trend, 'Chest', true)}
       {formatTrend(metrics.weight_trend, 'Weight')}
       {metrics.recomp_score != null && Number.isFinite(metrics.recomp_score) && (
-        <View style={styles.scoreRow}>
-          <Text style={styles.scoreLabel}>Recomp Score</Text>
+        <View style={[styles.scoreRow, { borderTopColor: c.border.subtle }]}>
+          <Text style={[styles.scoreLabel, { color: c.text.primary }]}>Recomp Score</Text>
           <Text style={[styles.scoreValue, { color: scoreColor(score) }]}>
             {score > 0 ? '+' : ''}{score.toFixed(0)}
           </Text>

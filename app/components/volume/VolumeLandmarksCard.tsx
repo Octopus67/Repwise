@@ -9,6 +9,7 @@ import { VolumeBar } from './VolumeBar';
 import { VolumeTrendChart, type TrendPoint } from './VolumeTrendChart';
 import { LandmarkExplainer, type LandmarkKey } from './LandmarkExplainer';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import type { WNSLandmarks } from '../../types/volume';
 
 export interface VolumeLandmarksCardProps {
@@ -35,6 +36,7 @@ export function VolumeLandmarksCard({
   trend,
   status,
 }: VolumeLandmarksCardProps) {
+  const c = useThemeColors();
   const [expanded, setExpanded] = useState(false);
   const [explainerLandmark, setExplainerLandmark] = useState<LandmarkKey | null>(null);
 
@@ -45,7 +47,7 @@ export function VolumeLandmarksCard({
     <Card variant="flat" style={styles.card}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>{displayName}</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>{displayName}</Text>
         <View
           style={[styles.badge, { backgroundColor: statusCfg.bg }]}
           accessibilityLabel={`Status: ${statusCfg.label}`}
@@ -59,7 +61,7 @@ export function VolumeLandmarksCard({
 
       {/* Current volume + info icons */}
       <View style={styles.infoRow}>
-        <Text style={styles.volumeText}>
+        <Text style={[styles.volumeText, { color: c.text.secondary }]}>
           {currentVolume} HU this week
         </Text>
         <View style={styles.infoIcons}>
@@ -71,7 +73,7 @@ export function VolumeLandmarksCard({
               accessibilityLabel={`Learn about ${key.toUpperCase()}`}
               accessibilityRole="button"
             >
-              <Text style={styles.infoIcon}>{key.toUpperCase()} ⓘ</Text>
+              <Text style={[styles.infoIcon, { color: c.text.muted }]}>{key.toUpperCase()} ⓘ</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -84,7 +86,7 @@ export function VolumeLandmarksCard({
         accessibilityLabel={expanded ? 'Hide trend chart' : 'Show trend chart'}
         accessibilityRole="button"
       >
-        <Text style={styles.expandText}>
+        <Text style={[styles.expandText, { color: c.accent.primary }]}>
           {expanded ? '▾ Hide Trend' : '▸ Show Trend'}
         </Text>
       </TouchableOpacity>

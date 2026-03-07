@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import { TrendLineChart } from '../charts/TrendLineChart';
 import { TimeRangeSelector } from '../charts/TimeRangeSelector';
@@ -22,6 +23,7 @@ interface MeasurementTrendChartProps {
 }
 
 export function MeasurementTrendChart({ measurements }: MeasurementTrendChartProps) {
+  const c = useThemeColors();
   const unitSystem = useStore((s) => s.unitSystem);
   const [metric, setMetric] = useState<Metric>('weight');
   const [range, setRange] = useState<TimeRange>('30d');
@@ -36,7 +38,7 @@ export function MeasurementTrendChart({ measurements }: MeasurementTrendChartPro
 
   const filtered = filterByTimeRange(dataPoints, range);
 
-  const chartColor = metric === 'weight' ? colors.accent.primary : colors.semantic.warning;
+  const chartColor = metric === 'weight' ? c.accent.primary : c.semantic.warning;
   const suffix = metric === 'weight'
     ? (unitSystem === 'imperial' ? ' lbs' : ' kg')
     : '%';
@@ -44,8 +46,8 @@ export function MeasurementTrendChart({ measurements }: MeasurementTrendChartPro
   return (
     <Card style={styles.card}>
       <View style={styles.header}>
-        <Text style={styles.title}>Trends</Text>
-        <View style={styles.metricToggle}>
+        <Text style={[styles.title, { color: c.text.primary }]}>Trends</Text>
+        <View style={[styles.metricToggle, { backgroundColor: c.bg.surfaceRaised }]}>
           {(['weight', 'bodyFat'] as const).map((m) => (
             <TouchableOpacity
               key={m}

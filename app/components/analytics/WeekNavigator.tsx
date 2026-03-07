@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../common/Icon';
 import { formatWeekRange, getAdjacentWeek, isCurrentOrFutureWeek } from '../../utils/muscleVolumeLogic';
 
@@ -10,6 +11,7 @@ interface WeekNavigatorProps {
 }
 
 export function WeekNavigator({ currentWeekStart, onWeekChange, disableNext }: WeekNavigatorProps) {
+  const c = useThemeColors();
   const nextDisabled = disableNext ?? isCurrentOrFutureWeek(currentWeekStart);
 
   return (
@@ -19,9 +21,9 @@ export function WeekNavigator({ currentWeekStart, onWeekChange, disableNext }: W
         hitSlop={8}
         style={styles.arrow}
       >
-        <Icon name="chevron-left" size={20} color={colors.text.primary} />
+        <Icon name="chevron-left" size={20} color={c.text.primary} />
       </TouchableOpacity>
-      <Text style={styles.label}>{formatWeekRange(currentWeekStart)}</Text>
+      <Text style={[styles.label, { color: c.text.primary }]}>{formatWeekRange(currentWeekStart)}</Text>
       <TouchableOpacity
         onPress={() => !nextDisabled && onWeekChange(getAdjacentWeek(currentWeekStart, 'next'))}
         hitSlop={8}
@@ -31,7 +33,7 @@ export function WeekNavigator({ currentWeekStart, onWeekChange, disableNext }: W
         <Icon
           name="chevron-right"
           size={20}
-          color={nextDisabled ? colors.text.muted : colors.text.primary}
+          color={nextDisabled ? c.text.muted : c.text.primary}
         />
       </TouchableOpacity>
     </View>

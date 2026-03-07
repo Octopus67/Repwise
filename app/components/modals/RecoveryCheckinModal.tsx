@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import api from '../../services/api';
 
 interface Props {
@@ -23,7 +24,7 @@ function Stepper({ label, value, onChange, labels }: {
 }) {
   return (
     <View style={styles.stepperContainer}>
-      <Text style={styles.stepperLabel}>{label}</Text>
+      <Text style={[styles.stepperLabel, { color: colors.text.secondary }]}>{label}</Text>
       <View style={styles.stepperRow}>
         {[1, 2, 3, 4, 5].map((v) => (
           <TouchableOpacity
@@ -37,12 +38,13 @@ function Stepper({ label, value, onChange, labels }: {
           </TouchableOpacity>
         ))}
       </View>
-      <Text style={styles.stepperHint}>{labels[value - 1]}</Text>
+      <Text style={[styles.stepperHint, { color: colors.text.muted }]}>{labels[value - 1]}</Text>
     </View>
   );
 }
 
 export function RecoveryCheckinModal({ visible, onClose, onSuccess }: Props) {
+  const c = useThemeColors();
   const [soreness, setSoreness] = useState(1);
   const [stress, setStress] = useState(1);
   const [sleepQuality, setSleepQuality] = useState(3);
@@ -84,12 +86,12 @@ export function RecoveryCheckinModal({ visible, onClose, onSuccess }: Props) {
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.sheet}>
+      <View style={[styles.overlay, { backgroundColor: c.bg.overlay }]}>
+        <View style={[styles.sheet, { backgroundColor: c.bg.surface }]}>
           <View style={styles.header}>
-            <Text style={styles.title}>Recovery Check-in</Text>
+            <Text style={[styles.title, { color: c.text.primary }]}>Recovery Check-in</Text>
             <TouchableOpacity onPress={onClose} hitSlop={8} style={styles.closeBtn}>
-              <Text style={styles.closeBtnText}>✕</Text>
+              <Text style={[styles.closeBtnText, { color: c.text.secondary }]}>✕</Text>
             </TouchableOpacity>
           </View>
           <Stepper label="Soreness" value={soreness} onChange={setSoreness} labels={LABELS.soreness} />
@@ -97,13 +99,13 @@ export function RecoveryCheckinModal({ visible, onClose, onSuccess }: Props) {
           <Stepper label="Sleep Quality" value={sleepQuality} onChange={setSleepQuality} labels={LABELS.sleep_quality} />
           <TouchableOpacity style={[styles.submitBtn, submitting && styles.submitBtnDisabled]} onPress={handleSubmit} disabled={submitting}>
             {submitting ? (
-              <ActivityIndicator color={colors.text.inverse} />
+              <ActivityIndicator color={c.text.inverse} />
             ) : (
-              <Text style={styles.submitText}>Submit</Text>
+              <Text style={[styles.submitText, { color: c.text.inverse }]}>Submit</Text>
             )}
           </TouchableOpacity>
           <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-            <Text style={styles.cancelText}>Skip</Text>
+            <Text style={[styles.cancelText, { color: c.text.muted }]}>Skip</Text>
           </TouchableOpacity>
         </View>
       </View>

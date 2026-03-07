@@ -9,6 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../common/Card';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -55,6 +56,7 @@ export function WeeklyCheckinCard({
   onModify,
   onDismissSuggestion,
 }: WeeklyCheckinCardProps) {
+  const c = useThemeColors();
   const [isEditing, setIsEditing] = useState(false);
   const [editTargets, setEditTargets] = useState<MacroTargets>({
     calories: checkin.new_targets?.calories ?? 2000,
@@ -80,30 +82,30 @@ export function WeeklyCheckinCard({
   // Recomp mode: show recomp-specific check-in
   if (checkin.coaching_mode === 'recomp' && checkin.recomp_recommendation) {
     const scoreColor = (checkin.recomp_score ?? 0) > 10
-      ? colors.semantic.positive
+      ? c.semantic.positive
       : (checkin.recomp_score ?? 0) < -10
-        ? colors.semantic.negative
-        : colors.text.secondary;
+        ? c.semantic.negative
+        : c.text.secondary;
 
     return (
       <Card variant="flat" style={styles.card}>
         <View style={styles.header}>
-          <Ionicons name="body-outline" size={20} color={colors.accent.primary} />
-          <Text style={styles.title}>Recomp Check-in</Text>
+          <Ionicons name="body-outline" size={20} color={c.accent.primary} />
+          <Text style={[styles.title, { color: c.text.primary }]}>Recomp Check-in</Text>
         </View>
-        <Text style={styles.explanation}>{checkin.recomp_recommendation}</Text>
+        <Text style={[styles.explanation, { color: c.text.secondary }]}>{checkin.recomp_recommendation}</Text>
         {checkin.recomp_score != null && (
           <Text style={[styles.trendText, { color: scoreColor }]}>
             Recomp Score: {checkin.recomp_score > 0 ? '+' : ''}{checkin.recomp_score.toFixed(0)}
           </Text>
         )}
         <TouchableOpacity
-          style={styles.primaryButton}
+          style={[styles.primaryButton, { backgroundColor: c.accent.primary }]}
           onPress={onDismiss}
           accessibilityRole="button"
           accessibilityLabel="Dismiss recomp check-in"
         >
-          <Text style={styles.primaryButtonText}>Got it</Text>
+          <Text style={[styles.primaryButtonText, { color: c.text.inverse }]}>Got it</Text>
         </TouchableOpacity>
       </Card>
     );
@@ -118,16 +120,16 @@ export function WeeklyCheckinCard({
     return (
       <Card variant="flat" style={styles.card}>
         <View style={styles.header}>
-          <Ionicons name="analytics-outline" size={20} color={colors.accent.primary} />
-          <Text style={styles.title}>Weekly Check-in</Text>
+          <Ionicons name="analytics-outline" size={20} color={c.accent.primary} />
+          <Text style={[styles.title, { color: c.text.primary }]}>Weekly Check-in</Text>
         </View>
-        <Text style={styles.explanation}>
+        <Text style={[styles.explanation, { color: c.text.secondary }]}>
           Log {remaining} more day{remaining !== 1 ? 's' : ''} for personalized recommendations
         </Text>
-        <View style={styles.progressBarBg}>
+        <View style={[styles.progressBarBg, { backgroundColor: c.bg.surfaceRaised }]}>
           <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
         </View>
-        <Text style={styles.progressText}>{logged}/7 days logged</Text>
+        <Text style={[styles.progressText, { color: c.text.muted }]}>{logged}/7 days logged</Text>
       </Card>
     );
   }
@@ -137,28 +139,28 @@ export function WeeklyCheckinCard({
     return (
       <Card variant="flat" style={styles.card}>
         <View style={styles.header}>
-          <Ionicons name="checkmark-circle" size={20} color={colors.semantic.positive} />
-          <Text style={styles.title}>Weekly Check-in</Text>
+          <Ionicons name="checkmark-circle" size={20} color={c.semantic.positive} />
+          <Text style={[styles.title, { color: c.text.primary }]}>Weekly Check-in</Text>
         </View>
         {checkin.weight_trend != null && (
-          <Text style={styles.trendText}>
+          <Text style={[styles.trendText, { color: c.text.primary }]}>
             Trend: {checkin.weight_trend.toFixed(1)}kg
             {checkin.weekly_weight_change != null && (
-              <Text style={styles.changeText}>
+              <Text style={[styles.changeText, { color: c.text.secondary }]}>
                 {' '}({checkin.weekly_weight_change > 0 ? '+' : ''}{checkin.weekly_weight_change.toFixed(1)}kg)
               </Text>
             )}
           </Text>
         )}
         {checkin.new_targets && <TargetRow targets={checkin.new_targets} />}
-        <Text style={styles.explanation}>{checkin.explanation}</Text>
+        <Text style={[styles.explanation, { color: c.text.secondary }]}>{checkin.explanation}</Text>
         <TouchableOpacity
-          style={styles.primaryButton}
+          style={[styles.primaryButton, { backgroundColor: c.accent.primary }]}
           onPress={onDismiss}
           accessibilityRole="button"
           accessibilityLabel="Dismiss check-in"
         >
-          <Text style={styles.primaryButtonText}>Got it</Text>
+          <Text style={[styles.primaryButtonText, { color: c.text.inverse }]}>Got it</Text>
         </TouchableOpacity>
       </Card>
     );
@@ -169,20 +171,20 @@ export function WeeklyCheckinCard({
     return (
       <Card variant="flat" style={styles.card}>
         <View style={styles.header}>
-          <Ionicons name="bulb-outline" size={20} color={colors.accent.primary} />
-          <Text style={styles.title}>Suggested Update</Text>
+          <Ionicons name="bulb-outline" size={20} color={c.accent.primary} />
+          <Text style={[styles.title, { color: c.text.primary }]}>Suggested Update</Text>
         </View>
         {checkin.weight_trend != null && (
-          <Text style={styles.trendText}>
+          <Text style={[styles.trendText, { color: c.text.primary }]}>
             Trend: {checkin.weight_trend.toFixed(1)}kg
             {checkin.weekly_weight_change != null && (
-              <Text style={styles.changeText}>
+              <Text style={[styles.changeText, { color: c.text.secondary }]}>
                 {' '}({checkin.weekly_weight_change > 0 ? '+' : ''}{checkin.weekly_weight_change.toFixed(1)}kg)
               </Text>
             )}
           </Text>
         )}
-        <Text style={styles.explanation}>{checkin.explanation}</Text>
+        <Text style={[styles.explanation, { color: c.text.secondary }]}>{checkin.explanation}</Text>
 
         {isEditing ? (
           <View style={styles.editContainer}>
@@ -195,7 +197,7 @@ export function WeeklyCheckinCard({
             <MacroInput label="Fat (g)" value={editTargets.fat_g} min={0}
               onChange={(v) => setEditTargets({ ...editTargets, fat_g: v })} />
             <TouchableOpacity
-              style={styles.primaryButton}
+              style={[styles.primaryButton, { backgroundColor: c.accent.primary }]}
               onPress={() => {
                 onModify?.(checkin.suggestion_id!, editTargets);
                 setIsEditing(false);
@@ -203,7 +205,7 @@ export function WeeklyCheckinCard({
               accessibilityRole="button"
               accessibilityLabel="Save modified targets"
             >
-              <Text style={styles.primaryButtonText}>Save Changes</Text>
+              <Text style={[styles.primaryButtonText, { color: c.text.inverse }]}>Save Changes</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -219,28 +221,28 @@ export function WeeklyCheckinCard({
             )}
             <View style={styles.buttonRow}>
               <TouchableOpacity
-                style={styles.primaryButton}
+                style={[styles.primaryButton, { backgroundColor: c.accent.primary }]}
                 onPress={() => onAccept?.(checkin.suggestion_id!)}
                 accessibilityRole="button"
                 accessibilityLabel="Accept suggestion"
               >
-                <Text style={styles.primaryButtonText}>Accept</Text>
+                <Text style={[styles.primaryButtonText, { color: c.text.inverse }]}>Accept</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.secondaryButton}
+                style={[styles.secondaryButton, { borderColor: c.border.default }]}
                 onPress={() => setIsEditing(true)}
                 accessibilityRole="button"
                 accessibilityLabel="Modify suggestion"
               >
-                <Text style={styles.secondaryButtonText}>Modify</Text>
+                <Text style={[styles.secondaryButtonText, { color: c.text.secondary }]}>Modify</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.secondaryButton}
+                style={[styles.secondaryButton, { borderColor: c.border.default }]}
                 onPress={() => onDismissSuggestion?.(checkin.suggestion_id!)}
                 accessibilityRole="button"
                 accessibilityLabel="Dismiss suggestion"
               >
-                <Text style={styles.secondaryButtonText}>Dismiss</Text>
+                <Text style={[styles.secondaryButtonText, { color: c.text.secondary }]}>Dismiss</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -274,7 +276,7 @@ function ComparisonTargetRow({ previousTargets, newTargets }: {
   return (
     <View style={styles.comparisonContainer}>
       <View style={styles.comparisonRow}>
-        <Text style={styles.comparisonLabel}>Current</Text>
+        <Text style={[styles.comparisonLabel, { color: colors.text.secondary }]}>Current</Text>
         <View style={styles.comparisonTargets}>
           <ComparisonPill label="Cal" value={Math.round(previousTargets.calories)} color={colors.macro.calories} />
           <ComparisonPill label="P" value={Math.round(previousTargets.protein_g)} color={colors.macro.protein} />
@@ -283,7 +285,7 @@ function ComparisonTargetRow({ previousTargets, newTargets }: {
         </View>
       </View>
       <View style={styles.comparisonRow}>
-        <Text style={styles.comparisonLabel}>Suggested</Text>
+        <Text style={[styles.comparisonLabel, { color: colors.text.secondary }]}>Suggested</Text>
         <View style={styles.comparisonTargets}>
           <ComparisonPill label="Cal" value={Math.round(newTargets.calories)} color={colors.macro.calories} />
           <ComparisonPill label="P" value={Math.round(newTargets.protein_g)} color={colors.macro.protein} />
@@ -299,7 +301,7 @@ function TargetPill({ label, value, color }: { label: string; value: number; col
   return (
     <View style={[styles.pill, { borderColor: color }]}>
       <Text style={[styles.pillLabel, { color }]}>{label}</Text>
-      <Text style={styles.pillValue}>{value}</Text>
+      <Text style={[styles.pillValue, { color: colors.text.primary }]}>{value}</Text>
     </View>
   );
 }
@@ -308,7 +310,7 @@ function ComparisonPill({ label, value, color }: { label: string; value: number;
   return (
     <View style={[styles.comparisonPill, { borderColor: color }]}>
       <Text style={[styles.comparisonPillLabel, { color }]}>{label}</Text>
-      <Text style={styles.comparisonPillValue}>{value}</Text>
+      <Text style={[styles.comparisonPillValue, { color: colors.text.primary }]}>{value}</Text>
     </View>
   );
 }
@@ -320,9 +322,9 @@ function MacroInput({
 }) {
   return (
     <View style={styles.inputRow}>
-      <Text style={styles.inputLabel}>{label}</Text>
+      <Text style={[styles.inputLabel, { color: colors.text.secondary }]}>{label}</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: colors.text.primary, backgroundColor: colors.bg.surfaceRaised }]}
         keyboardType="numeric"
         value={String(Math.round(value))}
         onChangeText={(text) => {

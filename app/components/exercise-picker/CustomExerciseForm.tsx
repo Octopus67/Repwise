@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import api from '../../services/api';
 import {
   MUSCLE_GROUPS,
@@ -31,6 +32,7 @@ function capitalize(s: string): string {
 }
 
 export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: CustomExerciseFormProps) {
+  const c = useThemeColors();
   const [form, setForm] = useState<CustomExerciseFormData>({
     name: initialName,
     muscleGroup: '',
@@ -81,24 +83,24 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
   }, [form, onCreated]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>Create Custom Exercise</Text>
+    <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]} contentContainerStyle={styles.content}>
+      <Text style={[styles.heading, { color: c.text.primary }]}>Create Custom Exercise</Text>
 
       {/* Name */}
-      <Text style={styles.label}>Name *</Text>
+      <Text style={[styles.label, { color: c.text.secondary }]}>Name *</Text>
       <TextInput
         style={[styles.input, errors.name ? styles.inputError : null]}
         value={form.name}
         onChangeText={(t) => updateField('name', t)}
         placeholder="e.g. Landmine Press"
-        placeholderTextColor={colors.text.muted}
+        placeholderTextColor={c.text.muted}
         maxLength={200}
         accessibilityLabel="Exercise name"
       />
-      {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+      {errors.name && <Text style={[styles.errorText, { color: c.semantic.negative }]}>{errors.name}</Text>}
 
       {/* Muscle Group */}
-      <Text style={styles.label}>Muscle Group *</Text>
+      <Text style={[styles.label, { color: c.text.secondary }]}>Muscle Group *</Text>
       <View style={styles.chipGrid}>
         {MUSCLE_GROUPS.map((mg) => (
           <TouchableOpacity
@@ -114,10 +116,10 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
           </TouchableOpacity>
         ))}
       </View>
-      {errors.muscleGroup && <Text style={styles.errorText}>{errors.muscleGroup}</Text>}
+      {errors.muscleGroup && <Text style={[styles.errorText, { color: c.semantic.negative }]}>{errors.muscleGroup}</Text>}
 
       {/* Equipment */}
-      <Text style={styles.label}>Equipment *</Text>
+      <Text style={[styles.label, { color: c.text.secondary }]}>Equipment *</Text>
       <View style={styles.chipGrid}>
         {EQUIPMENT_TYPES.map((eq) => (
           <TouchableOpacity
@@ -133,10 +135,10 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
           </TouchableOpacity>
         ))}
       </View>
-      {errors.equipment && <Text style={styles.errorText}>{errors.equipment}</Text>}
+      {errors.equipment && <Text style={[styles.errorText, { color: c.semantic.negative }]}>{errors.equipment}</Text>}
 
       {/* Category */}
-      <Text style={styles.label}>Category</Text>
+      <Text style={[styles.label, { color: c.text.secondary }]}>Category</Text>
       <View style={styles.chipGrid}>
         {CATEGORIES.map((cat) => (
           <TouchableOpacity
@@ -154,7 +156,7 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
       </View>
 
       {/* Secondary Muscles */}
-      <Text style={styles.label}>Secondary Muscles (optional)</Text>
+      <Text style={[styles.label, { color: c.text.secondary }]}>Secondary Muscles (optional)</Text>
       <View style={styles.chipGrid}>
         {MUSCLE_GROUPS.filter((mg) => mg !== form.muscleGroup).map((mg) => (
           <TouchableOpacity
@@ -172,13 +174,13 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
       </View>
 
       {/* Notes */}
-      <Text style={styles.label}>Notes (optional)</Text>
+      <Text style={[styles.label, { color: c.text.secondary }]}>Notes (optional)</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
         value={form.notes}
         onChangeText={(t) => updateField('notes', t)}
         placeholder="Any notes about this exercise..."
-        placeholderTextColor={colors.text.muted}
+        placeholderTextColor={c.text.muted}
         multiline
         numberOfLines={3}
         accessibilityLabel="Exercise notes"
@@ -186,8 +188,8 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
 
       {/* Actions */}
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.cancelBtn} onPress={onCancel} activeOpacity={0.7}>
-          <Text style={styles.cancelText}>Cancel</Text>
+        <TouchableOpacity style={[styles.cancelBtn, { borderColor: c.border.subtle }]} onPress={onCancel} activeOpacity={0.7}>
+          <Text style={[styles.cancelText, { color: c.text.secondary }]}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.submitBtn, submitting && styles.submitBtnDisabled]}
@@ -198,9 +200,9 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
           accessibilityLabel="Save custom exercise"
         >
           {submitting ? (
-            <ActivityIndicator size="small" color={colors.text.primary} />
+            <ActivityIndicator size="small" color={c.text.primary} />
           ) : (
-            <Text style={styles.submitText}>Save Exercise</Text>
+            <Text style={[styles.submitText, { color: c.text.primary }]}>Save Exercise</Text>
           )}
         </TouchableOpacity>
       </View>

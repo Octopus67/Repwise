@@ -14,6 +14,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { colors, radius, spacing, typography, motion } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import type { PersonalRecordResponse } from '../../types/training';
 import { useHaptics } from '../../hooks/useHaptics';
 
@@ -30,6 +31,7 @@ export function PRCelebration({
   visible,
   onDismiss,
 }: PRCelebrationProps) {
+  const c = useThemeColors();
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.8);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -95,11 +97,11 @@ export function PRCelebration({
       <Animated.View style={[styles.overlay, animatedOverlay]}>
         <Animated.View style={[styles.banner, animatedBanner]} accessibilityRole="alert" accessibilityLabel={`${prs.length === 1 ? 'New personal record' : `${prs.length} new personal records`}`}>
           <Text style={styles.trophy}>🏆</Text>
-          <Text style={styles.title}>
+          <Text style={[styles.title, { color: c.premium.gold }]}>
             {prs.length === 1 ? 'New PR!' : `${prs.length} New PRs!`}
           </Text>
           {prs.map((pr, i) => (
-            <Text key={`${pr.exercise_name}-${i}`} style={styles.prText}>
+            <Text key={`${pr.exercise_name}-${i}`} style={[styles.prText, { color: c.text.primary }]}>
               {pr.exercise_name} — {pr.new_weight_kg}kg × {pr.reps}
             </Text>
           ))}

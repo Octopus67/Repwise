@@ -7,6 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { colors, spacing, typography, radius } from '../../../theme/tokens';
+import { useThemeColors } from '../../../hooks/useThemeColors';
 import { useOnboardingStore, computeAge } from '../../../store/onboardingSlice';
 import type { Sex } from '../../../store/onboardingSlice';
 import { Button } from '../../../components/common/Button';
@@ -154,6 +155,7 @@ const pickerStyles = StyleSheet.create({
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export function BodyBasicsStep({ onNext }: Props) {
+  const c = useThemeColors();
   const {
     sex,
     birthYear,
@@ -196,11 +198,11 @@ export function BodyBasicsStep({ onNext }: Props) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <Text style={styles.title}>Body Basics</Text>
-      <Text style={styles.subtitle}>We'll use this to calculate your metabolism</Text>
+      <Text style={[styles.title, { color: c.text.primary }]}>Body Basics</Text>
+      <Text style={[styles.subtitle, { color: c.text.secondary }]}>We'll use this to calculate your metabolism</Text>
 
       {/* ── Sex selector ─────────────────────────────────────────────── */}
-      <Text style={styles.label}>Sex</Text>
+      <Text style={[styles.label, { color: c.text.secondary }]}>Sex</Text>
       <View style={styles.pillRow}>
         {SEX_OPTIONS.map((opt) => (
           <TouchableOpacity
@@ -221,18 +223,18 @@ export function BodyBasicsStep({ onNext }: Props) {
       {/* ── Birth Year & Month — side by side scroll pickers ────────── */}
       <View style={styles.dateRow}>
         <View style={styles.dateCol}>
-          <Text style={styles.label}>Birth Year</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>Birth Year</Text>
           <VerticalPicker data={yearData} selectedValue={selectedYear} onValueChange={handleYearChange} />
         </View>
         <View style={styles.dateCol}>
-          <Text style={styles.label}>Month</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>Month</Text>
           <VerticalPicker data={monthData} selectedValue={selectedMonth} onValueChange={handleMonthChange} />
         </View>
       </View>
 
       {/* Age validation error */}
       {birthYear && !ageValid && (
-        <Text style={styles.errorText}>Age must be between 13 and 120 years</Text>
+        <Text style={[styles.errorText, { color: c.semantic.negative }]}>Age must be between 13 and 120 years</Text>
       )}
 
       {onNext && (

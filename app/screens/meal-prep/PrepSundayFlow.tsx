@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { colors, typography, spacing } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { computeDaySummary, computeWeeklySummary } from '../../utils/mealPrepLogic';
 import type { MacroSummary, MealAssignment } from '../../utils/mealPrepLogic';
 
@@ -23,6 +24,7 @@ interface DayPlan {
 type Step = 'days' | 'slots' | 'fill' | 'review' | 'confirm';
 
 export function PrepSundayFlow({ navigation }: any) {
+  const c = useThemeColors();
   const [step, setStep] = useState<Step>('days');
   const [selectedDays, setSelectedDays] = useState<number[]>([0, 1, 2, 3, 4]);
   const [slots, setSlots] = useState<string[]>(DEFAULT_SLOTS);
@@ -82,48 +84,48 @@ export function PrepSundayFlow({ navigation }: any) {
   const weeklySummary = daySummaries.length > 0 ? computeWeeklySummary(daySummaries) : null;
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Prep Sunday</Text>
+    <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]}>
+      <Text style={[styles.title, { color: c.text.primary }]}>Prep Sunday</Text>
 
-      {loading && <ActivityIndicator size="large" color={colors.accent.primary} />}
+      {loading && <ActivityIndicator size="large" color={c.accent.primary} />}
       {error && (
-        <TouchableOpacity onPress={() => setError(null)} style={styles.errorRow}>
-          <Text style={styles.error}>{error}</Text>
-          <Text style={styles.errorDismiss}>✕</Text>
+        <TouchableOpacity onPress={() => setError(null)} style={[styles.errorRow, { backgroundColor: c.bg.surface }]}>
+          <Text style={[styles.error, { color: c.semantic.negative }]}>{error}</Text>
+          <Text style={[styles.errorDismiss, { color: c.semantic.negative }]}>✕</Text>
         </TouchableOpacity>
       )}
 
       {step === 'days' && (
         <View>
-          <Text style={styles.stepLabel}>Step 1: Select Days</Text>
+          <Text style={[styles.stepLabel, { color: c.text.primary }]}>Step 1: Select Days</Text>
           {ALL_DAYS.map((day, idx) => (
             <TouchableOpacity key={day} style={styles.dayRow} onPress={() => toggleDay(idx)}>
               <View style={[styles.checkbox, selectedDays.includes(idx) && styles.checked]} />
-              <Text style={styles.dayText}>{day}</Text>
+              <Text style={[styles.dayText, { color: c.text.primary }]}>{day}</Text>
             </TouchableOpacity>
           ))}
-          <TouchableOpacity style={styles.nextBtn} onPress={() => setStep('slots')}>
-            <Text style={styles.btnText}>Next</Text>
+          <TouchableOpacity style={[styles.nextBtn, { backgroundColor: c.accent.primary }]} onPress={() => setStep('slots')}>
+            <Text style={[styles.btnText, { color: c.text.primary }]}>Next</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {step === 'slots' && (
         <View>
-          <Text style={styles.stepLabel}>Step 2: Meal Slots</Text>
+          <Text style={[styles.stepLabel, { color: c.text.primary }]}>Step 2: Meal Slots</Text>
           {slots.map((s) => (
-            <Text key={s} style={styles.slotItem}>• {s}</Text>
+            <Text key={s} style={[styles.slotItem, { color: c.text.secondary }]}>• {s}</Text>
           ))}
           <View style={styles.navRow}>
-            <TouchableOpacity style={styles.backBtn} onPress={() => setStep('days')}>
-              <Text style={styles.btnText}>Back</Text>
+            <TouchableOpacity style={[styles.backBtn, { backgroundColor: c.bg.surface }]} onPress={() => setStep('days')}>
+              <Text style={[styles.btnText, { color: c.text.primary }]}>Back</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.nextBtn, loading && styles.btnDisabled]}
               onPress={handleGenerate}
               disabled={loading}
             >
-              <Text style={styles.btnText}>Auto-Fill</Text>
+              <Text style={[styles.btnText, { color: c.text.primary }]}>Auto-Fill</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -131,30 +133,30 @@ export function PrepSundayFlow({ navigation }: any) {
 
       {step === 'review' && (
         <View>
-          <Text style={styles.stepLabel}>Step 3: Review</Text>
+          <Text style={[styles.stepLabel, { color: c.text.primary }]}>Step 3: Review</Text>
           {weeklySummary && (
-            <Text style={styles.weeklyText}>
+            <Text style={[styles.weeklyText, { color: c.accent.primary }]}>
               Weekly: {weeklySummary.calories} cal · {weeklySummary.protein_g}g P
             </Text>
           )}
           {dayPlans.map((day, i) => (
             <View key={i} style={styles.reviewDay}>
-              <Text style={styles.reviewDayLabel}>{ALL_DAYS[selectedDays[i]] ?? `Day ${i + 1}`}</Text>
-              <Text style={styles.reviewMacros}>
+              <Text style={[styles.reviewDayLabel, { color: c.text.primary }]}>{ALL_DAYS[selectedDays[i]] ?? `Day ${i + 1}`}</Text>
+              <Text style={[styles.reviewMacros, { color: c.text.secondary }]}>
                 {daySummaries[i]?.calories ?? 0} cal · {daySummaries[i]?.protein_g ?? 0}g P
               </Text>
             </View>
           ))}
           <View style={styles.navRow}>
-            <TouchableOpacity style={styles.backBtn} onPress={() => setStep('slots')}>
-              <Text style={styles.btnText}>Back</Text>
+            <TouchableOpacity style={[styles.backBtn, { backgroundColor: c.bg.surface }]} onPress={() => setStep('slots')}>
+              <Text style={[styles.btnText, { color: c.text.primary }]}>Back</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.nextBtn, loading && styles.btnDisabled]}
               onPress={handleSave}
               disabled={loading}
             >
-              <Text style={styles.btnText}>Save Plan</Text>
+              <Text style={[styles.btnText, { color: c.text.primary }]}>Save Plan</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -162,12 +164,12 @@ export function PrepSundayFlow({ navigation }: any) {
 
       {step === 'confirm' && (
         <View style={styles.confirmView}>
-          <Text style={styles.confirmText}>Plan saved! 🎉</Text>
+          <Text style={[styles.confirmText, { color: c.text.primary }]}>Plan saved! 🎉</Text>
           <TouchableOpacity
-            style={styles.nextBtn}
+            style={[styles.nextBtn, { backgroundColor: c.accent.primary }]}
             onPress={() => navigation?.navigate?.('MealPlan')}
           >
-            <Text style={styles.btnText}>View Plan</Text>
+            <Text style={[styles.btnText, { color: c.text.primary }]}>View Plan</Text>
           </TouchableOpacity>
         </View>
       )}

@@ -9,6 +9,7 @@ import Animated, {
 import { ModalContainer } from '../common/ModalContainer';
 import { Icon, IconName } from '../common/Icon';
 import { colors, spacing, typography, radius, glowShadow } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface AchievementDetailSheetProps {
   visible: boolean;
@@ -73,6 +74,7 @@ function getCategoryLabel(category: string): string {
 }
 
 export function AchievementDetailSheet({ visible, onClose, achievement }: AchievementDetailSheetProps) {
+  const c = useThemeColors();
   const progressWidth = useSharedValue(0);
 
   useEffect(() => {
@@ -120,15 +122,15 @@ export function AchievementDetailSheet({ visible, onClose, achievement }: Achiev
             <Icon
               name={iconName}
               size={32}
-              color={achievement.unlocked ? categoryColor : colors.text.muted}
+              color={achievement.unlocked ? categoryColor : c.text.muted}
             />
           </View>
-          <Text style={styles.title}>{achievement.title}</Text>
-          <Text style={styles.category}>{getCategoryLabel(achievement.category)}</Text>
+          <Text style={[styles.title, { color: c.text.primary }]}>{achievement.title}</Text>
+          <Text style={[styles.category, { color: c.text.muted }]}>{getCategoryLabel(achievement.category)}</Text>
           {achievement.unlocked && achievement.unlocked_at && (
             <View style={styles.unlockedRow}>
-              <Icon name="check" size={14} color={colors.semantic.positive} />
-              <Text style={styles.unlockedDate}>
+              <Icon name="check" size={14} color={c.semantic.positive} />
+              <Text style={[styles.unlockedDate, { color: c.semantic.positive }]}>
                 Unlocked {new Date(achievement.unlocked_at).toLocaleDateString(undefined, { 
                   month: 'long', 
                   day: 'numeric',
@@ -141,33 +143,33 @@ export function AchievementDetailSheet({ visible, onClose, achievement }: Achiev
 
         {/* Progress */}
         <View style={styles.progressSection}>
-          <View style={styles.progressTrack}>
+          <View style={[styles.progressTrack, { backgroundColor: c.bg.surfaceRaised }]}>
             <Animated.View 
               style={[
                 styles.progressFill, 
-                { backgroundColor: achievement.unlocked ? categoryColor : colors.accent.primary },
+                { backgroundColor: achievement.unlocked ? categoryColor : c.accent.primary },
                 achievement.unlocked && glowShadow(categoryColor, 4, 0.3),
                 progressStyle
               ]} 
             />
           </View>
-          <Text style={styles.progressText}>{progressText}</Text>
+          <Text style={[styles.progressText, { color: c.text.secondary }]}>{progressText}</Text>
         </View>
 
         {/* Description */}
         <View style={styles.descriptionSection}>
-          <Text style={styles.descriptionTitle}>About this achievement</Text>
-          <Text style={styles.description}>{achievement.description}</Text>
+          <Text style={[styles.descriptionTitle, { color: c.text.primary }]}>About this achievement</Text>
+          <Text style={[styles.description, { color: c.text.secondary }]}>{achievement.description}</Text>
           {!achievement.unlocked && (
-            <Text style={styles.requirement}>
+            <Text style={[styles.requirement, { color: c.text.muted }]}>
               You need {Math.ceil((1 - achievement.progress) * achievement.threshold)} more to unlock this
             </Text>
           )}
         </View>
 
         {/* Close Button */}
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Text style={styles.closeButtonText}>Close</Text>
+        <TouchableOpacity style={[styles.closeButton, { backgroundColor: c.accent.primary }]} onPress={onClose}>
+          <Text style={[styles.closeButtonText, { color: c.text.primary }]}>Close</Text>
         </TouchableOpacity>
       </View>
     </ModalContainer>

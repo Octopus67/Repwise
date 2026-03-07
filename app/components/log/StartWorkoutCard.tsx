@@ -6,6 +6,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { colors, spacing, typography, radius, letterSpacing as ls } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import type { WorkoutTemplateResponse } from '../../types/training';
 
 // ─── 5.1: Props Interface ────────────────────────────────────────────────────
@@ -25,6 +26,7 @@ export function StartWorkoutCard({
   onStartEmpty,
   onStartTemplate,
 }: StartWorkoutCardProps) {
+  const c = useThemeColors();
   // 5.4: Template picker toggle
   const [showPicker, setShowPicker] = useState(false);
 
@@ -37,9 +39,9 @@ export function StartWorkoutCard({
   };
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: c.accent.primaryMuted }]}>
       {/* 5.2: Title */}
-      <Text style={styles.title}>🏋️ Start Workout</Text>
+      <Text style={[styles.title, { color: c.text.primary }]}>🏋️ Start Workout</Text>
 
       {/* 5.3 / 5.5: Buttons */}
       <View style={styles.buttonRow}>
@@ -51,7 +53,7 @@ export function StartWorkoutCard({
               accessibilityRole="button"
               accessibilityLabel="Start empty workout"
             >
-              <Text style={styles.buttonText}>Empty Workout</Text>
+              <Text style={[styles.buttonText, { color: c.text.inverse }]}>Empty Workout</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -60,7 +62,7 @@ export function StartWorkoutCard({
               accessibilityRole="button"
               accessibilityLabel="Start workout from template"
             >
-              <Text style={styles.buttonText}>From Template</Text>
+              <Text style={[styles.buttonText, { color: c.text.inverse }]}>From Template</Text>
             </TouchableOpacity>
           </>
         ) : (
@@ -71,27 +73,27 @@ export function StartWorkoutCard({
             accessibilityRole="button"
             accessibilityLabel="Start workout"
           >
-            <Text style={styles.buttonText}>Start Workout</Text>
+            <Text style={[styles.buttonText, { color: c.text.inverse }]}>Start Workout</Text>
           </TouchableOpacity>
         )}
       </View>
 
       {/* 5.4: Template picker */}
       {showPicker && hasTemplates && (
-        <View style={styles.picker}>
+        <View style={[styles.picker, { backgroundColor: c.bg.surfaceRaised }]}>
           {userTemplates.length > 0 && (
             <>
-              <Text style={styles.subheader}>My Templates</Text>
+              <Text style={[styles.subheader, { color: c.text.secondary }]}>My Templates</Text>
               {userTemplates.map((t) => (
                 <TouchableOpacity
                   key={t.id}
-                  style={styles.templateRow}
+                  style={[styles.templateRow, { borderBottomColor: c.border.subtle }]}
                   onPress={() => handleSelectTemplate(t.id)}
                   accessibilityRole="button"
                   accessibilityLabel={`Start ${t.name}`}
                 >
-                  <Text style={styles.templateName} numberOfLines={1}>{t.name}</Text>
-                  <Text style={styles.exerciseCount}>
+                  <Text style={[styles.templateName, { color: c.text.primary }]} numberOfLines={1}>{t.name}</Text>
+                  <Text style={[styles.exerciseCount, { color: c.text.muted }]}>
                     {t.exercises.length} exercise{t.exercises.length !== 1 ? 's' : ''}
                   </Text>
                 </TouchableOpacity>
@@ -101,17 +103,17 @@ export function StartWorkoutCard({
 
           {staticTemplates.length > 0 && (
             <>
-              <Text style={styles.subheader}>Pre-built</Text>
+              <Text style={[styles.subheader, { color: c.text.secondary }]}>Pre-built</Text>
               {staticTemplates.map((t) => (
                 <TouchableOpacity
                   key={t.id}
-                  style={styles.templateRow}
+                  style={[styles.templateRow, { borderBottomColor: c.border.subtle }]}
                   onPress={() => handleSelectTemplate(t.id)}
                   accessibilityRole="button"
                   accessibilityLabel={`Start ${t.name}`}
                 >
-                  <Text style={styles.templateName} numberOfLines={1}>{t.name}</Text>
-                  <Text style={styles.exerciseCount}>
+                  <Text style={[styles.templateName, { color: c.text.primary }]} numberOfLines={1}>{t.name}</Text>
+                  <Text style={[styles.exerciseCount, { color: c.text.muted }]}>
                     {t.exercises.length} exercise{t.exercises.length !== 1 ? 's' : ''}
                   </Text>
                 </TouchableOpacity>

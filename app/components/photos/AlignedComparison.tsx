@@ -17,6 +17,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { AlignmentData, ImageTransform, PhotoMeta, PhotoPathMap } from '../../utils/progressPhotoTypes';
 import { alignForComparison, computeAlignment } from '../../utils/autoAlignLogic';
 import { formatPhotoInfo } from '../../utils/timelineLogic';
@@ -41,6 +42,7 @@ export function AlignedComparison({
   pathMap,
   onDismiss,
 }: AlignedComparisonProps) {
+  const c = useThemeColors();
   const [leftTransform, setLeftTransform] = useState<ImageTransform>(IDENTITY_TRANSFORM);
   const [rightTransform, setRightTransform] = useState<ImageTransform>(IDENTITY_TRANSFORM);
   const [loading, setLoading] = useState(true);
@@ -94,18 +96,18 @@ export function AlignedComparison({
   const rightInfo = formatPhotoInfo(rightPhoto);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.bg.base }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Compare</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>Compare</Text>
         <TouchableOpacity onPress={onDismiss}>
-          <Text style={styles.dismissText}>✕</Text>
+          <Text style={[styles.dismissText, { color: c.text.secondary }]}>✕</Text>
         </TouchableOpacity>
       </View>
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator color={colors.accent.primary} size="large" />
-          <Text style={styles.loadingText}>Aligning photos...</Text>
+          <ActivityIndicator color={c.accent.primary} size="large" />
+          <Text style={[styles.loadingText, { color: c.text.secondary }]}>Aligning photos...</Text>
         </View>
       ) : (
         <View style={styles.row}>
@@ -135,19 +137,19 @@ function ComparisonSide({ uri, info, transform }: ComparisonSideProps) {
   };
 
   return (
-    <View style={styles.side}>
+    <View style={[styles.side, { backgroundColor: colors.bg.surface }]}>
       <View style={styles.photoClip}>
         {uri ? (
           <Image source={{ uri }} style={imageStyle} resizeMode="cover" />
         ) : (
           <View style={[styles.photoPlaceholder, { width: SIDE_WIDTH, height: PHOTO_HEIGHT }]}>
-            <Text style={styles.placeholderText}>No photo</Text>
+            <Text style={[styles.placeholderText, { color: colors.text.muted }]}>No photo</Text>
           </View>
         )}
       </View>
       <View style={styles.infoRow}>
-        <Text style={styles.dateText}>{info.dateLabel}</Text>
-        {info.weightLabel && <Text style={styles.weightText}>{info.weightLabel}</Text>}
+        <Text style={[styles.dateText, { color: colors.text.primary }]}>{info.dateLabel}</Text>
+        {info.weightLabel && <Text style={[styles.weightText, { color: colors.accent.primary }]}>{info.weightLabel}</Text>}
       </View>
     </View>
   );

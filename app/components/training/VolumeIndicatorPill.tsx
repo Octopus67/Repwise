@@ -15,6 +15,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import api from '../../services/api';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { getVolumeColor, VolumeColor } from '../../utils/intelligenceLayerLogic';
 import { HUExplainerSheet } from '../education/HUExplainerSheet';
 
@@ -48,6 +49,7 @@ const BG_COLOR_MAP: Record<VolumeColor, string> = {
 };
 
 export function VolumeIndicatorPill({ muscleGroups, completedSetCounts }: VolumeIndicatorPillProps) {
+  const c = useThemeColors();
   const [volumeData, setVolumeData] = useState<Record<string, MuscleVolumeData>>({});
   const [isWNS, setIsWNS] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -134,7 +136,7 @@ export function VolumeIndicatorPill({ muscleGroups, completedSetCounts }: Volume
           accessibilityLabel="How Hypertrophy Units work"
           accessibilityRole="button"
         >
-          <Text style={styles.infoIcon}>ⓘ</Text>
+          <Text style={[styles.infoIcon, { color: c.text.muted }]}>ⓘ</Text>
         </TouchableOpacity>
       )}
     </ScrollView>

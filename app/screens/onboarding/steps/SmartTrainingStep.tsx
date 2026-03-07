@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { colors, spacing, typography, radius } from '../../../theme/tokens';
+import { useThemeColors } from '../../../hooks/useThemeColors';
 import { Button } from '../../../components/common/Button';
 
 interface Props {
@@ -8,56 +9,57 @@ interface Props {
 }
 
 export function SmartTrainingStep({ onNext }: Props) {
+  const c = useThemeColors();
   return (
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-      <Text style={styles.heading}>Your Training Adapts Too</Text>
-      <Text style={styles.subheading}>
+      <Text style={[styles.heading, { color: c.text.primary }]}>Your Training Adapts Too</Text>
+      <Text style={[styles.subheading, { color: c.accent.primary }]}>
         First app to adjust volume recommendations based on your calorie goal
       </Text>
 
       {/* Cutting Example */}
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
         <View style={styles.cardHeader}>
           <Text style={styles.emoji}>🔥</Text>
-          <Text style={styles.cardTitle}>Cutting (0.5 kg/week)</Text>
+          <Text style={[styles.cardTitle, { color: c.text.primary }]}>Cutting (0.5 kg/week)</Text>
         </View>
         <View style={styles.cardContent}>
-          <Text style={styles.cardText}>→ 15% less volume recommended</Text>
-          <Text style={styles.cardText}>→ Prioritizes muscle preservation</Text>
-          <Text style={styles.cardText}>→ Matches your recovery capacity</Text>
+          <Text style={[styles.cardText, { color: c.text.secondary }]}>→ 15% less volume recommended</Text>
+          <Text style={[styles.cardText, { color: c.text.secondary }]}>→ Prioritizes muscle preservation</Text>
+          <Text style={[styles.cardText, { color: c.text.secondary }]}>→ Matches your recovery capacity</Text>
         </View>
       </View>
 
       {/* Bulking Example */}
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
         <View style={styles.cardHeader}>
           <Text style={styles.emoji}>💪</Text>
-          <Text style={styles.cardTitle}>Bulking (0.25 kg/week)</Text>
+          <Text style={[styles.cardTitle, { color: c.text.primary }]}>Bulking (0.25 kg/week)</Text>
         </View>
         <View style={styles.cardContent}>
-          <Text style={styles.cardText}>→ 10% more volume capacity</Text>
-          <Text style={styles.cardText}>→ Maximizes growth stimulus</Text>
-          <Text style={styles.cardText}>→ Leverages your surplus</Text>
+          <Text style={[styles.cardText, { color: c.text.secondary }]}>→ 10% more volume capacity</Text>
+          <Text style={[styles.cardText, { color: c.text.secondary }]}>→ Maximizes growth stimulus</Text>
+          <Text style={[styles.cardText, { color: c.text.secondary }]}>→ Leverages your surplus</Text>
         </View>
       </View>
 
       {/* Science Badge */}
-      <View style={styles.scienceBadge}>
-        <Text style={styles.scienceText}>
+      <View style={[styles.scienceBadge, { backgroundColor: c.accent.primaryMuted }]}>
+        <Text style={[styles.scienceText, { color: c.accent.primary }]}>
           Based on peer-reviewed research (Pelland 2024, Schoenfeld 2017)
         </Text>
-        <Text style={styles.scienceSubtext}>
+        <Text style={[styles.scienceSubtext, { color: c.text.secondary }]}>
           Not guesswork. Not generic advice. Personalized to YOUR goal.
         </Text>
       </View>
 
       {/* Value Prop */}
       <View style={styles.valueProp}>
-        <Text style={styles.valueTitle}>Why This Matters</Text>
-        <Text style={styles.valueText}>
+        <Text style={[styles.valueTitle, { color: c.text.primary }]}>Why This Matters</Text>
+        <Text style={[styles.valueText, { color: c.text.secondary }]}>
           Other apps give you the same training advice whether you're eating 1500 or 3500 calories.
         </Text>
-        <Text style={styles.valueText}>
+        <Text style={[styles.valueText, { color: c.text.secondary }]}>
           Repwise knows that recovery capacity changes with your calorie balance — and adjusts your targets accordingly.
         </Text>
       </View>

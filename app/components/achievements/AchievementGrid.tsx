@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, useWindowDimensions, TouchableOpacity } from 'react-native';
 import { colors, spacing, typography, letterSpacing as ls } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { AchievementCard } from './AchievementCard';
 import { AchievementDetailSheet } from './AchievementDetailSheet';
 import { Skeleton } from '../common/Skeleton';
@@ -45,6 +46,7 @@ export function groupAchievementsByCategory(
 }
 
 export function AchievementGrid() {
+  const c = useThemeColors();
   const [achievements, setAchievements] = useState<AchievementItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -82,16 +84,16 @@ export function AchievementGrid() {
   if (error) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.empty}>Failed to load achievements.</Text>
-        <TouchableOpacity onPress={fetchAchievements} style={styles.retryBtn}>
-          <Text style={styles.retryText}>Retry</Text>
+        <Text style={[styles.empty, { color: c.text.muted }]}>Failed to load achievements.</Text>
+        <TouchableOpacity onPress={fetchAchievements} style={[styles.retryBtn, { backgroundColor: c.accent.primary }]}>
+          <Text style={[styles.retryText, { color: c.text.primary }]}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   if (achievements.length === 0) {
-    return <Text style={styles.empty}>No achievements yet. Start training!</Text>;
+    return <Text style={[styles.empty, { color: c.text.muted }]}>No achievements yet. Start training!</Text>;
   }
 
   const groups = groupAchievementsByCategory(achievements);
@@ -100,7 +102,7 @@ export function AchievementGrid() {
     <View>
       {groups.map((group) => (
         <View key={group.category} style={styles.section}>
-          <Text style={styles.sectionTitle}>{group.label}</Text>
+          <Text style={[styles.sectionTitle, { color: c.text.secondary }]}>{group.label}</Text>
           <FlatList
             data={group.data}
             keyExtractor={(item) => item.definition.id}

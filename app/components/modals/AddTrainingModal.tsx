@@ -12,6 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { ModalContainer } from '../common/ModalContainer';
 import api from '../../services/api';
 import { useStore } from '../../store';
@@ -81,6 +82,7 @@ function useDebouncedValue<T>(value: T, delay: number): T {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
+  const c = useThemeColors();
   const navigation = useNavigation<StackNavigationProp<any>>();
   const profile = useStore((s) => s.profile);
   const selectedDate = useStore((s) => s.selectedDate);
@@ -360,7 +362,7 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
           activeOpacity={0.7}
           testID="training-template-toggle"
         >
-          <Text style={styles.sectionToggleText}>
+          <Text style={[styles.sectionToggleText, { color: c.accent.primary }]}>
             {templatesOpen ? '▾ Templates' : '▸ Templates'}
           </Text>
         </TouchableOpacity>
@@ -368,32 +370,32 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
         {templatesOpen && (
           <View style={styles.templateSection}>
             {templatesLoading ? (
-              <ActivityIndicator color={colors.accent.primary} />
+              <ActivityIndicator color={c.accent.primary} />
             ) : (
               <>
                 <TouchableOpacity
-                  style={styles.copyLastBtn}
+                  style={[styles.copyLastBtn, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                   onPress={copyLastWorkout}
                   disabled={copyLoading}
                   activeOpacity={0.7}
                   testID="training-copy-last"
                 >
                   {copyLoading ? (
-                    <ActivityIndicator size="small" color={colors.text.primary} />
+                    <ActivityIndicator size="small" color={c.text.primary} />
                   ) : (
-                    <Text style={styles.copyLastText}><Icon name="clipboard" /> Copy Last Workout</Text>
+                    <Text style={[styles.copyLastText, { color: c.text.primary }]}><Icon name="clipboard" /> Copy Last Workout</Text>
                   )}
                 </TouchableOpacity>
 
                 {templates.map((tpl) => (
                   <TouchableOpacity
                     key={tpl.id}
-                    style={styles.templateCard}
+                    style={[styles.templateCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                     onPress={() => loadFromTemplate(tpl)}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.templateName}>{tpl.name}</Text>
-                    <Text style={styles.templateDesc}>{tpl.description}</Text>
+                    <Text style={[styles.templateName, { color: c.text.primary }]}>{tpl.name}</Text>
+                    <Text style={[styles.templateDesc, { color: c.text.secondary }]}>{tpl.description}</Text>
                   </TouchableOpacity>
                 ))}
               </>
@@ -411,21 +413,21 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
             value={exerciseSearch}
             onChangeText={setExerciseSearch}
             placeholder="Search exercises..."
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
             onFocus={() => setExerciseSearchFocused(true)}
             onBlur={() => setExerciseSearchFocused(false)}
             testID="training-exercise-search"
           />
           {exerciseSearchResults.length > 0 && (
-            <View style={styles.exerciseSearchDropdown}>
+            <View style={[styles.exerciseSearchDropdown, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
               {exerciseSearchResults.slice(0, 8).map((result) => (
                 <TouchableOpacity
                   key={result.id}
-                  style={styles.exerciseSearchResult}
+                  style={[styles.exerciseSearchResult, { borderBottomColor: c.border.default }]}
                   onPress={() => handleSearchSelect(result.name)}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.exerciseSearchResultText}>{result.name}</Text>
+                  <Text style={[styles.exerciseSearchResultText, { color: c.text.primary }]}>{result.name}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -434,11 +436,11 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
 
         {/* ── Exercise List ── */}
         {exercises.map((ex, exIdx) => (
-          <View key={ex.id} style={styles.exerciseCard}>
+          <View key={ex.id} style={[styles.exerciseCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
             <View style={styles.exerciseHeader}>
-              <Text style={styles.exerciseIdx}>{exIdx + 1}</Text>
+              <Text style={[styles.exerciseIdx, { color: c.text.muted }]}>{exIdx + 1}</Text>
               <TouchableOpacity
-                style={styles.exerciseNameBtn}
+                style={[styles.exerciseNameBtn, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
                 onPress={() => {
                   formStateRef.current = { exercises, notes };
                   onClose();
@@ -464,7 +466,7 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => removeExercise(ex.id)}>
-                <Text style={styles.removeBtn}><Icon name="close" size={16} /></Text>
+                <Text style={[styles.removeBtn, { color: c.semantic.negative }]}><Icon name="close" size={16} /></Text>
               </TouchableOpacity>
             </View>
 
@@ -476,9 +478,9 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
             {/* Set header */}
             <View style={styles.setHeaderRow}>
               <Text style={[styles.setHeaderCell, { flex: 0.5 }]}>#</Text>
-              <Text style={styles.setHeaderCell}>Reps</Text>
-              <Text style={styles.setHeaderCell}>kg</Text>
-              <Text style={styles.setHeaderCell}>RPE</Text>
+              <Text style={[styles.setHeaderCell, { color: c.text.muted }]}>Reps</Text>
+              <Text style={[styles.setHeaderCell, { color: c.text.muted }]}>kg</Text>
+              <Text style={[styles.setHeaderCell, { color: c.text.muted }]}>RPE</Text>
               <View style={{ width: 28 }} />
             </View>
 
@@ -487,54 +489,54 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
               <View key={s.id} style={styles.setRow}>
                 <Text style={[styles.setNum, { flex: 0.5 }]}>{sIdx + 1}</Text>
                 <TextInput
-                  style={styles.setInput}
+                  style={[styles.setInput, { color: c.text.primary, backgroundColor: c.bg.surface, borderColor: c.border.default }]}
                   value={s.reps}
                   onChangeText={(v) => updateSet(ex.id, s.id, 'reps', v)}
                   keyboardType="numeric"
                   placeholder="0"
-                  placeholderTextColor={colors.text.muted}
+                  placeholderTextColor={c.text.muted}
                 />
                 <TextInput
-                  style={styles.setInput}
+                  style={[styles.setInput, { color: c.text.primary, backgroundColor: c.bg.surface, borderColor: c.border.default }]}
                   value={s.weight}
                   onChangeText={(v) => updateSet(ex.id, s.id, 'weight', v)}
                   keyboardType="numeric"
                   placeholder="0"
-                  placeholderTextColor={colors.text.muted}
+                  placeholderTextColor={c.text.muted}
                 />
                 <TextInput
-                  style={styles.setInput}
+                  style={[styles.setInput, { color: c.text.primary, backgroundColor: c.bg.surface, borderColor: c.border.default }]}
                   value={s.rpe}
                   onChangeText={(v) => updateSet(ex.id, s.id, 'rpe', v)}
                   keyboardType="numeric"
                   placeholder="—"
-                  placeholderTextColor={colors.text.muted}
+                  placeholderTextColor={c.text.muted}
                 />
                 <TouchableOpacity onPress={() => removeSet(ex.id, s.id)} style={{ width: 28, alignItems: 'center' }}>
-                  <Text style={styles.removeSetBtn}><Icon name="close" size={16} /></Text>
+                  <Text style={[styles.removeSetBtn, { color: c.text.muted }]}><Icon name="close" size={16} /></Text>
                 </TouchableOpacity>
               </View>
             ))}
 
             <TouchableOpacity style={styles.addSetBtn} onPress={() => addSet(ex.id)} activeOpacity={0.7}>
-              <Text style={styles.addSetText}>+ Add Set</Text>
+              <Text style={[styles.addSetText, { color: c.accent.primary }]}>+ Add Set</Text>
             </TouchableOpacity>
           </View>
         ))}
 
-        <TouchableOpacity style={styles.addExerciseBtn} onPress={addExercise} activeOpacity={0.7}>
-          <Text style={styles.addExerciseText}>+ Add Exercise</Text>
+        <TouchableOpacity style={[styles.addExerciseBtn, { backgroundColor: c.accent.primaryMuted }]} onPress={addExercise} activeOpacity={0.7}>
+          <Text style={[styles.addExerciseText, { color: c.accent.primary }]}>+ Add Exercise</Text>
         </TouchableOpacity>
 
         {/* Notes */}
         <View style={styles.field}>
-          <Text style={styles.label}>Notes (optional)</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>Notes (optional)</Text>
           <TextInput
             style={[styles.input, styles.notesInput]}
             value={notes}
             onChangeText={setNotes}
             placeholder="e.g. Felt strong today"
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
             multiline
           />
         </View>
@@ -549,9 +551,9 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
         testID="training-submit-button"
       >
         {loading ? (
-          <ActivityIndicator color={colors.text.primary} />
+          <ActivityIndicator color={c.text.primary} />
         ) : (
-          <Text style={styles.submitText}>Save Session</Text>
+          <Text style={[styles.submitText, { color: c.text.primary }]}>Save Session</Text>
         )}
       </TouchableOpacity>
 

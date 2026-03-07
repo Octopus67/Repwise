@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../../components/common/Card';
 import { TrendLineChart } from '../../components/charts/TrendLineChart';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -18,6 +19,7 @@ interface TrendPoint {
 }
 
 export function ReadinessTrendChart({ timeRange }: Props) {
+  const c = useThemeColors();
   const [data, setData] = useState<TrendPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -60,7 +62,7 @@ export function ReadinessTrendChart({ timeRange }: Props) {
     <Card>
       <TrendLineChart
         data={data}
-        color={colors.semantic.positive}
+        color={c.semantic.positive}
         suffix=""
         emptyMessage="No readiness data for this period"
       />

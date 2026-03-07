@@ -3,6 +3,7 @@ import { TouchableOpacity, View, Text, Image, StyleSheet } from 'react-native';
 import { Exercise } from '../../types/exercise';
 import { getMuscleGroupConfig } from '../../config/muscleGroups';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { MuscleGroupIcon } from './MuscleGroupIcon';
 import { API_BASE_URL } from '../../services/api';
 
@@ -27,6 +28,7 @@ function resolveImageUrl(url: string): string {
 }
 
 export function ExerciseCard({ exercise, onPress, onLongPress }: ExerciseCardProps) {
+  const c = useThemeColors();
   const config = getMuscleGroupConfig(exercise.muscle_group);
   const bgColor = config?.color ?? '#2563EB';
   const [imgError, setImgError] = useState(false);
@@ -35,7 +37,7 @@ export function ExerciseCard({ exercise, onPress, onLongPress }: ExerciseCardPro
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, { borderBottomColor: c.border.subtle }]}
       onPress={() => onPress(exercise)}
       onLongPress={onLongPress ? () => onLongPress(exercise) : undefined}
       activeOpacity={0.7}
@@ -55,18 +57,18 @@ export function ExerciseCard({ exercise, onPress, onLongPress }: ExerciseCardPro
       )}
 
       <View style={styles.info}>
-        <Text style={styles.name} numberOfLines={1}>{exercise.name}</Text>
+        <Text style={[styles.name, { color: c.text.primary }]} numberOfLines={1}>{exercise.name}</Text>
         <View style={styles.tagRow}>
-          <View style={styles.equipmentTag}>
-            <Text style={styles.tagText}>{exercise.equipment.replace('_', ' ')}</Text>
+          <View style={[styles.equipmentTag, { backgroundColor: c.accent.primaryMuted }]}>
+            <Text style={[styles.tagText, { color: c.text.secondary }]}>{exercise.equipment.replace('_', ' ')}</Text>
           </View>
           <View style={[styles.categoryTag, exercise.category === 'isolation' && styles.isolationTag]}>
-            <Text style={styles.tagText}>{exercise.category}</Text>
+            <Text style={[styles.tagText, { color: c.text.secondary }]}>{exercise.category}</Text>
           </View>
         </View>
       </View>
 
-      <Text style={styles.chevron}>›</Text>
+      <Text style={[styles.chevron, { color: c.text.muted }]}>›</Text>
     </TouchableOpacity>
   );
 }

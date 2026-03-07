@@ -11,6 +11,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { formatRestTimer } from '../../utils/durationFormat';
 import { getTimerColor } from '../../utils/restDurationV2';
 import { colors, spacing, typography, radius, motion } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 type TimerState = 'IDLE' | 'RUNNING' | 'PAUSED' | 'COMPLETED';
 
@@ -33,6 +34,7 @@ export function RestTimerV2({
   onDismiss,
   onComplete,
 }: RestTimerV2Props) {
+  const c = useThemeColors();
   const [state, setState] = useState<TimerState>('IDLE');
   const [remaining, setRemaining] = useState(durationSeconds);
   const [originalDuration, setOriginalDuration] = useState(durationSeconds);
@@ -117,16 +119,16 @@ export function RestTimerV2({
   const timerColor = getTimerColor(remaining);
   const ringColor =
     timerColor === 'green'
-      ? colors.semantic.positive
+      ? c.semantic.positive
       : timerColor === 'yellow'
-        ? colors.semantic.warning
-        : colors.semantic.negative;
+        ? c.semantic.warning
+        : c.semantic.negative;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleSkip}>
-      <View style={styles.overlay}>
-        <View style={styles.container}>
-          <Text style={styles.label}>Rest Timer</Text>
+      <View style={[styles.overlay, { backgroundColor: c.bg.overlay }]}>
+        <View style={[styles.container, { backgroundColor: c.bg.surfaceRaised }]}>
+          <Text style={[styles.label, { color: c.text.secondary }]}>Rest Timer</Text>
 
           {/* Progress Ring */}
           <View style={styles.ringContainer}>
@@ -136,7 +138,7 @@ export function RestTimerV2({
                 cx={CENTER}
                 cy={CENTER}
                 r={R}
-                stroke={colors.border.default}
+                stroke={c.border.default}
                 strokeWidth={STROKE_WIDTH}
                 fill="none"
               />
@@ -159,7 +161,7 @@ export function RestTimerV2({
                 {formatRestTimer(remaining)}
               </Text>
               {state === 'COMPLETED' && (
-                <Text style={styles.completeText}>Rest Complete</Text>
+                <Text style={[styles.completeText, { color: c.semantic.positive }]}>Rest Complete</Text>
               )}
             </View>
           </View>
@@ -167,18 +169,18 @@ export function RestTimerV2({
           {/* Adjust buttons */}
           <View style={styles.adjustRow}>
             <TouchableOpacity
-              style={styles.adjustBtn}
+              style={[styles.adjustBtn, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
               onPress={() => handleAdjust(-15)}
               activeOpacity={0.7}
             >
-              <Text style={styles.adjustText}>-15s</Text>
+              <Text style={[styles.adjustText, { color: c.text.secondary }]}>-15s</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.adjustBtn}
+              style={[styles.adjustBtn, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
               onPress={() => handleAdjust(15)}
               activeOpacity={0.7}
             >
-              <Text style={styles.adjustText}>+15s</Text>
+              <Text style={[styles.adjustText, { color: c.text.secondary }]}>+15s</Text>
             </TouchableOpacity>
           </View>
 
@@ -186,21 +188,21 @@ export function RestTimerV2({
           <View style={styles.actionRow}>
             {state !== 'COMPLETED' && (
               <TouchableOpacity
-                style={styles.actionBtn}
+                style={[styles.actionBtn, { backgroundColor: c.accent.primary }]}
                 onPress={handlePauseResume}
                 activeOpacity={0.7}
               >
-                <Text style={styles.actionText}>
+                <Text style={[styles.actionText, { color: c.text.primary }]}>
                   {state === 'PAUSED' ? 'Resume' : 'Pause'}
                 </Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity
-              style={styles.skipBtn}
+              style={[styles.skipBtn, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
               onPress={handleSkip}
               activeOpacity={0.7}
             >
-              <Text style={styles.skipText}>Skip</Text>
+              <Text style={[styles.skipText, { color: c.text.secondary }]}>Skip</Text>
             </TouchableOpacity>
           </View>
         </View>

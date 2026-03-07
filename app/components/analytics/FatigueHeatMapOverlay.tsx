@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { getFatigueColor, getFatigueLabel } from '../../utils/fatigueColorMapping';
 
 interface FatigueScore {
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function FatigueHeatMapOverlay({ scores, onMuscleGroupPress }: Props) {
+  const c = useThemeColors();
   if (!scores || scores.length === 0) return null;
 
   const sorted = [...scores].sort((a, b) => b.score - a.score);
@@ -36,9 +38,9 @@ export function FatigueHeatMapOverlay({ scores, onMuscleGroupPress }: Props) {
               activeOpacity={0.7}
             >
               <View style={[styles.dot, { backgroundColor: bg }]} />
-              <Text style={styles.name}>{s.muscle_group}</Text>
+              <Text style={[styles.name, { color: c.text.primary }]}>{s.muscle_group}</Text>
               <Text style={[styles.score, { color: bg }]}>{s.score.toFixed(0)}</Text>
-              <Text style={styles.label}>{label}</Text>
+              <Text style={[styles.label, { color: c.text.muted }]}>{label}</Text>
             </TouchableOpacity>
           );
         })}

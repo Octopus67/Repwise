@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import Animated, { useAnimatedReaction, runOnJS } from 'react-native-reanimated';
 import { colors, spacing, typography, radius } from '../../../theme/tokens';
+import { useThemeColors } from '../../../hooks/useThemeColors';
 import { useOnboardingStore, computeAge } from '../../../store/onboardingSlice';
 import { computeBMR } from '../../../utils/onboardingCalculations';
 import { Button } from '../../../components/common/Button';
@@ -236,6 +237,7 @@ const scaleStyles = StyleSheet.create({
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export function BodyMeasurementsStep({ onNext }: Props) {
+  const c = useThemeColors();
   const {
     sex,
     birthYear,
@@ -332,14 +334,14 @@ export function BodyMeasurementsStep({ onNext }: Props) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <Text style={styles.title}>Measurements</Text>
-      <Text style={styles.subtitle}>Height and weight help us dial in your metabolism</Text>
+      <Text style={[styles.title, { color: c.text.primary }]}>Measurements</Text>
+      <Text style={[styles.subtitle, { color: c.text.secondary }]}>Height and weight help us dial in your metabolism</Text>
 
       {/* ── Height — horizontal scroll scale ─────────────────────────── */}
       <View style={styles.fieldRow}>
-        <Text style={styles.label}>Height</Text>
-        <TouchableOpacity onPress={toggleUnits} style={styles.unitToggle} accessibilityLabel="Toggle units" accessibilityRole="button">
-          <Text style={styles.unitToggleText}>
+        <Text style={[styles.label, { color: c.text.secondary }]}>Height</Text>
+        <TouchableOpacity onPress={toggleUnits} style={[styles.unitToggle, { backgroundColor: c.accent.primaryMuted }]} accessibilityLabel="Toggle units" accessibilityRole="button">
+          <Text style={[styles.unitToggleText, { color: c.accent.primary }]}>
             {unitSystem === 'metric' ? 'cm → ft/in' : 'ft/in → cm'}
           </Text>
         </TouchableOpacity>
@@ -354,14 +356,14 @@ export function BodyMeasurementsStep({ onNext }: Props) {
         onValueChange={handleHeightChange}
       />
       {!heightValid && (
-        <Text style={styles.errorText}>Height must be between 100-250 cm (3'3" - 8'2")</Text>
+        <Text style={[styles.errorText, { color: c.semantic.negative }]}>Height must be between 100-250 cm (3'3" - 8'2")</Text>
       )}
 
       {/* ── Weight — horizontal scroll scale ─────────────────────────── */}
       <View style={styles.fieldRow}>
-        <Text style={styles.label}>Weight</Text>
-        <TouchableOpacity onPress={toggleUnits} style={styles.unitToggle} accessibilityLabel="Toggle units" accessibilityRole="button">
-          <Text style={styles.unitToggleText}>
+        <Text style={[styles.label, { color: c.text.secondary }]}>Weight</Text>
+        <TouchableOpacity onPress={toggleUnits} style={[styles.unitToggle, { backgroundColor: c.accent.primaryMuted }]} accessibilityLabel="Toggle units" accessibilityRole="button">
+          <Text style={[styles.unitToggleText, { color: c.accent.primary }]}>
             {unitSystem === 'metric' ? 'kg → lbs' : 'lbs → kg'}
           </Text>
         </TouchableOpacity>
@@ -376,15 +378,15 @@ export function BodyMeasurementsStep({ onNext }: Props) {
         onValueChange={handleWeightChange}
       />
       {!weightValid && (
-        <Text style={styles.errorText}>Weight must be between 30-300 kg (66-660 lbs)</Text>
+        <Text style={[styles.errorText, { color: c.semantic.negative }]}>Weight must be between 30-300 kg (66-660 lbs)</Text>
       )}
 
       {/* ── Live BMR display ─────────────────────────────────────────── */}
       {liveBMR > 0 && (
-        <View style={styles.bmrCard}>
-          <Text style={styles.bmrLabel}>Your BMR</Text>
-          <Text style={styles.bmrValue}>~{displayBMR.toLocaleString()} kcal/day</Text>
-          <Text style={styles.bmrHint}>Calories your body burns at rest</Text>
+        <View style={[styles.bmrCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.accent.primaryMuted }]}>
+          <Text style={[styles.bmrLabel, { color: c.text.secondary }]}>Your BMR</Text>
+          <Text style={[styles.bmrValue, { color: c.accent.primary }]}>~{displayBMR.toLocaleString()} kcal/day</Text>
+          <Text style={[styles.bmrHint, { color: c.text.muted }]}>Calories your body burns at rest</Text>
         </View>
       )}
 

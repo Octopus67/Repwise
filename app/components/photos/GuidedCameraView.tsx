@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { PoseType } from '../../utils/progressPhotoTypes';
 import { PoseOverlay } from './PoseOverlay';
 
@@ -29,27 +30,28 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 const CAMERA_HEIGHT = SCREEN_WIDTH * 1.33;
 
 export function GuidedCameraView({ poseType, onCapture, onCancel }: GuidedCameraViewProps) {
+  const c = useThemeColors();
   const cameraRef = useRef<CameraView>(null);
   const [capturing, setCapturing] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
 
   if (!permission) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={colors.accent.primary} />
+      <View style={[styles.center, { backgroundColor: c.bg.base }]}>
+        <ActivityIndicator color={c.accent.primary} />
       </View>
     );
   }
 
   if (!permission.granted) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.permText}>Camera access is required for progress photos.</Text>
-        <TouchableOpacity style={styles.permBtn} onPress={requestPermission}>
-          <Text style={styles.permBtnText}>Grant Permission</Text>
+      <View style={[styles.center, { backgroundColor: c.bg.base }]}>
+        <Text style={[styles.permText, { color: c.text.secondary }]}>Camera access is required for progress photos.</Text>
+        <TouchableOpacity style={[styles.permBtn, { backgroundColor: c.accent.primary }]} onPress={requestPermission}>
+          <Text style={[styles.permBtnText, { color: c.text.inverse }]}>Grant Permission</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
-          <Text style={styles.cancelText}>Cancel</Text>
+          <Text style={[styles.cancelText, { color: c.accent.primary }]}>Cancel</Text>
         </TouchableOpacity>
       </View>
     );
@@ -71,7 +73,7 @@ export function GuidedCameraView({ poseType, onCapture, onCancel }: GuidedCamera
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.bg.base }]}>
       <View style={styles.cameraContainer}>
         <CameraView
           ref={cameraRef}
@@ -87,7 +89,7 @@ export function GuidedCameraView({ poseType, onCapture, onCancel }: GuidedCamera
 
       <View style={styles.controls}>
         <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
-          <Text style={styles.cancelText}>Cancel</Text>
+          <Text style={[styles.cancelText, { color: c.accent.primary }]}>Cancel</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -97,9 +99,9 @@ export function GuidedCameraView({ poseType, onCapture, onCancel }: GuidedCamera
           activeOpacity={0.7}
         >
           {capturing ? (
-            <ActivityIndicator color={colors.text.inverse} size="small" />
+            <ActivityIndicator color={c.text.inverse} size="small" />
           ) : (
-            <View style={styles.captureInner} />
+            <View style={[styles.captureInner, { backgroundColor: c.text.primary }]} />
           )}
         </TouchableOpacity>
 

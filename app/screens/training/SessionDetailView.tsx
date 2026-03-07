@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing, typography, letterSpacing as ls } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../../components/common/Card';
 import { Skeleton } from '../../components/common/Skeleton';
 import { Icon } from '../../components/common/Icon';
@@ -31,6 +32,7 @@ interface SessionDetailViewProps {
 }
 
 export function SessionDetailView({ route, navigation }: SessionDetailViewProps) {
+  const c = useThemeColors();
   const { sessionId } = route.params;
   const unitSystem = useStore((s) => s.unitSystem);
 
@@ -111,12 +113,12 @@ export function SessionDetailView({ route, navigation }: SessionDetailViewProps)
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Icon name="chevron-left" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Session Detail</Text>
+          <Text style={[styles.headerTitle, { color: c.text.primary }]}>Session Detail</Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.skeletonContainer}>
@@ -134,19 +136,19 @@ export function SessionDetailView({ route, navigation }: SessionDetailViewProps)
 
   if (error || !session) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Icon name="chevron-left" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Session Detail</Text>
+          <Text style={[styles.headerTitle, { color: c.text.primary }]}>Session Detail</Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.errorContainer}>
           <Icon name="alert-circle" />
-          <Text style={styles.errorText}>{error ?? 'Session not found'}</Text>
-          <TouchableOpacity style={styles.errorBackBtn} onPress={() => navigation.goBack()}>
-            <Text style={styles.errorBackText}>Go Back</Text>
+          <Text style={[styles.errorText, { color: c.text.secondary }]}>{error ?? 'Session not found'}</Text>
+          <TouchableOpacity style={[styles.errorBackBtn, { backgroundColor: c.accent.primaryMuted }]} onPress={() => navigation.goBack()}>
+            <Text style={[styles.errorBackText, { color: c.accent.primary }]}>Go Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -161,35 +163,35 @@ export function SessionDetailView({ route, navigation }: SessionDetailViewProps)
   });
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Icon name="chevron-left" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Session Detail</Text>
+        <Text style={[styles.headerTitle, { color: c.text.primary }]}>Session Detail</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
         {/* Session summary */}
-        <Text style={styles.dateText}>{formattedDate}</Text>
+        <Text style={[styles.dateText, { color: c.text.primary }]}>{formattedDate}</Text>
 
         <View style={styles.summaryRow}>
           {durationSeconds != null && durationSeconds > 0 && (
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Duration</Text>
-              <Text style={styles.summaryValue}>{formatDuration(durationSeconds)}</Text>
+            <View style={[styles.summaryItem, { backgroundColor: c.bg.surface }]}>
+              <Text style={[styles.summaryLabel, { color: c.text.muted }]}>Duration</Text>
+              <Text style={[styles.summaryValue, { color: c.text.primary }]}>{formatDuration(durationSeconds)}</Text>
             </View>
           )}
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Volume</Text>
-            <Text style={styles.summaryValue}>
+          <View style={[styles.summaryItem, { backgroundColor: c.bg.surface }]}>
+            <Text style={[styles.summaryLabel, { color: c.text.muted }]}>Volume</Text>
+            <Text style={[styles.summaryValue, { color: c.text.primary }]}>
               {Math.round(workingVolume).toLocaleString()} {unitLabel}
             </Text>
           </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Exercises</Text>
-            <Text style={styles.summaryValue}>{session.exercises.length}</Text>
+          <View style={[styles.summaryItem, { backgroundColor: c.bg.surface }]}>
+            <Text style={[styles.summaryLabel, { color: c.text.muted }]}>Exercises</Text>
+            <Text style={[styles.summaryValue, { color: c.text.primary }]}>{session.exercises.length}</Text>
           </View>
         </View>
 
@@ -207,11 +209,11 @@ export function SessionDetailView({ route, navigation }: SessionDetailViewProps)
                     accessibilityLabel={`${exercise.exercise_name} image`}
                   />
                 ) : (
-                  <View style={styles.exerciseThumbPlaceholder}>
-                    <Icon name="dumbbell" size={16} color={colors.text.muted} />
+                  <View style={[styles.exerciseThumbPlaceholder, { backgroundColor: c.bg.surfaceRaised }]}>
+                    <Icon name="dumbbell" size={16} color={c.text.muted} />
                   </View>
                 )}
-                <Text style={styles.exerciseName}>{exercise.exercise_name}</Text>
+                <Text style={[styles.exerciseName, { color: c.text.primary }]}>{exercise.exercise_name}</Text>
               </View>
               {(() => {
                 const e1rm = bestE1RMForExercise(exercise.sets);
@@ -219,7 +221,7 @@ export function SessionDetailView({ route, navigation }: SessionDetailViewProps)
                 const display = convertWeight(e1rm, unitSystem);
                 const suffix = unitSystem === 'metric' ? 'kg' : 'lbs';
                 return (
-                  <Text style={styles.e1rmBadge}>
+                  <Text style={[styles.e1rmBadge, { color: c.accent.primary }]}>
                     Est. 1RM: {display} {suffix}
                   </Text>
                 );
@@ -227,7 +229,7 @@ export function SessionDetailView({ route, navigation }: SessionDetailViewProps)
             </View>
 
             {/* Set table header */}
-            <View style={styles.setHeaderRow}>
+            <View style={[styles.setHeaderRow, { borderBottomColor: c.border.subtle }]}>
               <Text style={[styles.setHeaderCell, styles.setNumCol]}>#</Text>
               <Text style={[styles.setHeaderCell, styles.weightCol]}>{unitLabel}</Text>
               <Text style={[styles.setHeaderCell, styles.repsCol]}>Reps</Text>
@@ -275,20 +277,20 @@ export function SessionDetailView({ route, navigation }: SessionDetailViewProps)
         {/* Notes section */}
         {notes ? (
           <Card style={styles.notesCard}>
-            <Text style={styles.notesLabel}>Notes</Text>
-            <Text style={styles.notesText}>{notes}</Text>
+            <Text style={[styles.notesLabel, { color: c.text.muted }]}>Notes</Text>
+            <Text style={[styles.notesText, { color: c.text.secondary }]}>{notes}</Text>
           </Card>
         ) : null}
 
         {/* Edit button */}
         <TouchableOpacity
-          style={styles.editButton}
+          style={[styles.editButton, { backgroundColor: c.accent.primary }]}
           activeOpacity={0.8}
           onPress={() =>
             navigation.push('ActiveWorkout', { mode: 'edit', sessionId: session.id })
           }
         >
-          <Text style={styles.editButtonText}>Edit Session</Text>
+          <Text style={[styles.editButtonText, { color: c.text.inverse }]}>Edit Session</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

@@ -7,6 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { colors, motion } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface SkeletonProps {
   width: DimensionValue;
@@ -21,6 +22,7 @@ export function Skeleton({
   borderRadius = 8,
   variant = 'rect',
 }: SkeletonProps) {
+  const c = useThemeColors();
   const resolvedRadius = variant === 'circle' ? height / 2 : borderRadius;
 
   if (Platform.OS === 'web') {
@@ -28,7 +30,7 @@ export function Skeleton({
       <View
         style={[
           styles.base,
-          { width, height, borderRadius: resolvedRadius, opacity: 0.5 },
+          { width, height, borderRadius: resolvedRadius, opacity: 0.5, backgroundColor: c.bg.surfaceRaised },
         ]}
       />
     );
@@ -48,7 +50,7 @@ export function Skeleton({
     <Animated.View
       style={[
         styles.base,
-        { width, height, borderRadius: resolvedRadius },
+        { width, height, borderRadius: resolvedRadius, backgroundColor: c.bg.surfaceRaised },
         animatedStyle,
       ]}
     />

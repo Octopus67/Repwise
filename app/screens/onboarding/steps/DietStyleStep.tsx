@@ -9,6 +9,7 @@ import {
   NativeScrollEvent,
 } from 'react-native';
 import { colors, spacing, typography, radius } from '../../../theme/tokens';
+import { useThemeColors } from '../../../hooks/useThemeColors';
 import { Button } from '../../../components/common/Button';
 import { useOnboardingStore, DietStyle, computeAge } from '../../../store/onboardingSlice';
 import {
@@ -40,6 +41,7 @@ const PROTEIN_STEP = 0.1;
 const PROTEIN_TICK_COUNT = Math.round((PROTEIN_MAX - PROTEIN_MIN) / PROTEIN_STEP) + 1; // 19
 
 export function DietStyleStep({ onNext }: Props) {
+  const c = useThemeColors();
   const store = useOnboardingStore();
   const age = computeAge(store.birthYear, store.birthMonth);
   const goalType = store.goalType ?? 'maintain';
@@ -102,8 +104,8 @@ export function DietStyleStep({ onNext }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-      <Text style={styles.heading}>Diet Style</Text>
-      <Text style={styles.subheading}>
+      <Text style={[styles.heading, { color: c.text.primary }]}>Diet Style</Text>
+      <Text style={[styles.subheading, { color: c.text.secondary }]}>
         Choose your macro balance. Protein is set first from your body weight — these styles change how carbs and fat are split.
       </Text>
 
@@ -125,16 +127,16 @@ export function DietStyleStep({ onNext }: Props) {
               activeOpacity={0.7}
             >
               <Text style={[styles.cardTitle, selected && styles.cardTitleSelected]}>{d.title}</Text>
-              <Text style={styles.cardDesc}>{d.desc}</Text>
+              <Text style={[styles.cardDesc, { color: c.text.muted }]}>{d.desc}</Text>
 
               {/* Mini macro bar */}
               <View style={styles.miniBar}>
-                <View style={[styles.miniBarSegment, { flex: pFlex, backgroundColor: colors.macro.protein, borderTopLeftRadius: 3, borderBottomLeftRadius: 3 }]} />
-                <View style={[styles.miniBarSegment, { flex: cFlex, backgroundColor: colors.macro.carbs }]} />
-                <View style={[styles.miniBarSegment, { flex: fFlex, backgroundColor: colors.macro.fat, borderTopRightRadius: 3, borderBottomRightRadius: 3 }]} />
+                <View style={[styles.miniBarSegment, { flex: pFlex, backgroundColor: c.macro.protein, borderTopLeftRadius: 3, borderBottomLeftRadius: 3 }]} />
+                <View style={[styles.miniBarSegment, { flex: cFlex, backgroundColor: c.macro.carbs }]} />
+                <View style={[styles.miniBarSegment, { flex: fFlex, backgroundColor: c.macro.fat, borderTopRightRadius: 3, borderBottomRightRadius: 3 }]} />
               </View>
 
-              <Text style={styles.miniBarLabel}>
+              <Text style={[styles.miniBarLabel, { color: c.text.secondary }]}>
                 P: {sm.proteinG}g · C: {sm.carbsG}g · F: {sm.fatG}g
               </Text>
             </TouchableOpacity>
@@ -143,14 +145,14 @@ export function DietStyleStep({ onNext }: Props) {
       </View>
 
       {/* Protein scale */}
-      <Text style={styles.sectionLabel}>Protein per kg body weight</Text>
-      <Text style={styles.proteinValueDisplay}>
+      <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Protein per kg body weight</Text>
+      <Text style={[styles.proteinValueDisplay, { color: c.text.primary }]}>
         {store.proteinPerKg.toFixed(1)} g/kg · {Math.round(store.proteinPerKg * store.weightKg)}g/day
       </Text>
 
       <View style={styles.scaleContainer}>
         {/* Center indicator line */}
-        <View style={styles.centerIndicator} />
+        <View style={[styles.centerIndicator, { backgroundColor: c.accent.primary }]} />
 
         <ScrollView
           ref={scrollRef}
@@ -167,7 +169,7 @@ export function DietStyleStep({ onNext }: Props) {
             const inRange = proteinRec && val >= proteinRec.min && val <= proteinRec.max;
             return (
               <View key={i} style={styles.tickContainer}>
-                {inRange && <View style={styles.tickRecommendedBg} />}
+                {inRange && <View style={[styles.tickRecommendedBg, { backgroundColor: c.semantic.positiveSubtle }]} />}
                 <View
                   style={[
                     styles.tick,
@@ -175,7 +177,7 @@ export function DietStyleStep({ onNext }: Props) {
                   ]}
                 />
                 {isMajor && (
-                  <Text style={styles.tickLabel}>{val.toFixed(1)}</Text>
+                  <Text style={[styles.tickLabel, { color: c.text.secondary }]}>{val.toFixed(1)}</Text>
                 )}
               </View>
             );
@@ -184,35 +186,35 @@ export function DietStyleStep({ onNext }: Props) {
       </View>
 
       {proteinRec && (
-        <Text style={styles.recHint}>
+        <Text style={[styles.recHint, { color: c.semantic.positive }]}>
           Recommended: {proteinRec.min}–{proteinRec.max} g/kg
         </Text>
       )}
 
       {/* Protein info card */}
-      <View style={styles.infoCard}>
-        <Text style={styles.infoText}>
+      <View style={[styles.infoCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}>
+        <Text style={[styles.infoText, { color: c.text.muted }]}>
           Protein preserves muscle during fat loss and supports growth during bulking. The green zone is optimal for your goal and training style.
         </Text>
       </View>
 
       {/* Live macro display */}
-      <View style={styles.macroCard}>
+      <View style={[styles.macroCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
         <View style={styles.macroRow}>
           <View style={styles.macroItem}>
-            <View style={[styles.macroDot, { backgroundColor: colors.macro.protein }]} />
-            <Text style={styles.macroLabel}>Protein</Text>
-            <Text style={styles.macroValue}>{macros.proteinG}g</Text>
+            <View style={[styles.macroDot, { backgroundColor: c.macro.protein }]} />
+            <Text style={[styles.macroLabel, { color: c.text.muted }]}>Protein</Text>
+            <Text style={[styles.macroValue, { color: c.text.primary }]}>{macros.proteinG}g</Text>
           </View>
           <View style={styles.macroItem}>
-            <View style={[styles.macroDot, { backgroundColor: colors.macro.carbs }]} />
-            <Text style={styles.macroLabel}>Carbs</Text>
-            <Text style={styles.macroValue}>{macros.carbsG}g</Text>
+            <View style={[styles.macroDot, { backgroundColor: c.macro.carbs }]} />
+            <Text style={[styles.macroLabel, { color: c.text.muted }]}>Carbs</Text>
+            <Text style={[styles.macroValue, { color: c.text.primary }]}>{macros.carbsG}g</Text>
           </View>
           <View style={styles.macroItem}>
-            <View style={[styles.macroDot, { backgroundColor: colors.macro.fat }]} />
-            <Text style={styles.macroLabel}>Fat</Text>
-            <Text style={styles.macroValue}>{macros.fatG}g</Text>
+            <View style={[styles.macroDot, { backgroundColor: c.macro.fat }]} />
+            <Text style={[styles.macroLabel, { color: c.text.muted }]}>Fat</Text>
+            <Text style={[styles.macroValue, { color: c.text.primary }]}>{macros.fatG}g</Text>
           </View>
         </View>
       </View>

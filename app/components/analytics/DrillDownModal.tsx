@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { ModalContainer } from '../common/ModalContainer';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { getStatusColor, getStatusLabel } from '../../utils/muscleVolumeLogic';
 import { HUExplainerSheet } from '../education/HUExplainerSheet';
 import api from '../../services/api';
@@ -52,6 +53,7 @@ interface DrillDownModalProps {
 }
 
 export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVolumes }: DrillDownModalProps) {
+  const c = useThemeColors();
   const [data, setData] = useState<DetailData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,14 +110,14 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
     <ModalContainer visible={visible} onClose={onClose} title={title}>
       <ScrollView style={styles.scroll}>
         {error && (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorText}>⚠️ {error}</Text>
+          <View style={[styles.errorBanner, { backgroundColor: c.semantic.warningSubtle }]}>
+            <Text style={[styles.errorText, { color: c.semantic.warning }]}>⚠️ {error}</Text>
           </View>
         )}
         {loading ? (
-          <ActivityIndicator color={colors.accent.primary} style={{ marginTop: spacing[6] }} />
+          <ActivityIndicator color={c.accent.primary} style={{ marginTop: spacing[6] }} />
         ) : !data || data.exercises.length === 0 ? (
-          <Text style={styles.empty}>No training data for this muscle group this week.</Text>
+          <Text style={[styles.empty, { color: c.text.muted }]}>No training data for this muscle group this week.</Text>
         ) : (
           <>
             {/* Summary */}
@@ -123,40 +125,40 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
               <View style={[styles.statusBadge, { backgroundColor: getStatusColor(data.status ?? data.volume_status) }]}>
                 <Text style={styles.statusText}>{getStatusLabel(data.status ?? data.volume_status)}</Text>
               </View>
-              <Text style={styles.setsText}>
+              <Text style={[styles.setsText, { color: c.text.primary }]}>
                 {data.hypertrophy_units != null
                   ? `${data.hypertrophy_units} HU`
                   : `${data.effective_sets} effective sets`}
               </Text>
             </View>
             {data.landmarks ? (
-              <Text style={styles.landmarkText}>
+              <Text style={[styles.landmarkText, { color: c.text.muted }]}>
                 MEV {data.landmarks.mev} · MAV {data.landmarks.mav_low}–{data.landmarks.mav_high} · MRV {data.landmarks.mrv} HU
               </Text>
             ) : (
-              <Text style={styles.landmarkText}>
+              <Text style={[styles.landmarkText, { color: c.text.muted }]}>
                 MEV {data.mev} · MAV {data.mav} · MRV {data.mrv}
               </Text>
             )}
             {data.gross_stimulus != null && (
-              <Text style={styles.landmarkText}>
+              <Text style={[styles.landmarkText, { color: c.text.muted }]}>
                 Gross stimulus: {data.gross_stimulus} · Atrophy: −{data.atrophy_effect}
               </Text>
             )}
 
             {/* Exercises */}
             {data.exercises.map((ex) => (
-              <View key={ex.exercise_name} style={styles.exerciseBlock}>
+              <View key={ex.exercise_name} style={[styles.exerciseBlock, { borderTopColor: c.border.subtle }]}>
                 <View style={styles.exerciseHeader}>
-                  <Text style={styles.exerciseName}>
+                  <Text style={[styles.exerciseName, { color: c.text.primary }]}>
                     {ex.exercise_name}
                     {ex.coefficient != null && (
-                      <Text style={styles.coeffBadge}>
+                      <Text style={[styles.coeffBadge, { color: c.text.muted }]}>
                         {' '}{ex.coefficient === 1.0 ? '(Direct)' : `(${ex.coefficient}×)`}
                       </Text>
                     )}
                   </Text>
-                  <Text style={styles.exerciseSets}>
+                  <Text style={[styles.exerciseSets, { color: c.text.secondary }]}>
                     {ex.contribution_hu != null
                       ? `${ex.contribution_hu} HU · ${ex.sets_count ?? ex.working_sets} sets`
                       : `${ex.working_sets} sets · ${ex.effective_sets} eff`}
@@ -164,11 +166,11 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
                 </View>
                 {ex.sets?.map((s, i) => (
                   <View key={i} style={styles.setRow}>
-                    <Text style={styles.setDetail}>
+                    <Text style={[styles.setDetail, { color: c.text.secondary }]}>
                       {s.weight_kg}kg × {s.reps}
                       {s.rpe != null ? ` @RPE ${s.rpe}` : ''}
                     </Text>
-                    <Text style={styles.setEffort}>×{s.effort}</Text>
+                    <Text style={[styles.setEffort, { color: c.text.muted }]}>×{s.effort}</Text>
                   </View>
                 ))}
               </View>
@@ -183,7 +185,7 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
           accessibilityLabel="How Hypertrophy Units are calculated"
           accessibilityRole="button"
         >
-          <Text style={styles.explainerText}>ⓘ How is this calculated?</Text>
+          <Text style={[styles.explainerText, { color: c.accent.primary }]}>ⓘ How is this calculated?</Text>
         </TouchableOpacity>
       )}
       <HUExplainerSheet visible={explainerVisible} onClose={() => setExplainerVisible(false)} />

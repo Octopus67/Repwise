@@ -20,6 +20,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { colors, typography, radius, spacing, motion } from '../../theme/tokens';
 import { springs } from '../../theme/tokens';
 import { Icon } from './Icon';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface ModalContainerProps {
   visible: boolean;
@@ -43,6 +44,7 @@ export function ModalContainer({
   const scale = useSharedValue(0.95);
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(300);
+  const themeColors = useThemeColors();
 
   const panGesture = Gesture.Pan()
     .onUpdate((e) => {
@@ -99,17 +101,17 @@ export function ModalContainer({
     return (
       <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
         <Pressable style={styles.webOverlay} onPress={onClose}>
-          <Animated.View style={[styles.backdrop, backdropStyle]} pointerEvents="none" />
-          <Animated.View style={[styles.webDialog, webContentStyle]} testID={testID}>
+          <Animated.View style={[styles.backdrop, { backgroundColor: themeColors.bg.overlay }, backdropStyle]} pointerEvents="none" />
+          <Animated.View style={[styles.webDialog, { backgroundColor: themeColors.bg.surface, borderColor: themeColors.border.default }, webContentStyle]} testID={testID}>
             <Pressable onPress={(e) => e.stopPropagation()} style={{ flex: 1 }}>
               <View style={styles.header}>
                 {typeof title === 'string' ? (
-                  <Text style={styles.title}>{title}</Text>
+                  <Text style={[styles.title, { color: themeColors.text.primary }]}>{title}</Text>
                 ) : (
                   <View style={styles.titleRow}>{title}</View>
                 )}
                 <TouchableOpacity onPress={onClose} hitSlop={8} style={{ padding: 8 }} testID={closeButtonTestID}>
-                  <Icon name="close" size={18} color={colors.text.secondary} />
+                  <Icon name="close" size={18} color={themeColors.text.secondary} />
                 </TouchableOpacity>
               </View>
               {children}
@@ -123,22 +125,22 @@ export function ModalContainer({
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <View style={styles.mobileOverlay}>
-        <Animated.View style={[styles.backdrop, backdropStyle]}>
+        <Animated.View style={[styles.backdrop, { backgroundColor: themeColors.bg.overlay }, backdropStyle]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         </Animated.View>
         <GestureDetector gesture={panGesture}>
-          <Animated.View style={[styles.mobileSheet, mobileContentStyle]} testID={testID}>
+          <Animated.View style={[styles.mobileSheet, { backgroundColor: themeColors.bg.surface, borderColor: themeColors.border.default }, mobileContentStyle]} testID={testID}>
             <View style={styles.dragHandleContainer}>
-              <View style={styles.dragHandle} />
+              <View style={[styles.dragHandle, { backgroundColor: themeColors.bg.surfaceRaised }]} />
             </View>
             <View style={styles.header}>
               {typeof title === 'string' ? (
-                <Text style={styles.title}>{title}</Text>
+                <Text style={[styles.title, { color: themeColors.text.primary }]}>{title}</Text>
               ) : (
                 <View style={styles.titleRow}>{title}</View>
               )}
               <TouchableOpacity onPress={onClose} hitSlop={8} style={{ padding: 8, zIndex: 30 }} testID={closeButtonTestID}>
-                <Icon name="close" size={18} color={colors.text.secondary} />
+                <Icon name="close" size={18} color={themeColors.text.secondary} />
               </TouchableOpacity>
             </View>
             {children}

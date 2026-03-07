@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { ModalContainer } from '../common/ModalContainer';
 import api from '../../services/api';
 import { WaterTracker } from '../nutrition/WaterTracker';
@@ -94,6 +95,7 @@ export function scaleMacros(
 }
 
 export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealName }: Props) {
+  const c = useThemeColors();
   const selectedDate = useStore((s) => s.selectedDate);
   const isAuthenticated = useStore((s) => s.isAuthenticated);
 
@@ -769,10 +771,10 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
       <ScrollView keyboardShouldPersistTaps="handled">
         {/* ── Inline Success Message ──────────────────────────── */}
         {successMessage && (
-          <View style={styles.successRow}>
-            <Text style={styles.successText}>{successMessage}</Text>
+          <View style={[styles.successRow, { backgroundColor: c.semantic.positive }]}>
+            <Text style={[styles.successText, { color: c.semantic.positive }]}>{successMessage}</Text>
             <TouchableOpacity onPress={handleSaveAsFavorite}>
-              <Text style={styles.saveFavLink}>Save as Favorite</Text>
+              <Text style={[styles.saveFavLink, { color: c.accent.primary }]}>Save as Favorite</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -836,7 +838,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
         {activeTab === 'mealPlans' && (
           <View>
             {customMealsLoading && (
-              <ActivityIndicator color={colors.accent.primary} style={{ marginVertical: spacing[3] }} />
+              <ActivityIndicator color={c.accent.primary} style={{ marginVertical: spacing[3] }} />
             )}
 
             {!creatingPlan && (
@@ -844,140 +846,140 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
                 {customMeals.map((meal) => (
                   <TouchableOpacity
                     key={meal.id}
-                    style={styles.planCard}
+                    style={[styles.planCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                     onPress={() => handleSelectPlan(meal)}
                     onLongPress={() => handleDeletePlan(meal)}
                     activeOpacity={0.7}
                   >
                     <View style={styles.planCardHeader}>
-                      <Text style={styles.planCardName} numberOfLines={1}>{meal.name}</Text>
+                      <Text style={[styles.planCardName, { color: c.text.primary }]} numberOfLines={1}>{meal.name}</Text>
                       <TouchableOpacity onPress={() => handleFavoritePlan(meal)} activeOpacity={0.7}>
                         <Text style={styles.planFavIcon}>⭐</Text>
                       </TouchableOpacity>
                     </View>
-                    <Text style={styles.planCardMacros}>
+                    <Text style={[styles.planCardMacros, { color: c.text.muted }]}>
                       {Math.round(meal.calories)} kcal · {Math.round(meal.protein_g)}g P · {Math.round(meal.carbs_g)}g C · {Math.round(meal.fat_g)}g F
                     </Text>
                   </TouchableOpacity>
                 ))}
 
                 {!customMealsLoading && customMeals.length === 0 && (
-                  <Text style={styles.emptyText}>No saved meal plans yet.</Text>
+                  <Text style={[styles.emptyText, { color: c.text.muted }]}>No saved meal plans yet.</Text>
                 )}
 
                 <TouchableOpacity
-                  style={styles.createPlanBtn}
+                  style={[styles.createPlanBtn, { borderColor: c.accent.primary }]}
                   onPress={() => { setCreatingPlan(true); setPlanItems([]); setPlanName(''); }}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.createPlanBtnText}>+ Create New Plan</Text>
+                  <Text style={[styles.createPlanBtnText, { color: c.accent.primary }]}>+ Create New Plan</Text>
                 </TouchableOpacity>
               </>
             )}
 
             {creatingPlan && (
               <View style={styles.planForm}>
-                <Text style={styles.sectionLabel}>Plan Name</Text>
+                <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Plan Name</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                   value={planName}
                   onChangeText={setPlanName}
                   placeholder="e.g. Post-Workout Meal"
-                  placeholderTextColor={colors.text.muted}
+                  placeholderTextColor={c.text.muted}
                 />
 
                 {planItems.map((item, idx) => (
-                  <View key={idx} style={styles.planItemCard}>
+                  <View key={idx} style={[styles.planItemCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
                     <View style={styles.planItemHeaderRow}>
-                      <Text style={styles.planItemIndex}>Item {idx + 1}</Text>
+                      <Text style={[styles.planItemIndex, { color: c.text.secondary }]}>Item {idx + 1}</Text>
                       <TouchableOpacity onPress={() => handleRemovePlanItem(idx)}>
-                        <Text style={styles.planItemRemove}><Icon name="close" size={16} /></Text>
+                        <Text style={[styles.planItemRemove, { color: c.semantic.negative }]}><Icon name="close" size={16} /></Text>
                       </TouchableOpacity>
                     </View>
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                       value={item.name}
                       onChangeText={(v) => handleUpdatePlanItem(idx, 'name', v)}
                       placeholder="Item name"
-                      placeholderTextColor={colors.text.muted}
+                      placeholderTextColor={c.text.muted}
                     />
                     <View style={styles.row}>
                       <View style={styles.fieldHalf}>
-                        <Text style={styles.microLabel}>Calories</Text>
+                        <Text style={[styles.microLabel, { color: c.text.secondary }]}>Calories</Text>
                         <TextInput
-                          style={styles.input}
+                          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                           value={item.calories ? String(item.calories) : ''}
                           onChangeText={(v) => handleUpdatePlanItem(idx, 'calories', v)}
                           keyboardType="numeric"
                           placeholder="0"
-                          placeholderTextColor={colors.text.muted}
+                          placeholderTextColor={c.text.muted}
                         />
                       </View>
                       <View style={styles.fieldHalf}>
-                        <Text style={styles.microLabel}>Protein (g)</Text>
+                        <Text style={[styles.microLabel, { color: c.text.secondary }]}>Protein (g)</Text>
                         <TextInput
-                          style={styles.input}
+                          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                           value={item.protein_g ? String(item.protein_g) : ''}
                           onChangeText={(v) => handleUpdatePlanItem(idx, 'protein_g', v)}
                           keyboardType="numeric"
                           placeholder="0"
-                          placeholderTextColor={colors.text.muted}
+                          placeholderTextColor={c.text.muted}
                         />
                       </View>
                     </View>
                     <View style={styles.row}>
                       <View style={styles.fieldHalf}>
-                        <Text style={styles.microLabel}>Carbs (g)</Text>
+                        <Text style={[styles.microLabel, { color: c.text.secondary }]}>Carbs (g)</Text>
                         <TextInput
-                          style={styles.input}
+                          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                           value={item.carbs_g ? String(item.carbs_g) : ''}
                           onChangeText={(v) => handleUpdatePlanItem(idx, 'carbs_g', v)}
                           keyboardType="numeric"
                           placeholder="0"
-                          placeholderTextColor={colors.text.muted}
+                          placeholderTextColor={c.text.muted}
                         />
                       </View>
                       <View style={styles.fieldHalf}>
-                        <Text style={styles.microLabel}>Fat (g)</Text>
+                        <Text style={[styles.microLabel, { color: c.text.secondary }]}>Fat (g)</Text>
                         <TextInput
-                          style={styles.input}
+                          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                           value={item.fat_g ? String(item.fat_g) : ''}
                           onChangeText={(v) => handleUpdatePlanItem(idx, 'fat_g', v)}
                           keyboardType="numeric"
                           placeholder="0"
-                          placeholderTextColor={colors.text.muted}
+                          placeholderTextColor={c.text.muted}
                         />
                       </View>
                     </View>
                     <View style={styles.fieldHalf}>
-                      <Text style={styles.microLabel}>Serving ×</Text>
+                      <Text style={[styles.microLabel, { color: c.text.secondary }]}>Serving ×</Text>
                       <TextInput
-                        style={styles.input}
+                        style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                         value={item.serving_multiplier ? String(item.serving_multiplier) : ''}
                         onChangeText={(v) => handleUpdatePlanItem(idx, 'serving_multiplier', v)}
                         keyboardType="numeric"
                         placeholder="1"
-                        placeholderTextColor={colors.text.muted}
+                        placeholderTextColor={c.text.muted}
                       />
                     </View>
                   </View>
                 ))}
 
                 <TouchableOpacity
-                  style={styles.addItemBtn}
+                  style={[styles.addItemBtn, { borderColor: c.border.default }]}
                   onPress={handleAddPlanItem}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.addItemBtnText}>+ Add Item</Text>
+                  <Text style={[styles.addItemBtnText, { color: c.text.secondary }]}>+ Add Item</Text>
                 </TouchableOpacity>
 
                 {planItems.length > 0 && (
-                  <View style={styles.planAggregate}>
-                    <Text style={styles.sectionLabel}>Running Total</Text>
+                  <View style={[styles.planAggregate, { backgroundColor: c.accent.primaryMuted }]}>
+                    <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Running Total</Text>
                     {(() => {
                       const agg = aggregateMealPlan(planItems);
                       return (
-                        <Text style={styles.planAggregateMacros}>
+                        <Text style={[styles.planAggregateMacros, { color: c.text.primary }]}>
                           {Math.round(agg.calories)} kcal · {Math.round(agg.protein_g)}g P · {Math.round(agg.carbs_g)}g C · {Math.round(agg.fat_g)}g F
                         </Text>
                       );
@@ -987,11 +989,11 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
 
                 <View style={styles.planFormActions}>
                   <TouchableOpacity
-                    style={styles.cancelPlanBtn}
+                    style={[styles.cancelPlanBtn, { borderColor: c.border.default }]}
                     onPress={() => { setCreatingPlan(false); setPlanItems([]); setPlanName(''); }}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.cancelPlanBtnText}>Cancel</Text>
+                    <Text style={[styles.cancelPlanBtnText, { color: c.text.muted }]}>Cancel</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.submitBtn, savingPlan && styles.submitBtnDisabled]}
@@ -1000,9 +1002,9 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
                     activeOpacity={0.7}
                   >
                     {savingPlan ? (
-                      <ActivityIndicator color={colors.text.primary} />
+                      <ActivityIndicator color={c.text.primary} />
                     ) : (
-                      <Text style={styles.submitText}>Save Plan</Text>
+                      <Text style={[styles.submitText, { color: c.text.primary }]}>Save Plan</Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -1015,7 +1017,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
         {activeTab === 'recipes' && (
           <View>
             {recipesLoading && (
-              <ActivityIndicator color={colors.accent.primary} style={{ marginVertical: spacing[3] }} />
+              <ActivityIndicator color={c.accent.primary} style={{ marginVertical: spacing[3] }} />
             )}
 
             {!selectedRecipe ? (
@@ -1023,16 +1025,16 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
                 {userRecipes.map((recipe) => (
                   <TouchableOpacity
                     key={recipe.id}
-                    style={styles.planCard}
+                    style={[styles.planCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                     onPress={() => handleSelectRecipe(recipe)}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.planCardName} numberOfLines={1}>{recipe.name}</Text>
-                    <Text style={styles.planCardMacros}>
+                    <Text style={[styles.planCardName, { color: c.text.primary }]} numberOfLines={1}>{recipe.name}</Text>
+                    <Text style={[styles.planCardMacros, { color: c.text.muted }]}>
                       {Math.round(recipe.calories)} kcal · {Math.round(recipe.protein_g)}g P · {Math.round(recipe.carbs_g)}g C · {Math.round(recipe.fat_g)}g F per serving
                     </Text>
                     {recipe.total_servings ? (
-                      <Text style={styles.planCardMacros}>
+                      <Text style={[styles.planCardMacros, { color: c.text.muted }]}>
                         {recipe.total_servings} total serving{recipe.total_servings !== 1 ? 's' : ''}
                       </Text>
                     ) : null}
@@ -1040,27 +1042,27 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
                 ))}
 
                 {!recipesLoading && userRecipes.length === 0 && (
-                  <Text style={styles.emptyText}>No recipes yet. Create one from the Quick Log tab.</Text>
+                  <Text style={[styles.emptyText, { color: c.text.muted }]}>No recipes yet. Create one from the Quick Log tab.</Text>
                 )}
               </>
             ) : (
               <View>
-                <Text style={styles.sectionLabel}>Log Recipe</Text>
-                <View style={styles.planCard}>
-                  <Text style={styles.planCardName}>{selectedRecipe.name}</Text>
-                  <Text style={styles.planCardMacros}>
+                <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Log Recipe</Text>
+                <View style={[styles.planCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
+                  <Text style={[styles.planCardName, { color: c.text.primary }]}>{selectedRecipe.name}</Text>
+                  <Text style={[styles.planCardMacros, { color: c.text.muted }]}>
                     Per serving: {Math.round(selectedRecipe.calories)} kcal · {Math.round(selectedRecipe.protein_g)}g P · {Math.round(selectedRecipe.carbs_g)}g C · {Math.round(selectedRecipe.fat_g)}g F
                   </Text>
                 </View>
 
-                <Text style={styles.sectionLabel}>Servings Consumed</Text>
+                <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Servings Consumed</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                   value={recipeServings}
                   onChangeText={setRecipeServings}
                   keyboardType="numeric"
                   placeholder="1"
-                  placeholderTextColor={colors.text.muted}
+                  placeholderTextColor={c.text.muted}
                 />
 
                 {(() => {
@@ -1068,9 +1070,9 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
                   if (s > 0) {
                     const scaled = scaleMacros(selectedRecipe, s);
                     return (
-                      <View style={styles.planAggregate}>
-                        <Text style={styles.sectionLabel}>You will log</Text>
-                        <Text style={styles.planAggregateMacros}>
+                      <View style={[styles.planAggregate, { backgroundColor: c.accent.primaryMuted }]}>
+                        <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>You will log</Text>
+                        <Text style={[styles.planAggregateMacros, { color: c.text.primary }]}>
                           {Math.round(scaled.calories)} kcal · {Math.round(scaled.protein_g * 10) / 10}g P · {Math.round(scaled.carbs_g * 10) / 10}g C · {Math.round(scaled.fat_g * 10) / 10}g F
                         </Text>
                       </View>
@@ -1081,11 +1083,11 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
 
                 <View style={styles.planFormActions}>
                   <TouchableOpacity
-                    style={styles.cancelPlanBtn}
+                    style={[styles.cancelPlanBtn, { borderColor: c.border.default }]}
                     onPress={() => setSelectedRecipe(null)}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.cancelPlanBtnText}>Back</Text>
+                    <Text style={[styles.cancelPlanBtnText, { color: c.text.muted }]}>Back</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.submitBtn, loggingRecipe && styles.submitBtnDisabled]}
@@ -1094,9 +1096,9 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
                     activeOpacity={0.7}
                   >
                     {loggingRecipe ? (
-                      <ActivityIndicator color={colors.text.primary} />
+                      <ActivityIndicator color={c.text.primary} />
                     ) : (
-                      <Text style={styles.submitText}>Log Recipe</Text>
+                      <Text style={[styles.submitText, { color: c.text.primary }]}>Log Recipe</Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -1111,7 +1113,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
         {/* ── Favorites (rendered BEFORE search) ──────────────── */}
         {favorites.length > 0 && (
           <View style={styles.favoritesSection}>
-            <Text style={styles.sectionLabel}>⭐ Favorites</Text>
+            <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>⭐ Favorites</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -1120,7 +1122,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
               {favorites.map((fav) => (
                 <TouchableOpacity
                   key={fav.id}
-                  style={styles.favoriteChip}
+                  style={[styles.favoriteChip, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                   onPress={() => {
                     if (isLongPressingRef.current) return;
                     handleSelectFavorite(fav);
@@ -1134,10 +1136,10 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
                   }}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.favoriteChipName} numberOfLines={1}>
+                  <Text style={[styles.favoriteChipName, { color: c.text.primary }]} numberOfLines={1}>
                     {fav.name}
                   </Text>
-                  <Text style={styles.favoriteChipCal}>
+                  <Text style={[styles.favoriteChipCal, { color: c.text.muted }]}>
                     {Math.round(fav.calories)} kcal
                   </Text>
                 </TouchableOpacity>
@@ -1146,34 +1148,34 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
           </View>
         )}
         {favoritesLoading && (
-          <ActivityIndicator color={colors.accent.primary} style={{ marginBottom: spacing[2] }} />
+          <ActivityIndicator color={c.accent.primary} style={{ marginBottom: spacing[2] }} />
         )}
 
         {/* ── Create Recipe Button ─────────────────────────── */}
         <TouchableOpacity
-          style={styles.createPlanBtn}
+          style={[styles.createPlanBtn, { borderColor: c.accent.primary }]}
           onPress={() => setShowRecipeBuilder(true)}
           activeOpacity={0.7}
         >
-          <Text style={styles.createPlanBtnText}><Icon name="egg" /> Create Recipe</Text>
+          <Text style={[styles.createPlanBtnText, { color: c.accent.primary }]}><Icon name="egg" /> Create Recipe</Text>
         </TouchableOpacity>
 
         {/* ── Food Search ─────────────────────────────────────── */}
         <View style={styles.searchSection}>
-          <Text style={styles.sectionLabel}>Search Food</Text>
+          <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Search Food</Text>
           <View style={styles.searchRow}>
             <TextInput
               style={[styles.input, styles.searchInput]}
               value={searchQuery}
               onChangeText={handleSearchChange}
               placeholder="Search foods (min 2 chars)..."
-              placeholderTextColor={colors.text.muted}
+              placeholderTextColor={c.text.muted}
               autoCorrect={false}
               testID="nutrition-food-name-input"
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={handleClearSearch} style={styles.clearBtn}>
-                <Text style={styles.clearBtnText}><Icon name="close" size={16} /></Text>
+                <Text style={[styles.clearBtnText, { color: c.text.muted }]}><Icon name="close" size={16} /></Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity
@@ -1188,7 +1190,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
               style={styles.barcodeBtn}
               activeOpacity={0.7}
             >
-              <Ionicons name="barcode-outline" size={24} color={colors.accent.primary} />
+              <Ionicons name="barcode-outline" size={24} color={c.accent.primary} />
             </TouchableOpacity>
           </View>
 
@@ -1201,15 +1203,15 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
                     flex: 1,
                     height: 40,
                     borderWidth: 1,
-                    borderColor: colors.accent.primary,
+                    borderColor: c.accent.primary,
                     borderRadius: radius.sm,
                     paddingHorizontal: 12,
-                    color: colors.text.primary,
+                    color: c.text.primary,
                     fontSize: typography.size.md,
                     backgroundColor: 'transparent',
                   }}
                   placeholder="Enter barcode (8-14 digits)"
-                  placeholderTextColor={colors.text.muted}
+                  placeholderTextColor={c.text.muted}
                   value={manualBarcodeValue}
                   onChangeText={(t) => {
                     setManualBarcodeValue(t);
@@ -1234,7 +1236,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
                   }}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="search-outline" size={20} color={colors.accent.primary} />
+                  <Ionicons name="search-outline" size={20} color={c.accent.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.barcodeBtn}
@@ -1245,7 +1247,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
                   }}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="close-outline" size={20} color={colors.text.secondary} />
+                  <Ionicons name="close-outline" size={20} color={c.text.secondary} />
                 </TouchableOpacity>
               </View>
               {manualBarcodeError ? (
@@ -1255,36 +1257,36 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
           )}
 
           {searchLoading && (
-            <ActivityIndicator color={colors.accent.primary} style={styles.searchSpinner} />
+            <ActivityIndicator color={c.accent.primary} style={styles.searchSpinner} />
           )}
 
           {searchError ? (
-            <Text style={styles.errorText}>{searchError}</Text>
+            <Text style={[styles.errorText, { color: c.semantic.warning }]}>{searchError}</Text>
           ) : null}
 
           {searchResults.length > 0 && (
-            <ScrollView style={styles.resultsList} nestedScrollEnabled keyboardShouldPersistTaps="handled">
+            <ScrollView style={[styles.resultsList, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]} nestedScrollEnabled keyboardShouldPersistTaps="handled">
               {searchResults.slice(0, 50).map((item) => (
                 <TouchableOpacity
                   key={item.id}
-                  style={styles.resultItem}
+                  style={[styles.resultItem, { borderBottomColor: c.border.subtle }]}
                   onPress={() => handleSelectFood(item)}
                   activeOpacity={0.7}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={styles.resultName} numberOfLines={1}>
+                    <Text style={[styles.resultName, { color: c.text.primary }]} numberOfLines={1}>
                       {item.name}
                     </Text>
                     <SourceBadge source={item.source || 'community'} />
                   </View>
-                  <Text style={styles.resultMeta}>
+                  <Text style={[styles.resultMeta, { color: c.text.muted }]}>
                     {Math.round(item.calories)} kcal · {item.protein_g}g protein
                     {item.serving_size ? ` · ${item.serving_size}${item.serving_unit}` : ''}
                   </Text>
                 </TouchableOpacity>
               ))}
               {searchResults.length > 50 && (
-                <Text style={styles.truncationText}>
+                <Text style={[styles.truncationText, { color: c.text.muted }]}>
                   Showing 50 of {searchResults.length} results. Refine your search for more.
                 </Text>
               )}
@@ -1292,14 +1294,14 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
           )}
 
           {searchEmpty && searchResults.length === 0 && !searchLoading && (
-            <Text style={styles.emptyText}>No results found — try a different term or enter macros manually</Text>
+            <Text style={[styles.emptyText, { color: c.text.muted }]}>No results found — try a different term or enter macros manually</Text>
           )}
         </View>
 
         {/* ── Serving Unit Selector (shown when food selected) ── */}
         {selectedFood && servingOptions.length > 0 && (
           <View style={styles.servingSelector}>
-            <Text style={styles.sectionLabel}>Serving Size</Text>
+            <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Serving Size</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {servingOptions.map((opt, i) => (
                 <TouchableOpacity
@@ -1327,8 +1329,8 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
 
         {/* ── Serving Multiplier (shown when food selected) ──── */}
         {selectedFood && (
-          <View style={styles.multiplierSection}>
-            <Text style={styles.sectionLabel}>
+          <View style={[styles.multiplierSection, { backgroundColor: c.accent.primaryMuted }]}>
+            <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>
               Servings of {selectedFood.name}
             </Text>
             <TextInput
@@ -1337,9 +1339,9 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
               onChangeText={handleMultiplierChange}
               keyboardType="numeric"
               placeholder="1"
-              placeholderTextColor={colors.text.muted}
+              placeholderTextColor={c.text.muted}
             />
-            <Text style={styles.multiplierHint}>
+            <Text style={[styles.multiplierHint, { color: c.text.muted }]}>
               {selectedServing
                 ? `${selectedServing.grams}${selectedFood.serving_unit} per ${selectedServing.label}`
                 : `${selectedFood.serving_size}${selectedFood.serving_unit} per serving`}
@@ -1350,27 +1352,27 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
         {/* ── Manual Macro Fields ─────────────────────────────── */}
         <View style={styles.row}>
           <View style={styles.fieldHalf}>
-            <Text style={styles.label}>Calories</Text>
+            <Text style={[styles.label, { color: c.text.secondary }]}>Calories</Text>
             <TextInput
               style={[styles.input, selectedFood && styles.inputLocked]}
               value={calories}
               onChangeText={setCalories}
               keyboardType="numeric"
               placeholder="kcal"
-              placeholderTextColor={colors.text.muted}
+              placeholderTextColor={c.text.muted}
               editable={!selectedFood}
               testID="nutrition-calories-input"
             />
           </View>
           <View style={styles.fieldHalf}>
-            <Text style={styles.label}>Protein (g)</Text>
+            <Text style={[styles.label, { color: c.text.secondary }]}>Protein (g)</Text>
             <TextInput
               style={[styles.input, selectedFood && styles.inputLocked]}
               value={protein}
               onChangeText={setProtein}
               keyboardType="numeric"
               placeholder="g"
-              placeholderTextColor={colors.text.muted}
+              placeholderTextColor={c.text.muted}
               editable={!selectedFood}
               testID="nutrition-protein-input"
             />
@@ -1379,27 +1381,27 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
 
         <View style={styles.row}>
           <View style={styles.fieldHalf}>
-            <Text style={styles.label}>Carbs (g)</Text>
+            <Text style={[styles.label, { color: c.text.secondary }]}>Carbs (g)</Text>
             <TextInput
               style={[styles.input, selectedFood && styles.inputLocked]}
               value={carbs}
               onChangeText={setCarbs}
               keyboardType="numeric"
               placeholder="g"
-              placeholderTextColor={colors.text.muted}
+              placeholderTextColor={c.text.muted}
               editable={!selectedFood}
               testID="nutrition-carbs-input"
             />
           </View>
           <View style={styles.fieldHalf}>
-            <Text style={styles.label}>Fat (g)</Text>
+            <Text style={[styles.label, { color: c.text.secondary }]}>Fat (g)</Text>
             <TextInput
               style={[styles.input, selectedFood && styles.inputLocked]}
               value={fat}
               onChangeText={setFat}
               keyboardType="numeric"
               placeholder="g"
-              placeholderTextColor={colors.text.muted}
+              placeholderTextColor={c.text.muted}
               editable={!selectedFood}
               testID="nutrition-fat-input"
             />
@@ -1408,14 +1410,14 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
 
         {/* ── Fibre Field ─────────────────────────────────────── */}
         <View style={styles.field}>
-          <Text style={styles.label}>Fibre (g)</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>Fibre (g)</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
             value={fibre}
             onChangeText={setFibre}
             keyboardType="numeric"
             placeholder="g"
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
           />
         </View>
 
@@ -1433,25 +1435,25 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
             onPress={() => setMicroExpanded(!microExpanded)}
             activeOpacity={0.7}
           >
-            <Text style={styles.sectionLabel}>
+            <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>
               Micronutrients ({countFilledFields(microNutrients)} filled)
             </Text>
-            <Text style={styles.microChevron}>{microExpanded ? '▲' : '▼'}</Text>
+            <Text style={[styles.microChevron, { color: c.text.muted }]}>{microExpanded ? '▲' : '▼'}</Text>
           </TouchableOpacity>
           {microExpanded && (
             <View style={styles.microGrid}>
               {MICRO_FIELDS.map((field) => (
                 <View key={field.key} style={styles.microFieldHalf}>
-                  <Text style={styles.microLabel}>{field.label}</Text>
+                  <Text style={[styles.microLabel, { color: c.text.secondary }]}>{field.label}</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                     value={microNutrients[field.key] ?? ''}
                     onChangeText={(text) =>
                       setMicroNutrients((prev) => ({ ...prev, [field.key]: text }))
                     }
                     keyboardType="numeric"
                     placeholder="0"
-                    placeholderTextColor={colors.text.muted}
+                    placeholderTextColor={c.text.muted}
                   />
                 </View>
               ))}
@@ -1460,13 +1462,13 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Notes (optional)</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>Notes (optional)</Text>
           <TextInput
             style={[styles.input, styles.notesInput]}
             value={notes}
             onChangeText={setNotes}
             placeholder="e.g. Post-workout meal"
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
             multiline
           />
         </View>
@@ -1483,15 +1485,15 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
         testID="nutrition-submit-button"
       >
         {loading ? (
-          <ActivityIndicator color={colors.text.primary} />
+          <ActivityIndicator color={c.text.primary} />
         ) : (
-          <Text style={styles.submitText}>Save</Text>
+          <Text style={[styles.submitText, { color: c.text.primary }]}>Save</Text>
         )}
       </TouchableOpacity>
       )}
 
       <TouchableOpacity onPress={handleCloseAfterSave} style={styles.doneBtn} activeOpacity={0.7}>
-        <Text style={styles.doneBtnText}>Done</Text>
+        <Text style={[styles.doneBtnText, { color: c.text.muted }]}>Done</Text>
       </TouchableOpacity>
     </ModalContainer>
 

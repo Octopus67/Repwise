@@ -10,6 +10,7 @@ import {
   UIManager,
 } from 'react-native';
 import { colors, spacing, typography, radius, opacityScale } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import { Icon } from '../common/Icon';
 import { Button } from '../common/Button';
@@ -59,6 +60,7 @@ function extractDraft(prefs: Record<string, unknown> | null | undefined): DraftS
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function AdvancedSettingsSection() {
+  const c = useThemeColors();
   const store = useStore();
   const profile = store.profile;
   const latestMetrics = store.latestMetrics;
@@ -182,20 +184,20 @@ export function AdvancedSettingsSection() {
         accessibilityLabel="Advanced Settings"
       >
         <View style={styles.headerLeft}>
-          <Icon name="gear" size={18} color={colors.text.secondary} />
-          <Text style={styles.headerTitle}>Advanced Settings</Text>
+          <Icon name="gear" size={18} color={c.text.secondary} />
+          <Text style={[styles.headerTitle, { color: c.text.primary }]}>Advanced Settings</Text>
         </View>
         <Icon
           name={expanded ? 'chevron-left' : 'chevron-right'}
           size={16}
-          color={colors.text.muted}
+          color={c.text.muted}
         />
       </TouchableOpacity>
 
       {expanded && (
         <View style={styles.body}>
           {/* ── Section 1: Exercise & Activity ── */}
-          <Text style={styles.sectionTitle}>Exercise & Activity</Text>
+          <Text style={[styles.sectionTitle, { color: c.text.secondary }]}>Exercise & Activity</Text>
           <ExerciseFrequencyPicker
             value={draft.exerciseFrequency}
             onChange={(v) => updateDraft('exerciseFrequency', v)}
@@ -206,8 +208,8 @@ export function AdvancedSettingsSection() {
           />
 
           {/* ── Section 2: Nutrition Preferences ── */}
-          <View style={styles.divider} />
-          <Text style={styles.sectionTitle}>Nutrition Preferences</Text>
+          <View style={[styles.divider, { backgroundColor: c.border.subtle }]} />
+          <Text style={[styles.sectionTitle, { color: c.text.secondary }]}>Nutrition Preferences</Text>
           <DietStylePicker
             value={draft.dietStyle}
             onChange={(v) => updateDraft('dietStyle', v)}
@@ -219,8 +221,8 @@ export function AdvancedSettingsSection() {
           />
 
           {/* ── Section 3: Food DNA ── */}
-          <View style={styles.divider} />
-          <Text style={styles.sectionTitle}>Food DNA</Text>
+          <View style={[styles.divider, { backgroundColor: c.border.subtle }]} />
+          <Text style={[styles.sectionTitle, { color: c.text.secondary }]}>Food DNA</Text>
           <DietaryRestrictionsPicker
             value={draft.dietaryRestrictions}
             onChange={(v) => updateDraft('dietaryRestrictions', v)}
@@ -239,8 +241,8 @@ export function AdvancedSettingsSection() {
           />
 
           {/* ── Feedback ── */}
-          {error && <Text style={styles.error}>{error}</Text>}
-          {success && <Text style={styles.success}>Settings saved ✓</Text>}
+          {error && <Text style={[styles.error, { color: c.semantic.negative }]}>{error}</Text>}
+          {success && <Text style={[styles.success, { color: c.semantic.positive }]}>Settings saved ✓</Text>}
 
           {/* ── Save button ── */}
           <Button

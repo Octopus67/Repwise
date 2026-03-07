@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../../components/common/Card';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Skeleton } from '../../components/common/Skeleton';
@@ -66,6 +67,7 @@ function SkeletonCards() {
 }
 
 export function LogsScreen() {
+  const c = useThemeColors();
   const navigation = useNavigation<StackNavigationProp<LogsStackParamList>>();
   const fabAnim = useStaggeredEntrance(0, 200);
   const { impact } = useHaptics();
@@ -286,7 +288,7 @@ export function LogsScreen() {
   const renderTrainingGroup = ({ item }: { item: { date: string; sessions: TrainingSessionResponse[] } }) => {
     return (
       <View key={item.date}>
-        <Text style={styles.dateHeader}>
+        <Text style={[styles.dateHeader, { color: c.text.secondary }]}>
           {new Date(item.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
         </Text>
         {item.sessions.map((session) => {
@@ -301,20 +303,20 @@ export function LogsScreen() {
                 >
                   <Card style={styles.entryCard}>
                     <View style={styles.entryHeader}>
-                      <Text style={styles.entryName}>
+                      <Text style={[styles.entryName, { color: c.text.primary }]}>
                         {session.exercises?.length ?? 0} exercises
                       </Text>
                       {hasPR && (
-                        <Icon name="star" size={16} color={colors.semantic.warning} />
+                        <Icon name="star" size={16} color={c.semantic.warning} />
                       )}
                     </View>
                     {session.exercises?.slice(0, 3).map((ex, i) => (
-                      <Text key={i} style={styles.exerciseText}>
+                      <Text key={i} style={[styles.exerciseText, { color: c.text.secondary }]}>
                         {ex.exercise_name} — {ex.sets.length} sets{ex.sets.length > 0 ? ` · ${ex.sets[0].weight_kg}kg × ${ex.sets[0].reps}` : ''}
                       </Text>
                     ))}
                     {(session.exercises?.length ?? 0) > 3 && (
-                      <Text style={styles.moreText}>
+                      <Text style={[styles.moreText, { color: c.text.muted }]}>
                         +{(session.exercises?.length ?? 0) - 3} more
                       </Text>
                     )}
@@ -332,7 +334,7 @@ export function LogsScreen() {
     if (!trainingLoadingMore) return null;
     return (
       <View style={styles.loadingMore}>
-        <ActivityIndicator size="small" color={colors.accent.primary} />
+        <ActivityIndicator size="small" color={c.accent.primary} />
       </View>
     );
   };
@@ -367,7 +369,7 @@ export function LogsScreen() {
               }}
               activeOpacity={0.7}
             >
-              <Text style={styles.browseLinkText}>Browse all templates →</Text>
+              <Text style={[styles.browseLinkText, { color: c.accent.primary }]}>Browse all templates →</Text>
             </TouchableOpacity>
           </View>
         </CollapsibleSection>
@@ -381,10 +383,10 @@ export function LogsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']} testID="logs-screen">
-      <Text style={styles.title}>Logs</Text>
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="logs-screen">
+      <Text style={[styles.title, { color: c.text.primary }]}>Logs</Text>
 
-      <View style={styles.tabs}>
+      <View style={[styles.tabs, { backgroundColor: c.bg.surface }]}>
         <TouchableOpacity
           style={[styles.tab, tab === 'nutrition' && styles.tabActive]}
           onPress={() => { impact('light'); setTab('nutrition'); }}
@@ -403,11 +405,11 @@ export function LogsScreen() {
 
       <View style={styles.dateNav}>
         <TouchableOpacity onPress={() => changeDate(-1)}>
-          <Text style={styles.dateArrow}>‹</Text>
+          <Text style={[styles.dateArrow, { color: c.accent.primary }]}>‹</Text>
         </TouchableOpacity>
-        <Text style={styles.dateText}>{formatDisplayDate(selectedDate)}</Text>
+        <Text style={[styles.dateText, { color: c.text.primary }]}>{formatDisplayDate(selectedDate)}</Text>
         <TouchableOpacity onPress={() => changeDate(1)}>
-          <Text style={styles.dateArrow}>›</Text>
+          <Text style={[styles.dateArrow, { color: c.accent.primary }]}>›</Text>
         </TouchableOpacity>
       </View>
 
@@ -428,7 +430,7 @@ export function LogsScreen() {
         <ScrollView
           style={styles.list}
           contentContainerStyle={styles.listContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent.primary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.accent.primary} />}
         >
           {/* 1. Quick Re-log row at top */}
           <QuickRelogRow
@@ -442,11 +444,11 @@ export function LogsScreen() {
 
           {/* 3. Inline meal-slot rendering with swipe-to-delete */}
           {mealSlots.map((slot) => (
-            <View key={slot.name} style={styles.slotContainer}>
+            <View key={slot.name} style={[styles.slotContainer, { backgroundColor: c.bg.surface }]}>
               {/* Slot header */}
-              <View style={styles.slotHeader}>
-                <Text style={styles.slotName}>{slot.name}</Text>
-                <Text style={styles.slotCalories}>
+              <View style={[styles.slotHeader, { backgroundColor: c.bg.surfaceRaised }]}>
+                <Text style={[styles.slotName, { color: c.text.primary }]}>{slot.name}</Text>
+                <Text style={[styles.slotCalories, { color: c.text.secondary }]}>
                   {Math.round(slot.totals.calories)} kcal
                 </Text>
               </View>
@@ -461,19 +463,19 @@ export function LogsScreen() {
                         <Card style={styles.entryCard}>
                           <View style={styles.entryHeader}>
                             <View style={styles.entryNameRow}>
-                              <Text style={styles.entryName}>{entry.food_name || entry.meal_name || 'Unnamed entry'}</Text>
+                              <Text style={[styles.entryName, { color: c.text.primary }]}>{entry.food_name || entry.meal_name || 'Unnamed entry'}</Text>
                               {entry.created_at && (
-                                <Text style={styles.entryTimestamp}>
+                                <Text style={[styles.entryTimestamp, { color: c.text.muted }]}>
                                   {formatEntryTime(entry.created_at)}
                                 </Text>
                               )}
                             </View>
                           </View>
                           <View style={styles.macroRow}>
-                            <MacroPill label="Cal" value={entry.calories} color={colors.chart.calories} />
-                            <MacroPill label="P" value={entry.protein_g} color={colors.semantic.positive} />
-                            <MacroPill label="C" value={entry.carbs_g} color={colors.semantic.warning} />
-                            <MacroPill label="F" value={entry.fat_g} color={colors.semantic.negative} />
+                            <MacroPill label="Cal" value={entry.calories} color={c.chart.calories} />
+                            <MacroPill label="P" value={entry.protein_g} color={c.semantic.positive} />
+                            <MacroPill label="C" value={entry.carbs_g} color={c.semantic.warning} />
+                            <MacroPill label="F" value={entry.fat_g} color={c.semantic.negative} />
                           </View>
                         </Card>
                       </SwipeableRow>
@@ -484,11 +486,11 @@ export function LogsScreen() {
 
               {/* Add button for slot — always visible */}
               <TouchableOpacity
-                style={styles.slotAddButton}
+                style={[styles.slotAddButton, { borderTopColor: c.border.subtle }]}
                 onPress={() => handleAddToSlot(slot.name)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.slotAddText}>+ Add to {slot.name}</Text>
+                <Text style={[styles.slotAddText, { color: c.accent.primary }]}>+ Add to {slot.name}</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -503,7 +505,7 @@ export function LogsScreen() {
                 {favorites.map((fav: any) => (
                   <TouchableOpacity
                     key={fav.id}
-                    style={styles.favoriteRow}
+                    style={[styles.favoriteRow, { borderBottomColor: c.border.subtle }]}
                     onPress={() => {
                       setPrefilledMealName(fav.name);
                       setShowNutritionModal(true);
@@ -511,17 +513,17 @@ export function LogsScreen() {
                     activeOpacity={0.7}
                   >
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.favoriteName}>{fav.name}</Text>
-                      <Text style={styles.favoriteMacros}>
+                      <Text style={[styles.favoriteName, { color: c.text.primary }]}>{fav.name}</Text>
+                      <Text style={[styles.favoriteMacros, { color: c.text.secondary }]}>
                         {Math.round(fav.calories)} kcal
                       </Text>
                     </View>
-                    <Text style={styles.favoriteLogBtn}>Log</Text>
+                    <Text style={[styles.favoriteLogBtn, { color: c.accent.primary }]}>Log</Text>
                   </TouchableOpacity>
                 ))}
               </View>
             ) : (
-              <Text style={styles.emptyFavText}>
+              <Text style={[styles.emptyFavText, { color: c.text.muted }]}>
                 Star foods when logging to save them here
               </Text>
             )}
@@ -538,7 +540,7 @@ export function LogsScreen() {
           <ScrollView
             style={styles.list}
             contentContainerStyle={styles.listContent}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent.primary} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.accent.primary} />}
           >
             {/* Start Workout card even in empty state */}
             <StartWorkoutCard
@@ -565,7 +567,7 @@ export function LogsScreen() {
             ListHeaderComponent={trainingListHeader}
             style={styles.list}
             contentContainerStyle={styles.listContent}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent.primary} />}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.accent.primary} />}
             onEndReached={loadMoreTraining}
             onEndReachedThreshold={0.5}
             ListFooterComponent={trainingListFooter}
@@ -575,12 +577,12 @@ export function LogsScreen() {
 
       <Animated.View style={[styles.fab, fabAnim]}>
         <TouchableOpacity
-          style={styles.fabInner}
+          style={[styles.fabInner, { backgroundColor: c.accent.primary }]}
           activeOpacity={0.8}
           onPress={openAddModal}
           testID="logs-add-button"
         >
-          <Text style={styles.fabText}>+</Text>
+          <Text style={[styles.fabText, { color: c.text.primary }]}>+</Text>
         </TouchableOpacity>
       </Animated.View>
 

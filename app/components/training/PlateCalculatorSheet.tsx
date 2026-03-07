@@ -2,26 +2,27 @@ import { useRef, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { calculatePlates } from '../../utils/plateCalculator';
 import { convertWeight } from '../../utils/unitConversion';
 import type { UnitSystem } from '../../utils/unitConversion';
 
 /** Color map for plate weights (kg) — visual distinction per plate size */
-const PLATE_COLORS: Record<number, string> = {
-  25: '#EF4444',    // Red
-  20: '#3B82F6',    // Blue
-  15: '#F59E0B',    // Yellow
-  10: '#22C55E',    // Green
-  5: '#F1F5F9',     // White
-  2.5: '#6B7280',   // Gray
-  1.25: '#A78BFA',  // Purple
+const PLATE_COLORS: Record<number, { bg: string; needsBorder: boolean }> = {
+  25: { bg: '#EF4444', needsBorder: false },
+  20: { bg: '#3B82F6', needsBorder: false },
+  15: { bg: '#F59E0B', needsBorder: false },
+  10: { bg: '#22C55E', needsBorder: false },
+  5: { bg: '#F1F5F9', needsBorder: true },
+  2.5: { bg: '#6B7280', needsBorder: false },
+  1.25: { bg: '#A78BFA', needsBorder: false },
   // Imperial equivalents (kg values)
-  20.4117: '#EF4444',
-  15.876: '#3B82F6',
-  11.34: '#F59E0B',
-  4.536: '#22C55E',
-  2.268: '#F1F5F9',
-  1.134: '#6B7280',
+  20.4117: { bg: '#EF4444', needsBorder: false },
+  15.876: { bg: '#3B82F6', needsBorder: false },
+  11.34: { bg: '#F59E0B', needsBorder: false },
+  4.536: { bg: '#22C55E', needsBorder: false },
+  2.268: { bg: '#F1F5F9', needsBorder: true },
+  1.134: { bg: '#6B7280', needsBorder: false },
 };
 
 interface PlateCalculatorSheetProps {
@@ -37,6 +38,7 @@ export function PlateCalculatorSheet({
   visible,
   onClose,
 }: PlateCalculatorSheetProps) {
+  const c = useThemeColors();
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   useEffect(() => {
@@ -76,36 +78,42 @@ export function PlateCalculatorSheet({
       handleIndicatorStyle={styles.handleIndicator}
     >
       <BottomSheetView style={styles.content}>
-        <Text style={styles.title}>Plate Calculator</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.title, { color: c.text.primary }]}>Plate Calculator</Text>
+        <Text style={[styles.subtitle, { color: c.text.secondary }]}>
           {displayWeight} {suffix} — Bar: {displayBar} {suffix}
         </Text>
 
         {!breakdown.isExact && (
-          <Text style={styles.inexactNote}>
+          <Text style={[styles.inexactNote, { color: c.semantic.warning }]}>
             Nearest achievable: {displayWeight} {suffix}
           </Text>
         )}
 
         {breakdown.platesPerSide.length === 0 ? (
-          <Text style={styles.barOnly} accessibilityRole="text" accessibilityLabel="Bar only, no plates needed">Bar only — no plates needed</Text>
+          <Text style={[styles.barOnly, { color: c.text.muted }]} accessibilityRole="text" accessibilityLabel="Bar only, no plates needed">Bar only — no plates needed</Text>
         ) : (
           <View style={styles.plateRow} accessibilityLabel={`Plates per side for ${displayWeight} ${suffix}`}>
-            <Text style={styles.perSideLabel}>Per side:</Text>
+            <Text style={[styles.perSideLabel, { color: c.text.muted }]}>Per side:</Text>
             <View style={styles.plates}>
               {breakdown.platesPerSide.map((plate, i) => {
-                const plateColor = PLATE_COLORS[plate.weightKg] || colors.text.muted;
+                const plateInfo = PLATE_COLORS[plate.weightKg];
+                const plateColor = plateInfo?.bg || c.text.muted;
+                const needsBorder = plateInfo?.needsBorder ?? false;
                 const plateDisplay = convertWeight(plate.weightKg, unitSystem);
                 return (
                   <View key={`${plate.weightKg}-${i}`} style={styles.plateGroup}>
                     {Array.from({ length: plate.count }).map((_, j) => (
                       <View
                         key={`${plate.weightKg}-${i}-${j}`}
-                        style={[styles.plate, { backgroundColor: plateColor }]}
+                        style={[
+                          styles.plate,
+                          { backgroundColor: plateColor },
+                          needsBorder && { borderWidth: 1, borderColor: c.border.default },
+                        ]}
                         accessibilityLabel={`${plateDisplay} ${suffix} plate`}
                         accessibilityRole="text"
                       >
-                        <Text style={styles.plateText}>
+                        <Text style={[styles.plateText, { color: needsBorder ? c.text.primary : c.bg.base }]}>
                           {plateDisplay}
                         </Text>
                       </View>
@@ -135,26 +143,22 @@ const styles = StyleSheet.create({
     paddingBottom: spacing[4],
   },
   title: {
-    color: colors.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
     lineHeight: typography.lineHeight.lg,
     marginBottom: spacing[1],
   },
   subtitle: {
-    color: colors.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     marginBottom: spacing[3],
   },
   inexactNote: {
-    color: colors.semantic.warning,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     marginBottom: spacing[3],
   },
   barOnly: {
-    color: colors.text.muted,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
     textAlign: 'center',
@@ -164,7 +168,6 @@ const styles = StyleSheet.create({
     marginTop: spacing[2],
   },
   perSideLabel: {
-    color: colors.text.muted,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.xs,
@@ -189,7 +192,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   plateText: {
-    color: colors.bg.base,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.bold,
     lineHeight: typography.lineHeight.sm,

@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import api from '../../services/api';
 import {
   initializeDraft,
@@ -314,6 +315,7 @@ export function PlanEditFlow({
   onSave,
   onCancel,
 }: PlanEditFlowProps) {
+  const c = useThemeColors();
   const [draft, setDraft] = useState<EditDraft>(() =>
     initializeDraft(metrics, goals, unitSystem),
   );
@@ -469,7 +471,7 @@ export function PlanEditFlow({
               activeOpacity={0.7}
             >
               {saving ? (
-                <ActivityIndicator color={colors.text.primary} size="small" />
+                <ActivityIndicator color={c.text.primary} size="small" />
               ) : (
                 <Text style={flowStyles.primaryBtnText}>Save</Text>
               )}

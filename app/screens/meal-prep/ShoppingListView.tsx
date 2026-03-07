@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { colors, typography, spacing } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface ShoppingItem {
   name: string;
@@ -19,6 +20,7 @@ interface ShoppingItem {
 const CATEGORY_ORDER = ['produce', 'protein', 'dairy', 'grains', 'pantry', 'other'];
 
 export function ShoppingListView({ route }: any) {
+  const c = useThemeColors();
   const planId = route?.params?.planId;
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [checked, setChecked] = useState<Set<string>>(new Set());
@@ -59,7 +61,7 @@ export function ShoppingListView({ route }: any) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.accent.primary} />
+        <ActivityIndicator size="large" color={c.accent.primary} />
       </View>
     );
   }
@@ -67,9 +69,9 @@ export function ShoppingListView({ route }: any) {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={[styles.errorText, { color: c.semantic.negative }]}>{error}</Text>
         <TouchableOpacity
-          style={styles.retryBtn}
+          style={[styles.retryBtn, { backgroundColor: c.accent.primary }]}
           onPress={() => {
             setError(null);
             setLoading(true);
@@ -83,18 +85,18 @@ export function ShoppingListView({ route }: any) {
               .finally(() => setLoading(false));
           }}
         >
-          <Text style={styles.retryText}>Retry</Text>
+          <Text style={[styles.retryText, { color: c.text.primary }]}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Shopping List</Text>
+    <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]}>
+      <Text style={[styles.title, { color: c.text.primary }]}>Shopping List</Text>
       {Object.entries(grouped).map(([category, catItems]) => (
         <View key={category} style={styles.section}>
-          <Text style={styles.categoryLabel}>{category.charAt(0).toUpperCase() + category.slice(1)}</Text>
+          <Text style={[styles.categoryLabel, { color: c.accent.primary }]}>{category.charAt(0).toUpperCase() + category.slice(1)}</Text>
           {catItems.map((item) => (
             <TouchableOpacity
               key={item.name}
@@ -105,7 +107,7 @@ export function ShoppingListView({ route }: any) {
               <Text style={[styles.itemName, checked.has(item.name) && styles.strikethrough]}>
                 {item.name}
               </Text>
-              <Text style={styles.itemQty}>
+              <Text style={[styles.itemQty, { color: c.text.secondary }]}>
                 {item.quantity} {item.unit}
               </Text>
             </TouchableOpacity>

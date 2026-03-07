@@ -8,7 +8,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { ModalContainer } from '../common/ModalContainer';
-import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface HUExplainerSheetProps {
   visible: boolean;
@@ -47,10 +48,10 @@ const HU_SECTIONS = [
 ] as const;
 
 const HU_COLOR_LEGEND = [
-  { label: 'Below MEV', desc: 'Not enough stimulus to grow', color: '#6B7280' },
-  { label: 'Optimal', desc: 'Sweet spot for hypertrophy', color: '#22C55E' },
-  { label: 'Approaching MRV', desc: 'High volume — monitor recovery', color: '#EAB308' },
-  { label: 'Above MRV', desc: 'Exceeding recovery capacity', color: '#EF4444' },
+  { label: 'Below MEV', desc: 'Not enough stimulus to grow', colorKey: 'belowMev' },
+  { label: 'Optimal', desc: 'Sweet spot for hypertrophy', colorKey: 'optimal' },
+  { label: 'Approaching MRV', desc: 'High volume — monitor recovery', colorKey: 'nearMrv' },
+  { label: 'Above MRV', desc: 'Exceeding recovery capacity', colorKey: 'aboveMrv' },
 ] as const;
 
 // ─── Fatigue Score Content ───────────────────────────────────────────────────
@@ -83,14 +84,15 @@ const FATIGUE_SECTIONS = [
 ] as const;
 
 const FATIGUE_COLOR_LEGEND = [
-  { label: 'Low Fatigue (0–30)', desc: 'Fully recovered — push hard', color: '#22C55E' },
-  { label: 'Moderate (31–60)', desc: 'Normal training fatigue', color: '#EAB308' },
-  { label: 'High Fatigue (61–100)', desc: 'Consider a deload week', color: '#EF4444' },
+  { label: 'Low Fatigue (0–30)', desc: 'Fully recovered — push hard', colorKey: 'positive' },
+  { label: 'Moderate (31–60)', desc: 'Normal training fatigue', colorKey: 'warning' },
+  { label: 'High Fatigue (61–100)', desc: 'Consider a deload week', colorKey: 'negative' },
 ] as const;
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function HUExplainerSheet({ visible, onClose, initialTab = 'hu' }: HUExplainerSheetProps) {
+  const c = useThemeColors();
   const [tab, setTab] = useState<'hu' | 'fatigue'>(initialTab);
 
   // Reset tab when modal opens
@@ -103,50 +105,50 @@ export function HUExplainerSheet({ visible, onClose, initialTab = 'hu' }: HUExpl
       {/* Tab Switcher */}
       <View style={styles.tabRow}>
         <TouchableOpacity
-          style={[styles.tab, tab === 'hu' && styles.tabActive]}
+          style={[styles.tab, { backgroundColor: tab === 'hu' ? c.accent.primaryMuted : c.bg.surfaceRaised }]}
           onPress={() => setTab('hu')}
           accessibilityRole="tab"
           accessibilityState={{ selected: tab === 'hu' }}
           accessibilityLabel="Hypertrophy Units tab"
         >
-          <Text style={[styles.tabText, tab === 'hu' && styles.tabTextActive]}>Hypertrophy Units</Text>
+          <Text style={[styles.tabText, { color: tab === 'hu' ? c.accent.primary : c.text.muted }]}>Hypertrophy Units</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, tab === 'fatigue' && styles.tabActive]}
+          style={[styles.tab, { backgroundColor: tab === 'fatigue' ? c.accent.primaryMuted : c.bg.surfaceRaised }]}
           onPress={() => setTab('fatigue')}
           accessibilityRole="tab"
           accessibilityState={{ selected: tab === 'fatigue' }}
           accessibilityLabel="Fatigue Score tab"
         >
-          <Text style={[styles.tabText, tab === 'fatigue' && styles.tabTextActive]}>Fatigue Score</Text>
+          <Text style={[styles.tabText, { color: tab === 'fatigue' ? c.accent.primary : c.text.muted }]}>Fatigue Score</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         {tab === 'hu' ? (
           <>
-            <Text style={styles.intro}>
+            <Text style={[styles.intro, { color: c.text.secondary }]}>
               Your HU score measures the actual growth stimulus reaching each muscle — not just how many sets you did.
             </Text>
 
             {HU_SECTIONS.map((section) => (
               <View key={section.title} style={styles.section}>
                 <View style={styles.numberRow}>
-                  <Text style={styles.sectionNumber}>{section.number}</Text>
-                  <Text style={styles.sectionTitle}>{section.title}</Text>
+                  <Text style={[styles.sectionNumber, { color: c.accent.primary }]}>{section.number}</Text>
+                  <Text style={[styles.sectionTitle, { color: c.text.primary }]}>{section.title}</Text>
                 </View>
-                <Text style={styles.sectionBody}>{section.body}</Text>
+                <Text style={[styles.sectionBody, { color: c.text.secondary }]}>{section.body}</Text>
               </View>
             ))}
 
             <View style={styles.legendSection}>
-              <Text style={styles.legendHeading}>Status Indicators</Text>
+              <Text style={[styles.legendHeading, { color: c.text.primary }]}>Status Indicators</Text>
               {HU_COLOR_LEGEND.map((item) => (
                 <View key={item.label} style={styles.legendRow}>
-                  <View style={[styles.legendDot, { backgroundColor: item.color }]} />
+                  <View style={[styles.legendDot, { backgroundColor: c.heatmap[item.colorKey] }]} />
                   <View style={styles.legendText}>
-                    <Text style={styles.legendLabel}>{item.label}</Text>
-                    <Text style={styles.legendDesc}>{item.desc}</Text>
+                    <Text style={[styles.legendLabel, { color: c.text.primary }]}>{item.label}</Text>
+                    <Text style={[styles.legendDesc, { color: c.text.muted }]}>{item.desc}</Text>
                   </View>
                 </View>
               ))}
@@ -154,38 +156,38 @@ export function HUExplainerSheet({ visible, onClose, initialTab = 'hu' }: HUExpl
           </>
         ) : (
           <>
-            <Text style={styles.intro}>
+            <Text style={[styles.intro, { color: c.text.secondary }]}>
               Your fatigue score (0–100) estimates accumulated training stress across four dimensions. Higher scores indicate greater need for recovery.
             </Text>
 
             {FATIGUE_SECTIONS.map((section) => (
               <View key={section.title} style={styles.section}>
                 <View style={styles.numberRow}>
-                  <Text style={styles.sectionNumber}>{section.number}</Text>
+                  <Text style={[styles.sectionNumber, { color: c.accent.primary }]}>{section.number}</Text>
                   <View style={styles.titleWeightRow}>
-                    <Text style={styles.sectionTitle}>{section.title}</Text>
-                    <Text style={styles.weightBadge}>{section.weight}</Text>
+                    <Text style={[styles.sectionTitle, { color: c.text.primary }]}>{section.title}</Text>
+                    <Text style={[styles.weightBadge, { color: c.accent.primary, backgroundColor: c.accent.primaryMuted }]}>{section.weight}</Text>
                   </View>
                 </View>
-                <Text style={styles.sectionBody}>{section.body}</Text>
+                <Text style={[styles.sectionBody, { color: c.text.secondary }]}>{section.body}</Text>
               </View>
             ))}
 
             <View style={styles.legendSection}>
-              <Text style={styles.legendHeading}>Score Ranges</Text>
+              <Text style={[styles.legendHeading, { color: c.text.primary }]}>Score Ranges</Text>
               {FATIGUE_COLOR_LEGEND.map((item) => (
                 <View key={item.label} style={styles.legendRow}>
-                  <View style={[styles.legendDot, { backgroundColor: item.color }]} />
+                  <View style={[styles.legendDot, { backgroundColor: c.semantic[item.colorKey] }]} />
                   <View style={styles.legendText}>
-                    <Text style={styles.legendLabel}>{item.label}</Text>
-                    <Text style={styles.legendDesc}>{item.desc}</Text>
+                    <Text style={[styles.legendLabel, { color: c.text.primary }]}>{item.label}</Text>
+                    <Text style={[styles.legendDesc, { color: c.text.muted }]}>{item.desc}</Text>
                   </View>
                 </View>
               ))}
             </View>
 
-            <View style={styles.noteBox}>
-              <Text style={styles.noteText}>
+            <View style={[styles.noteBox, { backgroundColor: c.bg.surfaceRaised, borderLeftColor: c.accent.primary }]}>
+              <Text style={[styles.noteText, { color: c.text.secondary }]}>
                 When your fatigue score exceeds 70, Repwise will suggest a deload — reducing volume by 40–60% for one week while maintaining intensity.
               </Text>
             </View>
@@ -207,24 +209,17 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[2],
     borderRadius: radius.md,
     alignItems: 'center',
-    backgroundColor: colors.bg.surfaceRaised,
   },
-  tabActive: {
-    backgroundColor: colors.accent.primaryMuted,
-  },
+  tabActive: {},
   tabText: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
-    color: colors.text.muted,
   },
-  tabTextActive: {
-    color: colors.accent.primary,
-  },
+  tabTextActive: {},
   scroll: {
     maxHeight: 420,
   },
   intro: {
-    color: colors.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: 20,
     marginBottom: spacing[4],
@@ -239,7 +234,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing[1],
   },
   sectionNumber: {
-    color: colors.accent.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.bold,
     width: 20,
@@ -251,22 +245,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   sectionTitle: {
-    color: colors.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
   },
   weightBadge: {
-    color: colors.accent.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
-    backgroundColor: colors.accent.primaryMuted,
     paddingHorizontal: spacing[2],
     paddingVertical: 2,
     borderRadius: radius.sm,
     overflow: 'hidden',
   },
   sectionBody: {
-    color: colors.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: 20,
     paddingLeft: 28,
@@ -276,7 +266,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing[4],
   },
   legendHeading: {
-    color: colors.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[2],
@@ -296,24 +285,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   legendLabel: {
-    color: colors.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
   legendDesc: {
-    color: colors.text.muted,
     fontSize: typography.size.xs,
   },
   noteBox: {
-    backgroundColor: colors.bg.surfaceRaised,
     borderRadius: radius.md,
     padding: spacing[3],
     marginBottom: spacing[4],
     borderLeftWidth: 3,
-    borderLeftColor: colors.accent.primary,
   },
   noteText: {
-    color: colors.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: 20,
   },

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { colors, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import {
   groupEntriesBySlot,
   computeSlotTotals,
@@ -22,18 +23,19 @@ function MealSlotWrapper({ index, children }: { index: number; children: React.R
 }
 
 export function MealSlotDiary({ entries, onAddToSlot }: MealSlotDiaryProps) {
+  const c = useThemeColors();
   const slots = groupEntriesBySlot(entries);
   const dailyTotals = computeSlotTotals(entries);
 
   return (
     <View style={styles.container}>
       {/* Daily total header */}
-      <View style={styles.totalHeader}>
-        <Text style={styles.totalLabel}>Daily Total</Text>
-        <Text style={styles.totalValue}>
+      <View style={[styles.totalHeader, { borderBottomColor: c.border.subtle }]}>
+        <Text style={[styles.totalLabel, { color: c.text.primary }]}>Daily Total</Text>
+        <Text style={[styles.totalValue, { color: c.text.primary }]}>
           {Math.round(dailyTotals.calories)} kcal
           {'  '}
-          <Text style={styles.totalMacros}>
+          <Text style={[styles.totalMacros, { color: c.text.secondary }]}>
             P {Math.round(dailyTotals.protein_g)}g · C {Math.round(dailyTotals.carbs_g)}g · F {Math.round(dailyTotals.fat_g)}g
           </Text>
         </Text>

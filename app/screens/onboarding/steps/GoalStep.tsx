@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView } from 'react-native';
 import { colors, spacing, typography, radius } from '../../../theme/tokens';
+import { useThemeColors } from '../../../hooks/useThemeColors';
 import { Button } from '../../../components/common/Button';
 import { Icon } from '../../../components/common/Icon';
 import { useOnboardingStore, computeAge } from '../../../store/onboardingSlice';
@@ -28,6 +29,7 @@ function formatDate(d: Date): string {
 }
 
 export function GoalStep({ onNext }: Props) {
+  const c = useThemeColors();
   const store = useOnboardingStore();
   const { impact } = useHaptics();
   const age = computeAge(store.birthYear, store.birthMonth);
@@ -65,8 +67,8 @@ export function GoalStep({ onNext }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-      <Text style={styles.heading}>Set Your Pace</Text>
-      <Text style={styles.subheading}>
+      <Text style={[styles.heading, { color: c.text.primary }]}>Set Your Pace</Text>
+      <Text style={[styles.subheading, { color: c.text.secondary }]}>
         {isMaintain ? 'Maintain your current weight' : `How fast do you want to ${isLose ? 'lose' : 'gain'}?`}
       </Text>
 
@@ -89,7 +91,7 @@ export function GoalStep({ onNext }: Props) {
                 accessibilityRole="button"
               >
                 <Text style={[styles.rateValue, selected && { color }]}>{r}</Text>
-                <Text style={styles.rateUnit}>kg/wk</Text>
+                <Text style={[styles.rateUnit, { color: c.text.muted }]}>kg/wk</Text>
               </TouchableOpacity>
             );
           })}
@@ -97,23 +99,23 @@ export function GoalStep({ onNext }: Props) {
       )}
 
       {/* Live calorie budget */}
-      <View style={styles.budgetCard}>
-        <Text style={styles.budgetLabel}>Your daily budget</Text>
-        <Text style={styles.budgetValue}>{budget.budget.toLocaleString()} kcal</Text>
+      <View style={[styles.budgetCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
+        <Text style={[styles.budgetLabel, { color: c.text.secondary }]}>Your daily budget</Text>
+        <Text style={[styles.budgetValue, { color: c.text.primary }]}>{budget.budget.toLocaleString()} kcal</Text>
       </View>
 
       {/* Calorie floor warning */}
       {budget.floorApplied && (
-        <View style={styles.warningBanner}>
-          <Text style={styles.warningText}>
-            <Icon name="warning" size={16} color={colors.semantic.warning} />{' '}Calorie floor applied — we won't go below a safe minimum for your profile
+        <View style={[styles.warningBanner, { backgroundColor: c.semantic.warningSubtle, borderColor: c.semantic.warning }]}>
+          <Text style={[styles.warningText, { color: c.semantic.warning }]}>
+            <Icon name="warning" size={16} color={c.semantic.warning} />{' '}Calorie floor applied — we won't go below a safe minimum for your profile
           </Text>
         </View>
       )}
 
       {/* Projected date */}
       {projectedDate && (
-        <Text style={styles.projected}>
+        <Text style={[styles.projected, { color: c.text.secondary }]}>
           You'll reach your goal by {formatDate(projectedDate)}
         </Text>
       )}
@@ -121,7 +123,7 @@ export function GoalStep({ onNext }: Props) {
       {/* Target weight input */}
       {!isMaintain && (
         <View style={styles.targetRow}>
-          <Text style={styles.targetLabel}>Target weight (optional)</Text>
+          <Text style={[styles.targetLabel, { color: c.text.secondary }]}>Target weight (optional)</Text>
           <TextInput
             style={[styles.targetInput, !targetWeightValid && styles.targetInputError]}
             value={store.targetWeightKg ? String(store.targetWeightKg) : ''}
@@ -131,11 +133,11 @@ export function GoalStep({ onNext }: Props) {
             }}
             keyboardType="numeric"
             placeholder="kg"
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={c.text.muted}
             accessibilityLabel="Target weight in kilograms"
           />
           {!targetWeightValid && (
-            <Text style={styles.errorText}>Target weight must be between 30-300 kg</Text>
+            <Text style={[styles.errorText, { color: c.semantic.negative }]}>Target weight must be between 30-300 kg</Text>
           )}
         </View>
       )}

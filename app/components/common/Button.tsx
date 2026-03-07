@@ -14,6 +14,7 @@ import { colors, radius, spacing, typography, letterSpacing, shadows, opacitySca
 import { usePressAnimation } from '../../hooks/usePressAnimation';
 import { useHoverState } from '../../hooks/useHoverState';
 import { useHaptics } from '../../hooks/useHaptics';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
@@ -36,35 +37,37 @@ interface ButtonProps {
 export function getButtonStyles(
   variant: ButtonVariant,
   disabled: boolean,
+  themeColors: typeof import('../../theme/tokens').colors = colors,
 ): { container: ViewStyle; text: TextStyle } {
   const container: ViewStyle = {
     ...baseStyle,
   };
   const text: TextStyle = {
     ...baseTextStyle,
+    color: themeColors.text.primary,
   };
 
   switch (variant) {
     case 'primary':
-      container.backgroundColor = colors.accent.primary;
+      container.backgroundColor = themeColors.accent.primary;
       Object.assign(container, shadows.md);
-      text.color = colors.text.primary;
+      text.color = themeColors.text.primary;
       break;
     case 'secondary':
       container.backgroundColor = 'transparent';
       container.borderWidth = 1;
-      container.borderColor = colors.border.default;
-      text.color = colors.accent.primary;
+      container.borderColor = themeColors.border.default;
+      text.color = themeColors.accent.primary;
       break;
     case 'ghost':
       container.backgroundColor = 'transparent';
-      text.color = colors.accent.primary;
+      text.color = themeColors.accent.primary;
       break;
     case 'danger':
-      container.backgroundColor = colors.semantic.negativeSubtle;
+      container.backgroundColor = themeColors.semantic.negativeSubtle;
       container.borderWidth = 1;
-      container.borderColor = colors.semantic.negative;
-      text.color = colors.semantic.negative;
+      container.borderColor = themeColors.semantic.negative;
+      text.color = themeColors.semantic.negative;
       break;
   }
 
@@ -107,7 +110,8 @@ export function Button({
   const { animatedStyle, onPressIn, onPressOut } = usePressAnimation();
   const { isHovered, hoverProps } = useHoverState();
   const { impact } = useHaptics();
-  const computed = getButtonStyles(variant, isDisabled);
+  const themeColors = useThemeColors();
+  const computed = getButtonStyles(variant, isDisabled, themeColors);
 
   const handlePress = () => {
     if (variant === 'primary') {
@@ -118,7 +122,7 @@ export function Button({
 
   const hoverStyle: ViewStyle | undefined =
     isHovered && !isDisabled
-      ? { borderWidth: 1, borderColor: colors.border.hover }
+      ? { borderWidth: 1, borderColor: themeColors.border.hover }
       : undefined;
 
   return (
@@ -136,7 +140,7 @@ export function Button({
         {...hoverProps}
       >
         {loading ? (
-          <ActivityIndicator color={colors.text.primary} size="small" />
+          <ActivityIndicator color={themeColors.text.primary} size="small" />
         ) : (
           <View style={styles.content}>
             {icon && <View style={styles.icon}>{icon}</View>}

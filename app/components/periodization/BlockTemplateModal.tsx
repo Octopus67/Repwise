@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { ModalContainer } from '../common/ModalContainer';
 import { Button } from '../common/Button';
 import api from '../../services/api';
@@ -24,6 +25,7 @@ interface BlockTemplateModalProps {
 }
 
 export function BlockTemplateModal({ visible, onClose, onApplied }: BlockTemplateModalProps) {
+  const c = useThemeColors();
   const [templates, setTemplates] = useState<BlockTemplate[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [startDate, setStartDate] = useState('');
@@ -64,7 +66,7 @@ export function BlockTemplateModal({ visible, onClose, onApplied }: BlockTemplat
     <ModalContainer visible={visible} onClose={onClose} title="Apply Block Template">
       <ScrollView style={styles.content}>
         {loadingTemplates ? (
-          <ActivityIndicator color={colors.accent.primary} style={{ marginVertical: spacing[4] }} />
+          <ActivityIndicator color={c.accent.primary} style={{ marginVertical: spacing[4] }} />
         ) : (
           templates.map((t) => (
             <TouchableOpacity
@@ -72,11 +74,11 @@ export function BlockTemplateModal({ visible, onClose, onApplied }: BlockTemplat
               style={[styles.card, selectedId === t.id && styles.cardSelected]}
               onPress={() => setSelectedId(t.id)}
             >
-              <Text style={styles.cardTitle}>{t.name}</Text>
-              <Text style={styles.cardDesc}>{t.description}</Text>
+              <Text style={[styles.cardTitle, { color: c.text.primary }]}>{t.name}</Text>
+              <Text style={[styles.cardDesc, { color: c.text.secondary }]}>{t.description}</Text>
               <View style={styles.phases}>
                 {t.phases.map((p, i) => (
-                  <Text key={i} style={styles.phaseTag}>
+                  <Text key={i} style={[styles.phaseTag, { color: c.text.muted, backgroundColor: c.bg.surface }]}>
                     {p.phase_type} ({p.duration_weeks}w)
                   </Text>
                 ))}
@@ -85,16 +87,16 @@ export function BlockTemplateModal({ visible, onClose, onApplied }: BlockTemplat
           ))
         )}
 
-        <Text style={styles.label}>Start Date</Text>
+        <Text style={[styles.label, { color: c.text.secondary }]}>Start Date</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}
           value={startDate}
           onChangeText={setStartDate}
           placeholder="YYYY-MM-DD"
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
         />
 
-        {error && <Text style={styles.error}>{error}</Text>}
+        {error && <Text style={[styles.error, { color: c.semantic.negative }]}>{error}</Text>}
 
         <Button title="Apply Template" onPress={handleApply} variant="primary" disabled={applying} loading={applying} />
       </ScrollView>

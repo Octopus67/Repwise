@@ -4,6 +4,7 @@ import { ActiveExercise } from '../../types/training';
 import { computeWorkoutSummary, formatMiniSummary } from '../../utils/workoutSummaryFormatter';
 import { calculateSetProgress } from '../../utils/setProgressCalculator';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface ConfirmationSheetProps {
   visible: boolean;
@@ -24,6 +25,7 @@ export const ConfirmationSheet = ({
   onConfirm,
   onCancel,
 }: ConfirmationSheetProps) => {
+  const c = useThemeColors();
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
 
   // Reset toggle state whenever the sheet is opened

@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import { Icon } from '../common/Icon';
 
@@ -41,12 +42,13 @@ function LevelBadge({ level }: { level: string }) {
 }
 
 export function StrengthStandardsCard({ classifications, bodyweightKg }: StrengthStandardsCardProps) {
+  const c = useThemeColors();
   if (bodyweightKg == null) {
     return (
       <Card>
         <View style={styles.emptyContainer}>
-          <Icon name="scale" size={24} color={colors.text.muted} />
-          <Text style={styles.emptyText}>Log your bodyweight to see strength standards</Text>
+          <Icon name="scale" size={24} color={c.text.muted} />
+          <Text style={[styles.emptyText, { color: c.text.muted }]}>Log your bodyweight to see strength standards</Text>
         </View>
       </Card>
     );
@@ -56,8 +58,8 @@ export function StrengthStandardsCard({ classifications, bodyweightKg }: Strengt
     return (
       <Card>
         <View style={styles.emptyContainer}>
-          <Icon name="dumbbell" size={24} color={colors.text.muted} />
-          <Text style={styles.emptyText}>Log training sessions with supported lifts to see standards</Text>
+          <Icon name="dumbbell" size={24} color={c.text.muted} />
+          <Text style={[styles.emptyText, { color: c.text.muted }]}>Log training sessions with supported lifts to see standards</Text>
         </View>
       </Card>
     );
@@ -68,12 +70,12 @@ export function StrengthStandardsCard({ classifications, bodyweightKg }: Strengt
       {classifications.map((c, idx) => (
         <View key={c.exercise_name} style={[styles.row, idx > 0 && styles.rowBorder]}>
           <View style={styles.rowLeft}>
-            <Text style={styles.exerciseName}>{formatExerciseName(c.exercise_name)}</Text>
-            <Text style={styles.ratio}>{c.bodyweight_ratio.toFixed(2)}× BW</Text>
+            <Text style={[styles.exerciseName, { color: colors.text.primary }]}>{formatExerciseName(c.exercise_name)}</Text>
+            <Text style={[styles.ratio, { color: colors.text.secondary }]}>{c.bodyweight_ratio.toFixed(2)}× BW</Text>
           </View>
           <View style={styles.rowRight}>
             <LevelBadge level={c.level} />
-            <Text style={styles.e1rm}>{Math.round(c.e1rm_kg)} kg</Text>
+            <Text style={[styles.e1rm, { color: colors.text.secondary }]}>{Math.round(c.e1rm_kg)} kg</Text>
           </View>
         </View>
       ))}

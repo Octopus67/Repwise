@@ -4,6 +4,7 @@ import Animated from 'react-native-reanimated';
 import { Card } from '../common/Card';
 import { usePressAnimation } from '../../hooks/usePressAnimation';
 import { colors, typography, spacing } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon, IconName } from '../common/Icon';
 
 interface QuickActionButtonProps {
@@ -23,6 +24,7 @@ export function QuickActionButton({
   completed,
   onPress,
 }: QuickActionButtonProps) {
+  const c = useThemeColors();
   const { animatedStyle, onPressIn, onPressOut } = usePressAnimation();
 
   return (
@@ -37,10 +39,10 @@ export function QuickActionButton({
           <View style={styles.iconArea}>
             <Icon name={icon} size={24} color={accentColor} />
           </View>
-          <Text style={styles.label}>{label}</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>{label}</Text>
           {completed && (
-            <View style={styles.badge} testID="checkmark-badge">
-              <Icon name="check" size={12} color={colors.semantic.positive} />
+            <View style={[styles.badge, { backgroundColor: c.semantic.positive }]} testID="checkmark-badge">
+              <Icon name="check" size={12} color={c.semantic.positive} />
             </View>
           )}
         </Card>

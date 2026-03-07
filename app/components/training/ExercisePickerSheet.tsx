@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface ExercisePickerSheetProps {
   visible: boolean;
@@ -28,6 +29,7 @@ export function ExercisePickerSheet({
   exercises = [],
   recentExercises = [],
 }: ExercisePickerSheetProps) {
+  const c = useThemeColors();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -82,17 +84,17 @@ export function ExercisePickerSheet({
   const renderItem = useCallback(
     ({ item }: { item: ListItem }) => {
       if (item.type === 'header') {
-        return <Text style={styles.sectionTitle}>{item.label}</Text>;
+        return <Text style={[styles.sectionTitle, { color: c.text.muted }]}>{item.label}</Text>;
       }
       return (
         <TouchableOpacity
-          style={styles.exerciseItem}
+          style={[styles.exerciseItem, { borderBottomColor: c.border.subtle }]}
           onPress={() => handleSelect(item.name)}
           accessibilityLabel={`Select ${item.name}`}
           accessibilityRole="button"
           activeOpacity={0.7}
         >
-          <Text style={styles.exerciseName}>{item.name}</Text>
+          <Text style={[styles.exerciseName, { color: c.text.primary }]}>{item.name}</Text>
         </TouchableOpacity>
       );
     },
@@ -117,9 +119,9 @@ export function ExercisePickerSheet({
     >
       <View style={styles.searchContainer}>
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: c.text.primary, backgroundColor: c.bg.surface, borderColor: c.border.default }]}
           placeholder="Search exercises…"
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
           value={searchInput}
           onChangeText={setSearchInput}
           autoCapitalize="none"
@@ -136,7 +138,7 @@ export function ExercisePickerSheet({
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyText, { color: c.text.muted }]}>
             {query ? 'No exercises found' : 'No exercises available'}
           </Text>
         }

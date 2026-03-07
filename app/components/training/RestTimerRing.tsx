@@ -15,6 +15,7 @@ import Animated, { useSharedValue, useAnimatedProps, withTiming } from 'react-na
 import { getTimerColor } from '../../utils/restDurationV2';
 import { formatRestTimer } from '../../utils/durationFormat';
 import { colors, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 
 export { getTimerColor };
@@ -49,6 +50,7 @@ export function RestTimerRing({
   paused,
   size = DEFAULT_SIZE,
 }: RestTimerRingProps) {
+  const c = useThemeColors();
   // Geometry derived from size prop
   const strokeWidth = Math.round(size * STROKE_WIDTH / DEFAULT_SIZE);
   const r = (size - strokeWidth) / 2;
@@ -79,10 +81,10 @@ export function RestTimerRing({
   const colorName = getTimerColor(remainingSeconds);
   const ringColor =
     colorName === 'green'
-      ? colors.semantic.positive
+      ? c.semantic.positive
       : colorName === 'yellow'
-        ? colors.semantic.warning
-        : colors.semantic.negative;
+        ? c.semantic.warning
+        : c.semantic.negative;
 
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
@@ -92,7 +94,7 @@ export function RestTimerRing({
           cx={center}
           cy={center}
           r={r}
-          stroke={colors.border.default}
+          stroke={c.border.default}
           strokeWidth={strokeWidth}
           fill="none"
         />

@@ -15,6 +15,7 @@
 
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import {
   RPE_VALUES,
   RIR_VALUES,
@@ -42,6 +43,7 @@ interface RPEPickerProps {
 }
 
 export function RPEPicker({ visible, mode, onSelect, onDismiss }: RPEPickerProps) {
+  const c = useThemeColors();
   const values = mode === 'rpe' ? RPE_VALUES : RIR_VALUES;
 
   const handleSelect = (value: number) => {
@@ -58,16 +60,16 @@ export function RPEPicker({ visible, mode, onSelect, onDismiss }: RPEPickerProps
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onDismiss}>
-        <View style={styles.pickerContainer}>
-          <Text style={styles.modeLabel}>{mode === 'rpe' ? 'RPE' : 'RIR'}</Text>
+        <View style={[styles.pickerContainer, { backgroundColor: c.bg.surface }]}>
+          <Text style={[styles.modeLabel, { color: c.text.secondary }]}>{mode === 'rpe' ? 'RPE' : 'RIR'}</Text>
           <View style={styles.buttonRow}>
             {values.map((value) => (
               <TouchableOpacity
                 key={value}
-                style={styles.valueButton}
+                style={[styles.valueButton, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                 onPress={() => handleSelect(value)}
               >
-                <Text style={styles.valueText}>{getLabel(value)}</Text>
+                <Text style={[styles.valueText, { color: c.text.primary }]}>{getLabel(value)}</Text>
               </TouchableOpacity>
             ))}
           </View>

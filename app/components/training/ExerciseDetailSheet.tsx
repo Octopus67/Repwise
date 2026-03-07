@@ -36,6 +36,7 @@ import {
 } from 'react-native-gesture-handler';
 import type { Exercise } from '../../types/exercise';
 import { colors, spacing, typography, radius, springs, motion } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 import {
   shouldShowInstructions,
@@ -58,6 +59,7 @@ interface ExerciseDetailSheetProps {
 }
 
 export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDetailSheetProps) {
+  const c = useThemeColors();
   const slideAnim = useSharedValue(SHEET_HEIGHT);
   const [internalVisible, setInternalVisible] = useState(false);
   const reduceMotion = useReduceMotion();
@@ -131,7 +133,7 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
     >
       {/* Backdrop — tap to dismiss */}
       <TouchableWithoutFeedback onPress={dismiss} accessibilityRole="button" accessibilityLabel="Close exercise details">
-        <View style={styles.backdrop} />
+        <View style={[styles.backdrop, { backgroundColor: c.bg.overlay }]} />
       </TouchableWithoutFeedback>
 
       {/* Sheet */}
@@ -141,7 +143,7 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
         >
         {/* Drag handle */}
         <View style={styles.handleRow}>
-          <View style={styles.handle} />
+          <View style={[styles.handle, { backgroundColor: c.text.muted }]} />
         </View>
 
         <ScrollView
@@ -153,39 +155,39 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
           {hasImage && imageUrl ? (
             <Image
               source={{ uri: imageUrl }}
-              style={styles.image}
+              style={[styles.image, { backgroundColor: c.bg.surfaceRaised }]}
               resizeMode="contain"
               accessibilityLabel={`${exercise.name} demonstration`}
             />
           ) : (
             <View style={[styles.placeholder, { backgroundColor: `${mgColor}15` }]}>
               <MuscleGroupIcon muscleGroup={exercise.muscle_group} size={48} color={mgColor} />
-              <Text style={styles.placeholderText}>No image available</Text>
+              <Text style={[styles.placeholderText, { color: c.text.muted }]}>No image available</Text>
             </View>
           )}
 
           {/* Exercise name */}
-          <Text style={styles.exerciseName}>{exercise.name}</Text>
+          <Text style={[styles.exerciseName, { color: c.text.primary }]}>{exercise.name}</Text>
 
           {/* Tags */}
           <View style={styles.tagRow}>
             {tags.map((tag, i) => (
-              <View key={i} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
+              <View key={i} style={[styles.tag, { backgroundColor: c.bg.surfaceRaised }]}>
+                <Text style={[styles.tagText, { color: c.text.secondary }]}>{tag}</Text>
               </View>
             ))}
           </View>
 
           {/* Muscles Targeted */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Muscles Targeted</Text>
-            <Text style={styles.muscleLabel}>
-              Primary: <Text style={styles.muscleValue}>{muscles.primary.replace(/_/g, ' ')}</Text>
+            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Muscles Targeted</Text>
+            <Text style={[styles.muscleLabel, { color: c.text.secondary }]}>
+              Primary: <Text style={[styles.muscleValue, { color: c.text.primary }]}>{muscles.primary.replace(/_/g, ' ')}</Text>
             </Text>
             {muscles.secondary.length > 0 && (
-              <Text style={styles.muscleLabel}>
+              <Text style={[styles.muscleLabel, { color: c.text.secondary }]}>
                 Secondary:{' '}
-                <Text style={styles.muscleValue}>
+                <Text style={[styles.muscleValue, { color: c.text.primary }]}>
                   {muscles.secondary.map((m) => m.replace(/_/g, ' ')).join(', ')}
                 </Text>
               </Text>
@@ -195,29 +197,29 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
           {/* Instructions */}
           {hasInstructions ? (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Instructions</Text>
+              <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Instructions</Text>
               {exercise.instructions!.map((step, i) => (
                 <View key={i} style={styles.instructionRow}>
-                  <Text style={styles.instructionNum}>{i + 1}.</Text>
-                  <Text style={styles.instructionText}>{step}</Text>
+                  <Text style={[styles.instructionNum, { color: c.accent.primary }]}>{i + 1}.</Text>
+                  <Text style={[styles.instructionText, { color: c.text.secondary }]}>{step}</Text>
                 </View>
               ))}
             </View>
           ) : (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Instructions</Text>
-              <Text style={styles.noContent}>No instructions available</Text>
+              <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Instructions</Text>
+              <Text style={[styles.noContent, { color: c.text.muted }]}>No instructions available</Text>
             </View>
           )}
 
           {/* Tips */}
           {hasTips && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Tips</Text>
+              <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Tips</Text>
               {exercise.tips!.map((tip, i) => (
                 <View key={i} style={styles.tipRow}>
-                  <Text style={styles.tipBullet}>•</Text>
-                  <Text style={styles.tipText}>{tip}</Text>
+                  <Text style={[styles.tipBullet, { color: c.accent.primary }]}>•</Text>
+                  <Text style={[styles.tipText, { color: c.text.secondary }]}>{tip}</Text>
                 </View>
               ))}
             </View>

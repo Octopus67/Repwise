@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radius, shadows } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface TemplateRowProps {
   name: string;
@@ -8,16 +9,17 @@ interface TemplateRowProps {
 }
 
 export function TemplateRow({ name, exerciseCount, onStart }: TemplateRowProps) {
+  const c = useThemeColors();
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
       <View style={styles.content}>
-        <Text style={styles.name} numberOfLines={1}>{name}</Text>
-        <Text style={styles.badge}>
+        <Text style={[styles.name, { color: c.text.primary }]} numberOfLines={1}>{name}</Text>
+        <Text style={[styles.badge, { color: c.text.secondary }]}>
           {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'}
         </Text>
       </View>
-      <TouchableOpacity style={styles.startButton} onPress={onStart} activeOpacity={0.8}>
-        <Text style={styles.startText}>Start</Text>
+      <TouchableOpacity style={[styles.startButton, { backgroundColor: c.accent.primary }]} onPress={onStart} activeOpacity={0.8}>
+        <Text style={[styles.startText, { color: c.text.inverse }]}>Start</Text>
       </TouchableOpacity>
     </View>
   );

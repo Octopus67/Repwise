@@ -7,6 +7,7 @@
 
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import type { WNSLandmarks } from '../../types/volume';
 
 export interface VolumeBarProps {
@@ -34,6 +35,7 @@ function getZoneLabel(volume: number, landmarks: WNSLandmarks): string {
 }
 
 export function VolumeBar({ landmarks, currentVolume, muscleGroup }: VolumeBarProps) {
+  const c = useThemeColors();
   const { mv, mev, mav_high, mrv } = landmarks;
   // Total range extends 20% past MRV to show overflow
   const maxRange = mrv * 1.2;
@@ -54,7 +56,7 @@ export function VolumeBar({ landmarks, currentVolume, muscleGroup }: VolumeBarPr
       accessibilityRole="progressbar"
     >
       {/* Zone bar */}
-      <View style={styles.barTrack}>
+      <View style={[styles.barTrack, { backgroundColor: c.bg.surfaceRaised }]}>
         {/* MV → MEV zone */}
         <View
           style={[

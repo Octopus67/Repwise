@@ -16,6 +16,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { PhotoMeta, PhotoPathMap, PoseType, POSE_TYPES } from '../../utils/progressPhotoTypes';
 import { sortPhotosByDate, filterByPoseType, formatPhotoInfo } from '../../utils/timelineLogic';
 
@@ -46,6 +47,7 @@ export function TimelineSlider({
   poseFilter,
   onPoseFilterChange,
 }: TimelineSliderProps) {
+  const c = useThemeColors();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
@@ -81,17 +83,17 @@ export function TimelineSlider({
       const { dateLabel, weightLabel } = formatPhotoInfo(item);
 
       return (
-        <View style={styles.item}>
+        <View style={[styles.item, { backgroundColor: c.bg.surface }]}>
           {fileUri ? (
-            <Image source={{ uri: fileUri }} style={styles.photo} resizeMode="cover" />
+            <Image source={{ uri: fileUri }} style={[styles.photo, { backgroundColor: c.bg.surfaceRaised }]} resizeMode="cover" />
           ) : (
             <View style={[styles.photo, styles.placeholder]}>
-              <Text style={styles.placeholderText}>Photo unavailable</Text>
+              <Text style={[styles.placeholderText, { color: c.text.muted }]}>Photo unavailable</Text>
             </View>
           )}
           <View style={styles.info}>
-            <Text style={styles.dateLabel}>{dateLabel}</Text>
-            {weightLabel && <Text style={styles.weightLabel}>{weightLabel}</Text>}
+            <Text style={[styles.dateLabel, { color: c.text.primary }]}>{dateLabel}</Text>
+            {weightLabel && <Text style={[styles.weightLabel, { color: c.accent.primary }]}>{weightLabel}</Text>}
           </View>
         </View>
       );
@@ -120,7 +122,7 @@ export function TimelineSlider({
 
       {displayPhotos.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyText}>No photos for this filter</Text>
+          <Text style={[styles.emptyText, { color: c.text.muted }]}>No photos for this filter</Text>
         </View>
       ) : (
         <>
@@ -141,13 +143,13 @@ export function TimelineSlider({
 
           {/* Compare button */}
           {displayPhotos.length >= 2 && (
-            <TouchableOpacity style={styles.compareBtn} onPress={handleCompare} activeOpacity={0.8}>
-              <Text style={styles.compareBtnText}>Compare</Text>
+            <TouchableOpacity style={[styles.compareBtn, { backgroundColor: c.accent.primary }]} onPress={handleCompare} activeOpacity={0.8}>
+              <Text style={[styles.compareBtnText, { color: c.text.inverse }]}>Compare</Text>
             </TouchableOpacity>
           )}
 
           {/* Page indicator */}
-          <Text style={styles.pageIndicator}>
+          <Text style={[styles.pageIndicator, { color: c.text.muted }]}>
             {currentIndex + 1} / {displayPhotos.length}
           </Text>
         </>

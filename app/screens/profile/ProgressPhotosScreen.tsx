@@ -14,6 +14,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { documentDirectory, getInfoAsync, makeDirectoryAsync, copyAsync, deleteAsync } from 'expo-file-system/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, radius, spacing, typography, shadows } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import api from '../../services/api';
 
 const PHOTO_DIR = `${documentDirectory ?? ''}progress_photos/`;
@@ -27,6 +28,7 @@ interface PhotoEntry {
 }
 
 export function ProgressPhotosScreen() {
+  const c = useThemeColors();
   const navigation = useNavigation();
   const [photos, setPhotos] = useState<PhotoEntry[]>([]);
   const [pathMap, setPathMap] = useState<Record<string, string>>({});
@@ -129,41 +131,41 @@ export function ProgressPhotosScreen() {
   const renderPhoto = ({ item }: { item: PhotoEntry }) => {
     const uri = pathMap[item.id];
     return (
-      <TouchableOpacity style={styles.photoCard} onLongPress={() => handleDelete(item)} activeOpacity={0.8}>
+      <TouchableOpacity style={[styles.photoCard, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]} onLongPress={() => handleDelete(item)} activeOpacity={0.8}>
         {uri ? (
-          <Image source={{ uri }} style={styles.photoImage} />
+          <Image source={{ uri }} style={[styles.photoImage, { backgroundColor: c.bg.surfaceRaised }]} />
         ) : (
-          <View style={styles.photoPlaceholder}>
-            <Text style={styles.placeholderText}>No local file</Text>
+          <View style={[styles.photoPlaceholder, { backgroundColor: c.bg.surfaceRaised }]}>
+            <Text style={[styles.placeholderText, { color: c.text.muted }]}>No local file</Text>
           </View>
         )}
-        <Text style={styles.photoDate}>{item.capture_date}</Text>
+        <Text style={[styles.photoDate, { color: c.text.secondary }]}>{item.capture_date}</Text>
       </TouchableOpacity>
     );
   };
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        <View style={styles.center}><ActivityIndicator color={colors.accent.primary} size="large" /></View>
+      <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
+        <View style={styles.center}><ActivityIndicator color={c.accent.primary} size="large" /></View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
+      <View style={[styles.header, { borderBottomColor: c.border.subtle }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Back</Text>
+          <Text style={[styles.backText, { color: c.accent.primary }]}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Progress Photos</Text>
-        <Text style={styles.count}>{photos.length}/{MAX_PHOTOS}</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>Progress Photos</Text>
+        <Text style={[styles.count, { color: c.text.muted }]}>{photos.length}/{MAX_PHOTOS}</Text>
       </View>
 
       {photos.length === 0 ? (
         <View style={styles.center}>
-          <Text style={styles.emptyTitle}>No photos yet</Text>
-          <Text style={styles.emptySubtitle}>Take your first progress photo to start tracking your transformation.</Text>
+          <Text style={[styles.emptyTitle, { color: c.text.primary }]}>No photos yet</Text>
+          <Text style={[styles.emptySubtitle, { color: c.text.secondary }]}>Take your first progress photo to start tracking your transformation.</Text>
         </View>
       ) : (
         <FlatList

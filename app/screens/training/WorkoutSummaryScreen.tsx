@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { colors, spacing, typography, radius, shadows } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { formatDuration } from '../../utils/durationFormat';
 import type { PersonalRecordResponse } from '../../types/training';
 import type { WorkoutSummaryResult } from '../../utils/workoutSummary';
@@ -57,9 +58,9 @@ function CheckmarkIcon() {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <View style={styles.statCard}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+    <View style={[styles.statCard, { backgroundColor: colors.bg.surface, borderColor: colors.border.default }]}>
+      <Text style={[styles.statValue, { color: colors.text.primary }]}>{value}</Text>
+      <Text style={[styles.statLabel, { color: colors.text.secondary }]}>{label}</Text>
     </View>
   );
 }
@@ -67,6 +68,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export function WorkoutSummaryScreen({ route, navigation }: WorkoutSummaryScreenProps) {
+  const c = useThemeColors();
   const { summary, duration, personalRecords, exerciseBreakdown } = route.params;
 
   const handleDone = () => {
@@ -81,12 +83,12 @@ export function WorkoutSummaryScreen({ route, navigation }: WorkoutSummaryScreen
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: c.bg.base }]} edges={['top']}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
           <CheckmarkIcon />
-          <Text style={styles.title}>Workout Complete</Text>
+          <Text style={[styles.title, { color: c.text.primary }]}>Workout Complete</Text>
         </View>
 
         {/* Stats Row */}
@@ -99,8 +101,8 @@ export function WorkoutSummaryScreen({ route, navigation }: WorkoutSummaryScreen
 
         {/* Exercise Breakdown */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Exercise Breakdown</Text>
-          <View style={styles.sectionContent}>
+          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Exercise Breakdown</Text>
+          <View style={[styles.sectionContent, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}>
             {exerciseBreakdown.map((exercise, index) => (
               <View
                 key={index}
@@ -110,11 +112,11 @@ export function WorkoutSummaryScreen({ route, navigation }: WorkoutSummaryScreen
                 ]}
               >
                 <View style={styles.exerciseHeader}>
-                  <Text style={styles.exerciseName}>{exercise.exerciseName}</Text>
-                  <Text style={styles.setsCount}>{exercise.setsCompleted} sets</Text>
+                  <Text style={[styles.exerciseName, { color: c.text.primary }]}>{exercise.exerciseName}</Text>
+                  <Text style={[styles.setsCount, { color: c.text.secondary }]}>{exercise.setsCompleted} sets</Text>
                 </View>
                 {exercise.bestSet && (
-                  <Text style={styles.bestSet}>
+                  <Text style={[styles.bestSet, { color: c.text.muted }]}>
                     Best: {exercise.bestSet.weight}kg × {exercise.bestSet.reps}
                   </Text>
                 )}
@@ -126,8 +128,8 @@ export function WorkoutSummaryScreen({ route, navigation }: WorkoutSummaryScreen
         {/* Personal Records */}
         {personalRecords.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Personal Records</Text>
-            <View style={styles.sectionContent}>
+            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Personal Records</Text>
+            <View style={[styles.sectionContent, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}>
               {personalRecords.map((pr, index) => (
                 <View
                   key={index}
@@ -137,14 +139,14 @@ export function WorkoutSummaryScreen({ route, navigation }: WorkoutSummaryScreen
                   ]}
                 >
                   <View style={styles.prHeader}>
-                    <Text style={styles.prExercise}>{pr.exercise_name}</Text>
-                    <Text style={styles.prImprovement}>
+                    <Text style={[styles.prExercise, { color: c.text.primary }]}>{pr.exercise_name}</Text>
+                    <Text style={[styles.prImprovement, { color: c.accent.primary }]}>
                       {pr.previous_weight_kg
                         ? `+${(pr.new_weight_kg - pr.previous_weight_kg).toFixed(1)}kg`
                         : 'New PR!'}
                     </Text>
                   </View>
-                  <Text style={styles.prDetails}>
+                  <Text style={[styles.prDetails, { color: c.text.secondary }]}>
                     {pr.new_weight_kg}kg × {pr.reps} reps
                   </Text>
                 </View>
@@ -155,14 +157,14 @@ export function WorkoutSummaryScreen({ route, navigation }: WorkoutSummaryScreen
       </ScrollView>
 
       {/* Done Button */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { borderTopColor: c.border.subtle }]}>
         <TouchableOpacity
-          style={styles.doneButton}
+          style={[styles.doneButton, { backgroundColor: c.accent.primary }]}
           onPress={handleDone}
           accessibilityLabel="Done"
           accessibilityRole="button"
         >
-          <Text style={styles.doneButtonText}>Done</Text>
+          <Text style={[styles.doneButtonText, { color: c.text.primary }]}>Done</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

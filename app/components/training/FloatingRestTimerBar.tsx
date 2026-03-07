@@ -14,6 +14,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { colors, radius, spacing, typography, shadows, springs, motion } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { adjustTime, getTimerColor } from '../../utils/restTimerLogic';
 import { useHaptics } from '../../hooks/useHaptics';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
@@ -39,6 +40,7 @@ export function FloatingRestTimerBar({
   onComplete,
   onDismiss,
 }: FloatingRestTimerBarProps) {
+  const c = useThemeColors();
   const [remaining, setRemaining] = useState(durationSeconds);
   const [paused, setPaused] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -164,46 +166,46 @@ export function FloatingRestTimerBar({
       <View style={styles.row}>
         {/* Exercise name */}
         <View style={styles.infoSection}>
-          <Text style={styles.exerciseName} numberOfLines={1}>{exerciseName}</Text>
+          <Text style={[styles.exerciseName, { color: c.text.secondary }]} numberOfLines={1}>{exerciseName}</Text>
           <Text style={[styles.countdown, { color: timerColor }]}>{timeText}</Text>
         </View>
 
         {/* Controls */}
         <View style={styles.controls}>
           <TouchableOpacity
-            style={styles.adjustBtn}
+            style={[styles.adjustBtn, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
             onPress={() => handleAdjust(-15)}
             accessibilityLabel="Decrease rest time by 15 seconds"
             accessibilityRole="button"
           >
-            <Text style={styles.adjustText}>-15s</Text>
+            <Text style={[styles.adjustText, { color: c.text.secondary }]}>-15s</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.adjustBtn}
+            style={[styles.adjustBtn, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
             onPress={() => handleAdjust(15)}
             accessibilityLabel="Increase rest time by 15 seconds"
             accessibilityRole="button"
           >
-            <Text style={styles.adjustText}>+15s</Text>
+            <Text style={[styles.adjustText, { color: c.text.secondary }]}>+15s</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.pauseBtn}
+            style={[styles.pauseBtn, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
             onPress={handleTogglePause}
             accessibilityLabel={paused ? 'Resume timer' : 'Pause timer'}
             accessibilityRole="button"
           >
-            <Text style={styles.pauseText}>{paused ? '▶' : '⏸'}</Text>
+            <Text style={[styles.pauseText, { color: c.text.primary }]}>{paused ? '▶' : '⏸'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.dismissBtn}
+            style={[styles.dismissBtn, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
             onPress={handleAnimatedDismiss}
             accessibilityLabel="Dismiss rest timer"
             accessibilityRole="button"
           >
-            <Text style={styles.dismissText}>✕</Text>
+            <Text style={[styles.dismissText, { color: c.text.muted }]}>✕</Text>
           </TouchableOpacity>
         </View>
       </View>

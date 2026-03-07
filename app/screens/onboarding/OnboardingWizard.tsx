@@ -2,6 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Platform } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { colors, spacing, typography, radius, motion } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { useStepTransition } from '../../hooks/useStepTransition';
 import { useHaptics } from '../../hooks/useHaptics';
 import { useOnboardingStore } from '../../store/onboardingSlice';
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export function OnboardingWizard({ onComplete }: Props) {
+  const c = useThemeColors();
   const currentStep = useOnboardingStore((s) => s.currentStep);
   const setStep = useOnboardingStore((s) => s.setStep);
   const reset = useOnboardingStore((s) => s.reset);
@@ -85,7 +87,7 @@ export function OnboardingWizard({ onComplete }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: c.bg.base }]}>
       <ErrorBoundary
         onError={(error, errorInfo) => {
           console.error('[ErrorBoundary:Onboarding]', error.message);
@@ -93,10 +95,10 @@ export function OnboardingWizard({ onComplete }: Props) {
         }}
         fallback={(error, retry) => (
           <View style={styles.errorContainer}>
-            <Text style={styles.errorTitle}>Something went wrong</Text>
-            <Text style={styles.errorMessage}>We encountered an error during onboarding.</Text>
+            <Text style={[styles.errorTitle, { color: c.text.primary }]}>Something went wrong</Text>
+            <Text style={[styles.errorMessage, { color: c.text.secondary }]}>We encountered an error during onboarding.</Text>
             <TouchableOpacity 
-              style={styles.restartButton} 
+              style={[styles.restartButton, { backgroundColor: c.accent.primary }]} 
               onPress={() => {
                 reset();
                 setStep(1);
@@ -111,16 +113,16 @@ export function OnboardingWizard({ onComplete }: Props) {
       >
         {/* Progress bar */}
         <View style={styles.progressContainer}>
-          <View style={styles.progressTrack}>
+          <View style={[styles.progressTrack, { backgroundColor: c.border.subtle }]}>
             <Animated.View style={[styles.progressFill, progressStyle]} />
           </View>
-          <Text style={styles.stepCounter}>Step {currentStep} of {TOTAL_STEPS}</Text>
+          <Text style={[styles.stepCounter, { color: c.text.muted }]}>Step {currentStep} of {TOTAL_STEPS}</Text>
         </View>
 
         {/* Back button (hidden on step 1) */}
         {currentStep > 1 && (
           <TouchableOpacity onPress={goBack} style={styles.backButton} activeOpacity={0.7} accessibilityLabel="Go back" accessibilityRole="button">
-            <Text style={styles.backText}>← Back</Text>
+            <Text style={[styles.backText, { color: c.text.secondary }]}>← Back</Text>
           </TouchableOpacity>
         )}
 

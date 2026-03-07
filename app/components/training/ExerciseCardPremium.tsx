@@ -26,6 +26,7 @@ import type {
 import { SetRowPremium } from './SetRowPremium';
 import { OverloadBadge } from './OverloadBadge';
 import { colors, typography, spacing, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -78,6 +79,7 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
   onApplyOverload,
   onShowRpeEducation,
 }) => {
+  const c = useThemeColors();
   const [notesVisible, setNotesVisible] = useState(false);
   const [notesText, setNotesText] = useState(exercise.notes ?? '');
   const [menuVisible, setMenuVisible] = useState(false);
@@ -267,7 +269,7 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
           value={notesText}
           onChangeText={setNotesText}
           placeholder="Exercise notes..."
-          placeholderTextColor={colors.text.muted}
+          placeholderTextColor={c.text.muted}
           multiline
           accessibilityLabel={`Notes for ${exercise.exerciseName}`}
           accessibilityRole="text"

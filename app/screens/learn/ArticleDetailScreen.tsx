@@ -14,6 +14,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-na
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Markdown from 'react-native-markdown-display';
 import { colors, radius, spacing, typography, motion } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../../components/common/Icon';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { ArticleChart } from '../../components/learn/ArticleChart';
@@ -38,6 +39,7 @@ interface ArticleDetailScreenProps {
 }
 
 export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDetailScreenProps) {
+  const c = useThemeColors();
   const [article, setArticle] = useState<ArticleDetail | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -114,10 +116,10 @@ export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDeta
 
   if (!article) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']} testID="article-detail-screen">
+      <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="article-detail-screen">
         <View style={styles.header}>
           <TouchableOpacity testID="article-detail-back" onPress={onBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ minWidth: 44, minHeight: 44, justifyContent: 'center' }}>
-            <Text style={styles.backBtn}>← Back</Text>
+            <Text style={[styles.backBtn, { color: c.accent.primary }]}>← Back</Text>
           </TouchableOpacity>
         </View>
         {error ? (
@@ -125,23 +127,23 @@ export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDeta
             <ErrorBanner message={error} onRetry={loadArticle} onDismiss={() => setError(null)} />
           </View>
         ) : (
-          <ActivityIndicator size="large" color={colors.accent.primary} />
+          <ActivityIndicator size="large" color={c.accent.primary} />
         )}
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']} testID="article-detail-screen">
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="article-detail-screen">
       {/* Scroll progress bar */}
-      <View style={styles.progressBar}>
+      <View style={[styles.progressBar, { backgroundColor: c.bg.surface }]}>
         <Animated.View style={[styles.progressFill, progressBarStyle]} />
       </View>
 
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity testID="article-detail-back" onPress={onBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ minWidth: 44, minHeight: 44, justifyContent: 'center' }}>
-          <Text style={styles.backBtn}>← Back</Text>
+          <Text style={[styles.backBtn, { color: c.accent.primary }]}>← Back</Text>
         </TouchableOpacity>
         <TouchableOpacity testID="article-detail-favorite" onPress={toggleFavorite} style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={[styles.favBtn, isFavorite && styles.favActive]}>
@@ -156,11 +158,11 @@ export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDeta
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-        <Text style={styles.title}>{article.title}</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>{article.title}</Text>
         <View style={styles.meta}>
-          <Text style={styles.readTime}>{article.estimated_read_time_min} min read</Text>
-          <Text style={styles.dot}>·</Text>
-          <Text style={styles.date}>
+          <Text style={[styles.readTime, { color: c.text.muted }]}>{article.estimated_read_time_min} min read</Text>
+          <Text style={[styles.dot, { color: c.text.muted }]}>·</Text>
+          <Text style={[styles.date, { color: c.text.muted }]}>
             {new Date(article.published_at).toLocaleDateString()}
           </Text>
         </View>
@@ -169,12 +171,12 @@ export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDeta
         {article.youtube_links?.map((url, i) => (
           <TouchableOpacity
             key={i}
-            style={styles.videoCard}
+            style={[styles.videoCard, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
             onPress={() => Linking.openURL(url)}
             activeOpacity={0.8}
           >
-            <Text style={styles.videoIcon}>▶</Text>
-            <Text style={styles.videoText}>Watch Video</Text>
+            <Text style={[styles.videoIcon, { color: c.semantic.negative }]}>▶</Text>
+            <Text style={[styles.videoText, { color: c.text.primary }]}>Watch Video</Text>
           </TouchableOpacity>
         ))}
 
@@ -190,14 +192,14 @@ export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDeta
         {/* Tags */}
         <View style={styles.tags}>
           {article.tags?.map((tag) => (
-            <Text key={tag} style={styles.tag}>{tag}</Text>
+            <Text key={tag} style={[styles.tag, { color: c.text.muted, backgroundColor: c.bg.surfaceRaised }]}>{tag}</Text>
           ))}
         </View>
 
         {/* See all articles link */}
         {onSeeAll && (
-          <TouchableOpacity onPress={onSeeAll} style={styles.seeAllLink} activeOpacity={0.7} accessibilityLabel="Browse all articles" accessibilityRole="button">
-            <Text style={styles.seeAllText}>Browse all articles →</Text>
+          <TouchableOpacity onPress={onSeeAll} style={[styles.seeAllLink, { borderTopColor: c.border.subtle }]} activeOpacity={0.7} accessibilityLabel="Browse all articles" accessibilityRole="button">
+            <Text style={[styles.seeAllText, { color: c.accent.primary }]}>Browse all articles →</Text>
           </TouchableOpacity>
         )}
       </ScrollView>

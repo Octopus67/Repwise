@@ -10,6 +10,7 @@ import {
 import Animated, { Layout } from 'react-native-reanimated';
 import Constants from 'expo-constants';
 import { colors, spacing, typography } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { useStore } from '../../store';
@@ -21,6 +22,7 @@ interface AccountSectionProps {
 }
 
 export function AccountSection({ onLogout }: AccountSectionProps) {
+  const c = useThemeColors();
   const store = useStore();
   const setNeedsOnboarding = useStore((s) => s.setNeedsOnboarding);
   const reduceMotion = useReduceMotion();
@@ -78,7 +80,7 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
 
   return (
     <Card>
-      <Text style={styles.sectionTitle}>Account</Text>
+      <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Account</Text>
 
       {/* Log Out */}
       <View style={styles.logoutRow}>
@@ -91,33 +93,33 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
       </View>
 
       {/* Legal Links */}
-      <View style={styles.legalSection}>
+      <View style={[styles.legalSection, { borderBottomColor: c.border.subtle }]}>
         <TouchableOpacity
           style={styles.legalLink}
           onPress={() => Linking.openURL('https://repwise.app/privacy')}
           accessibilityRole="link"
         >
-          <Text style={styles.legalText}>Privacy Policy</Text>
+          <Text style={[styles.legalText, { color: c.accent.primary }]}>Privacy Policy</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.legalLink}
           onPress={() => Linking.openURL('https://repwise.app/terms')}
           accessibilityRole="link"
         >
-          <Text style={styles.legalText}>Terms of Service</Text>
+          <Text style={[styles.legalText, { color: c.accent.primary }]}>Terms of Service</Text>
         </TouchableOpacity>
       </View>
 
       {/* Danger Zone */}
       <TouchableOpacity
-        style={styles.dangerZoneHeader}
+        style={[styles.dangerZoneHeader, { borderTopColor: c.border.subtle }]}
         onPress={toggleDangerZone}
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityState={{ expanded: dangerZoneExpanded }}
         accessibilityLabel="Danger Zone"
       >
-        <Text style={styles.dangerZoneText}>
+        <Text style={[styles.dangerZoneText, { color: c.semantic.negative }]}>
           {dangerZoneExpanded ? '▾' : '▸'} Danger Zone
         </Text>
       </TouchableOpacity>
@@ -133,7 +135,7 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
       )}
 
       {/* App Version */}
-      <Text style={styles.version}>App version: {appVersion}</Text>
+      <Text style={[styles.version, { color: c.text.muted }]}>App version: {appVersion}</Text>
     </Card>
   );
 }

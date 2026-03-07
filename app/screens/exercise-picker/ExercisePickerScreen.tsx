@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { colors, spacing, typography, radius } from '../../theme/tokens';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../../components/common/Icon';
 import api from '../../services/api';
 import { Exercise } from '../../types/exercise';
@@ -38,6 +39,7 @@ const EQUIPMENT_FILTERS = ['All', 'Barbell', 'Dumbbell', 'Cable', 'Machine', 'Bo
 export { EQUIPMENT_FILTERS };
 
 export function ExercisePickerScreen({ route, navigation }: Props) {
+  const c = useThemeColors();
   const { target = 'activeWorkout' } = route.params ?? {};
   const currentExerciseLocalId = (route.params as any)?.currentExerciseLocalId;
   const initialMuscleGroup = (route.params as any)?.muscleGroup;
@@ -157,9 +159,9 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.screen}>
+      <SafeAreaView style={[styles.screen, { backgroundColor: c.bg.base }]}>
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.accent.primary} />
+          <ActivityIndicator size="large" color={c.accent.primary} />
         </View>
       </SafeAreaView>
     );
@@ -167,12 +169,12 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
 
   if (error) {
     return (
-      <SafeAreaView style={styles.screen}>
+      <SafeAreaView style={[styles.screen, { backgroundColor: c.bg.base }]}>
         <View style={styles.center}>
           <Text style={styles.errorIcon}><Icon name="warning" /></Text>
-          <Text style={styles.errorText}>Failed to load exercises</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={fetchData} activeOpacity={0.7}>
-            <Text style={styles.retryText}>Retry</Text>
+          <Text style={[styles.errorText, { color: c.text.secondary }]}>Failed to load exercises</Text>
+          <TouchableOpacity style={[styles.retryBtn, { backgroundColor: c.accent.primary }]} onPress={fetchData} activeOpacity={0.7}>
+            <Text style={[styles.retryText, { color: c.text.primary }]}>Retry</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -182,7 +184,7 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
   // Show custom exercise form (6.7)
   if (showCustomForm) {
     return (
-      <SafeAreaView style={styles.screen}>
+      <SafeAreaView style={[styles.screen, { backgroundColor: c.bg.base }]}>
         <CustomExerciseForm
           initialName={searchText.trim()}
           onCreated={handleCustomExerciseCreated}
@@ -193,7 +195,7 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={[styles.screen, { backgroundColor: c.bg.base }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -202,9 +204,9 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
           accessibilityRole="button"
           style={styles.backBtn}
         >
-          <Text style={styles.backText}>←</Text>
+          <Text style={[styles.backText, { color: c.text.primary }]}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Choose Exercise</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>Choose Exercise</Text>
         <View style={styles.backBtn} />
       </View>
 
@@ -245,11 +247,11 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
       {/* Muscle group header when filtered */}
       {selectedMuscleGroup && (
         <View style={styles.filterHeader}>
-          <Text style={styles.filterLabel}>
+          <Text style={[styles.filterLabel, { color: c.text.primary }]}>
             {selectedMuscleGroup.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
           </Text>
           <TouchableOpacity onPress={() => setSelectedMuscleGroup(null)} accessibilityLabel="Clear muscle group filter">
-            <Text style={styles.clearFilter}><Icon name="close" /> Clear</Text>
+            <Text style={[styles.clearFilter, { color: c.accent.primary }]}><Icon name="close" /> Clear</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -265,18 +267,18 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
           />
         ) : (
           <View style={styles.center}>
-            <Text style={styles.emptyText}>No exercises match your search</Text>
+            <Text style={[styles.emptyText, { color: c.text.muted }]}>No exercises match your search</Text>
             {selectedMuscleGroup && (
-              <Text style={styles.emptyHint}>Try clearing the muscle group filter</Text>
+              <Text style={[styles.emptyHint, { color: c.text.muted }]}>Try clearing the muscle group filter</Text>
             )}
             <TouchableOpacity
-              style={styles.createCustomBtn}
+              style={[styles.createCustomBtn, { backgroundColor: c.accent.primary }]}
               onPress={() => setShowCustomForm(true)}
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel="Create custom exercise"
             >
-              <Text style={styles.createCustomText}>+ Create Custom Exercise</Text>
+              <Text style={[styles.createCustomText, { color: c.text.primary }]}>+ Create Custom Exercise</Text>
             </TouchableOpacity>
           </View>
         )

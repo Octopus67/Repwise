@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { colors, spacing, typography, radius } from '../../../theme/tokens';
+import { useThemeColors } from '../../../hooks/useThemeColors';
 import { Button } from '../../../components/common/Button';
 import { ErrorBanner } from '../../../components/common/ErrorBanner';
 import { useOnboardingStore, computeAge } from '../../../store/onboardingSlice';
@@ -37,6 +38,7 @@ function SummaryRow({ index, children }: { index: number; children: React.ReactN
 }
 
 export function SummaryStep({ onComplete, onEditStep }: Props) {
+  const c = useThemeColors();
   const store = useOnboardingStore();
   const mainStore = useMainStore();
   const age = computeAge(store.birthYear, store.birthMonth);
@@ -136,12 +138,12 @@ export function SummaryStep({ onComplete, onEditStep }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-      <Text style={styles.heading}>Your Plan</Text>
-      <Text style={styles.subheading}>Review your personalized numbers — tap any row to edit</Text>
+      <Text style={[styles.heading, { color: c.text.primary }]}>Your Plan</Text>
+      <Text style={[styles.subheading, { color: c.text.secondary }]}>Review your personalized numbers — tap any row to edit</Text>
 
       {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
 
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
         {rows.map((row, i) => (
           <SummaryRow key={row.label} index={i}>
             <TouchableOpacity
@@ -152,10 +154,10 @@ export function SummaryStep({ onComplete, onEditStep }: Props) {
               accessibilityLabel={`Edit ${row.label}: ${row.value}`}
               accessibilityRole="button"
             >
-              <Text style={styles.rowLabel}>{row.label}</Text>
+              <Text style={[styles.rowLabel, { color: c.text.secondary }]}>{row.label}</Text>
               <View style={styles.rowRight}>
-                <Text style={styles.rowValue}>{row.value}</Text>
-                <Text style={styles.editIcon}>›</Text>
+                <Text style={[styles.rowValue, { color: c.text.primary }]}>{row.value}</Text>
+                <Text style={[styles.editIcon, { color: c.text.muted }]}>›</Text>
               </View>
             </TouchableOpacity>
           </SummaryRow>
