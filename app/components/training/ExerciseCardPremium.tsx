@@ -37,6 +37,8 @@ export interface ExerciseCardPremiumProps {
   unitSystem: UnitSystem;
   showRpeRir: boolean;
   rpeMode?: 'rpe' | 'rir'; // kept for backward compat, no longer used
+  /** Per-exercise HU (shown as badge below exercise name) */
+  currentHU?: number;
   onSwap: () => void;
   onSkip: () => void;
   onGenerateWarmUp: () => void;
@@ -54,6 +56,7 @@ export interface ExerciseCardPremiumProps {
   onWeightStep: (setLocalId: string, direction: 'up' | 'down') => void;
   onApplyOverload?: () => void;
   onShowRpeEducation?: () => void;
+  onShowHUExplainer?: () => void;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -65,6 +68,7 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
   unitSystem,
   showRpeRir,
   rpeMode,
+  currentHU,
   onSwap,
   onSkip,
   onGenerateWarmUp,
@@ -78,6 +82,7 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
   onWeightStep,
   onApplyOverload,
   onShowRpeEducation,
+  onShowHUExplainer,
 }) => {
   const c = useThemeColors();
   const [notesVisible, setNotesVisible] = useState(false);
@@ -157,6 +162,21 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
               </Text>
             ))}
           </View>
+
+          {/* HU badge (shown after first completed set) */}
+          {currentHU != null && currentHU > 0 && (
+            <TouchableOpacity
+              style={styles.huBadge}
+              onPress={onShowHUExplainer}
+              accessibilityLabel={`${currentHU.toFixed(1)} Hard Units for ${exercise.exerciseName}`}
+              accessibilityRole="button"
+              accessibilityHint="Tap to learn about Hard Units"
+              hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+            >
+              <Text style={styles.huBadgeText}>{currentHU.toFixed(1)} HU</Text>
+              <Text style={styles.huInfoIcon}>ⓘ</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <TouchableOpacity
@@ -488,6 +508,28 @@ const styles = StyleSheet.create({
   addSetText: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    color: colors.accent.primary,
+  },
+
+  huBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.accent.primaryMuted,
+    borderRadius: radius.full,
+    paddingVertical: 2,
+    paddingHorizontal: spacing[2],
+    marginTop: 2,
+    gap: spacing[1],
+  },
+  huBadgeText: {
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.semibold,
+    color: colors.accent.primary,
+    fontVariant: ['tabular-nums'],
+  },
+  huInfoIcon: {
+    fontSize: 10,
     color: colors.accent.primary,
   },
 

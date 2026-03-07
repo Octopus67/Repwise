@@ -37,6 +37,7 @@ import {
 import api from '../../services/api';
 import type { TrainingSessionResponse } from '../../types/training';
 import type { Exercise } from '../../types/exercise';
+import { ShareCardCustomizer } from '../../components/sharing/ShareCardCustomizer';
 
 interface SessionDetailScreenProps {
   route: { params: { sessionId: string } };
@@ -55,6 +56,7 @@ export function SessionDetailScreen({ route, navigation }: SessionDetailScreenPr
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exerciseImages, setExerciseImages] = useState<Record<string, string | null>>({});
+  const [shareModalVisible, setShareModalVisible] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -167,7 +169,15 @@ export function SessionDetailScreen({ route, navigation }: SessionDetailScreenPr
           <Icon name="chevron-left" />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: c.text.primary }]}>Session Detail</Text>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity
+          onPress={() => setShareModalVisible(true)}
+          style={styles.backBtn}
+          accessibilityLabel="Share workout"
+          accessibilityRole="button"
+          testID="share-session-button"
+        >
+          <Icon name="share" size={20} color={c.text.primary} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
@@ -288,6 +298,14 @@ export function SessionDetailScreen({ route, navigation }: SessionDetailScreenPr
           <Text style={[styles.editButtonText, { color: c.text.inverse }]}>Edit Session</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Share modal */}
+      <ShareCardCustomizer
+        visible={shareModalVisible}
+        onClose={() => setShareModalVisible(false)}
+        session={session}
+        unitSystem={unitSystem}
+      />
     </SafeAreaView>
   );
 }

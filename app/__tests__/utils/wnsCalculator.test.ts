@@ -10,6 +10,9 @@ import {
   stimulatingRepsPerSet,
   diminishingReturns,
   estimateSessionHU,
+  calculateSetStimulus,
+  calculateExerciseStimulus,
+  calculateSessionStimulus,
   DEFAULT_RIR,
 } from '../../utils/wnsCalculator';
 
@@ -86,7 +89,7 @@ describe('stimulatingRepsPerSet', () => {
 
   test('null RIR uses default', () => {
     // DEFAULT_RIR = 2.0 (RPE 8) → min(3.0, 10) = 3.0
-    expect(stimulatingRepsPerSet(10, null, 0.75)).toBe(2.0);
+    expect(stimulatingRepsPerSet(10, null, 0.75)).toBe(3.0);
   });
 
   test('null intensity uses default', () => {
@@ -116,8 +119,9 @@ describe('diminishingReturns', () => {
     const oneSet = diminishingReturns([5.0]);
     const sixSets = diminishingReturns([5.0, 5.0, 5.0, 5.0, 5.0, 5.0]);
     const ratio = sixSets / oneSet;
+    // With K=0.96, ratio is ~2.49 (average of Schoenfeld K=1.69 and Pelland K=0.24)
     expect(ratio).toBeGreaterThan(1.8);
-    expect(ratio).toBeLessThan(2.2);
+    expect(ratio).toBeLessThan(2.6);
   });
 
   test('order matters', () => {
@@ -143,5 +147,121 @@ describe('estimateSessionHU', () => {
     const direct = estimateSessionHU([{ stimReps: 5.0, coefficient: 1.0 }]);
     const fractional = estimateSessionHU([{ stimReps: 5.0, coefficient: 0.5 }]);
     expect(fractional).toBe(direct * 0.5);
+  });
+});
+
+// ─── calculateSetStimulus ────────────────────────────────────────────────────
+
+describe('calculateSetStimulus', () => {
+  test('RPE 10 (failure) returns max stim reps', () => {
+    expect(calculateSetStimulus(10, 10, 0.75)).toBe(5.0);
+  });
+
+  test('RPE 8 (RIR 2) returns 3', () => {
+    expect(calculateSetStimulus(10, 8, 0.75)).toBe(3.0);
+  });
+
+  test('null RPE uses default RIR', () => {
+    // DEFAULT_RIR = 2.0 → stimulatingRepsPerSet(10, 2.0, 0.75) = 3.0
+    expect(calculateSetStimulus(10, null, 0.75)).toBe(3.0);
+  });
+
+  test('zero reps returns zero', () => {
+    expect(calculateSetStimulus(0, 10, 0.75)).toBe(0.0);
+  });
+
+  test('heavy load returns all reps up to max', () => {
+    expect(calculateSetStimulus(3, 8, 0.90)).toBe(3.0);
+  });
+});
+
+// ─── calculateExerciseStimulus ───────────────────────────────────────────────
+
+describe('calculateExerciseStimulus', () => {
+  test('empty sets returns zero', () => {
+    expect(calculateExerciseStimulus([])).toBe(0.0);
+  });
+
+  test('single set at failure', () => {
+    const result = calculateExerciseStimulus([{ reps: 10, rpe: 10, intensityPct: 0.75 }]);
+    expect(result).toBe(5.0);
+  });
+
+  test('multiple sets with diminishing returns', () => {
+    const sets = [
+      { reps: 10, rpe: 10, intensityPct: 0.75 },
+      { reps: 10, rpe: 10, intensityPct: 0.75 },
+    ];
+    const result = calculateExerciseStimulus(sets);
+    expect(result).toBeGreaterThan(5.0);
+    expect(result).toBeLessThan(10.0);
+  });
+
+  test('coefficient reduces contribution', () => {
+    const full = calculateExerciseStimulus(
+      [{ reps: 10, rpe: 10, intensityPct: 0.75 }],
+      1.0,
+    );
+    const half = calculateExerciseStimulus(
+      [{ reps: 10, rpe: 10, intensityPct: 0.75 }],
+      0.5,
+    );
+    expect(half).toBeCloseTo(full * 0.5, 5);
+  });
+});
+
+// ─── calculateSessionStimulus ────────────────────────────────────────────────
+
+describe('calculateSessionStimulus', () => {
+  test('empty exercises returns empty object', () => {
+    expect(calculateSessionStimulus([], {})).toEqual({});
+  });
+
+  test('single exercise maps to muscle group', () => {
+    const exercises = [
+      {
+        exerciseName: 'Bench Press',
+        sets: [{ reps: 10, rpe: 10, intensityPct: null }],
+      },
+    ];
+    const muscleMap = { 'Bench Press': 'chest' };
+    const result = calculateSessionStimulus(exercises, muscleMap);
+    expect(result.chest).toBe(5.0);
+  });
+
+  test('two exercises same muscle group accumulate', () => {
+    const exercises = [
+      {
+        exerciseName: 'Bench Press',
+        sets: [{ reps: 10, rpe: 10, intensityPct: null }],
+      },
+      {
+        exerciseName: 'Incline DB Press',
+        sets: [{ reps: 10, rpe: 10, intensityPct: null }],
+      },
+    ];
+    const muscleMap = { 'Bench Press': 'chest', 'Incline DB Press': 'chest' };
+    const result = calculateSessionStimulus(exercises, muscleMap);
+    expect(result.chest).toBe(10.0);
+  });
+
+  test('exercises without muscle group mapping are skipped', () => {
+    const exercises = [
+      {
+        exerciseName: 'Unknown Exercise',
+        sets: [{ reps: 10, rpe: 10, intensityPct: null }],
+      },
+    ];
+    const result = calculateSessionStimulus(exercises, {});
+    expect(Object.keys(result)).toHaveLength(0);
+  });
+
+  test('exercises with empty sets are skipped', () => {
+    const exercises = [
+      { exerciseName: 'Bench Press', sets: [] },
+    ];
+    const muscleMap = { 'Bench Press': 'chest' };
+    const result = calculateSessionStimulus(exercises, muscleMap);
+    expect(Object.keys(result)).toHaveLength(0);
   });
 });

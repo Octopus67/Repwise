@@ -58,6 +58,7 @@ async def lifespan(application: FastAPI):
         import src.modules.meal_plans.models  # noqa: F401
         import src.modules.notifications.models  # noqa: F401
         import src.modules.measurements.models  # noqa: F401
+        import src.modules.sharing.models  # noqa: F401
         import src.shared.audit  # noqa: F401
 
         # Patch JSONB → JSON for SQLite compatibility
@@ -276,3 +277,6 @@ app.include_router(feature_flags_router, prefix="/api/v1/feature-flags", tags=["
 
 from src.modules.measurements.router import router as measurements_router
 app.include_router(measurements_router, prefix="/api/v1/body", tags=["body-measurements"])
+
+from src.modules.sharing.router import router as sharing_router
+app.include_router(sharing_router, prefix="/api/v1/share", tags=["sharing"])

@@ -5,13 +5,14 @@
  * Displays workout stats, exercise breakdown, and personal records.
  */
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -21,6 +22,7 @@ import { useThemeColors } from '../../hooks/useThemeColors';
 import { formatDuration } from '../../utils/durationFormat';
 import type { PersonalRecordResponse } from '../../types/training';
 import type { WorkoutSummaryResult } from '../../utils/workoutSummary';
+import { Icon } from '../../components/common/Icon';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -70,10 +72,22 @@ function StatCard({ label, value }: { label: string; value: string }) {
 export function WorkoutSummaryScreen({ route, navigation }: WorkoutSummaryScreenProps) {
   const c = useThemeColors();
   const { summary, duration, personalRecords, exerciseBreakdown } = route.params;
+  const [sharePromptDismissed, setSharePromptDismissed] = useState(false);
 
   const handleDone = () => {
     navigation.navigate('DashboardHome');
   };
+
+  const handleShareWorkout = useCallback(() => {
+    // Navigate back to session detail with share modal open
+    // For now, show a prompt that the feature is available from session detail
+    Alert.alert(
+      'Share Your Workout 💪',
+      'You can share a branded workout card from the Session Detail screen. Tap the share icon in the header!',
+      [{ text: 'Got it', style: 'default' }],
+    );
+    setSharePromptDismissed(true);
+  }, []);
 
   const formatVolume = (kg: number) => {
     if (kg >= 1000) {
@@ -153,6 +167,26 @@ export function WorkoutSummaryScreen({ route, navigation }: WorkoutSummaryScreen
               ))}
             </View>
           </View>
+        )}
+        {/* Share Prompt — shown when PRs exist */}
+        {personalRecords.length > 0 && !sharePromptDismissed && (
+          <TouchableOpacity
+            style={[styles.sharePrompt, { backgroundColor: c.accent.primaryMuted, borderColor: c.accent.primary }]}
+            onPress={handleShareWorkout}
+            accessibilityLabel="Share your personal records"
+            accessibilityRole="button"
+            testID="share-pr-prompt"
+          >
+            <Icon name="share" size={20} color={c.accent.primary} />
+            <View style={styles.sharePromptText}>
+              <Text style={[styles.sharePromptTitle, { color: c.text.primary }]}>
+                New PR{personalRecords.length > 1 ? 's' : ''}! Share your achievement?
+              </Text>
+              <Text style={[styles.sharePromptSub, { color: c.text.secondary }]}>
+                Create a branded card to share with friends
+              </Text>
+            </View>
+          </TouchableOpacity>
         )}
       </ScrollView>
 
@@ -308,6 +342,24 @@ const styles = StyleSheet.create({
     padding: spacing[4],
     borderTopWidth: 1,
     borderTopColor: colors.border.subtle,
+  },
+  sharePrompt: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing[4],
+    borderRadius: radius.md,
+    borderWidth: 1,
+    gap: spacing[3],
+    marginBottom: spacing[4],
+  },
+  sharePromptText: { flex: 1 },
+  sharePromptTitle: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+  },
+  sharePromptSub: {
+    fontSize: typography.size.sm,
+    marginTop: 2,
   },
   doneButton: {
     backgroundColor: colors.accent.primary,

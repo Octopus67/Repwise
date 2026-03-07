@@ -81,3 +81,62 @@ export function estimateSessionHU(
   const weighted = sets.map((s) => s.stimReps * s.coefficient);
   return diminishingReturns(weighted);
 }
+
+// ─── Modular Higher-Level Functions ──────────────────────────────────────────
+
+/**
+ * Calculate stimulus (HU) for a single set.
+ * Combines RIR derivation + stimulating reps into one call.
+ */
+export function calculateSetStimulus(
+  reps: number,
+  rpe: number | null,
+  intensityPct: number | null,
+): number {
+  const rir = rirFromRpe(rpe);
+  return stimulatingRepsPerSet(reps, rir, intensityPct);
+}
+
+/**
+ * Calculate total HU for one exercise from its completed sets.
+ * Applies diminishing returns across ordered sets.
+ * @param coefficient - muscle contribution factor (1.0 = primary, 0.5 = secondary)
+ */
+export function calculateExerciseStimulus(
+  sets: Array<{ reps: number; rpe: number | null; intensityPct: number | null }>,
+  coefficient: number = 1.0,
+): number {
+  const stimReps = sets.map((s) => calculateSetStimulus(s.reps, s.rpe, s.intensityPct));
+  const weighted = stimReps.map((sr) => sr * coefficient);
+  return diminishingReturns(weighted);
+}
+
+/** Per-muscle HU result from a session */
+export interface SessionStimulusResult {
+  [muscleGroup: string]: number;
+}
+
+/**
+ * Calculate session-level HU grouped by muscle.
+ * @param exercises - array of exercises with their completed sets
+ * @param muscleGroupMap - maps exercise name → primary muscle group
+ */
+export function calculateSessionStimulus(
+  exercises: Array<{
+    exerciseName: string;
+    sets: Array<{ reps: number; rpe: number | null; intensityPct: number | null }>;
+  }>,
+  muscleGroupMap: Record<string, string>,
+): SessionStimulusResult {
+  const result: SessionStimulusResult = {};
+
+  for (const ex of exercises) {
+    const muscle = muscleGroupMap[ex.exerciseName];
+    if (!muscle || ex.sets.length === 0) continue;
+
+    const hu = calculateExerciseStimulus(ex.sets, 1.0);
+    result[muscle] = (result[muscle] ?? 0) + hu;
+  }
+
+  return result;
+}

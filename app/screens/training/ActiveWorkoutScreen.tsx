@@ -44,6 +44,9 @@ import { FinishConfirmationSheet } from '../../components/training/FinishConfirm
 import { ExercisePickerSheet } from '../../components/training/ExercisePickerSheet';
 import { PRCelebration } from '../../components/training/PRCelebration';
 import { RPEEducationSheet } from '../../components/training/RPEEducationSheet';
+import { HUFloatingPill } from '../../components/training/HUFloatingPill';
+import { HUExplainerModal } from '../../components/training/HUExplainerModal';
+import { WorkoutSummaryModal } from '../../components/training/WorkoutSummaryModal';
 
 // Utilities
 import { formatDuration } from '../../utils/durationFormat';
@@ -54,6 +57,8 @@ import { hasUnsavedData } from '../../utils/setCompletionLogic';
 import { activeExercisesToPayload } from '../../utils/sessionEditConversion';
 import { sessionResponseToActiveExercises } from '../../utils/sessionEditConversion';
 import { templateToActiveExercises } from '../../utils/templateConversion';
+import { calculateExerciseStimulus, calculateSessionStimulus } from '../../utils/wnsCalculator';
+import { generateRecommendations, getVolumeStatus, type VolumeLandmarks, type VolumeStatus } from '../../utils/wnsRecommendations';
 // Types
 import type { PreviousPerformanceData, PersonalRecordResponse } from '../../types/training';
 import type { WorkoutSummaryResult } from '../../utils/workoutSummary';
@@ -96,6 +101,12 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   const [exerciseList, setExerciseList] = useState<string[]>([]);
   const [recentExercises, setRecentExercises] = useState<string[]>([]);
   const [muscleGroupMap, setMuscleGroupMap] = useState<Record<string, string>>({});
+  const [huExplainerVisible, setHuExplainerVisible] = useState(false);
+  const [huExplainerExercise, setHuExplainerExercise] = useState<string | undefined>();
+  const [huExplainerHU, setHuExplainerHU] = useState<number | undefined>();
+  const [workoutSummaryVisible, setWorkoutSummaryVisible] = useState(false);
+  const [summaryHU, setSummaryHU] = useState<Record<string, number>>({});
+  const [summaryRecs, setSummaryRecs] = useState<string[]>([]);
   const initialized = useRef(false);
   const isNavigatingAway = useRef(false);
 
@@ -389,6 +400,11 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
 
       // Navigate to WorkoutSummary
       const prs: PersonalRecordResponse[] = response.data?.personal_records ?? [];
+      
+      // Compute final HU for summary
+      const finalHU = { ...sessionHU };
+      const finalRecs = generateRecommendations(finalHU, {});
+      
       store.discardWorkout();
       isNavigatingAway.current = true;
       
@@ -397,6 +413,8 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
         duration: elapsedSeconds,
         personalRecords: prs,
         exerciseBreakdown,
+        huByMuscle: finalHU,
+        recommendations: finalRecs,
       });
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Could not save workout. Please try again.';
@@ -443,6 +461,42 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   const formattedDate = store.sessionDate
     ? new Date(store.sessionDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
     : 'Today';
+
+  // ── HU computation (recalculates on every set change) ──
+
+  const sessionHU = React.useMemo(() => {
+    const exerciseData = store.exercises
+      .filter((ex) => !ex.skipped)
+      .map((ex) => ({
+        exerciseName: ex.exerciseName,
+        sets: ex.sets
+          .filter((s) => s.completed && s.setType !== 'warm-up')
+          .map((s) => ({
+            reps: parseInt(s.reps, 10) || 0,
+            rpe: s.rpe ? parseFloat(s.rpe) : null,
+            intensityPct: null as number | null,
+          })),
+      }));
+    return calculateSessionStimulus(exerciseData, muscleGroupMap);
+  }, [store.exercises, muscleGroupMap]);
+
+  const exerciseHUMap = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const ex of store.exercises) {
+      if (ex.skipped) continue;
+      const completedSets = ex.sets
+        .filter((s) => s.completed && s.setType !== 'warm-up')
+        .map((s) => ({
+          reps: parseInt(s.reps, 10) || 0,
+          rpe: s.rpe ? parseFloat(s.rpe) : null,
+          intensityPct: null as number | null,
+        }));
+      if (completedSets.length > 0) {
+        map[ex.localId] = calculateExerciseStimulus(completedSets);
+      }
+    }
+    return map;
+  }, [store.exercises]);
 
   // ── Render ──
 
@@ -503,6 +557,16 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
         {/* Volume pills */}
         <VolumePills muscleVolumes={volumeData} />
 
+        {/* HU floating pill */}
+        <HUFloatingPill
+          huByMuscle={sessionHU}
+          onPress={() => {
+            setSummaryHU(sessionHU);
+            setSummaryRecs(generateRecommendations(sessionHU, {}));
+            setWorkoutSummaryVisible(true);
+          }}
+        />
+
         {/* Exercise cards */}
         {store.exercises.map((exercise, idx) => {
           const prevKey = exercise.exerciseName.toLowerCase();
@@ -518,6 +582,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
               unitSystem={unitSystem}
               showRpeRir={showRpeRir}
               rpeMode={rpeMode}
+              currentHU={exerciseHUMap[exercise.localId]}
               onSwap={() => handleSwapExercise(exercise.localId)}
               onSkip={() => store.toggleExerciseSkip(exercise.localId)}
               onGenerateWarmUp={() => handleGenerateWarmUp(exercise.localId)}
@@ -542,6 +607,11 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
               }
               onApplyOverload={() => handleApplyOverload(exercise.localId)}
               onShowRpeEducation={() => setRpeEducationVisible(true)}
+              onShowHUExplainer={() => {
+                setHuExplainerExercise(exercise.exerciseName);
+                setHuExplainerHU(exerciseHUMap[exercise.localId]);
+                setHuExplainerVisible(true);
+              }}
               />
             </ExerciseCardWrapper>
           );
@@ -608,6 +678,30 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
         prs={prData}
         visible={prCelebrationVisible}
         onDismiss={() => setPrCelebrationVisible(false)}
+      />
+
+      {/* HU Explainer modal */}
+      <HUExplainerModal
+        visible={huExplainerVisible}
+        exerciseName={huExplainerExercise}
+        currentHU={huExplainerHU}
+        onClose={() => setHuExplainerVisible(false)}
+      />
+
+      {/* Workout Summary modal (post-workout) */}
+      <WorkoutSummaryModal
+        visible={workoutSummaryVisible}
+        durationFormatted={durationFormatted}
+        totalSets={summary.setCount}
+        huByMuscle={summaryHU}
+        recommendations={summaryRecs}
+        onClose={() => setWorkoutSummaryVisible(false)}
+        onShowExplainer={() => {
+          setWorkoutSummaryVisible(false);
+          setHuExplainerExercise(undefined);
+          setHuExplainerHU(undefined);
+          setHuExplainerVisible(true);
+        }}
       />
     </SafeAreaView>
   );

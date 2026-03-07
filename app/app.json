@@ -19,6 +19,7 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Repwise needs camera access to take progress photos and scan food barcodes.",
         "NSPhotoLibraryUsageDescription": "Repwise needs photo library access to select progress photos.",
+        "NSPhotoLibraryAddUsageDescription": "Repwise needs permission to save workout share cards to your photo library.",
         "ITSAppUsesNonExemptEncryption": false,
         "NSUserNotificationsUsageDescription": "Repwise sends notifications for workout reminders, personal records, and weekly check-ins."
       }
@@ -32,7 +33,8 @@
       "versionCode": 2,
       "permissions": [
         "CAMERA",
-        "READ_EXTERNAL_STORAGE"
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
       ]
     },
     "plugins": [
@@ -46,7 +48,14 @@
         }
       ],
       "expo-secure-store",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Repwise to save workout share cards to your photo library.",
+          "savePhotosPermission": "Allow Repwise to save workout share cards to your photo library."
+        }
+      ]
     ],
     "scheme": "repwise",
     "extra": {
