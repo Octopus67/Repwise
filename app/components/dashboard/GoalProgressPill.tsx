@@ -22,8 +22,8 @@ export default function GoalProgressPill({ goalType, targetCalories }: GoalProgr
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.subtle }]}>
-      <Text style={[styles.text, { color: getThemeColors().text.secondary }]}>
+    <View style={[styles.container, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
+      <Text style={[styles.text, { color: c.text.secondary }]}>
         {getGoalLabel(goalType)} · {targetCalories} cal
       </Text>
     </View>
@@ -32,18 +32,18 @@ export default function GoalProgressPill({ goalType, targetCalories }: GoalProgr
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.full,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
     alignSelf: 'flex-start',
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   text: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     lineHeight: typography.lineHeight.sm,
   },
 });

@@ -68,9 +68,10 @@ interface LoginScreenProps {
   onNavigateRegister: () => void;
   onLoginSuccess: (user: { id: string; email: string }, tokens: { accessToken: string; refreshToken: string; expiresIn: number }) => void;
   onNavigateForgotPassword?: () => void;
+  onNavigateEmailVerification?: (email: string) => void;
 }
 
-export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForgotPassword }: LoginScreenProps) {
+export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForgotPassword, onNavigateEmailVerification }: LoginScreenProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const [email, setEmail] = useState('');
@@ -79,6 +80,9 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState('');
   const passwordRef = useRef<TextInput>(null);
   const titleAnim = useStaggeredEntrance(0, 80);
   const subtitleAnim = useStaggeredEntrance(1, 80);
@@ -89,6 +93,8 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
   const handleLogin = async () => {
     setError('');
     setEmailError('');
+    setUnverifiedEmail('');
+    setResendSuccess('');
     const cleanEmail = trimEmail(email);
     if (cleanEmail && !isValidEmail(cleanEmail)) {
       setEmailError('Please enter a valid email address');
@@ -111,10 +117,32 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
         },
       );
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? err?.response?.data?.detail ?? 'Login failed. Please check your credentials.');
+      const code = err?.response?.data?.code;
+      if (code === 'EMAIL_NOT_VERIFIED') {
+        setUnverifiedEmail(cleanEmail);
+        setError('');
+      } else {
+        setError(err?.response?.data?.message ?? err?.response?.data?.detail ?? 'Login failed. Please check your credentials.');
+      }
       setEmailError('');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    setResendSuccess('');
+    try {
+      await api.post('auth/resend-verification-email', { email: unverifiedEmail });
+      setResendSuccess('Verification code sent! Check your email.');
+      if (onNavigateEmailVerification) {
+        onNavigateEmailVerification(unverifiedEmail);
+      }
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? 'Failed to resend verification email');
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -128,25 +156,43 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: getThemeColors().bg.base }]}
+      style={[styles.container, { backgroundColor: c.bg.base }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Animated.View style={titleAnim}>
-          <Text style={[styles.title, { color: getThemeColors().text.primary }]}>Repwise</Text>
+          <Text style={[styles.title, { color: c.text.primary }]}>Repwise</Text>
         </Animated.View>
         <Animated.View style={subtitleAnim}>
-          <Text style={[styles.subtitle, { color: getThemeColors().text.secondary }]}>Sign in to continue</Text>
+          <Text style={[styles.subtitle, { color: c.text.secondary }]}>Sign in to continue</Text>
         </Animated.View>
 
         <Animated.View style={formAnim}>
         {error ? <ErrorBanner testID="login-error-message" message={error} onDismiss={() => setError('')} /> : null}
 
+        {unverifiedEmail ? (
+          <View testID="unverified-banner" style={[styles.unverifiedBanner, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}>
+            <Text style={[styles.unverifiedText, { color: c.text.primary }]}>
+              Your email is not verified yet. Please verify to continue.
+            </Text>
+            {resendSuccess ? (
+              <Text style={[styles.resendSuccess, { color: c.semantic.positive }]}>{resendSuccess}</Text>
+            ) : null}
+            <Button
+              testID="resend-verification-button"
+              title={resendLoading ? 'Sending…' : 'Resend Verification Email'}
+              onPress={handleResendVerification}
+              loading={resendLoading}
+              style={styles.resendBtn}
+            />
+          </View>
+        ) : null}
+
         <TextInput
           testID="login-email-input"
-          style={[styles.input, { color: getThemeColors().text.primary, backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.subtle }]}
+          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}
           placeholder="Email"
-          placeholderTextColor={getThemeColors().text.muted}
+          placeholderTextColor={c.text.muted}
           keyboardType="email-address"
           autoCapitalize="none"
           value={email}
@@ -156,14 +202,14 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
           accessibilityLabel="Email address"
           accessibilityHint="Enter your email to sign in"
         />
-        {emailError ? <Text style={[styles.emailError, { color: getThemeColors().semantic.negative }]}>{emailError}</Text> : null}
+        {emailError ? <Text style={[styles.emailError, { color: c.semantic.negative }]}>{emailError}</Text> : null}
         <View style={{ position: 'relative' }}>
           <TextInput
             ref={passwordRef}
             testID="login-password-input"
             style={[styles.input, { paddingRight: spacing[10], marginBottom: 0 }]}
             placeholder="Password"
-            placeholderTextColor={getThemeColors().text.muted}
+            placeholderTextColor={c.text.muted}
             secureTextEntry={!showPassword}
             value={password}
             onChangeText={setPassword}
@@ -179,7 +225,7 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
             accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
             accessibilityRole="button"
           >
-            <Icon name={showPassword ? 'eye-off' : 'eye'} size={20} color={getThemeColors().text.muted} />
+            <Icon name={showPassword ? 'eye-off' : 'eye'} size={20} color={c.text.muted} />
           </TouchableOpacity>
         </View>
         <View style={{ marginBottom: spacing[3] }} />
@@ -188,7 +234,7 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
         <Animated.View style={buttonAnim}>
         {onNavigateForgotPassword ? (
           <TouchableOpacity testID="forgot-password-link" onPress={onNavigateForgotPassword} style={{ alignItems: 'flex-end', marginBottom: spacing[3], minHeight: 44, justifyContent: 'center' }}>
-            <Text style={{ color: getThemeColors().accent.primary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm }}>Forgot Password?</Text>
+            <Text style={{ color: c.accent.primary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm }}>Forgot Password?</Text>
           </TouchableOpacity>
         ) : null}
 
@@ -198,8 +244,8 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
 
         <Animated.View style={linkAnim}>
         <TouchableOpacity testID="login-register-link" onPress={onNavigateRegister} style={styles.link}>
-          <Text style={[styles.linkText, { color: getThemeColors().text.secondary }]}>
-            Don't have an account? <Text style={[styles.linkAccent, { color: getThemeColors().accent.primary }]}>Register</Text>
+          <Text style={[styles.linkText, { color: c.text.secondary }]}>
+            Don't have an account? <Text style={[styles.linkAccent, { color: c.accent.primary }]}>Register</Text>
           </Text>
         </TouchableOpacity>
         </Animated.View>
@@ -209,21 +255,21 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
 }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: getThemeColors().bg.base },
+  container: { flex: 1, backgroundColor: c.bg.base },
   scroll: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: spacing[6],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.semibold,
     textAlign: 'center',
     lineHeight: typography.lineHeight['2xl'],
   },
   subtitle: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     textAlign: 'center',
     marginTop: spacing[2],
@@ -231,32 +277,50 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     lineHeight: typography.lineHeight.base,
   },
   error: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.sm,
     textAlign: 'center',
     marginBottom: spacing[4],
     lineHeight: typography.lineHeight.sm,
   },
   emailError: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.sm,
     marginBottom: spacing[2],
     marginTop: -spacing[2],
     lineHeight: typography.lineHeight.sm,
   },
   input: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
-    color: getThemeColors().text.primary,
+    borderColor: c.border.subtle,
+    color: c.text.primary,
     fontSize: typography.size.base,
     padding: spacing[4],
     marginBottom: spacing[3],
     lineHeight: typography.lineHeight.base,
   },
   btn: { marginTop: spacing[2] },
+  resendBtn: { marginTop: spacing[3] },
+  unverifiedBanner: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing[4],
+    marginBottom: spacing[4],
+  },
+  unverifiedText: {
+    fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
+    textAlign: 'center',
+  },
+  resendSuccess: {
+    fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm,
+    textAlign: 'center',
+    marginTop: spacing[2],
+  },
   link: { alignItems: 'center', marginTop: spacing[6], minHeight: 44, justifyContent: 'center' },
-  linkText: { color: getThemeColors().text.secondary, fontSize: typography.size.base, lineHeight: typography.lineHeight.base },
-  linkAccent: { color: getThemeColors().accent.primary, fontWeight: typography.weight.semibold },
+  linkText: { color: c.text.secondary, fontSize: typography.size.base, lineHeight: typography.lineHeight.base },
+  linkAccent: { color: c.accent.primary, fontWeight: typography.weight.semibold },
 });

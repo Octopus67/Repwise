@@ -111,7 +111,7 @@ export function TrendLineChart({
   if (data.length === 0) {
     return (
       <View style={[styles.emptyContainer]}>
-        <Text style={[styles.emptyText, { color: getThemeColors().text.muted }]}>{emptyMessage || 'No data for this period'}</Text>
+        <Text style={[styles.emptyText, { color: c.text.muted }]}>{emptyMessage || 'No data for this period'}</Text>
       </View>
     );
   }
@@ -151,7 +151,7 @@ export function TrendLineChart({
               x={PADDING.left - 6}
               y={tick.y + 4}
               textAnchor="end"
-              fill={getThemeColors().text.muted}
+              fill={c.text.muted}
               fontSize={10}
             >
               {tick.label}
@@ -166,7 +166,7 @@ export function TrendLineChart({
               y1={tick.y}
               x2={PADDING.left + plotWidth}
               y2={tick.y}
-              stroke={getThemeColors().border.subtle}
+              stroke={c.border.subtle}
               strokeWidth={1}
             />
           ))}
@@ -178,7 +178,7 @@ export function TrendLineChart({
               y1={targetY}
               x2={PADDING.left + plotWidth}
               y2={targetY}
-              stroke={getThemeColors().semantic.warning}
+              stroke={c.semantic.warning}
               strokeWidth={1.5}
               strokeDasharray="6,4"
             />
@@ -237,7 +237,7 @@ export function TrendLineChart({
           {selectedIndex != null && (
             <>
               <Circle cx={selectedX} cy={selectedY} r={5} fill={color} />
-              <Circle cx={selectedX} cy={selectedY} r={3} fill={getThemeColors().bg.surface} />
+              <Circle cx={selectedX} cy={selectedY} r={3} fill={c.bg.surface} />
             </>
           )}
 
@@ -248,7 +248,7 @@ export function TrendLineChart({
               x={tick.x}
               y={CHART_HEIGHT - 4}
               textAnchor="middle"
-              fill={getThemeColors().text.muted}
+              fill={c.text.muted}
               fontSize={10}
             >
               {tick.label}
@@ -260,7 +260,7 @@ export function TrendLineChart({
       {/* Tooltip */}
       {selectedPoint && (
         <View style={styles.tooltip}>
-          <Text style={[styles.tooltipDate, { color: getThemeColors().text.secondary }]}>
+          <Text style={[styles.tooltipDate, { color: c.text.secondary }]}>
             {new Date(selectedPoint.date + 'T00:00:00').toLocaleDateString()}
           </Text>
           <Text style={[styles.tooltipValue, { color }]}>
@@ -279,7 +279,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.base,
     textAlign: 'center',
     lineHeight: typography.lineHeight.base,
@@ -292,7 +292,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingTop: spacing[2],
   },
   tooltipDate: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
   },

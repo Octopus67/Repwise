@@ -30,10 +30,10 @@ export function FeatureNavItem({ icon, label, description, onPress, testID }: Fe
       >
         <View style={styles.iconWrap}>{icon}</View>
         <View style={styles.content}>
-          <Text style={[styles.label, { color: getThemeColors().text.primary }]}>{label}</Text>
-          <Text style={[styles.description, { color: getThemeColors().text.muted }]}>{description}</Text>
+          <Text style={[styles.label, { color: c.text.primary }]}>{label}</Text>
+          <Text style={[styles.description, { color: c.text.muted }]}>{description}</Text>
         </View>
-        <Text style={[styles.chevron, { color: getThemeColors().text.muted }]}>›</Text>
+        <Text style={[styles.chevron, { color: c.text.muted }]}>›</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -58,16 +58,16 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   label: {
     fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
   },
   description: {
     fontSize: typography.size.sm,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     marginTop: spacing[1],
   },
   chevron: {
     fontSize: typography.size.md,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     marginLeft: spacing[2],
   },
 });

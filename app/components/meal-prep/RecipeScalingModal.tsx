@@ -73,7 +73,7 @@ export function RecipeScalingModal({
   return (
     <ModalContainer visible={visible} onClose={onClose} title="Scale Recipe">
       <View style={styles.content}>
-        <Text style={[styles.label, { color: getThemeColors().text.muted }]}>Target Macro</Text>
+        <Text style={[styles.label, { color: c.text.muted }]}>Target Macro</Text>
         <View style={styles.macroRow}>
           {MACRO_OPTIONS.map((m) => (
             <TouchableOpacity
@@ -88,28 +88,28 @@ export function RecipeScalingModal({
           ))}
         </View>
 
-        <Text style={[styles.label, { color: getThemeColors().text.muted }]}>Target Value</Text>
+        <Text style={[styles.label, { color: c.text.muted }]}>Target Value</Text>
         <TextInput
-          style={[styles.input, { color: getThemeColors().text.primary, backgroundColor: getThemeColors().bg.surface }]}
+          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surface }]}
           keyboardType="numeric"
           value={targetValue}
           onChangeText={setTargetValue}
           placeholder="e.g. 500"
-          placeholderTextColor={getThemeColors().text.muted}
+          placeholderTextColor={c.text.muted}
         />
 
         {preview && (
-          <View style={[styles.preview, { backgroundColor: getThemeColors().bg.surface }]}>
-            <Text style={[styles.previewTitle, { color: getThemeColors().accent.primary }]}>Preview (×{preview.factor.toFixed(2)})</Text>
-            <Text style={[styles.previewMacros, { color: getThemeColors().text.primary }]}>
+          <View style={[styles.preview, { backgroundColor: c.bg.surface }]}>
+            <Text style={[styles.previewTitle, { color: c.accent.primary }]}>Preview (×{preview.factor.toFixed(2)})</Text>
+            <Text style={[styles.previewMacros, { color: c.text.primary }]}>
               {preview.calories} cal · {preview.protein_g}g P · {preview.carbs_g}g C · {preview.fat_g}g F
             </Text>
           </View>
         )}
 
         <View style={styles.row}>
-          <Text style={[styles.origLabel, { color: getThemeColors().text.muted }]}>Original</Text>
-          <Text style={[styles.origValue, { color: getThemeColors().text.secondary }]}>
+          <Text style={[styles.origLabel, { color: c.text.muted }]}>Original</Text>
+          <Text style={[styles.origValue, { color: c.text.secondary }]}>
             {originalCalories} cal · {originalProtein}g P · {originalCarbs}g C · {originalFat}g F
           </Text>
         </View>
@@ -122,7 +122,7 @@ export function RecipeScalingModal({
             if (val > 0) onConfirm(val, targetMacro);
           }}
         >
-          <Text style={[styles.confirmText, { color: getThemeColors().text.primary }]}>Apply Scaling</Text>
+          <Text style={[styles.confirmText, { color: c.text.primary }]}>Apply Scaling</Text>
         </TouchableOpacity>
       </View>
     </ModalContainer>
@@ -131,20 +131,20 @@ export function RecipeScalingModal({
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   content: { padding: spacing[4] },
-  label: { fontSize: typography.size.sm, color: getThemeColors().text.muted, marginBottom: spacing[1], marginTop: spacing[3] },
+  label: { fontSize: typography.size.sm, color: c.text.muted, marginBottom: spacing[1], marginTop: spacing[3] },
   macroRow: { flexDirection: 'row', gap: spacing[2] },
-  macroPill: { paddingHorizontal: spacing[3], paddingVertical: spacing[1], borderRadius: 16, backgroundColor: getThemeColors().bg.surface },
-  macroPillActive: { backgroundColor: getThemeColors().accent.primary },
-  pillText: { fontSize: typography.size.sm, color: getThemeColors().text.secondary },
-  pillTextActive: { color: getThemeColors().text.primary, fontWeight: typography.weight.semibold },
-  input: { backgroundColor: getThemeColors().bg.surface, borderRadius: 8, padding: spacing[3], color: getThemeColors().text.primary, fontSize: typography.size.base },
-  preview: { marginTop: spacing[3], padding: spacing[3], backgroundColor: getThemeColors().bg.surface, borderRadius: 8 },
-  previewTitle: { fontSize: typography.size.sm, color: getThemeColors().accent.primary, marginBottom: spacing[1] },
-  previewMacros: { fontSize: typography.size.base, color: getThemeColors().text.primary },
+  macroPill: { paddingHorizontal: spacing[3], paddingVertical: spacing[1], borderRadius: 16, backgroundColor: c.bg.surface },
+  macroPillActive: { backgroundColor: c.accent.primary },
+  pillText: { fontSize: typography.size.sm, color: c.text.secondary },
+  pillTextActive: { color: c.text.primary, fontWeight: typography.weight.semibold },
+  input: { backgroundColor: c.bg.surface, borderRadius: 8, padding: spacing[3], color: c.text.primary, fontSize: typography.size.base },
+  preview: { marginTop: spacing[3], padding: spacing[3], backgroundColor: c.bg.surface, borderRadius: 8 },
+  previewTitle: { fontSize: typography.size.sm, color: c.accent.primary, marginBottom: spacing[1] },
+  previewMacros: { fontSize: typography.size.base, color: c.text.primary },
   row: { marginTop: spacing[2] },
-  origLabel: { fontSize: typography.size.xs, color: getThemeColors().text.muted },
-  origValue: { fontSize: typography.size.sm, color: getThemeColors().text.secondary },
-  confirmBtn: { marginTop: spacing[4], backgroundColor: getThemeColors().accent.primary, padding: spacing[3], borderRadius: 8, alignItems: 'center' },
+  origLabel: { fontSize: typography.size.xs, color: c.text.muted },
+  origValue: { fontSize: typography.size.sm, color: c.text.secondary },
+  confirmBtn: { marginTop: spacing[4], backgroundColor: c.accent.primary, padding: spacing[3], borderRadius: 8, alignItems: 'center' },
   confirmBtnDisabled: { opacity: 0.5 },
-  confirmText: { color: getThemeColors().text.primary, fontWeight: typography.weight.semibold },
+  confirmText: { color: c.text.primary, fontWeight: typography.weight.semibold },
 });

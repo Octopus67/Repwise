@@ -97,18 +97,18 @@ export function AlignedComparison({
   const rightInfo = formatPhotoInfo(rightPhoto);
 
   return (
-    <View style={[getStyles().container, { backgroundColor: getThemeColors().bg.base }]}>
+    <View style={[getStyles().container, { backgroundColor: c.bg.base }]}>
       <View style={getStyles().header}>
-        <Text style={[getStyles().title, { color: getThemeColors().text.primary }]}>Compare</Text>
+        <Text style={[getStyles().title, { color: c.text.primary }]}>Compare</Text>
         <TouchableOpacity onPress={onDismiss}>
-          <Text style={[getStyles().dismissText, { color: getThemeColors().text.secondary }]}>✕</Text>
+          <Text style={[getStyles().dismissText, { color: c.text.secondary }]}>✕</Text>
         </TouchableOpacity>
       </View>
 
       {loading ? (
         <View style={getStyles().loadingContainer}>
-          <ActivityIndicator color={getThemeColors().accent.primary} size="large" />
-          <Text style={[getStyles().loadingText, { color: getThemeColors().text.secondary }]}>Aligning photos...</Text>
+          <ActivityIndicator color={c.accent.primary} size="large" />
+          <Text style={[getStyles().loadingText, { color: c.text.secondary }]}>Aligning photos...</Text>
         </View>
       ) : (
         <View style={getStyles().row}>
@@ -127,6 +127,7 @@ interface ComparisonSideProps {
 }
 
 function ComparisonSide({ uri, info, transform }: ComparisonSideProps) {
+  const c = useThemeColors();
   const imageStyle = {
     width: SIDE_WIDTH,
     height: PHOTO_HEIGHT,
@@ -138,19 +139,19 @@ function ComparisonSide({ uri, info, transform }: ComparisonSideProps) {
   };
 
   return (
-    <View style={[getStyles().side, { backgroundColor: getThemeColors().bg.surface }]}>
+    <View style={[getStyles().side, { backgroundColor: c.bg.surface }]}>
       <View style={getStyles().photoClip}>
         {uri ? (
           <Image source={{ uri }} style={imageStyle} resizeMode="cover" />
         ) : (
           <View style={[getStyles().photoPlaceholder, { width: SIDE_WIDTH, height: PHOTO_HEIGHT }]}>
-            <Text style={[getStyles().placeholderText, { color: getThemeColors().text.muted }]}>No photo</Text>
+            <Text style={[getStyles().placeholderText, { color: c.text.muted }]}>No photo</Text>
           </View>
         )}
       </View>
       <View style={getStyles().infoRow}>
-        <Text style={[getStyles().dateText, { color: getThemeColors().text.primary }]}>{info.dateLabel}</Text>
-        {info.weightLabel && <Text style={[getStyles().weightText, { color: getThemeColors().accent.primary }]}>{info.weightLabel}</Text>}
+        <Text style={[getStyles().dateText, { color: c.text.primary }]}>{info.dateLabel}</Text>
+        {info.weightLabel && <Text style={[getStyles().weightText, { color: c.accent.primary }]}>{info.weightLabel}</Text>}
       </View>
     </View>
   );
@@ -162,7 +163,7 @@ function getStyles() { return getThemedStyles(getThemeColors()); }
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.base,
+    backgroundColor: c.bg.base,
     paddingTop: spacing[4],
   },
   header: {
@@ -173,12 +174,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[4],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
   },
   dismissText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.xl,
   },
   loadingContainer: {
@@ -187,7 +188,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     marginTop: spacing[2],
   },
@@ -200,7 +201,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     width: SIDE_WIDTH,
     borderRadius: radius.md,
     overflow: 'hidden',
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
   },
   photoClip: {
     width: SIDE_WIDTH,
@@ -208,12 +209,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     overflow: 'hidden',
   },
   photoPlaceholder: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
   },
   placeholderText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
   },
   infoRow: {
@@ -221,12 +222,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   dateText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
   },
   weightText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
     marginTop: 2,

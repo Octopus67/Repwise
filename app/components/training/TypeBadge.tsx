@@ -20,8 +20,8 @@ export function TypeBadge({ setType }: TypeBadgeProps) {
   if (!label) return null;
 
   return (
-    <View style={[styles.pill, { backgroundColor: getThemeColors().accent.primaryMuted }]}>
-      <Text style={[styles.label, { color: getThemeColors().accent.primary }]}>{label}</Text>
+    <View style={[styles.pill, { backgroundColor: c.accent.primaryMuted }]}>
+      <Text style={[styles.label, { color: c.accent.primary }]}>{label}</Text>
     </View>
   );
 }
@@ -30,7 +30,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   pill: {
     height: 20,
     borderRadius: radius.full,
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
@@ -38,6 +38,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   label: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
   },
 });

@@ -19,19 +19,20 @@ interface StrengthStandardsCardProps {
   bodyweightKg: number | null;
 }
 
-const LEVEL_COLORS: Record<string, string> = {
-  beginner: getThemeColors().text.muted,
-  intermediate: getThemeColors().semantic.warning,
-  advanced: getThemeColors().accent.primary,
-  elite: getThemeColors().premium.gold,
-};
+const getLEVEL_COLORS = (c: ThemeColors): Record<string, string> => ({
+  beginner: c.text.muted,
+  intermediate: c.semantic.warning,
+  advanced: c.accent.primary,
+  elite: c.premium.gold,
+});
 
 function formatExerciseName(name: string): string {
   return name.split(' ').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
 }
 
 function LevelBadge({ level }: { level: string }) {
-  const color = LEVEL_COLORS[level] ?? getThemeColors().text.muted;
+  const c = useThemeColors();
+  const color = getLEVEL_COLORS(c)[level] ?? c.text.muted;
   return (
     <View style={[getStyles().badge, { borderColor: color }]}>
       <Text style={[getStyles().badgeText, { color }]}>
@@ -48,8 +49,8 @@ export function StrengthStandardsCard({ classifications, bodyweightKg }: Strengt
     return (
       <Card>
         <View style={getStyles().emptyContainer}>
-          <Icon name="scale" size={24} color={getThemeColors().text.muted} />
-          <Text style={[getStyles().emptyText, { color: getThemeColors().text.muted }]}>Log your bodyweight to see strength standards</Text>
+          <Icon name="scale" size={24} color={c.text.muted} />
+          <Text style={[getStyles().emptyText, { color: c.text.muted }]}>Log your bodyweight to see strength standards</Text>
         </View>
       </Card>
     );
@@ -59,8 +60,8 @@ export function StrengthStandardsCard({ classifications, bodyweightKg }: Strengt
     return (
       <Card>
         <View style={getStyles().emptyContainer}>
-          <Icon name="dumbbell" size={24} color={getThemeColors().text.muted} />
-          <Text style={[getStyles().emptyText, { color: getThemeColors().text.muted }]}>Log training sessions with supported lifts to see standards</Text>
+          <Icon name="dumbbell" size={24} color={c.text.muted} />
+          <Text style={[getStyles().emptyText, { color: c.text.muted }]}>Log training sessions with supported lifts to see standards</Text>
         </View>
       </Card>
     );
@@ -68,15 +69,15 @@ export function StrengthStandardsCard({ classifications, bodyweightKg }: Strengt
 
   return (
     <Card>
-      {classifications.map((c, idx) => (
-        <View key={c.exercise_name} style={[getStyles().row, idx > 0 && getStyles().rowBorder]}>
+      {classifications.map((item, idx) => (
+        <View key={item.exercise_name} style={[getStyles().row, idx > 0 && getStyles().rowBorder]}>
           <View style={getStyles().rowLeft}>
-            <Text style={[getStyles().exerciseName, { color: getThemeColors().text.primary }]}>{formatExerciseName(c.exercise_name)}</Text>
-            <Text style={[getStyles().ratio, { color: getThemeColors().text.secondary }]}>{c.bodyweight_ratio.toFixed(2)}× BW</Text>
+            <Text style={[getStyles().exerciseName, { color: c.text.primary }]}>{formatExerciseName(item.exercise_name)}</Text>
+            <Text style={[getStyles().ratio, { color: c.text.secondary }]}>{item.bodyweight_ratio.toFixed(2)}× BW</Text>
           </View>
           <View style={getStyles().rowRight}>
-            <LevelBadge level={c.level} />
-            <Text style={[getStyles().e1rm, { color: getThemeColors().text.secondary }]}>{Math.round(c.e1rm_kg)} kg</Text>
+            <LevelBadge level={item.level} />
+            <Text style={[getStyles().e1rm, { color: c.text.secondary }]}>{Math.round(item.e1rm_kg)} kg</Text>
           </View>
         </View>
       ))}
@@ -94,7 +95,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[4],
   },
   emptyText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     textAlign: 'center',
   },
@@ -106,22 +107,22 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   rowBorder: {
     borderTopWidth: 1,
-    borderTopColor: getThemeColors().border.subtle,
+    borderTopColor: c.border.subtle,
   },
   rowLeft: { flex: 1 },
   rowRight: { alignItems: 'flex-end', gap: spacing[1] },
   exerciseName: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
   ratio: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.xs,
     marginTop: 2,
   },
   e1rm: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.xs,
   },
   badge: {

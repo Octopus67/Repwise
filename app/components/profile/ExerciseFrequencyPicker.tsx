@@ -42,7 +42,7 @@ export function ExerciseFrequencyPicker({ value, onChange }: Props) {
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: { marginBottom: spacing[3] },
   label: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
@@ -53,22 +53,22 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: radius.md,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
   btnActive: {
-    borderColor: getThemeColors().accent.primary,
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    borderColor: c.accent.primary,
+    backgroundColor: c.accent.primaryMuted,
   },
   text: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     fontVariant: ['tabular-nums'],
     lineHeight: typography.lineHeight.base,
   },
-  textActive: { color: getThemeColors().accent.primary },
+  textActive: { color: c.accent.primary },
 });

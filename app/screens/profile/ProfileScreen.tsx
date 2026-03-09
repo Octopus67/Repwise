@@ -18,6 +18,7 @@ import { Icon } from '../../components/common/Icon';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { EditableField } from '../../components/common/EditableField';
+import { AvatarUpload } from '../../components/common/AvatarUpload';
 import { SectionHeader } from '../../components/common/SectionHeader';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { Skeleton } from '../../components/common/Skeleton';
@@ -127,6 +128,19 @@ export function ProfileScreen() {
     store.setProfile({ ...store.profile!, displayName: trimmed });
   };
 
+  const handleAvatarUpload = async (uri: string) => {
+    const formData = new FormData();
+    formData.append('avatar', {
+      uri,
+      name: 'avatar.jpg',
+      type: 'image/jpeg',
+    } as any);
+    const { data } = await api.put('users/profile/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    store.setProfile({ ...store.profile!, avatarUrl: data.avatar_url ?? uri });
+  };
+
   const handleLogout = async () => {
     await secureClear();
     store.clearAuth();
@@ -173,9 +187,11 @@ export function ProfileScreen() {
         )}
         <Animated.View style={headerAnim}>
           <Card style={styles.profileCard}>
-            <View style={[styles.avatarCircle, { backgroundColor: c.accent.primaryMuted }]}>
-              <Text style={[styles.avatarText, { color: c.accent.primary }]}>{avatarInitial}</Text>
-            </View>
+            <AvatarUpload
+              avatarUrl={store.profile?.avatarUrl ?? null}
+              initial={avatarInitial}
+              onUpload={handleAvatarUpload}
+            />
             {premium && <PremiumBadge size="md" />}
             <View style={styles.fieldsContainer}>
               <EditableField label="Display Name" value={store.profile?.displayName || 'Set your name'} onSave={handleSaveDisplayName} />
@@ -263,17 +279,17 @@ export function ProfileScreen() {
 
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: getThemeColors().bg.base },
+  safe: { flex: 1, backgroundColor: c.bg.base },
   container: { flex: 1 },
   content: { padding: spacing[4], paddingBottom: spacing[12], gap: spacing[4] },
   profileCard: { alignItems: 'center', paddingVertical: spacing[6] },
   avatarCircle: {
     width: 64, height: 64, borderRadius: radius.full,
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
     alignItems: 'center', justifyContent: 'center', marginBottom: spacing[3],
   },
   avatarText: {
-    color: getThemeColors().accent.primary, fontSize: typography.size['2xl'],
+    color: c.accent.primary, fontSize: typography.size['2xl'],
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight['2xl'],
   },
@@ -281,19 +297,19 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignSelf: 'stretch', paddingHorizontal: spacing[4], marginTop: spacing[3],
   },
   memberSince: {
-    color: getThemeColors().text.muted, fontSize: typography.size.sm,
+    color: c.text.muted, fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     marginTop: spacing[3], textAlign: 'center',
   },
   subRow: {
     flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing[2],
   },
-  subLabel: { color: getThemeColors().text.secondary, fontSize: typography.size.base, lineHeight: typography.lineHeight.base },
+  subLabel: { color: c.text.secondary, fontSize: typography.size.base, lineHeight: typography.lineHeight.base },
   subValue: {
-    color: getThemeColors().text.primary, fontSize: typography.size.base,
+    color: c.text.primary, fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.base,
   },
-  subActive: { color: getThemeColors().semantic.positive },
+  subActive: { color: c.semantic.positive },
   upgradeBtn: { marginTop: spacing[4] },
 });

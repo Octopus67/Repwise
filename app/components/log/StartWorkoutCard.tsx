@@ -40,9 +40,9 @@ export function StartWorkoutCard({
   };
 
   return (
-    <View style={[styles.card, { backgroundColor: getThemeColors().accent.primaryMuted }]}>
+    <View style={[styles.card, { backgroundColor: c.accent.primaryMuted }]}>
       {/* 5.2: Title */}
-      <Text style={[styles.title, { color: getThemeColors().text.primary }]}>🏋️ Start Workout</Text>
+      <Text style={[styles.title, { color: c.text.primary }]}>🏋️ Start Workout</Text>
 
       {/* 5.3 / 5.5: Buttons */}
       <View style={styles.buttonRow}>
@@ -54,7 +54,7 @@ export function StartWorkoutCard({
               accessibilityRole="button"
               accessibilityLabel="Start empty workout"
             >
-              <Text style={[styles.buttonText, { color: getThemeColors().text.inverse }]}>Empty Workout</Text>
+              <Text style={[styles.buttonText, { color: c.text.inverse }]}>Empty Workout</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -63,7 +63,7 @@ export function StartWorkoutCard({
               accessibilityRole="button"
               accessibilityLabel="Start workout from template"
             >
-              <Text style={[styles.buttonText, { color: getThemeColors().text.inverse }]}>From Template</Text>
+              <Text style={[styles.buttonText, { color: c.text.inverse }]}>From Template</Text>
             </TouchableOpacity>
           </>
         ) : (
@@ -74,27 +74,27 @@ export function StartWorkoutCard({
             accessibilityRole="button"
             accessibilityLabel="Start workout"
           >
-            <Text style={[styles.buttonText, { color: getThemeColors().text.inverse }]}>Start Workout</Text>
+            <Text style={[styles.buttonText, { color: c.text.inverse }]}>Start Workout</Text>
           </TouchableOpacity>
         )}
       </View>
 
       {/* 5.4: Template picker */}
       {showPicker && hasTemplates && (
-        <View style={[styles.picker, { backgroundColor: getThemeColors().bg.surfaceRaised }]}>
+        <View style={[styles.picker, { backgroundColor: c.bg.surfaceRaised }]}>
           {userTemplates.length > 0 && (
             <>
-              <Text style={[styles.subheader, { color: getThemeColors().text.secondary }]}>My Templates</Text>
+              <Text style={[styles.subheader, { color: c.text.secondary }]}>My Templates</Text>
               {userTemplates.map((t) => (
                 <TouchableOpacity
                   key={t.id}
-                  style={[styles.templateRow, { borderBottomColor: getThemeColors().border.subtle }]}
+                  style={[styles.templateRow, { borderBottomColor: c.border.subtle }]}
                   onPress={() => handleSelectTemplate(t.id)}
                   accessibilityRole="button"
                   accessibilityLabel={`Start ${t.name}`}
                 >
-                  <Text style={[styles.templateName, { color: getThemeColors().text.primary }]} numberOfLines={1}>{t.name}</Text>
-                  <Text style={[styles.exerciseCount, { color: getThemeColors().text.muted }]}>
+                  <Text style={[styles.templateName, { color: c.text.primary }]} numberOfLines={1}>{t.name}</Text>
+                  <Text style={[styles.exerciseCount, { color: c.text.muted }]}>
                     {t.exercises.length} exercise{t.exercises.length !== 1 ? 's' : ''}
                   </Text>
                 </TouchableOpacity>
@@ -104,17 +104,17 @@ export function StartWorkoutCard({
 
           {staticTemplates.length > 0 && (
             <>
-              <Text style={[styles.subheader, { color: getThemeColors().text.secondary }]}>Pre-built</Text>
+              <Text style={[styles.subheader, { color: c.text.secondary }]}>Pre-built</Text>
               {staticTemplates.map((t) => (
                 <TouchableOpacity
                   key={t.id}
-                  style={[styles.templateRow, { borderBottomColor: getThemeColors().border.subtle }]}
+                  style={[styles.templateRow, { borderBottomColor: c.border.subtle }]}
                   onPress={() => handleSelectTemplate(t.id)}
                   accessibilityRole="button"
                   accessibilityLabel={`Start ${t.name}`}
                 >
-                  <Text style={[styles.templateName, { color: getThemeColors().text.primary }]} numberOfLines={1}>{t.name}</Text>
-                  <Text style={[styles.exerciseCount, { color: getThemeColors().text.muted }]}>
+                  <Text style={[styles.templateName, { color: c.text.primary }]} numberOfLines={1}>{t.name}</Text>
+                  <Text style={[styles.exerciseCount, { color: c.text.muted }]}>
                     {t.exercises.length} exercise{t.exercises.length !== 1 ? 's' : ''}
                   </Text>
                 </TouchableOpacity>
@@ -132,7 +132,7 @@ export function StartWorkoutCard({
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   card: {
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
     borderRadius: radius.md,
     padding: spacing[4],
     marginBottom: spacing[4],
@@ -140,7 +140,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   title: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     marginBottom: spacing[3],
   },
   buttonRow: {
@@ -148,7 +148,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[2],
   },
   button: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.sm,
     paddingVertical: spacing[3],
     alignItems: 'center',
@@ -161,23 +161,23 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     flex: 1,
   },
   buttonActive: {
-    backgroundColor: getThemeColors().accent.primaryHover,
+    backgroundColor: c.accent.primaryHover,
   },
   buttonText: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
-    color: getThemeColors().text.inverse,
+    color: c.text.inverse,
   },
   picker: {
     marginTop: spacing[3],
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     padding: spacing[3],
   },
   subheader: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     marginBottom: spacing[2],
     marginTop: spacing[2],
     textTransform: 'uppercase',
@@ -190,18 +190,18 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[2],
     paddingHorizontal: spacing[2],
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.subtle,
+    borderBottomColor: c.border.subtle,
   },
   templateName: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     flex: 1,
     marginRight: spacing[2],
   },
   exerciseCount: {
     fontSize: typography.size.sm,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
   },
 });
 

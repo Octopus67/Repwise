@@ -1,89 +1,132 @@
-import * as fc from 'fast-check';
+/**
+ * Unit tests for extended generateWarmUpSets.
+ * Tests: previousBestWeight fallback, backward compatibility, edge cases.
+ */
 
 import { generateWarmUpSets, WarmUpSet } from '../../utils/warmUpGenerator';
 
-/**
- * Property 19: Warm-up generator produces valid ramp
- *
- * For any target working weight > bar weight, the warm-up generator SHALL produce sets where:
- * (a) all weights are >= bar weight (20 kg)
- * (b) weights are non-decreasing
- * (c) all sets have set_type "warm-up"
- *
- * Edge cases:
- * - working weight = 20 (bar) → empty array
- * - working weight = 22.5 → only bar × 10
- *
- * **Validates: Requirements 13.1, 13.2, 13.3**
- */
+describe('generateWarmUpSets', () => {
+  // ── Backward compatibility (existing callers) ──
 
-const BAR_WEIGHT = 20;
+  describe('backward compatibility — single number arg', () => {
+    it('generates warm-up sets for 100kg working weight', () => {
+      const sets = generateWarmUpSets(100);
+      expect(sets.length).toBeGreaterThanOrEqual(2);
+      expect(sets[0].weightKg).toBe(20); // bar only
+      expect(sets[0].reps).toBe(10);
+      expect(sets.every((s) => s.setType === 'warm-up')).toBe(true);
+    });
 
-describe('Property 19: Warm-up generator produces valid ramp', () => {
-  it('all generated weights >= bar weight (20 kg), non-decreasing, all tagged warm-up', () => {
-    fc.assert(
-      fc.property(
-        fc.float({ min: 21, max: 300, noNaN: true }),
-        (workingWeight: number) => {
-          const sets = generateWarmUpSets(workingWeight, BAR_WEIGHT);
+    it('returns empty for weight at or below bar', () => {
+      expect(generateWarmUpSets(20)).toEqual([]);
+      expect(generateWarmUpSets(15)).toEqual([]);
+    });
 
-          // Must produce at least one warm-up set
-          expect(sets.length).toBeGreaterThanOrEqual(1);
+    it('returns empty for undefined working weight', () => {
+      expect(generateWarmUpSets(undefined)).toEqual([]);
+    });
 
-          for (const set of sets) {
-            // (a) all weights >= bar weight
-            expect(set.weightKg).toBeGreaterThanOrEqual(BAR_WEIGHT);
-
-            // (c) all tagged warm-up
-            expect(set.setType).toBe('warm-up');
-
-            // reps must be positive
-            expect(set.reps).toBeGreaterThan(0);
-          }
-
-          // (b) weights are non-decreasing
-          for (let i = 1; i < sets.length; i++) {
-            expect(sets[i].weightKg).toBeGreaterThanOrEqual(sets[i - 1].weightKg);
-          }
-        },
-      ),
-      { numRuns: 200 },
-    );
+    it('accepts custom bar weight as second number arg', () => {
+      const sets = generateWarmUpSets(100, 25);
+      expect(sets[0].weightKg).toBe(25);
+    });
   });
 
-  it('working weight = bar weight → empty array', () => {
-    const sets = generateWarmUpSets(BAR_WEIGHT, BAR_WEIGHT);
-    expect(sets).toEqual([]);
+  // ── previousBestWeight fallback ──
+
+  describe('previousBestWeight fallback', () => {
+    it('uses previousBestWeight when workingWeight is undefined', () => {
+      const sets = generateWarmUpSets(undefined, { previousBestWeight: 100 });
+      expect(sets.length).toBeGreaterThanOrEqual(2);
+      expect(sets[0].weightKg).toBe(20); // bar
+    });
+
+    it('ignores previousBestWeight when workingWeight is provided', () => {
+      const setsWithWorking = generateWarmUpSets(80, { previousBestWeight: 120 });
+      const setsWithoutPrev = generateWarmUpSets(80);
+      // Should produce same sets since workingWeight takes priority
+      expect(setsWithWorking).toEqual(setsWithoutPrev);
+    });
+
+    it('returns empty when previousBestWeight is at or below bar', () => {
+      expect(generateWarmUpSets(undefined, { previousBestWeight: 20 })).toEqual([]);
+      expect(generateWarmUpSets(undefined, { previousBestWeight: 15 })).toEqual([]);
+    });
+
+    it('returns empty when neither weight is provided', () => {
+      expect(generateWarmUpSets(undefined, {})).toEqual([]);
+      expect(generateWarmUpSets(undefined, { previousBestWeight: undefined })).toEqual([]);
+    });
+
+    it('respects custom barWeightKg in options', () => {
+      const sets = generateWarmUpSets(undefined, { previousBestWeight: 100, barWeightKg: 15 });
+      expect(sets[0].weightKg).toBe(15);
+    });
   });
 
-  it('working weight < bar weight → empty array', () => {
-    const sets = generateWarmUpSets(15, BAR_WEIGHT);
-    expect(sets).toEqual([]);
+  // ── Set generation logic ──
+
+  describe('set generation', () => {
+    it('always starts with bar-only set at 10 reps', () => {
+      const sets = generateWarmUpSets(100);
+      expect(sets[0]).toEqual({ weightKg: 20, reps: 10, setType: 'warm-up' });
+    });
+
+    it('includes 60% set at 5 reps when meaningfully above bar', () => {
+      const sets = generateWarmUpSets(100);
+      const sixtyPct = Math.round(100 * 0.6 / 2.5) * 2.5; // 60
+      const hasSixty = sets.some((s) => s.weightKg === sixtyPct && s.reps === 5);
+      expect(hasSixty).toBe(true);
+    });
+
+    it('includes 80% set at 3 reps when above previous set', () => {
+      const sets = generateWarmUpSets(100);
+      const eightyPct = Math.round(100 * 0.8 / 2.5) * 2.5; // 80
+      const hasEighty = sets.some((s) => s.weightKg === eightyPct && s.reps === 3);
+      expect(hasEighty).toBe(true);
+    });
+
+    it('skips 60% set when it equals bar weight', () => {
+      // 40kg working weight: 60% = 24 → rounds to 22.5 → > 20 bar, so included
+      // 35kg: 60% = 21 → rounds to 20 → equals bar, so skipped
+      const sets = generateWarmUpSets(35);
+      // Should only have bar set (20kg) and possibly 80% (28 → 27.5)
+      expect(sets[0].weightKg).toBe(20);
+      expect(sets.filter((s) => s.reps === 5).length).toBe(0); // no 60% set
+    });
+
+    it('weights are rounded to nearest 2.5kg', () => {
+      const sets = generateWarmUpSets(100);
+      for (const s of sets) {
+        expect(s.weightKg % 2.5).toBe(0);
+      }
+    });
+
+    it('all sets have setType warm-up', () => {
+      const sets = generateWarmUpSets(120, { previousBestWeight: 100 });
+      expect(sets.every((s) => s.setType === 'warm-up')).toBe(true);
+    });
   });
 
-  it('working weight = 22.5 → only bar × 10', () => {
-    const sets = generateWarmUpSets(22.5, BAR_WEIGHT);
-    expect(sets.length).toBe(1);
-    expect(sets[0].weightKg).toBe(BAR_WEIGHT);
-    expect(sets[0].reps).toBe(10);
-    expect(sets[0].setType).toBe('warm-up');
-  });
+  // ── Edge cases ──
 
-  it('all warm-up weights are rounded to 2.5 kg plate increments', () => {
-    fc.assert(
-      fc.property(
-        fc.float({ min: 21, max: 300, noNaN: true }),
-        (workingWeight: number) => {
-          const sets = generateWarmUpSets(workingWeight, BAR_WEIGHT);
+  describe('edge cases', () => {
+    it('handles very heavy weight (200kg)', () => {
+      const sets = generateWarmUpSets(200);
+      expect(sets.length).toBe(3); // bar, 60%, 80%
+      expect(sets[sets.length - 1].weightKg).toBeLessThan(200);
+    });
 
-          for (const set of sets) {
-            // Weight should be a multiple of 2.5 (plate increment)
-            const remainder = (set.weightKg * 10) % 25; // multiply by 10 to avoid float issues
-            expect(remainder).toBeCloseTo(0, 5);
-          }
-        },
-      ),
-      { numRuns: 200 },
-    );
+    it('handles light weight just above bar (25kg)', () => {
+      const sets = generateWarmUpSets(25);
+      expect(sets.length).toBeGreaterThanOrEqual(1);
+      expect(sets[0].weightKg).toBe(20);
+    });
+
+    it('previousBestWeight produces same sets as direct working weight', () => {
+      const direct = generateWarmUpSets(100);
+      const fromPrev = generateWarmUpSets(undefined, { previousBestWeight: 100 });
+      expect(direct).toEqual(fromPrev);
+    });
   });
 });

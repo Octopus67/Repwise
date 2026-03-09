@@ -15,14 +15,14 @@ export function SearchBar({ value, onChangeText, onClear, resultCount }: SearchB
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   return (
-    <View style={[styles.container, { backgroundColor: getThemeColors().bg.base }]}>
-      <View style={[styles.inputRow, { backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]}>
+    <View style={[styles.container, { backgroundColor: c.bg.base }]}>
+      <View style={[styles.inputRow, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
         <TextInput
-          style={[styles.input, { color: getThemeColors().text.primary }]}
+          style={[styles.input, { color: c.text.primary }]}
           value={value}
           onChangeText={onChangeText}
           placeholder="Search exercises..."
-          placeholderTextColor={getThemeColors().text.muted}
+          placeholderTextColor={c.text.muted}
           autoCorrect={false}
           returnKeyType="search"
           accessibilityLabel="Search exercises"
@@ -34,12 +34,12 @@ export function SearchBar({ value, onChangeText, onClear, resultCount }: SearchB
             accessibilityLabel="Clear search"
             accessibilityRole="button"
           >
-            <Icon name="close" size={16} color={getThemeColors().text.muted} />
+            <Icon name="close" size={16} color={c.text.muted} />
           </TouchableOpacity>
         )}
       </View>
       {resultCount != null && resultCount > 0 && (
-        <Text style={[styles.resultCount, { color: getThemeColors().text.muted }]}>{resultCount} exercises</Text>
+        <Text style={[styles.resultCount, { color: c.text.muted }]}>{resultCount} exercises</Text>
       )}
     </View>
   );
@@ -49,19 +49,19 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[2],
-    backgroundColor: getThemeColors().bg.base,
+    backgroundColor: c.bg.base,
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
   },
   input: {
     flex: 1,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
@@ -72,7 +72,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   clearText: {},
   resultCount: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     marginTop: spacing[1],
   },

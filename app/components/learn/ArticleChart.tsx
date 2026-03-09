@@ -30,17 +30,17 @@ interface ArticleChartProps {
 
 // ─── Chart registry ──────────────────────────────────────────────────────────
 
-const CHART_REGISTRY: Record<string, ChartConfig> = {
+const getCHART_REGISTRY = (c: ThemeColors): Record<string, ChartConfig> => ({
   'volume-dose-response': {
     type: 'bar',
     title: 'Weekly Sets vs Muscle Growth',
     subtitle: 'Estimated hypertrophy by weekly set volume',
     suffix: '%',
     data: [
-      { label: '5 sets/wk', value: 3.9, color: getThemeColors().accent.primary },
-      { label: '10 sets/wk', value: 6.8, color: getThemeColors().semantic.positive },
-      { label: '15 sets/wk', value: 8.0, color: getThemeColors().semantic.warning },
-      { label: '20 sets/wk', value: 8.5, color: getThemeColors().semantic.negative },
+      { label: '5 sets/wk', value: 3.9, color: c.accent.primary },
+      { label: '10 sets/wk', value: 6.8, color: c.semantic.positive },
+      { label: '15 sets/wk', value: 8.0, color: c.semantic.warning },
+      { label: '20 sets/wk', value: 8.5, color: c.semantic.negative },
     ] as BarDatum[],
   },
 
@@ -52,8 +52,8 @@ const CHART_REGISTRY: Record<string, ChartConfig> = {
       {
         label: 'Hypertrophy Effect Size',
         values: [
-          { name: '1×/week', value: 0.30, color: getThemeColors().text.muted },
-          { name: '2×/week', value: 0.49, color: getThemeColors().semantic.positive },
+          { name: '1×/week', value: 0.30, color: c.text.muted },
+          { name: '2×/week', value: 0.49, color: c.semantic.positive },
         ],
       },
     ] as ComparisonDatum[],
@@ -65,11 +65,11 @@ const CHART_REGISTRY: Record<string, ChartConfig> = {
     subtitle: 'Relative gain at different daily protein intakes',
     suffix: '%',
     data: [
-      { label: '0.8 g/kg', value: 40, color: getThemeColors().text.muted },
-      { label: '1.2 g/kg', value: 68, color: getThemeColors().accent.primary },
-      { label: '1.6 g/kg', value: 95, color: getThemeColors().semantic.positive },
-      { label: '2.0 g/kg', value: 100, color: getThemeColors().semantic.positive },
-      { label: '2.4 g/kg', value: 100, color: getThemeColors().semantic.warning },
+      { label: '0.8 g/kg', value: 40, color: c.text.muted },
+      { label: '1.2 g/kg', value: 68, color: c.accent.primary },
+      { label: '1.6 g/kg', value: 95, color: c.semantic.positive },
+      { label: '2.0 g/kg', value: 100, color: c.semantic.positive },
+      { label: '2.4 g/kg', value: 100, color: c.semantic.warning },
     ] as BarDatum[],
   },
 
@@ -81,15 +81,15 @@ const CHART_REGISTRY: Record<string, ChartConfig> = {
       {
         label: 'Strength Gain',
         values: [
-          { name: '60s rest', value: 0.34, color: getThemeColors().semantic.negative },
-          { name: '2-3min rest', value: 0.63, color: getThemeColors().semantic.positive },
+          { name: '60s rest', value: 0.34, color: c.semantic.negative },
+          { name: '2-3min rest', value: 0.63, color: c.semantic.positive },
         ],
       },
       {
         label: 'Hypertrophy',
         values: [
-          { name: '60s rest', value: 0.28, color: getThemeColors().semantic.negative },
-          { name: '2-3min rest', value: 0.49, color: getThemeColors().semantic.positive },
+          { name: '60s rest', value: 0.28, color: c.semantic.negative },
+          { name: '2-3min rest', value: 0.49, color: c.semantic.positive },
         ],
       },
     ] as ComparisonDatum[],
@@ -103,15 +103,15 @@ const CHART_REGISTRY: Record<string, ChartConfig> = {
       {
         label: 'Hypertrophy',
         values: [
-          { name: 'To Failure', value: 0.19, color: getThemeColors().semantic.positive },
-          { name: 'Not to Failure', value: 0.00, color: getThemeColors().text.muted },
+          { name: 'To Failure', value: 0.19, color: c.semantic.positive },
+          { name: 'Not to Failure', value: 0.00, color: c.text.muted },
         ],
       },
       {
         label: 'Strength',
         values: [
-          { name: 'To Failure', value: 0.12, color: getThemeColors().accent.primary },
-          { name: 'Not to Failure', value: 0.11, color: getThemeColors().text.muted },
+          { name: 'To Failure', value: 0.12, color: c.accent.primary },
+          { name: 'Not to Failure', value: 0.11, color: c.text.muted },
         ],
       },
     ] as ComparisonDatum[],
@@ -125,8 +125,8 @@ const CHART_REGISTRY: Record<string, ChartConfig> = {
       {
         label: 'Hypertrophy',
         values: [
-          { name: 'Peri-workout', value: 0.28, color: getThemeColors().accent.primary },
-          { name: 'Any time', value: 0.24, color: getThemeColors().text.muted },
+          { name: 'Peri-workout', value: 0.28, color: c.accent.primary },
+          { name: 'Any time', value: 0.24, color: c.text.muted },
         ],
       },
     ] as ComparisonDatum[],
@@ -137,9 +137,9 @@ const CHART_REGISTRY: Record<string, ChartConfig> = {
     title: 'Periodization Models vs No Plan',
     subtitle: 'Effect size for strength gains',
     data: [
-      { label: 'No Plan', value: 0.54, color: getThemeColors().text.muted },
-      { label: 'Linear', value: 0.78, color: getThemeColors().accent.primary },
-      { label: 'Undulating', value: 0.82, color: getThemeColors().semantic.positive },
+      { label: 'No Plan', value: 0.54, color: c.text.muted },
+      { label: 'Linear', value: 0.78, color: c.accent.primary },
+      { label: 'Undulating', value: 0.82, color: c.semantic.positive },
     ] as BarDatum[],
   },
 
@@ -149,11 +149,11 @@ const CHART_REGISTRY: Record<string, ChartConfig> = {
     subtitle: 'Relative importance for successful recomp',
     suffix: '%',
     data: [
-      { label: 'Protein 2.0+ g/kg', value: 95, color: getThemeColors().semantic.positive },
-      { label: 'Moderate deficit', value: 90, color: getThemeColors().semantic.positive },
-      { label: 'Resistance training', value: 85, color: getThemeColors().accent.primary },
-      { label: 'Sleep 7-9h', value: 75, color: getThemeColors().semantic.warning },
-      { label: 'Slow loss rate', value: 70, color: getThemeColors().semantic.warning },
+      { label: 'Protein 2.0+ g/kg', value: 95, color: c.semantic.positive },
+      { label: 'Moderate deficit', value: 90, color: c.semantic.positive },
+      { label: 'Resistance training', value: 85, color: c.accent.primary },
+      { label: 'Sleep 7-9h', value: 75, color: c.semantic.warning },
+      { label: 'Slow loss rate', value: 70, color: c.semantic.warning },
     ] as BarDatum[],
   },
 
@@ -162,13 +162,13 @@ const CHART_REGISTRY: Record<string, ChartConfig> = {
     title: 'Creatine Supplementation Effects',
     subtitle: 'Measured improvements with creatine monohydrate',
     data: [
-      { label: 'Lean mass', value: 1.4, color: getThemeColors().semantic.positive },
-      { label: 'Strength', value: 8, color: getThemeColors().semantic.positive },
-      { label: 'Sprint', value: 5, color: getThemeColors().accent.primary },
-      { label: 'Volume', value: 14, color: getThemeColors().semantic.positive },
+      { label: 'Lean mass', value: 1.4, color: c.semantic.positive },
+      { label: 'Strength', value: 8, color: c.semantic.positive },
+      { label: 'Sprint', value: 5, color: c.accent.primary },
+      { label: 'Volume', value: 14, color: c.semantic.positive },
     ] as BarDatum[],
   },
-};
+});
 
 // ─── Bar Chart ───────────────────────────────────────────────────────────────
 
@@ -179,6 +179,7 @@ const VALUE_WIDTH = 50;
 const BAR_AREA_WIDTH = 180;
 
 function BarChart({ data, suffix }: { data: BarDatum[]; suffix?: string }) {
+  const c = useThemeColors();
   const maxVal = Math.max(...data.map((d) => d.value));
   const svgHeight = data.length * (BAR_HEIGHT + BAR_GAP) - BAR_GAP + 8;
   const svgWidth = LABEL_WIDTH + BAR_AREA_WIDTH + VALUE_WIDTH;
@@ -188,7 +189,7 @@ function BarChart({ data, suffix }: { data: BarDatum[]; suffix?: string }) {
       {data.map((d, i) => {
         const y = i * (BAR_HEIGHT + BAR_GAP);
         const barWidth = maxVal > 0 ? (d.value / maxVal) * BAR_AREA_WIDTH : 0;
-        const barColor = d.color ?? getThemeColors().accent.primary;
+        const barColor = d.color ?? c.accent.primary;
 
         return (
           <View key={d.label}>
@@ -197,7 +198,7 @@ function BarChart({ data, suffix }: { data: BarDatum[]; suffix?: string }) {
               x={LABEL_WIDTH - 6}
               y={y + BAR_HEIGHT / 2 + 4}
               textAnchor="end"
-              fill={getThemeColors().text.secondary}
+              fill={c.text.secondary}
               fontSize={11}
               fontWeight="500"
             >
@@ -211,7 +212,7 @@ function BarChart({ data, suffix }: { data: BarDatum[]; suffix?: string }) {
               width={BAR_AREA_WIDTH}
               height={BAR_HEIGHT - 4}
               rx={4}
-              fill={getThemeColors().bg.surfaceRaised}
+              fill={c.bg.surfaceRaised}
             />
 
             {/* Bar fill */}
@@ -230,7 +231,7 @@ function BarChart({ data, suffix }: { data: BarDatum[]; suffix?: string }) {
               x={LABEL_WIDTH + BAR_AREA_WIDTH + 8}
               y={y + BAR_HEIGHT / 2 + 4}
               textAnchor="start"
-              fill={getThemeColors().text.primary}
+              fill={c.text.primary}
               fontSize={11}
               fontWeight="600"
             >
@@ -250,6 +251,7 @@ const COMP_BAR_MAX_HEIGHT = 100;
 const COMP_GROUP_GAP = 32;
 
 function ComparisonChart({ data }: { data: ComparisonDatum[] }) {
+  const c = useThemeColors();
   const allValues = data.flatMap((g) => g.values.map((v) => v.value));
   const maxVal = Math.max(...allValues);
 
@@ -270,7 +272,7 @@ function ComparisonChart({ data }: { data: ComparisonDatum[] }) {
           y1={COMP_BAR_MAX_HEIGHT}
           x2={svgWidth}
           y2={COMP_BAR_MAX_HEIGHT}
-          stroke={getThemeColors().border.subtle}
+          stroke={c.border.subtle}
           strokeWidth={1}
         />
 
@@ -291,7 +293,7 @@ function ComparisonChart({ data }: { data: ComparisonDatum[] }) {
                       x={barX + COMP_BAR_WIDTH / 2}
                       y={barY - 6}
                       textAnchor="middle"
-                      fill={getThemeColors().text.primary}
+                      fill={c.text.primary}
                       fontSize={12}
                       fontWeight="600"
                     >
@@ -314,7 +316,7 @@ function ComparisonChart({ data }: { data: ComparisonDatum[] }) {
                       x={barX + COMP_BAR_WIDTH / 2}
                       y={COMP_BAR_MAX_HEIGHT + 16}
                       textAnchor="middle"
-                      fill={getThemeColors().text.secondary}
+                      fill={c.text.secondary}
                       fontSize={10}
                       fontWeight="500"
                     >
@@ -329,7 +331,7 @@ function ComparisonChart({ data }: { data: ComparisonDatum[] }) {
                 x={groupX + groupWidth / 2}
                 y={COMP_BAR_MAX_HEIGHT + 34}
                 textAnchor="middle"
-                fill={getThemeColors().text.muted}
+                fill={c.text.muted}
                 fontSize={10}
               >
                 {group.label}
@@ -347,13 +349,13 @@ function ComparisonChart({ data }: { data: ComparisonDatum[] }) {
 export function ArticleChart({ chartId }: ArticleChartProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
-  const config = CHART_REGISTRY[chartId];
+  const config = getCHART_REGISTRY(c)[chartId];
   if (!config) return null;
 
   return (
-    <View style={[styles.container, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.subtle }]}>
-      <Text style={[styles.title, { color: getThemeColors().text.primary }]}>{config.title}</Text>
-      {config.subtitle && <Text style={[styles.subtitle, { color: getThemeColors().text.muted }]}>{config.subtitle}</Text>}
+    <View style={[styles.container, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
+      <Text style={[styles.title, { color: c.text.primary }]}>{config.title}</Text>
+      {config.subtitle && <Text style={[styles.subtitle, { color: c.text.muted }]}>{config.subtitle}</Text>}
 
       <View style={styles.chartArea}>
         {config.type === 'bar' && (
@@ -369,21 +371,21 @@ export function ArticleChart({ chartId }: ArticleChartProps) {
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
     padding: spacing[4],
     marginVertical: spacing[4],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[1],
   },
   subtitle: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     marginBottom: spacing[3],
   },

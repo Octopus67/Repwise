@@ -67,7 +67,7 @@ export function BlockTemplateModal({ visible, onClose, onApplied }: BlockTemplat
     <ModalContainer visible={visible} onClose={onClose} title="Apply Block Template">
       <ScrollView style={styles.content}>
         {loadingTemplates ? (
-          <ActivityIndicator color={getThemeColors().accent.primary} style={{ marginVertical: spacing[4] }} />
+          <ActivityIndicator color={c.accent.primary} style={{ marginVertical: spacing[4] }} />
         ) : (
           templates.map((t) => (
             <TouchableOpacity
@@ -75,11 +75,11 @@ export function BlockTemplateModal({ visible, onClose, onApplied }: BlockTemplat
               style={[styles.card, selectedId === t.id && styles.cardSelected]}
               onPress={() => setSelectedId(t.id)}
             >
-              <Text style={[styles.cardTitle, { color: getThemeColors().text.primary }]}>{t.name}</Text>
-              <Text style={[styles.cardDesc, { color: getThemeColors().text.secondary }]}>{t.description}</Text>
+              <Text style={[styles.cardTitle, { color: c.text.primary }]}>{t.name}</Text>
+              <Text style={[styles.cardDesc, { color: c.text.secondary }]}>{t.description}</Text>
               <View style={styles.phases}>
                 {t.phases.map((p, i) => (
-                  <Text key={i} style={[styles.phaseTag, { color: getThemeColors().text.muted, backgroundColor: getThemeColors().bg.surface }]}>
+                  <Text key={i} style={[styles.phaseTag, { color: c.text.muted, backgroundColor: c.bg.surface }]}>
                     {p.phase_type} ({p.duration_weeks}w)
                   </Text>
                 ))}
@@ -88,16 +88,16 @@ export function BlockTemplateModal({ visible, onClose, onApplied }: BlockTemplat
           ))
         )}
 
-        <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>Start Date</Text>
+        <Text style={[styles.label, { color: c.text.secondary }]}>Start Date</Text>
         <TextInput
-          style={[styles.input, { color: getThemeColors().text.primary, backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.subtle }]}
+          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}
           value={startDate}
           onChangeText={setStartDate}
           placeholder="YYYY-MM-DD"
-          placeholderTextColor={getThemeColors().text.muted}
+          placeholderTextColor={c.text.muted}
         />
 
-        {error && <Text style={[styles.error, { color: getThemeColors().semantic.negative }]}>{error}</Text>}
+        {error && <Text style={[styles.error, { color: c.semantic.negative }]}>{error}</Text>}
 
         <Button title="Apply Template" onPress={handleApply} variant="primary" disabled={applying} loading={applying} />
       </ScrollView>
@@ -107,13 +107,13 @@ export function BlockTemplateModal({ visible, onClose, onApplied }: BlockTemplat
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   content: { paddingHorizontal: spacing[4], paddingBottom: spacing[6] },
-  card: { backgroundColor: getThemeColors().bg.surfaceRaised, borderRadius: radius.sm, padding: spacing[3], marginBottom: spacing[2], borderWidth: 1, borderColor: getThemeColors().border.subtle },
-  cardSelected: { borderColor: getThemeColors().accent.primary, backgroundColor: getThemeColors().accent.primaryMuted },
-  cardTitle: { color: getThemeColors().text.primary, fontSize: typography.size.base, fontWeight: typography.weight.semibold },
-  cardDesc: { color: getThemeColors().text.secondary, fontSize: typography.size.sm, marginTop: spacing[1] },
+  card: { backgroundColor: c.bg.surfaceRaised, borderRadius: radius.sm, padding: spacing[3], marginBottom: spacing[2], borderWidth: 1, borderColor: c.border.subtle },
+  cardSelected: { borderColor: c.accent.primary, backgroundColor: c.accent.primaryMuted },
+  cardTitle: { color: c.text.primary, fontSize: typography.size.base, fontWeight: typography.weight.semibold },
+  cardDesc: { color: c.text.secondary, fontSize: typography.size.sm, marginTop: spacing[1] },
   phases: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[1], marginTop: spacing[2] },
-  phaseTag: { color: getThemeColors().text.muted, fontSize: typography.size.xs, backgroundColor: getThemeColors().bg.surface, paddingHorizontal: spacing[2], paddingVertical: 2, borderRadius: radius.full },
-  label: { color: getThemeColors().text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, marginTop: spacing[3], marginBottom: spacing[1] },
-  input: { backgroundColor: getThemeColors().bg.surfaceRaised, color: getThemeColors().text.primary, borderRadius: radius.sm, padding: spacing[3], fontSize: typography.size.base, borderWidth: 1, borderColor: getThemeColors().border.subtle, marginBottom: spacing[3] },
-  error: { color: getThemeColors().semantic.negative, fontSize: typography.size.sm, marginBottom: spacing[2] },
+  phaseTag: { color: c.text.muted, fontSize: typography.size.xs, backgroundColor: c.bg.surface, paddingHorizontal: spacing[2], paddingVertical: 2, borderRadius: radius.full },
+  label: { color: c.text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, marginTop: spacing[3], marginBottom: spacing[1] },
+  input: { backgroundColor: c.bg.surfaceRaised, color: c.text.primary, borderRadius: radius.sm, padding: spacing[3], fontSize: typography.size.base, borderWidth: 1, borderColor: c.border.subtle, marginBottom: spacing[3] },
+  error: { color: c.semantic.negative, fontSize: typography.size.sm, marginBottom: spacing[2] },
 });

@@ -23,13 +23,16 @@ function TodayWorkoutCardComponent({
   onResume, 
   onStartWorkout 
 }: TodayWorkoutCardProps) {
+  const c = useThemeColors();
+  const styles = getThemedStyles(c);
+  
   // Show resume banner if workout is active
   if (isWorkoutActive) {
     return (
       <Card variant="flat" style={getStyles().card}>
         <TouchableOpacity onPress={onResume} activeOpacity={0.7} style={getStyles().resumeBanner} accessibilityLabel={`Resume workout with ${activeExerciseCount} exercises`} accessibilityRole="button">
           <View style={getStyles().resumeContent}>
-            <Icon name="dumbbell" size={20} color={getThemeColors().accent.primary} />
+            <Icon name="dumbbell" size={20} color={c.accent.primary} />
             <View style={getStyles().resumeText}>
               <Text style={getStyles().resumeTitle}>Workout in progress</Text>
               <Text style={getStyles().resumeSubtitle}>{activeExerciseCount} exercises</Text>
@@ -46,13 +49,11 @@ function TodayWorkoutCardComponent({
     return (
       <Card variant="flat" style={getStyles().card}>
         <View style={getStyles().header}>
-          <Icon name="dumbbell" size={16} color={getThemeColors().accent.primary} />
+          <Icon name="dumbbell" size={16} color={c.accent.primary} />
           <Text style={getStyles().title}>Today's Training</Text>
         </View>
         
         {sessions.map((session, index) => {
-  const c = useThemeColors();
-  const styles = getThemedStyles(c);
           const duration = session.start_time && session.end_time 
             ? Math.round((new Date(session.end_time).getTime() - new Date(session.start_time).getTime()) / (1000 * 60))
             : null;
@@ -133,13 +134,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[3],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.md,
   },
   resumeBanner: {
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
     borderRadius: radius.sm,
     padding: spacing[3],
     flexDirection: 'row',
@@ -156,18 +157,18 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     flex: 1,
   },
   resumeTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.base,
   },
   resumeSubtitle: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
   },
   resumeButton: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.base,
@@ -177,7 +178,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   sessionBorder: {
     borderTopWidth: 1,
-    borderTopColor: getThemeColors().border.subtle,
+    borderTopColor: c.border.subtle,
     marginTop: spacing[2],
     paddingTop: spacing[3],
   },
@@ -185,7 +186,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[2],
   },
   sessionName: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.base,
@@ -195,12 +196,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[2],
   },
   exerciseText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
   },
   moreText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
   },
@@ -209,26 +210,26 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[4],
   },
   statText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
   },
   emptyText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
     marginBottom: spacing[3],
   },
   startButton: {
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
     borderRadius: radius.sm,
     paddingVertical: spacing[2],
     paddingHorizontal: spacing[3],
     alignSelf: 'flex-start',
   },
   startButtonText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.sm,

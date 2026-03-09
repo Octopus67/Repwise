@@ -16,10 +16,10 @@ export function SectionHeader({ title, action }: SectionHeaderProps) {
   const styles = getThemedStyles(c);
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: getThemeColors().text.primary }]}>{title}</Text>
+      <Text style={[styles.title, { color: c.text.primary }]}>{title}</Text>
       {action ? (
         <TouchableOpacity onPress={action.onPress} activeOpacity={0.7}>
-          <Text style={[styles.actionLabel, { color: getThemeColors().accent.primary }]}>{action.label}</Text>
+          <Text style={[styles.actionLabel, { color: c.accent.primary }]}>{action.label}</Text>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -37,10 +37,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   title: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
   },
   actionLabel: {
     fontSize: typography.size.base,
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
   },
 });

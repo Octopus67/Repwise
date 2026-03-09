@@ -116,7 +116,7 @@ export function TemplatePicker({
   if (loading) {
     return (
       <View style={getStyles().loadingContainer}>
-        <ActivityIndicator color={getThemeColors().accent.primary} />
+        <ActivityIndicator color={c.accent.primary} />
       </View>
     );
   }
@@ -124,18 +124,18 @@ export function TemplatePicker({
   return (
     <ScrollView style={getStyles().container} contentContainerStyle={getStyles().content}>
       {/* Quick actions */}
-      <TouchableOpacity style={[getStyles().quickAction, { backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]} onPress={onCopyLast} activeOpacity={0.7}>
-        <Text style={[getStyles().quickActionText, { color: getThemeColors().text.primary }]}>📋 Copy Last Workout</Text>
+      <TouchableOpacity style={[getStyles().quickAction, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]} onPress={onCopyLast} activeOpacity={0.7}>
+        <Text style={[getStyles().quickActionText, { color: c.text.primary }]}>📋 Copy Last Workout</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={[getStyles().quickAction, { backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]} onPress={onStartEmpty} activeOpacity={0.7}>
-        <Text style={[getStyles().quickActionText, { color: getThemeColors().text.primary }]}>➕ Start Empty Workout</Text>
+      <TouchableOpacity style={[getStyles().quickAction, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]} onPress={onStartEmpty} activeOpacity={0.7}>
+        <Text style={[getStyles().quickActionText, { color: c.text.primary }]}>➕ Start Empty Workout</Text>
       </TouchableOpacity>
 
       {/* My Templates */}
       {userTemplates.length > 0 && (
         <>
-          <Text style={[getStyles().sectionTitle, { color: getThemeColors().text.secondary }]}>My Templates</Text>
+          <Text style={[getStyles().sectionTitle, { color: c.text.secondary }]}>My Templates</Text>
           {userTemplates.map((t) => (
             <TemplateCard
               key={t.id}
@@ -150,7 +150,7 @@ export function TemplatePicker({
       {/* System Templates */}
       {systemTemplates.length > 0 && (
         <>
-          <Text style={[getStyles().sectionTitle, { color: getThemeColors().text.secondary }]}>System Templates</Text>
+          <Text style={[getStyles().sectionTitle, { color: c.text.secondary }]}>System Templates</Text>
           {systemTemplates.map((t) => (
             <TemplateCard
               key={t.id}
@@ -211,19 +211,19 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     padding: spacing[8],
   },
   quickAction: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     padding: spacing[4],
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
   },
   quickActionText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
   },
   sectionTitle: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     textTransform: 'uppercase',
@@ -231,26 +231,26 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: spacing[2],
   },
   card: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     padding: spacing[4],
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     ...shadows.sm,
   },
   cardName: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[1],
   },
   cardDesc: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     marginBottom: spacing[1],
   },
   cardMeta: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
   },
 });

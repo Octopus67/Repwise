@@ -3,7 +3,7 @@ import { Text, TouchableOpacity, StyleSheet, ActionSheetIOS, Platform } from 're
 import type { SetType } from '../../types/training';
 import { SET_TYPE_ABBREVIATIONS, SET_TYPE_LABELS } from '../../utils/setTypeLabels';
 import { spacing, typography, radius } from '../../theme/tokens';
-import { useThemeColors, getThemeColors } from '../../hooks/useThemeColors';
+import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 
 // Re-export for consumers that import from the component
 export { SET_TYPE_ABBREVIATIONS } from '../../utils/setTypeLabels';
@@ -15,12 +15,12 @@ interface SetTypeSelectorProps {
 
 const SET_TYPE_OPTIONS: SetType[] = ['normal', 'warm-up', 'drop-set', 'amrap'];
 
-const SET_TYPE_COLORS: Record<SetType, string> = {
-  normal: getThemeColors().text.secondary,
-  'warm-up': getThemeColors().text.muted,
-  'drop-set': getThemeColors().semantic.warning,
-  amrap: getThemeColors().accent.primary,
-};
+const getSET_TYPE_COLORS = (c: ThemeColors): Record<SetType, string> => ({
+  normal: c.text.secondary,
+  'warm-up': c.text.muted,
+  'drop-set': c.semantic.warning,
+  amrap: c.accent.primary,
+});
 
 export function SetTypeSelector({ value, onChange }: SetTypeSelectorProps) {
   const c = useThemeColors();
@@ -45,13 +45,16 @@ export function SetTypeSelector({ value, onChange }: SetTypeSelectorProps) {
     }
   }, [value, onChange]);
 
-  const pillColor = SET_TYPE_COLORS[value];
+  const pillColor = getSET_TYPE_COLORS(c)[value];
 
   return (
     <TouchableOpacity
       style={[styles.pill, { borderColor: pillColor }]}
       onPress={handlePress}
       activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={`Set type: ${SET_TYPE_LABELS[value]}. Tap to change.`}
+      accessibilityHint={Platform.OS === 'ios' ? 'Opens menu' : 'Cycles through options'}
     >
       <Text style={[styles.text, { color: pillColor }]}>
         {SET_TYPE_ABBREVIATIONS[value]}

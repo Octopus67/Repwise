@@ -31,12 +31,12 @@ export function MealSlotDiary({ entries, onAddToSlot }: MealSlotDiaryProps) {
   return (
     <View style={styles.container}>
       {/* Daily total header */}
-      <View style={[styles.totalHeader, { borderBottomColor: getThemeColors().border.subtle }]}>
-        <Text style={[styles.totalLabel, { color: getThemeColors().text.primary }]}>Daily Total</Text>
-        <Text style={[styles.totalValue, { color: getThemeColors().text.primary }]}>
+      <View style={[styles.totalHeader, { borderBottomColor: c.border.subtle }]}>
+        <Text style={[styles.totalLabel, { color: c.text.primary }]}>Daily Total</Text>
+        <Text style={[styles.totalValue, { color: c.text.primary }]}>
           {Math.round(dailyTotals.calories)} kcal
           {'  '}
-          <Text style={[styles.totalMacros, { color: getThemeColors().text.secondary }]}>
+          <Text style={[styles.totalMacros, { color: c.text.secondary }]}>
             P {Math.round(dailyTotals.protein_g)}g · C {Math.round(dailyTotals.carbs_g)}g · F {Math.round(dailyTotals.fat_g)}g
           </Text>
         </Text>
@@ -64,21 +64,21 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing[3],
     marginBottom: spacing[2],
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.subtle,
+    borderBottomColor: c.border.subtle,
   },
   totalLabel: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.bold,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
   },
   totalValue: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
   },
   totalMacros: {
     fontSize: typography.size.xs,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontWeight: typography.weight.regular,
   },
 });

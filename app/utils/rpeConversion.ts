@@ -10,7 +10,7 @@
  */
 
 /** RPE quick-select values */
-export const RPE_VALUES: number[] = [6, 7, 8, 9, 10];
+export const RPE_VALUES: number[] = [2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 /** RIR quick-select values (4 means "4+") */
 export const RIR_VALUES: number[] = [4, 3, 2, 1, 0];

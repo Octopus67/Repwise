@@ -33,24 +33,27 @@ function safeNumber(value: unknown): number {
 }
 
 function trendColor(direction: string, invertGood = false): string {
-  if (direction === 'decreasing') return invertGood ? getThemeColors().semantic.negative : getThemeColors().semantic.positive;
-  if (direction === 'increasing') return invertGood ? getThemeColors().semantic.positive : getThemeColors().semantic.negative;
-  return getThemeColors().text.secondary;
+  const c = useThemeColors();
+  if (direction === 'decreasing') return invertGood ? c.semantic.negative : c.semantic.positive;
+  if (direction === 'increasing') return invertGood ? c.semantic.positive : c.semantic.negative;
+  return c.text.secondary;
 }
 
 function scoreColor(score: number): string {
-  if (score > 10) return getThemeColors().semantic.positive;
-  if (score < -10) return getThemeColors().semantic.negative;
-  return getThemeColors().text.secondary;
+  const c = useThemeColors();
+  if (score > 10) return c.semantic.positive;
+  if (score < -10) return c.semantic.negative;
+  return c.text.secondary;
 }
 
 function formatTrend(trend: TrendData | null, label: string, invertGood = false): React.ReactNode {
+  const c = useThemeColors();
   if (!trend) return null;
   const slope = safeNumber(trend.slope_per_week);
   const sign = slope >= 0 ? '+' : '';
   return (
     <View style={getStyles().trendRow}>
-      <Text style={[getStyles().trendLabel, { color: getThemeColors().text.secondary }]}>{label}</Text>
+      <Text style={[getStyles().trendLabel, { color: c.text.secondary }]}>{label}</Text>
       <Text style={[getStyles().trendValue, { color: trendColor(trend.direction, invertGood) }]}>
         {sign}{slope.toFixed(1)} cm/wk
       </Text>
@@ -64,10 +67,10 @@ export function RecompDashboardCard({ metrics, loading = false, error = null }: 
   if (loading) {
     return (
       <Card variant="flat" style={getStyles().card}>
-        <Text style={[getStyles().title, { color: getThemeColors().text.primary }]}>Body Recomposition</Text>
+        <Text style={[getStyles().title, { color: c.text.primary }]}>Body Recomposition</Text>
         <View style={getStyles().loadingContainer}>
-          <ActivityIndicator size="small" color={getThemeColors().accent.primary} />
-          <Text style={[getStyles().loadingText, { color: getThemeColors().text.secondary }]}>Loading metrics…</Text>
+          <ActivityIndicator size="small" color={c.accent.primary} />
+          <Text style={[getStyles().loadingText, { color: c.text.secondary }]}>Loading metrics…</Text>
         </View>
       </Card>
     );
@@ -76,16 +79,16 @@ export function RecompDashboardCard({ metrics, loading = false, error = null }: 
   if (error) {
     return (
       <Card variant="flat" style={getStyles().card}>
-        <Text style={[getStyles().title, { color: getThemeColors().text.primary }]}>Body Recomposition</Text>
-        <Text style={[getStyles().errorText, { color: getThemeColors().semantic.negative }]}>{error}</Text>
+        <Text style={[getStyles().title, { color: c.text.primary }]}>Body Recomposition</Text>
+        <Text style={[getStyles().errorText, { color: c.semantic.negative }]}>{error}</Text>
       </Card>
     );
   }
   if (!metrics || !metrics.has_sufficient_data) {
     return (
       <Card variant="flat" style={getStyles().card}>
-        <Text style={[getStyles().title, { color: getThemeColors().text.primary }]}>Body Recomposition</Text>
-        <Text style={[getStyles().prompt, { color: getThemeColors().text.secondary }]}>Log waist, arm, and chest measurements to track your recomp progress</Text>
+        <Text style={[getStyles().title, { color: c.text.primary }]}>Body Recomposition</Text>
+        <Text style={[getStyles().prompt, { color: c.text.secondary }]}>Log waist, arm, and chest measurements to track your recomp progress</Text>
       </Card>
     );
   }
@@ -94,14 +97,14 @@ export function RecompDashboardCard({ metrics, loading = false, error = null }: 
 
   return (
     <Card variant="flat" style={getStyles().card}>
-      <Text style={[getStyles().title, { color: getThemeColors().text.primary }]}>Body Recomposition</Text>
+      <Text style={[getStyles().title, { color: c.text.primary }]}>Body Recomposition</Text>
       {formatTrend(metrics.waist_trend, 'Waist')}
       {formatTrend(metrics.arm_trend, 'Arms', true)}
       {formatTrend(metrics.chest_trend, 'Chest', true)}
       {formatTrend(metrics.weight_trend, 'Weight')}
       {metrics.recomp_score != null && Number.isFinite(metrics.recomp_score) && (
-        <View style={[getStyles().scoreRow, { borderTopColor: getThemeColors().border.subtle }]}>
-          <Text style={[getStyles().scoreLabel, { color: getThemeColors().text.primary }]}>Recomp Score</Text>
+        <View style={[getStyles().scoreRow, { borderTopColor: c.border.subtle }]}>
+          <Text style={[getStyles().scoreLabel, { color: c.text.primary }]}>Recomp Score</Text>
           <Text style={[getStyles().scoreValue, { color: scoreColor(score) }]}>
             {score > 0 ? '+' : ''}{score.toFixed(0)}
           </Text>
@@ -117,13 +120,13 @@ function getStyles() { return getThemedStyles(getThemeColors()); }
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   card: { marginBottom: spacing[3] },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[2],
   },
   prompt: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
   },
   loadingContainer: {
@@ -132,11 +135,11 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[2],
   },
   loadingText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
   },
   errorText: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.sm,
   },
   trendRow: {
@@ -146,7 +149,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[1],
   },
   trendLabel: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
   },
   trendValue: {
@@ -160,10 +163,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: spacing[2],
     paddingTop: spacing[2],
     borderTopWidth: 1,
-    borderTopColor: getThemeColors().border.subtle,
+    borderTopColor: c.border.subtle,
   },
   scoreLabel: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },

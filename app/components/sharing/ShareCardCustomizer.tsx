@@ -108,7 +108,7 @@ export function ShareCardCustomizer({
 
         {/* Options */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: getThemeColors().text.muted }]}>OPTIONS</Text>
+          <Text style={[styles.sectionTitle, { color: c.text.muted }]}>OPTIONS</Text>
 
           <ToggleRow
             label="Show Exercises"
@@ -129,7 +129,7 @@ export function ShareCardCustomizer({
 
         {/* Theme picker */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: getThemeColors().text.muted }]}>THEME</Text>
+          <Text style={[styles.sectionTitle, { color: c.text.muted }]}>THEME</Text>
           <View style={styles.themeRow}>
             {THEMES.map(t => (
               <TouchableOpacity
@@ -137,7 +137,7 @@ export function ShareCardCustomizer({
                 style={[
                   styles.themeSwatch,
                   { backgroundColor: t.color },
-                  options.theme === t.key && { borderColor: getThemeColors().accent.primary, borderWidth: 2 },
+                  options.theme === t.key && { borderColor: c.accent.primary, borderWidth: 2 },
                 ]}
                 onPress={() => setTheme(t.key)}
                 accessibilityLabel={`${t.label} theme`}
@@ -160,7 +160,6 @@ export function ShareCardCustomizer({
 }
 
 function ToggleRow({ label, value, onToggle }: { label: string; value: boolean; onToggle: () => void }) {
-  const c = useThemeColors();
   return (
     <View style={styles.toggleRow}>
       <Text style={[styles.toggleLabel, { color: getThemeColors().text.primary }]}>{label}</Text>

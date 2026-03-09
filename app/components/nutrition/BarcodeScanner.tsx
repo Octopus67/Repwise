@@ -76,6 +76,21 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
   const lastScanRef = useRef<number>(0);
   const [permission, requestPermission] = useCameraPermissions();
 
+  // ── Permission handling (must be before early return) ──────────────────
+  useEffect(() => {
+    if (Platform.OS === 'web') return; // Skip on web
+    if (!permission) return; // still loading
+    if (permission.granted) {
+      setState('scanning');
+    } else if (permission.canAskAgain) {
+      requestPermission().then((result: { granted: boolean }) => {
+        setState(result.granted ? 'scanning' : 'denied');
+      });
+    } else {
+      setState('denied');
+    }
+  }, [permission?.status, requestPermission]);
+
   // ── Web guard ──────────────────────────────────────────────────────────
   if (Platform.OS === 'web') {
     return (
@@ -92,20 +107,6 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
       </View>
     );
   }
-
-  // ── Permission handling ────────────────────────────────────────────────
-  useEffect(() => {
-    if (!permission) return; // still loading
-    if (permission.granted) {
-      setState('scanning');
-    } else if (permission.canAskAgain) {
-      requestPermission().then((result: { granted: boolean }) => {
-        setState(result.granted ? 'scanning' : 'denied');
-      });
-    } else {
-      setState('denied');
-    }
-  }, [permission?.status, requestPermission]);
 
   // ── Barcode scan handler ───────────────────────────────────────────────
   const handleBarCodeScanned = useCallback(
@@ -182,7 +183,7 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
     return (
       <View style={styles.container}>
         <View style={styles.messageCard}>
-          <ActivityIndicator size="large" color={getThemeColors().accent.primary} />
+          <ActivityIndicator size="large" color={c.accent.primary} />
           <Text style={[styles.messageText, { marginTop: spacing[3] }]}>
             Looking up barcode…
           </Text>
@@ -321,7 +322,7 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.base,
+    backgroundColor: c.bg.base,
   },
   // ── Overlay ──────────────────────────────────────────────────────────
   overlay: {
@@ -359,7 +360,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     position: 'absolute',
     width: 24,
     height: 24,
-    borderColor: getThemeColors().accent.primary,
+    borderColor: c.accent.primary,
   },
   cornerTL: {
     top: 0,
@@ -400,7 +401,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing[4],
   },
   cancelScanBtnText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.base,
     fontWeight: '600',
   },
@@ -409,20 +410,20 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     margin: spacing[4],
     marginTop: 'auto',
     marginBottom: 'auto',
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.lg,
     padding: spacing[5],
     alignItems: 'center',
   },
   messageTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xl,
     fontWeight: '700',
     marginBottom: spacing[2],
     textAlign: 'center',
   },
   messageText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     textAlign: 'center',
     marginBottom: spacing[3],
@@ -433,18 +434,18 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     margin: spacing[4],
     marginTop: 'auto',
     marginBottom: 'auto',
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.lg,
     padding: spacing[5],
   },
   confirmTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xl,
     fontWeight: '700',
     marginBottom: spacing[1],
   },
   confirmServing: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     marginBottom: spacing[3],
   },
@@ -458,12 +459,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     flex: 1,
   },
   macroValue: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xl,
     fontWeight: '700',
   },
   macroLabel: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     marginTop: 2,
   },
@@ -473,13 +474,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[4],
   },
   servingLabel: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     marginRight: spacing[2],
   },
   servingInput: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
-    color: getThemeColors().text.primary,
+    backgroundColor: c.bg.surfaceRaised,
+    color: c.text.primary,
     borderRadius: radius.md,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
@@ -495,25 +496,25 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   // ── Buttons ──────────────────────────────────────────────────────────
   primaryBtn: {
     flex: 1,
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.md,
     paddingVertical: spacing[3],
     alignItems: 'center',
   },
   primaryBtnText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: '600',
   },
   closeBtn: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.md,
     paddingVertical: spacing[3],
     alignItems: 'center',
   },
   closeBtnText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     fontWeight: '600',
   },

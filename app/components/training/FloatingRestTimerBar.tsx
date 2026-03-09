@@ -27,11 +27,11 @@ interface FloatingRestTimerBarProps {
   onDismiss: () => void;
 }
 
-const TIMER_COLOR_MAP: Record<'green' | 'yellow' | 'red', string> = {
-  green: getThemeColors().semantic.positive,
-  yellow: getThemeColors().semantic.warning,
-  red: getThemeColors().semantic.negative,
-};
+const getTIMER_COLOR_MAP = (c: ThemeColors): Record<'green' | 'yellow' | 'red', string> => ({
+  green: c.semantic.positive,
+  yellow: c.semantic.warning,
+  red: c.semantic.negative,
+});
 
 export function FloatingRestTimerBar({
   durationSeconds,
@@ -156,7 +156,7 @@ export function FloatingRestTimerBar({
   if (!isActive) return null;
 
   const timerColorKey = getTimerColor(remaining, durationSeconds);
-  const timerColor = TIMER_COLOR_MAP[timerColorKey];
+  const timerColor = getTIMER_COLOR_MAP(c)[timerColorKey];
   const clampedRemaining = Math.max(0, remaining);
   const minutes = Math.floor(clampedRemaining / 60);
   const seconds = clampedRemaining % 60;
@@ -167,46 +167,46 @@ export function FloatingRestTimerBar({
       <View style={styles.row}>
         {/* Exercise name */}
         <View style={styles.infoSection}>
-          <Text style={[styles.exerciseName, { color: getThemeColors().text.secondary }]} numberOfLines={1}>{exerciseName}</Text>
+          <Text style={[styles.exerciseName, { color: c.text.secondary }]} numberOfLines={1}>{exerciseName}</Text>
           <Text style={[styles.countdown, { color: timerColor }]}>{timeText}</Text>
         </View>
 
         {/* Controls */}
         <View style={styles.controls}>
           <TouchableOpacity
-            style={[styles.adjustBtn, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.subtle }]}
+            style={[styles.adjustBtn, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
             onPress={() => handleAdjust(-15)}
             accessibilityLabel="Decrease rest time by 15 seconds"
             accessibilityRole="button"
           >
-            <Text style={[styles.adjustText, { color: getThemeColors().text.secondary }]}>-15s</Text>
+            <Text style={[styles.adjustText, { color: c.text.secondary }]}>-15s</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.adjustBtn, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.subtle }]}
+            style={[styles.adjustBtn, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
             onPress={() => handleAdjust(15)}
             accessibilityLabel="Increase rest time by 15 seconds"
             accessibilityRole="button"
           >
-            <Text style={[styles.adjustText, { color: getThemeColors().text.secondary }]}>+15s</Text>
+            <Text style={[styles.adjustText, { color: c.text.secondary }]}>+15s</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.pauseBtn, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.subtle }]}
+            style={[styles.pauseBtn, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
             onPress={handleTogglePause}
             accessibilityLabel={paused ? 'Resume timer' : 'Pause timer'}
             accessibilityRole="button"
           >
-            <Text style={[styles.pauseText, { color: getThemeColors().text.primary }]}>{paused ? '▶' : '⏸'}</Text>
+            <Text style={[styles.pauseText, { color: c.text.primary }]}>{paused ? '▶' : '⏸'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.dismissBtn, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.subtle }]}
+            style={[styles.dismissBtn, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
             onPress={handleAnimatedDismiss}
             accessibilityLabel="Dismiss rest timer"
             accessibilityRole="button"
           >
-            <Text style={[styles.dismissText, { color: getThemeColors().text.muted }]}>✕</Text>
+            <Text style={[styles.dismissText, { color: c.text.muted }]}>✕</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -221,10 +221,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     bottom: 70, // Above StickyFinishBar
     left: spacing[3],
     right: spacing[3],
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[3],
     ...shadows.md,
@@ -239,7 +239,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginRight: spacing[3],
   },
   exerciseName: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
   },
@@ -254,40 +254,40 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[2],
   },
   adjustBtn: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[2],
     paddingVertical: spacing[1],
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   adjustText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
   },
   pauseBtn: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[2],
     paddingVertical: spacing[1],
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   pauseText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
   },
   dismissBtn: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[2],
     paddingVertical: spacing[1],
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   dismissText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.base,
   },
 });

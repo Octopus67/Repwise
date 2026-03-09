@@ -12,12 +12,12 @@ export interface VolumeLandmarks {
   mrv: number;
 }
 
-export type VolumeStatus = 'below_mev' | 'optimal' | 'near_mrv' | 'above_mrv';
+export type VolumeStatus = 'below_mev' | 'optimal' | 'approaching_mrv' | 'above_mrv';
 
 /** Determine volume status for a muscle given current HU and landmarks. */
 export function getVolumeStatus(currentHU: number, landmarks: VolumeLandmarks): VolumeStatus {
-  if (currentHU >= landmarks.mrv) return 'above_mrv';
-  if (currentHU >= landmarks.mavHigh * 0.9) return 'near_mrv';
+  if (currentHU > landmarks.mrv) return 'above_mrv';
+  if (currentHU > landmarks.mavHigh) return 'approaching_mrv';
   if (currentHU >= landmarks.mev) return 'optimal';
   return 'below_mev';
 }
@@ -43,7 +43,7 @@ export function generateRecommendations(
       case 'optimal':
         recs.push(`Great work on ${label}! You're in the optimal stimulus range.`);
         break;
-      case 'near_mrv':
+      case 'approaching_mrv':
         recs.push(`${label} is near your recovery limit. Maintain or slightly reduce volume.`);
         break;
       case 'above_mrv':

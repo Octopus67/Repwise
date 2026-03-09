@@ -39,9 +39,9 @@ export function FatigueHeatMapOverlay({ scores, onMuscleGroupPress }: Props) {
               activeOpacity={0.7}
             >
               <View style={[styles.dot, { backgroundColor: bg }]} />
-              <Text style={[styles.name, { color: getThemeColors().text.primary }]}>{s.muscle_group}</Text>
+              <Text style={[styles.name, { color: c.text.primary }]}>{s.muscle_group}</Text>
               <Text style={[styles.score, { color: bg }]}>{s.score.toFixed(0)}</Text>
-              <Text style={[styles.label, { color: getThemeColors().text.muted }]}>{label}</Text>
+              <Text style={[styles.label, { color: c.text.muted }]}>{label}</Text>
             </TouchableOpacity>
           );
         })}
@@ -58,7 +58,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[2],
   },
   cell: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     padding: spacing[2],
     borderWidth: 1,
@@ -73,7 +73,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[1],
   },
   name: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
     textTransform: 'capitalize',
@@ -84,7 +84,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: typography.weight.bold,
   },
   label: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: 10,
   },
 });

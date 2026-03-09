@@ -105,50 +105,50 @@ export function HUExplainerSheet({ visible, onClose, initialTab = 'hu' }: HUExpl
       {/* Tab Switcher */}
       <View style={styles.tabRow}>
         <TouchableOpacity
-          style={[styles.tab, { backgroundColor: tab === 'hu' ? getThemeColors().accent.primaryMuted : getThemeColors().bg.surfaceRaised }]}
+          style={[styles.tab, { backgroundColor: tab === 'hu' ? c.accent.primaryMuted : c.bg.surfaceRaised }]}
           onPress={() => setTab('hu')}
           accessibilityRole="tab"
           accessibilityState={{ selected: tab === 'hu' }}
           accessibilityLabel="Hypertrophy Units tab"
         >
-          <Text style={[styles.tabText, { color: tab === 'hu' ? getThemeColors().accent.primary : getThemeColors().text.muted }]}>Hypertrophy Units</Text>
+          <Text style={[styles.tabText, { color: tab === 'hu' ? c.accent.primary : c.text.muted }]}>Hypertrophy Units</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, { backgroundColor: tab === 'fatigue' ? getThemeColors().accent.primaryMuted : getThemeColors().bg.surfaceRaised }]}
+          style={[styles.tab, { backgroundColor: tab === 'fatigue' ? c.accent.primaryMuted : c.bg.surfaceRaised }]}
           onPress={() => setTab('fatigue')}
           accessibilityRole="tab"
           accessibilityState={{ selected: tab === 'fatigue' }}
           accessibilityLabel="Fatigue Score tab"
         >
-          <Text style={[styles.tabText, { color: tab === 'fatigue' ? getThemeColors().accent.primary : getThemeColors().text.muted }]}>Fatigue Score</Text>
+          <Text style={[styles.tabText, { color: tab === 'fatigue' ? c.accent.primary : c.text.muted }]}>Fatigue Score</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         {tab === 'hu' ? (
           <>
-            <Text style={[styles.intro, { color: getThemeColors().text.secondary }]}>
+            <Text style={[styles.intro, { color: c.text.secondary }]}>
               Your HU score measures the actual growth stimulus reaching each muscle — not just how many sets you did.
             </Text>
 
             {HU_SECTIONS.map((section) => (
               <View key={section.title} style={styles.section}>
                 <View style={styles.numberRow}>
-                  <Text style={[styles.sectionNumber, { color: getThemeColors().accent.primary }]}>{section.number}</Text>
-                  <Text style={[styles.sectionTitle, { color: getThemeColors().text.primary }]}>{section.title}</Text>
+                  <Text style={[styles.sectionNumber, { color: c.accent.primary }]}>{section.number}</Text>
+                  <Text style={[styles.sectionTitle, { color: c.text.primary }]}>{section.title}</Text>
                 </View>
-                <Text style={[styles.sectionBody, { color: getThemeColors().text.secondary }]}>{section.body}</Text>
+                <Text style={[styles.sectionBody, { color: c.text.secondary }]}>{section.body}</Text>
               </View>
             ))}
 
             <View style={styles.legendSection}>
-              <Text style={[styles.legendHeading, { color: getThemeColors().text.primary }]}>Status Indicators</Text>
+              <Text style={[styles.legendHeading, { color: c.text.primary }]}>Status Indicators</Text>
               {HU_COLOR_LEGEND.map((item) => (
                 <View key={item.label} style={styles.legendRow}>
-                  <View style={[styles.legendDot, { backgroundColor: getThemeColors().heatmap[item.colorKey] }]} />
+                  <View style={[styles.legendDot, { backgroundColor: c.heatmap[item.colorKey] }]} />
                   <View style={styles.legendText}>
-                    <Text style={[styles.legendLabel, { color: getThemeColors().text.primary }]}>{item.label}</Text>
-                    <Text style={[styles.legendDesc, { color: getThemeColors().text.muted }]}>{item.desc}</Text>
+                    <Text style={[styles.legendLabel, { color: c.text.primary }]}>{item.label}</Text>
+                    <Text style={[styles.legendDesc, { color: c.text.muted }]}>{item.desc}</Text>
                   </View>
                 </View>
               ))}
@@ -156,38 +156,38 @@ export function HUExplainerSheet({ visible, onClose, initialTab = 'hu' }: HUExpl
           </>
         ) : (
           <>
-            <Text style={[styles.intro, { color: getThemeColors().text.secondary }]}>
+            <Text style={[styles.intro, { color: c.text.secondary }]}>
               Your fatigue score (0–100) estimates accumulated training stress across four dimensions. Higher scores indicate greater need for recovery.
             </Text>
 
             {FATIGUE_SECTIONS.map((section) => (
               <View key={section.title} style={styles.section}>
                 <View style={styles.numberRow}>
-                  <Text style={[styles.sectionNumber, { color: getThemeColors().accent.primary }]}>{section.number}</Text>
+                  <Text style={[styles.sectionNumber, { color: c.accent.primary }]}>{section.number}</Text>
                   <View style={styles.titleWeightRow}>
-                    <Text style={[styles.sectionTitle, { color: getThemeColors().text.primary }]}>{section.title}</Text>
-                    <Text style={[styles.weightBadge, { color: getThemeColors().accent.primary, backgroundColor: getThemeColors().accent.primaryMuted }]}>{section.weight}</Text>
+                    <Text style={[styles.sectionTitle, { color: c.text.primary }]}>{section.title}</Text>
+                    <Text style={[styles.weightBadge, { color: c.accent.primary, backgroundColor: c.accent.primaryMuted }]}>{section.weight}</Text>
                   </View>
                 </View>
-                <Text style={[styles.sectionBody, { color: getThemeColors().text.secondary }]}>{section.body}</Text>
+                <Text style={[styles.sectionBody, { color: c.text.secondary }]}>{section.body}</Text>
               </View>
             ))}
 
             <View style={styles.legendSection}>
-              <Text style={[styles.legendHeading, { color: getThemeColors().text.primary }]}>Score Ranges</Text>
+              <Text style={[styles.legendHeading, { color: c.text.primary }]}>Score Ranges</Text>
               {FATIGUE_COLOR_LEGEND.map((item) => (
                 <View key={item.label} style={styles.legendRow}>
-                  <View style={[styles.legendDot, { backgroundColor: getThemeColors().semantic[item.colorKey] }]} />
+                  <View style={[styles.legendDot, { backgroundColor: c.semantic[item.colorKey] }]} />
                   <View style={styles.legendText}>
-                    <Text style={[styles.legendLabel, { color: getThemeColors().text.primary }]}>{item.label}</Text>
-                    <Text style={[styles.legendDesc, { color: getThemeColors().text.muted }]}>{item.desc}</Text>
+                    <Text style={[styles.legendLabel, { color: c.text.primary }]}>{item.label}</Text>
+                    <Text style={[styles.legendDesc, { color: c.text.muted }]}>{item.desc}</Text>
                   </View>
                 </View>
               ))}
             </View>
 
-            <View style={[styles.noteBox, { backgroundColor: getThemeColors().bg.surfaceRaised, borderLeftColor: getThemeColors().accent.primary }]}>
-              <Text style={[styles.noteText, { color: getThemeColors().text.secondary }]}>
+            <View style={[styles.noteBox, { backgroundColor: c.bg.surfaceRaised, borderLeftColor: c.accent.primary }]}>
+              <Text style={[styles.noteText, { color: c.text.secondary }]}>
                 When your fatigue score exceeds 70, Repwise will suggest a deload — reducing volume by 40–60% for one week while maintaining intensity.
               </Text>
             </View>

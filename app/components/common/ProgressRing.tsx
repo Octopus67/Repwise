@@ -48,6 +48,7 @@ export const ProgressRing = memo(function ProgressRing({
   const fill = computeRingFill(value, target, color);
   const ringLabel = formatRingLabel(value, target, label);
   const reduceMotion = useReduceMotion();
+  const c = useThemeColors();
 
   const progress = useSharedValue(0);
 
@@ -138,7 +139,7 @@ export const ProgressRing = memo(function ProgressRing({
             <Text
               style={[
                 getStyles().centerText,
-                fill.isOvershoot && { color: getThemeColors().semantic.warning },
+                fill.isOvershoot && { color: c.semantic.warning },
               ]}
             >
               {animated && !reduceMotion ? animatedValue : ringLabel.centerText}
@@ -165,16 +166,16 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
   },
   centerText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.bold,
   },
   subText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
   },
   setTargetsText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
   },

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { spacing, typography } from '../../theme/tokens';
 import { Button } from './Button';
-import { getThemeColors } from '../../hooks/useThemeColors';
+import { getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -43,6 +43,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         return this.props.fallback(this.state.error, this.handleRetry);
       }
 
+      const styles = getStyles(getThemeColors());
       return (
         <SafeAreaView style={styles.container}>
           <View style={styles.content}>
@@ -63,10 +64,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 }
 
-const styles = StyleSheet.create({
+const getStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.base,
+    backgroundColor: c.bg.base,
   },
   content: {
     flex: 1,
@@ -75,19 +76,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[6],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.bold,
     marginBottom: spacing[3],
   },
   subtitle: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[4],
   },
   errorMessage: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.sm,
     textAlign: 'center',
     marginBottom: spacing[6],

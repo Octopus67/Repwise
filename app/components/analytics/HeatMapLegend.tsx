@@ -2,12 +2,12 @@ import { View, Text, StyleSheet } from 'react-native';
 import { spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 
-const LEGEND_ITEMS = [
-  { color: getThemeColors().heatmap.untrained, label: 'Untrained' },
-  { color: getThemeColors().heatmap.belowMev, label: 'Below MEV' },
-  { color: getThemeColors().heatmap.optimal, label: 'Optimal' },
-  { color: getThemeColors().heatmap.nearMrv, label: 'Near MRV' },
-  { color: getThemeColors().heatmap.aboveMrv, label: 'Above MRV' },
+const getLEGEND_ITEMS = (c: ThemeColors) => [
+  { color: c.heatmap.untrained, label: 'Untrained' },
+  { color: c.heatmap.belowMev, label: 'Below MEV' },
+  { color: c.heatmap.optimal, label: 'Optimal' },
+  { color: c.heatmap.nearMrv, label: 'Near MRV' },
+  { color: c.heatmap.aboveMrv, label: 'Above MRV' },
 ];
 
 export function HeatMapLegend() {
@@ -15,7 +15,7 @@ export function HeatMapLegend() {
   const styles = getThemedStyles(c);
   return (
     <View style={styles.container}>
-      {LEGEND_ITEMS.map((item) => (
+      {getLEGEND_ITEMS(c).map((item) => (
         <View key={item.label} style={styles.item}>
           <View style={[styles.dot, { backgroundColor: item.color }]} />
           <Text style={[styles.label, { color: c.text.secondary }]}>{item.label}</Text>
@@ -44,7 +44,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: 5,
   },
   label: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.xs,
   },
 });

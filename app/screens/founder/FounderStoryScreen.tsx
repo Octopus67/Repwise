@@ -140,10 +140,10 @@ export function FounderStoryScreen() {
 }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: getThemeColors().bg.base },
+  safe: { flex: 1, backgroundColor: c.bg.base },
   container: { flex: 1 },
   content: { padding: spacing[4], paddingBottom: spacing[12] },
-  loading: { color: getThemeColors().text.muted, textAlign: 'center', marginTop: spacing[10], fontSize: typography.size.base, lineHeight: typography.lineHeight.base },
+  loading: { color: c.text.muted, textAlign: 'center', marginTop: spacing[10], fontSize: typography.size.base, lineHeight: typography.lineHeight.base },
   backBtn: {
     paddingVertical: spacing[2],
     marginBottom: spacing[2],
@@ -151,13 +151,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
   },
   backText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.base,
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.xl,
@@ -165,12 +165,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   narrativeCard: { marginBottom: spacing[2] },
   narrative: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     lineHeight: typography.lineHeight.md,
   },
   sectionTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.lg,
@@ -180,7 +180,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   metricsRow: { flexDirection: 'row', gap: spacing[3] },
   metricsCard: { flex: 1 },
   metricsLabel: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.sm,
@@ -192,14 +192,14 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: spacing[1],
   },
-  metricKey: { color: getThemeColors().text.muted, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm, textTransform: 'capitalize' },
-  metricVal: { color: getThemeColors().text.primary, fontSize: typography.size.base, fontWeight: typography.weight.semibold, lineHeight: typography.lineHeight.base },
+  metricKey: { color: c.text.muted, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm, textTransform: 'capitalize' },
+  metricVal: { color: c.text.primary, fontSize: typography.size.base, fontWeight: typography.weight.semibold, lineHeight: typography.lineHeight.base },
   timelineItem: { flexDirection: 'row', marginBottom: spacing[4], position: 'relative' },
   timelineDot: {
     width: 10,
     height: 10,
     borderRadius: radius.full,
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     marginTop: spacing[1],
     marginRight: spacing[3],
   },
@@ -209,13 +209,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     top: 14,
     bottom: -spacing[4],
     width: 2,
-    backgroundColor: getThemeColors().border.default,
+    backgroundColor: c.border.default,
   },
   timelineContent: { flex: 1 },
-  timelineYear: { color: getThemeColors().accent.primary, fontSize: typography.size.sm, fontWeight: typography.weight.semibold, lineHeight: typography.lineHeight.sm },
-  timelineEvent: { color: getThemeColors().text.primary, fontSize: typography.size.base, lineHeight: typography.lineHeight.base, marginTop: spacing[0.5] },
+  timelineYear: { color: c.accent.primary, fontSize: typography.size.sm, fontWeight: typography.weight.semibold, lineHeight: typography.lineHeight.sm },
+  timelineEvent: { color: c.text.primary, fontSize: typography.size.base, lineHeight: typography.lineHeight.base, marginTop: spacing[0.5] },
   philosophy: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
     fontStyle: 'italic',
@@ -226,6 +226,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     height: 200,
     borderRadius: radius.md,
     marginRight: spacing[3],
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
   },
 });

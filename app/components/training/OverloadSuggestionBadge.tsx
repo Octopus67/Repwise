@@ -58,7 +58,7 @@ export function OverloadSuggestionBadge({ exerciseName, unitSystem }: OverloadSu
   if (loading) {
     return (
       <View style={styles.skeleton}>
-        <View style={[styles.skeletonBar, { backgroundColor: getThemeColors().bg.surfaceRaised }]} />
+        <View style={[styles.skeletonBar, { backgroundColor: c.bg.surfaceRaised }]} />
       </View>
     );
   }
@@ -69,14 +69,14 @@ export function OverloadSuggestionBadge({ exerciseName, unitSystem }: OverloadSu
   const text = formatSuggestionText(suggestion, unitSystem);
 
   return (
-    <View style={[styles.container, { backgroundColor: getThemeColors().accent.primaryMuted }]}>
-      <Text style={[styles.text, { color: getThemeColors().accent.primary }]} numberOfLines={1}>{text}</Text>
+    <View style={[styles.container, { backgroundColor: c.accent.primaryMuted }]}>
+      <Text style={[styles.text, { color: c.accent.primary }]} numberOfLines={1}>{text}</Text>
       <TouchableOpacity
         style={styles.dismissBtn}
         onPress={() => setDismissed(true)}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <Text style={[styles.dismissText, { color: getThemeColors().text.muted }]}>✕</Text>
+        <Text style={[styles.dismissText, { color: c.text.muted }]}>✕</Text>
       </TouchableOpacity>
     </View>
   );
@@ -86,7 +86,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
@@ -96,7 +96,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   text: {
     flex: 1,
     fontSize: typography.size.sm,
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontWeight: typography.weight.medium,
   },
   dismissBtn: {
@@ -105,7 +105,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   dismissText: {
     fontSize: typography.size.xs,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
   },
   skeleton: {
     marginTop: spacing[1],
@@ -116,7 +116,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   skeletonBar: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
   },
 });

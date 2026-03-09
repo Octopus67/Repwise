@@ -131,7 +131,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[2],
   },
   errorText: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.sm,
     textAlign: 'center',
   },
@@ -139,12 +139,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[2],
     borderRadius: 6,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
   },
   retryText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
@@ -153,7 +153,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: 2,
   },
   frequencyItem: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.xs,
   },
   loadingContainer: {

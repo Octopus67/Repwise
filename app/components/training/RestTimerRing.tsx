@@ -81,10 +81,10 @@ export function RestTimerRing({
   const colorName = getTimerColor(remainingSeconds);
   const ringColor =
     colorName === 'green'
-      ? getThemeColors().semantic.positive
+      ? c.semantic.positive
       : colorName === 'yellow'
-        ? getThemeColors().semantic.warning
-        : getThemeColors().semantic.negative;
+        ? c.semantic.warning
+        : c.semantic.negative;
 
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
@@ -94,7 +94,7 @@ export function RestTimerRing({
           cx={center}
           cy={center}
           r={r}
-          stroke={getThemeColors().border.default}
+          stroke={c.border.default}
           strokeWidth={strokeWidth}
           fill="none"
         />

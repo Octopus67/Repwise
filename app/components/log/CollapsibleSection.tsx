@@ -33,7 +33,7 @@ export function CollapsibleSection({
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: getThemeColors().bg.surface }]}>
+    <View style={[styles.container, { backgroundColor: c.bg.surface }]}>
       <TouchableOpacity
         style={styles.header}
         onPress={toggle}
@@ -44,9 +44,9 @@ export function CollapsibleSection({
       >
         <View style={styles.headerLeft}>
           {icon && <View style={styles.icon}>{icon}</View>}
-          <Text style={[styles.title, { color: getThemeColors().text.primary }]}>{title}</Text>
+          <Text style={[styles.title, { color: c.text.primary }]}>{title}</Text>
         </View>
-        <Text style={[styles.chevron, { color: getThemeColors().text.muted }]}>{expanded ? '▾' : '▸'}</Text>
+        <Text style={[styles.chevron, { color: c.text.muted }]}>{expanded ? '▾' : '▸'}</Text>
       </TouchableOpacity>
 
       {expanded && <Animated.View layout={reduceMotion ? undefined : Layout} style={styles.body}>{children}</Animated.View>}
@@ -56,7 +56,7 @@ export function CollapsibleSection({
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.md,
     overflow: 'hidden',
   },
@@ -76,12 +76,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginRight: spacing[2],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
   },
   chevron: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.md,
     marginLeft: spacing[2],
   },

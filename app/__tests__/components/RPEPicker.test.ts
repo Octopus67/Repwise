@@ -19,8 +19,8 @@ import {
 // ─── (a) RPE mode shows values 6-10 ─────────────────────────────────────────
 
 describe('RPE mode values', () => {
-  it('RPE_VALUES contains exactly [6, 7, 8, 9, 10]', () => {
-    expect(RPE_VALUES).toEqual([6, 7, 8, 9, 10]);
+  it('RPE_VALUES contains exactly [2, 3, 4, 5, 6, 7, 8, 9, 10]', () => {
+    expect(RPE_VALUES).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10]);
   });
 
   it('RPE_VALUES has 5 entries', () => {

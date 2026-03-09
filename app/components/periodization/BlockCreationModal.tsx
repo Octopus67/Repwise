@@ -85,17 +85,17 @@ export function BlockCreationModal({ visible, onClose, onSaved, block }: BlockCr
   return (
     <ModalContainer visible={visible} onClose={onClose} title={isEdit ? 'Edit Block' : 'New Training Block'}>
       <ScrollView style={styles.form}>
-        <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>Name</Text>
+        <Text style={[styles.label, { color: c.text.secondary }]}>Name</Text>
         <TextInput
-          style={[styles.input, { color: getThemeColors().text.primary, backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.subtle }]}
+          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}
           value={name}
           onChangeText={setName}
           placeholder="e.g. Hypertrophy Phase 1"
-          placeholderTextColor={getThemeColors().text.muted}
+          placeholderTextColor={c.text.muted}
           maxLength={100}
         />
 
-        <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>Phase Type</Text>
+        <Text style={[styles.label, { color: c.text.secondary }]}>Phase Type</Text>
         <View style={styles.pills}>
           {PHASE_OPTIONS.map((p) => (
             <TouchableOpacity
@@ -110,25 +110,25 @@ export function BlockCreationModal({ visible, onClose, onSaved, block }: BlockCr
           ))}
         </View>
 
-        <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>Start Date</Text>
+        <Text style={[styles.label, { color: c.text.secondary }]}>Start Date</Text>
         <TextInput
-          style={[styles.input, { color: getThemeColors().text.primary, backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.subtle }]}
+          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}
           value={startDate}
           onChangeText={setStartDate}
           placeholder="YYYY-MM-DD"
-          placeholderTextColor={getThemeColors().text.muted}
+          placeholderTextColor={c.text.muted}
         />
 
-        <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>End Date</Text>
+        <Text style={[styles.label, { color: c.text.secondary }]}>End Date</Text>
         <TextInput
-          style={[styles.input, { color: getThemeColors().text.primary, backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.subtle }]}
+          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}
           value={endDate}
           onChangeText={setEndDate}
           placeholder="YYYY-MM-DD"
-          placeholderTextColor={getThemeColors().text.muted}
+          placeholderTextColor={c.text.muted}
         />
 
-        <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>Nutrition Phase (optional)</Text>
+        <Text style={[styles.label, { color: c.text.secondary }]}>Nutrition Phase (optional)</Text>
         <View style={styles.pills}>
           {NUTRITION_OPTIONS.map((n) => (
             <TouchableOpacity
@@ -145,7 +145,7 @@ export function BlockCreationModal({ visible, onClose, onSaved, block }: BlockCr
 
         {error && (
           <TouchableOpacity onPress={() => setError(null)} activeOpacity={0.7}>
-            <Text style={[styles.error, { color: getThemeColors().semantic.negative }]}>{error} (tap to dismiss)</Text>
+            <Text style={[styles.error, { color: c.semantic.negative }]}>{error} (tap to dismiss)</Text>
           </TouchableOpacity>
         )}
 
@@ -157,12 +157,12 @@ export function BlockCreationModal({ visible, onClose, onSaved, block }: BlockCr
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   form: { paddingHorizontal: spacing[4], paddingBottom: spacing[6] },
-  label: { color: getThemeColors().text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, marginTop: spacing[3], marginBottom: spacing[1] },
-  input: { backgroundColor: getThemeColors().bg.surfaceRaised, color: getThemeColors().text.primary, borderRadius: radius.sm, padding: spacing[3], fontSize: typography.size.base, borderWidth: 1, borderColor: getThemeColors().border.subtle },
+  label: { color: c.text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, marginTop: spacing[3], marginBottom: spacing[1] },
+  input: { backgroundColor: c.bg.surfaceRaised, color: c.text.primary, borderRadius: radius.sm, padding: spacing[3], fontSize: typography.size.base, borderWidth: 1, borderColor: c.border.subtle },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2] },
-  pill: { paddingHorizontal: spacing[3], paddingVertical: spacing[1], borderRadius: radius.full, backgroundColor: getThemeColors().bg.surfaceRaised, borderWidth: 1, borderColor: getThemeColors().border.subtle },
-  pillActive: { backgroundColor: getThemeColors().accent.primaryMuted, borderColor: getThemeColors().accent.primary },
-  pillText: { color: getThemeColors().text.secondary, fontSize: typography.size.sm },
-  pillTextActive: { color: getThemeColors().accent.primary },
-  error: { color: getThemeColors().semantic.negative, fontSize: typography.size.sm, marginTop: spacing[2], marginBottom: spacing[2] },
+  pill: { paddingHorizontal: spacing[3], paddingVertical: spacing[1], borderRadius: radius.full, backgroundColor: c.bg.surfaceRaised, borderWidth: 1, borderColor: c.border.subtle },
+  pillActive: { backgroundColor: c.accent.primaryMuted, borderColor: c.accent.primary },
+  pillText: { color: c.text.secondary, fontSize: typography.size.sm },
+  pillTextActive: { color: c.accent.primary },
+  error: { color: c.semantic.negative, fontSize: typography.size.sm, marginTop: spacing[2], marginBottom: spacing[2] },
 });

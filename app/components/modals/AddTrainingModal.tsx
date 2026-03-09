@@ -363,7 +363,7 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
           activeOpacity={0.7}
           testID="training-template-toggle"
         >
-          <Text style={[styles.sectionToggleText, { color: getThemeColors().accent.primary }]}>
+          <Text style={[styles.sectionToggleText, { color: c.accent.primary }]}>
             {templatesOpen ? '▾ Templates' : '▸ Templates'}
           </Text>
         </TouchableOpacity>
@@ -371,32 +371,32 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
         {templatesOpen && (
           <View style={styles.templateSection}>
             {templatesLoading ? (
-              <ActivityIndicator color={getThemeColors().accent.primary} />
+              <ActivityIndicator color={c.accent.primary} />
             ) : (
               <>
                 <TouchableOpacity
-                  style={[styles.copyLastBtn, { backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]}
+                  style={[styles.copyLastBtn, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                   onPress={copyLastWorkout}
                   disabled={copyLoading}
                   activeOpacity={0.7}
                   testID="training-copy-last"
                 >
                   {copyLoading ? (
-                    <ActivityIndicator size="small" color={getThemeColors().text.primary} />
+                    <ActivityIndicator size="small" color={c.text.primary} />
                   ) : (
-                    <Text style={[styles.copyLastText, { color: getThemeColors().text.primary }]}><Icon name="clipboard" /> Copy Last Workout</Text>
+                    <Text style={[styles.copyLastText, { color: c.text.primary }]}><Icon name="clipboard" /> Copy Last Workout</Text>
                   )}
                 </TouchableOpacity>
 
                 {templates.map((tpl) => (
                   <TouchableOpacity
                     key={tpl.id}
-                    style={[styles.templateCard, { backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]}
+                    style={[styles.templateCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                     onPress={() => loadFromTemplate(tpl)}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.templateName, { color: getThemeColors().text.primary }]}>{tpl.name}</Text>
-                    <Text style={[styles.templateDesc, { color: getThemeColors().text.secondary }]}>{tpl.description}</Text>
+                    <Text style={[styles.templateName, { color: c.text.primary }]}>{tpl.name}</Text>
+                    <Text style={[styles.templateDesc, { color: c.text.secondary }]}>{tpl.description}</Text>
                   </TouchableOpacity>
                 ))}
               </>
@@ -414,21 +414,21 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
             value={exerciseSearch}
             onChangeText={setExerciseSearch}
             placeholder="Search exercises..."
-            placeholderTextColor={getThemeColors().text.muted}
+            placeholderTextColor={c.text.muted}
             onFocus={() => setExerciseSearchFocused(true)}
             onBlur={() => setExerciseSearchFocused(false)}
             testID="training-exercise-search"
           />
           {exerciseSearchResults.length > 0 && (
-            <View style={[styles.exerciseSearchDropdown, { backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]}>
+            <View style={[styles.exerciseSearchDropdown, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
               {exerciseSearchResults.slice(0, 8).map((result) => (
                 <TouchableOpacity
                   key={result.id}
-                  style={[styles.exerciseSearchResult, { borderBottomColor: getThemeColors().border.default }]}
+                  style={[styles.exerciseSearchResult, { borderBottomColor: c.border.default }]}
                   onPress={() => handleSearchSelect(result.name)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.exerciseSearchResultText, { color: getThemeColors().text.primary }]}>{result.name}</Text>
+                  <Text style={[styles.exerciseSearchResultText, { color: c.text.primary }]}>{result.name}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -437,11 +437,11 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
 
         {/* ── Exercise List ── */}
         {exercises.map((ex, exIdx) => (
-          <View key={ex.id} style={[styles.exerciseCard, { backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]}>
+          <View key={ex.id} style={[styles.exerciseCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
             <View style={styles.exerciseHeader}>
-              <Text style={[styles.exerciseIdx, { color: getThemeColors().text.muted }]}>{exIdx + 1}</Text>
+              <Text style={[styles.exerciseIdx, { color: c.text.muted }]}>{exIdx + 1}</Text>
               <TouchableOpacity
-                style={[styles.exerciseNameBtn, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.default }]}
+                style={[styles.exerciseNameBtn, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
                 onPress={() => {
                   formStateRef.current = { exercises, notes };
                   onClose();
@@ -467,7 +467,7 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => removeExercise(ex.id)}>
-                <Text style={[styles.removeBtn, { color: getThemeColors().semantic.negative }]}><Icon name="close" size={16} /></Text>
+                <Text style={[styles.removeBtn, { color: c.semantic.negative }]}><Icon name="close" size={16} /></Text>
               </TouchableOpacity>
             </View>
 
@@ -479,9 +479,9 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
             {/* Set header */}
             <View style={styles.setHeaderRow}>
               <Text style={[styles.setHeaderCell, { flex: 0.5 }]}>#</Text>
-              <Text style={[styles.setHeaderCell, { color: getThemeColors().text.muted }]}>Reps</Text>
-              <Text style={[styles.setHeaderCell, { color: getThemeColors().text.muted }]}>kg</Text>
-              <Text style={[styles.setHeaderCell, { color: getThemeColors().text.muted }]}>RPE</Text>
+              <Text style={[styles.setHeaderCell, { color: c.text.muted }]}>Reps</Text>
+              <Text style={[styles.setHeaderCell, { color: c.text.muted }]}>kg</Text>
+              <Text style={[styles.setHeaderCell, { color: c.text.muted }]}>RPE</Text>
               <View style={{ width: 28 }} />
             </View>
 
@@ -490,54 +490,54 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
               <View key={s.id} style={styles.setRow}>
                 <Text style={[styles.setNum, { flex: 0.5 }]}>{sIdx + 1}</Text>
                 <TextInput
-                  style={[styles.setInput, { color: getThemeColors().text.primary, backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.default }]}
+                  style={[styles.setInput, { color: c.text.primary, backgroundColor: c.bg.surface, borderColor: c.border.default }]}
                   value={s.reps}
                   onChangeText={(v) => updateSet(ex.id, s.id, 'reps', v)}
                   keyboardType="numeric"
                   placeholder="0"
-                  placeholderTextColor={getThemeColors().text.muted}
+                  placeholderTextColor={c.text.muted}
                 />
                 <TextInput
-                  style={[styles.setInput, { color: getThemeColors().text.primary, backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.default }]}
+                  style={[styles.setInput, { color: c.text.primary, backgroundColor: c.bg.surface, borderColor: c.border.default }]}
                   value={s.weight}
                   onChangeText={(v) => updateSet(ex.id, s.id, 'weight', v)}
                   keyboardType="numeric"
                   placeholder="0"
-                  placeholderTextColor={getThemeColors().text.muted}
+                  placeholderTextColor={c.text.muted}
                 />
                 <TextInput
-                  style={[styles.setInput, { color: getThemeColors().text.primary, backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.default }]}
+                  style={[styles.setInput, { color: c.text.primary, backgroundColor: c.bg.surface, borderColor: c.border.default }]}
                   value={s.rpe}
                   onChangeText={(v) => updateSet(ex.id, s.id, 'rpe', v)}
                   keyboardType="numeric"
                   placeholder="—"
-                  placeholderTextColor={getThemeColors().text.muted}
+                  placeholderTextColor={c.text.muted}
                 />
                 <TouchableOpacity onPress={() => removeSet(ex.id, s.id)} style={{ width: 28, alignItems: 'center' }}>
-                  <Text style={[styles.removeSetBtn, { color: getThemeColors().text.muted }]}><Icon name="close" size={16} /></Text>
+                  <Text style={[styles.removeSetBtn, { color: c.text.muted }]}><Icon name="close" size={16} /></Text>
                 </TouchableOpacity>
               </View>
             ))}
 
             <TouchableOpacity style={styles.addSetBtn} onPress={() => addSet(ex.id)} activeOpacity={0.7}>
-              <Text style={[styles.addSetText, { color: getThemeColors().accent.primary }]}>+ Add Set</Text>
+              <Text style={[styles.addSetText, { color: c.accent.primary }]}>+ Add Set</Text>
             </TouchableOpacity>
           </View>
         ))}
 
-        <TouchableOpacity style={[styles.addExerciseBtn, { backgroundColor: getThemeColors().accent.primaryMuted }]} onPress={addExercise} activeOpacity={0.7}>
-          <Text style={[styles.addExerciseText, { color: getThemeColors().accent.primary }]}>+ Add Exercise</Text>
+        <TouchableOpacity style={[styles.addExerciseBtn, { backgroundColor: c.accent.primaryMuted }]} onPress={addExercise} activeOpacity={0.7}>
+          <Text style={[styles.addExerciseText, { color: c.accent.primary }]}>+ Add Exercise</Text>
         </TouchableOpacity>
 
         {/* Notes */}
         <View style={styles.field}>
-          <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>Notes (optional)</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>Notes (optional)</Text>
           <TextInput
             style={[styles.input, styles.notesInput]}
             value={notes}
             onChangeText={setNotes}
             placeholder="e.g. Felt strong today"
-            placeholderTextColor={getThemeColors().text.muted}
+            placeholderTextColor={c.text.muted}
             multiline
           />
         </View>
@@ -552,9 +552,9 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
         testID="training-submit-button"
       >
         {loading ? (
-          <ActivityIndicator color={getThemeColors().text.primary} />
+          <ActivityIndicator color={c.text.primary} />
         ) : (
-          <Text style={[styles.submitText, { color: getThemeColors().text.primary }]}>Save Session</Text>
+          <Text style={[styles.submitText, { color: c.text.primary }]}>Save Session</Text>
         )}
       </TouchableOpacity>
 
@@ -599,7 +599,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[2],
   },
   sectionToggleText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.md,
     lineHeight: typography.lineHeight.md,
     fontWeight: typography.weight.medium,
@@ -609,34 +609,34 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[2],
   },
   copyLastBtn: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     padding: spacing[3],
     alignItems: 'center',
   },
   copyLastText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.medium,
   },
   templateCard: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     padding: spacing[3],
   },
   templateName: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.semibold,
   },
   templateDesc: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     marginTop: spacing[1],
@@ -648,22 +648,22 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     zIndex: 10,
   },
   exerciseSearchInput: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
-    color: getThemeColors().text.primary,
+    borderColor: c.border.default,
+    color: c.text.primary,
     fontSize: typography.size.base,
     padding: 12,
   },
   exerciseSearchInputFocused: {
-    borderColor: getThemeColors().accent.primary,
+    borderColor: c.accent.primary,
   },
   exerciseSearchDropdown: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     marginTop: spacing[1],
     maxHeight: 240,
     overflow: 'hidden',
@@ -672,20 +672,20 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[2],
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.default,
+    borderBottomColor: c.border.default,
   },
   exerciseSearchResultText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
   },
 
   // Exercise card
   exerciseCard: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     padding: spacing[3],
     marginBottom: spacing[3],
   },
@@ -696,7 +696,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[2],
   },
   exerciseIdx: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.semibold,
@@ -705,23 +705,23 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   exerciseNameBtn: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
   },
   exerciseNameText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
   },
   exerciseNamePlaceholder: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
   },
   removeBtn: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.md,
     lineHeight: typography.lineHeight.md,
     paddingHorizontal: spacing[2],
@@ -737,7 +737,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   setHeaderCell: {
     flex: 1,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     lineHeight: typography.lineHeight.xs,
     fontWeight: typography.weight.medium,
@@ -750,7 +750,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[1],
   },
   setNum: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     textAlign: 'center',
@@ -758,18 +758,18 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   setInput: {
     flex: 1,
     minWidth: 56,
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
-    color: getThemeColors().text.primary,
+    borderColor: c.border.default,
+    color: c.text.primary,
     fontSize: typography.size.base,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
     textAlign: 'center',
   },
   removeSetBtn: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
   },
@@ -778,7 +778,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   addSetText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
@@ -786,14 +786,14 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
 
   // Add exercise
   addExerciseBtn: {
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
     borderRadius: radius.sm,
     padding: spacing[3],
     alignItems: 'center',
     marginBottom: spacing[3],
   },
   addExerciseText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.semibold,
@@ -802,18 +802,18 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   // Notes & submit
   field: { marginBottom: spacing[3] },
   label: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[1],
   },
   input: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
-    color: getThemeColors().text.primary,
+    borderColor: c.border.default,
+    color: c.text.primary,
     fontSize: typography.size.base,
     padding: spacing[3],
   },
@@ -822,7 +822,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     textAlignVertical: 'top',
   },
   submitBtn: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.sm,
     padding: spacing[3],
     alignItems: 'center',
@@ -830,7 +830,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   submitBtnDisabled: { opacity: 0.6 },
   submitText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     lineHeight: typography.lineHeight.md,
     fontWeight: typography.weight.semibold,

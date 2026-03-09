@@ -22,17 +22,17 @@ export default function NudgeCard({ nudge, onDismiss, onAction }: NudgeCardProps
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: getThemeColors().semantic.warningSubtle, borderLeftColor: getThemeColors().semantic.warning }]}>
+    <View style={[styles.container, { backgroundColor: c.semantic.warningSubtle, borderLeftColor: c.semantic.warning }]}>
       <View style={styles.content}>
-        <Text style={[styles.title, { color: getThemeColors().text.primary }]}>{nudge.title}</Text>
-        <Text style={[styles.message, { color: getThemeColors().text.secondary }]}>{nudge.message}</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>{nudge.title}</Text>
+        <Text style={[styles.message, { color: c.text.secondary }]}>{nudge.message}</Text>
       </View>
       <View style={styles.actions}>
         <TouchableOpacity style={styles.dismissButton} onPress={onDismiss}>
-          <Text style={[styles.dismissText, { color: getThemeColors().text.muted }]}>Dismiss</Text>
+          <Text style={[styles.dismissText, { color: c.text.muted }]}>Dismiss</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionButton, { backgroundColor: getThemeColors().semantic.warning }]} onPress={handleAction}>
-          <Text style={[styles.actionText, { color: getThemeColors().text.inverse }]}>Take Action</Text>
+        <TouchableOpacity style={[styles.actionButton, { backgroundColor: c.semantic.warning }]} onPress={handleAction}>
+          <Text style={[styles.actionText, { color: c.text.inverse }]}>Take Action</Text>
         </TouchableOpacity>
       </View>
     </View>

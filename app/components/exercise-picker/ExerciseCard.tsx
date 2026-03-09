@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { TouchableOpacity, View, Text, Image, StyleSheet } from 'react-native';
 import { Exercise } from '../../types/exercise';
-import { getMuscleGroupConfig } from '../../config/muscleGroups';
+import { findMuscleGroupConfig } from '../../config/muscleGroups';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { MuscleGroupIcon } from './MuscleGroupIcon';
@@ -30,7 +30,7 @@ function resolveImageUrl(url: string): string {
 export function ExerciseCard({ exercise, onPress, onLongPress }: ExerciseCardProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
-  const config = getMuscleGroupConfig(exercise.muscle_group);
+  const config = findMuscleGroupConfig(exercise.muscle_group);
   const bgColor = config?.color ?? '#2563EB';
   const [imgError, setImgError] = useState(false);
 
@@ -38,7 +38,7 @@ export function ExerciseCard({ exercise, onPress, onLongPress }: ExerciseCardPro
 
   return (
     <TouchableOpacity
-      style={[styles.container, { borderBottomColor: getThemeColors().border.subtle }]}
+      style={[styles.container, { borderBottomColor: c.border.subtle }]}
       onPress={() => onPress(exercise)}
       onLongPress={onLongPress ? () => onLongPress(exercise) : undefined}
       activeOpacity={0.7}
@@ -58,18 +58,18 @@ export function ExerciseCard({ exercise, onPress, onLongPress }: ExerciseCardPro
       )}
 
       <View style={styles.info}>
-        <Text style={[styles.name, { color: getThemeColors().text.primary }]} numberOfLines={1}>{exercise.name}</Text>
+        <Text style={[styles.name, { color: c.text.primary }]} numberOfLines={1}>{exercise.name}</Text>
         <View style={styles.tagRow}>
-          <View style={[styles.equipmentTag, { backgroundColor: getThemeColors().accent.primaryMuted }]}>
-            <Text style={[styles.tagText, { color: getThemeColors().text.secondary }]}>{exercise.equipment.replace('_', ' ')}</Text>
+          <View style={[styles.equipmentTag, { backgroundColor: c.accent.primaryMuted }]}>
+            <Text style={[styles.tagText, { color: c.text.secondary }]}>{exercise.equipment.replace('_', ' ')}</Text>
           </View>
           <View style={[styles.categoryTag, exercise.category === 'isolation' && styles.isolationTag]}>
-            <Text style={[styles.tagText, { color: getThemeColors().text.secondary }]}>{exercise.category}</Text>
+            <Text style={[styles.tagText, { color: c.text.secondary }]}>{exercise.category}</Text>
           </View>
         </View>
       </View>
 
-      <Text style={[styles.chevron, { color: getThemeColors().text.muted }]}>›</Text>
+      <Text style={[styles.chevron, { color: c.text.muted }]}>›</Text>
     </TouchableOpacity>
   );
 }
@@ -81,7 +81,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[3],
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.subtle,
+    borderBottomColor: c.border.subtle,
   },
   abbrevCircle: {
     width: 48,
@@ -100,7 +100,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginLeft: spacing[3],
   },
   name: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.medium,
@@ -111,27 +111,27 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: 4,
   },
   equipmentTag: {
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
     borderRadius: radius.full,
     paddingHorizontal: spacing[2],
     paddingVertical: 2,
   },
   categoryTag: {
-    backgroundColor: getThemeColors().semantic.positiveSubtle,
+    backgroundColor: c.semantic.positiveSubtle,
     borderRadius: radius.full,
     paddingHorizontal: spacing[2],
     paddingVertical: 2,
   },
   isolationTag: {
-    backgroundColor: getThemeColors().semantic.warningSubtle,
+    backgroundColor: c.semantic.warningSubtle,
   },
   tagText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.xs,
     lineHeight: typography.lineHeight.xs,
   },
   chevron: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xl,
     lineHeight: typography.lineHeight.xl,
     marginLeft: spacing[2],

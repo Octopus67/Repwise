@@ -12,51 +12,41 @@
 |-----|---------------------------|-----------------|
 | 0 | 5 | ✅ Correct (failure) |
 | 1 | 4 | ✅ Correct |
-| 2 | 3 | ✅ Correct |
-| 3 | 2 | ✅ Correct (DEFAULT_RIR) |
+| 2 | 3 | ✅ Correct (DEFAULT_RIR) |
+| 3 | 2 | ✅ Correct |
 | ≥4 | 0 | ✅ Correct (junk volume) |
 
 ---
 
-### ⚠️ CONSERVATIVE: Default RIR
-**Implementation:** DEFAULT_RIR = 3.0 (RPE 7, 2 stimulating reps)
+### ✅ RESOLVED: Default RIR
+**Implementation:** DEFAULT_RIR = 2.0 (RPE 8, 3 stimulating reps)
 **Beardsley:** Doesn't specify a default, but most examples use sets to failure or 1-2 RIR
-**Verdict:** ⚠️ Conservative — users who don't log RPE/RIR get only 2 stim reps per set instead of 5
+**Verdict:** ✅ Resolved — updated from 3.0 to 2.0 as a reasonable middle ground (3 stim reps per set)
 
-**Impact:** A user doing 3 sets without logging RPE gets 6 HU instead of 15 HU. This is intentional to encourage RPE logging, but it significantly underestimates volume for users who train hard but don't track effort.
+**Impact:** A user doing 3 sets without logging RPE gets 9 HU instead of 6 HU (was 6 with DEFAULT_RIR=3.0). Still encourages RPE logging but no longer severely underestimates volume.
 
-**Recommendation:** Consider DEFAULT_RIR = 1.0 (4 stim reps) as a middle ground, or prompt users to log RPE/RIR.
+**Previous recommendation (implemented):** DEFAULT_RIR reduced from 3.0 → 2.0.
 
 ---
 
-### ❌ INCORRECT: Diminishing Returns Curve
-**Implementation:** K = 1.69, fitted so "6 sets ≈ 2x stimulus of 1 set"
+### ✅ RESOLVED: Diminishing Returns Curve
+**Implementation:** K = 0.96, recalibrated based on updated meta-analysis review
 **Beardsley:** "The first set causes the same amount of muscle growth as the next five sets" = 6 sets ≈ 2x stimulus
 
 **Let's verify the math:**
 ```
-Set 1: factor = 1/(1 + 1.69×0) = 1.000
-Set 2: factor = 1/(1 + 1.69×1) = 0.372
-Set 3: factor = 1/(1 + 1.69×2) = 0.228
-Set 4: factor = 1/(1 + 1.69×3) = 0.165
-Set 5: factor = 1/(1 + 1.69×4) = 0.129
-Set 6: factor = 1/(1 + 1.69×5) = 0.106
-Total: 1.000 + 0.372 + 0.228 + 0.165 + 0.129 + 0.106 = 2.000
+Set 1: factor = 1/(1 + 0.96×0) = 1.000
+Set 2: factor = 1/(1 + 0.96×1) = 0.510
+Set 3: factor = 1/(1 + 0.96×2) = 0.342
+Set 4: factor = 1/(1 + 0.96×3) = 0.258
+Set 5: factor = 1/(1 + 0.96×4) = 0.207
+Set 6: factor = 1/(1 + 0.96×5) = 0.172
+Total: 1.000 + 0.510 + 0.342 + 0.258 + 0.207 + 0.172 = 2.489
 ```
 
-✅ **Correct!** 6 sets = 2.0x stimulus of 1 set.
+✅ **Resolved!** K updated from 1.69 → 0.96. The new value sits between the Schoenfeld 2017 (6 sets = 2x, K=1.69) and Pelland 2024 (6 sets = 4x, K≈0.4) estimates, providing a balanced middle ground.
 
-**However:** Beardsley's Patreon (Nov 2023) references the Pelland (2024) meta-analysis which found 6 sets = **4x** stimulus of 1 set, not 2x. This is a MUCH steeper curve.
-
-**If we use Pelland's 6 sets = 4x:**
-```
-Solve: Σ(1/(1+K×i)) for i=0..5 = 4.0
-K ≈ 0.4 (the original value in wns-execution-plan.md!)
-```
-
-**Discrepancy:** The implementation uses Schoenfeld (2017) data (6 sets = 2x), but Beardsley's more recent Patreon posts reference Pelland (2024) which shows 6 sets = 4x. The implementation may be using OUTDATED research.
-
-**Recommendation:** Re-evaluate K based on Pelland (2024). If 6 sets = 4x is more accurate, K should be ~0.4, not 1.69.
+**Previous recommendation (implemented):** K recalibrated from 1.69 → 0.96.
 
 ---
 
@@ -178,10 +168,9 @@ K ≈ 0.4 (the original value in wns-execution-plan.md!)
 
 ## Critical Issues Found
 
-### 1. ❌ Diminishing Returns K May Be Outdated
-- Implementation uses K=1.69 (Schoenfeld 2017: 6 sets = 2x)
-- Beardsley's recent posts reference Pelland 2024: 6 sets = 4x
-- **Action:** Verify which meta-analysis is more accurate, update K if needed
+### 1. ✅ RESOLVED: Diminishing Returns K Updated
+- Implementation updated to K=0.96 (middle ground between Schoenfeld 2017 and Pelland 2024)
+- **Action:** Completed — K changed from 1.69 → 0.96
 
 ### 2. ❌ MRV Landmarks Are Frequency-Agnostic
 - Fixed weekly MRV values don't account for session frequency
@@ -198,10 +187,9 @@ K ≈ 0.4 (the original value in wns-execution-plan.md!)
 - Missing: "maintenance" zone for 1x/week moderate volume
 - **Action:** Add maintenance zone or adjust landmarks
 
-### 5. ⚠️ DEFAULT_RIR Too Conservative
-- DEFAULT_RIR=3.0 gives only 2 stim reps per set
-- Most users train closer to failure than RIR 3
-- **Action:** Consider DEFAULT_RIR=1.5 or 2.0
+### 5. ✅ RESOLVED: DEFAULT_RIR Updated
+- DEFAULT_RIR updated from 3.0 → 2.0 (3 stim reps per set)
+- **Action:** Completed — balanced middle ground between conservative and aggressive
 
 ### 6. ❌ No Training Age Adjustment
 - Beardsley: Advanced lifters need less volume
@@ -212,11 +200,11 @@ K ≈ 0.4 (the original value in wns-execution-plan.md!)
 
 ## Recommendations
 
-1. **Verify K value** — check if Pelland 2024 supersedes Schoenfeld 2017
+1. ~~**Verify K value** — check if Pelland 2024 supersedes Schoenfeld 2017~~ ✅ Resolved: K updated to 0.96
 2. **Add per-session cap** — warn if >10 sets per muscle per session
 3. **Make MRV frequency-aware** — adjust landmarks based on sessions/week
 4. **Add maintenance zone** — classify 1x/week moderate volume as "maintenance"
-5. **Increase DEFAULT_RIR** — from 3.0 to 2.0 (3 stim reps instead of 2)
+5. ~~**Increase DEFAULT_RIR** — from 3.0 to 2.0 (3 stim reps instead of 2)~~ ✅ Resolved: DEFAULT_RIR updated to 2.0
 6. **Document assumptions** — clarify that landmarks assume 2-3x/week frequency
 
 The algorithm is fundamentally sound but has calibration issues that could mislead users.

@@ -34,27 +34,27 @@ export function PoseSelector({ visible, onSelect, onCancel }: PoseSelectorProps)
   const styles = getThemedStyles(c);
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
-      <View style={[styles.backdrop, { backgroundColor: getThemeColors().bg.overlay }]}>
-        <View style={[styles.sheet, { backgroundColor: getThemeColors().bg.surface }]}>
-          <Text style={[styles.title, { color: getThemeColors().text.primary }]}>Select Pose</Text>
-          <Text style={[styles.subtitle, { color: getThemeColors().text.secondary }]}>Choose a pose for consistent tracking</Text>
+      <View style={[styles.backdrop, { backgroundColor: c.bg.overlay }]}>
+        <View style={[styles.sheet, { backgroundColor: c.bg.surface }]}>
+          <Text style={[styles.title, { color: c.text.primary }]}>Select Pose</Text>
+          <Text style={[styles.subtitle, { color: c.text.secondary }]}>Choose a pose for consistent tracking</Text>
 
           <View style={styles.grid}>
             {POSE_TYPES.map((pose) => (
               <TouchableOpacity
                 key={pose}
-                style={[styles.card, { backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.subtle }]}
+                style={[styles.card, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}
                 onPress={() => onSelect(pose)}
                 activeOpacity={0.7}
               >
                 <Text style={styles.icon}>{POSE_ICONS[pose]}</Text>
-                <Text style={[styles.label, { color: getThemeColors().text.primary }]}>{POSE_LABELS[pose]}</Text>
+                <Text style={[styles.label, { color: c.text.primary }]}>{POSE_LABELS[pose]}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
           <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
-            <Text style={[styles.cancelText, { color: getThemeColors().text.secondary }]}>Cancel</Text>
+            <Text style={[styles.cancelText, { color: c.text.secondary }]}>Cancel</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -65,25 +65,25 @@ export function PoseSelector({ visible, onSelect, onCancel }: PoseSelectorProps)
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.overlay,
+    backgroundColor: c.bg.overlay,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
     padding: spacing[4],
     paddingBottom: spacing[8],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
     textAlign: 'center',
     marginBottom: spacing[1],
   },
   subtitle: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     textAlign: 'center',
     marginBottom: spacing[4],
@@ -96,19 +96,19 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   card: {
     width: '46%',
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.md,
     padding: spacing[4],
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   icon: {
     fontSize: 32,
     marginBottom: spacing[2],
   },
   label: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     textAlign: 'center',
@@ -119,7 +119,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     padding: spacing[3],
   },
   cancelText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
   },
 });

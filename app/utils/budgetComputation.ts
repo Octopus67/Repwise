@@ -5,7 +5,7 @@
  */
 
 ;
-import { getThemeColors } from '../hooks/useThemeColors';
+import { getThemeColors, type ThemeColors } from '../hooks/useThemeColors';
 
 export interface MacroValues {
   calories: number;
@@ -41,7 +41,8 @@ export function getOverTargetColor(
   value: number,
   target: number,
   standardColor: string,
+  c: ThemeColors = getThemeColors(),
 ): string {
-  if (value > target) return getThemeColors().semantic.overTarget;
+  if (value > target) return c.semantic.overTarget;
   return standardColor;
 }

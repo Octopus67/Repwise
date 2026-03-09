@@ -26,16 +26,62 @@ class PreviousPerformanceResolver:
     ) -> Optional[PreviousPerformance]:
         """Return the last set from the most recent session containing *exercise_name*.
 
-        Queries training_sessions for the user, ordered by session_date DESC.
-        Iterates through sessions to find one containing the exercise, then
-        extracts the last set from that exercise entry.
-
-        Returns None if no previous session exists for this exercise.
+        Uses JSONB filtering to avoid loading all sessions.
         """
+        from sqlalchemy import func
+        
+        # For SQLite (dev), fall back to loading sessions
+        if "sqlite" in str(self.session.bind.url):
+            return await self._get_previous_performance_sqlite(user_id, exercise_name)
+        
+        # PostgreSQL: Filter sessions that contain the exercise using JSONB operators
+        stmt = (
+            select(TrainingSession)
+            .where(
+                TrainingSession.user_id == user_id,
+                TrainingSession.deleted_at.is_(None),
+                func.jsonb_path_exists(
+                    TrainingSession.exercises,
+                    f'$[*] ? (@.exercise_name like_regex "{exercise_name}" flag "i")'
+                )
+            )
+            .order_by(TrainingSession.session_date.desc())
+            .limit(10)  # Only check last 10 sessions with this exercise
+        )
+
+        result = await self.session.execute(stmt)
+        sessions = result.scalars().all()
+
+        lower_name = exercise_name.lower().strip()
+
+        for session in sessions:
+            for exercise_data in session.exercises or []:
+                if exercise_data.get("exercise_name", "").lower().strip() == lower_name:
+                    sets = exercise_data.get("sets", [])
+                    if not sets:
+                        continue
+                    last_set = sets[-1]
+                    weight = last_set.get("weight_kg")
+                    reps = last_set.get("reps")
+                    if weight is not None and reps is not None:
+                        return PreviousPerformance(
+                            exercise_name=exercise_name,
+                            session_date=session.session_date,
+                            last_set_weight_kg=weight,
+                            last_set_reps=reps,
+                        )
+
+        return None
+    
+    async def _get_previous_performance_sqlite(
+        self, user_id: uuid.UUID, exercise_name: str
+    ) -> Optional[PreviousPerformance]:
+        """SQLite fallback (dev only)."""
         stmt = (
             select(TrainingSession)
             .where(TrainingSession.user_id == user_id)
             .order_by(TrainingSession.session_date.desc())
+            .limit(50)  # Limit to last 50 sessions
         )
         stmt = TrainingSession.not_deleted(stmt)
 

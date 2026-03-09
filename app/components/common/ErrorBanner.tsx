@@ -14,23 +14,23 @@ interface ErrorBannerProps {
   testID?: string;
 }
 
-const variantConfig: Record<ErrorBannerVariant, { bg: string; accent: string; icon: string }> = {
+const getVariantConfig = (c: ThemeColors): Record<ErrorBannerVariant, { bg: string; accent: string; icon: string }> => ({
   error: {
-    bg: getThemeColors().semantic.negativeSubtle,
-    accent: getThemeColors().semantic.negative,
+    bg: c.semantic.negativeSubtle,
+    accent: c.semantic.negative,
     icon: 'alert-circle',
   },
   warning: {
-    bg: getThemeColors().semantic.warningSubtle,
-    accent: getThemeColors().semantic.warning,
+    bg: c.semantic.warningSubtle,
+    accent: c.semantic.warning,
     icon: 'alert-triangle',
   },
   info: {
-    bg: getThemeColors().accent.primaryMuted,
-    accent: getThemeColors().accent.primary,
+    bg: c.accent.primaryMuted,
+    accent: c.accent.primary,
     icon: 'info',
   },
-};
+});
 
 export function ErrorBanner({
   message,
@@ -41,7 +41,7 @@ export function ErrorBanner({
 }: ErrorBannerProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
-  const config = variantConfig[variant];
+  const config = getVariantConfig(c)[variant];
 
   return (
     <Animated.View
@@ -53,7 +53,7 @@ export function ErrorBanner({
       testID={testID}
     >
       <Icon name={config.icon as any} size={20} color={config.accent} />
-      <Text style={[styles.message, { color: getThemeColors().text.secondary }]} numberOfLines={3}>
+      <Text style={[styles.message, { color: c.text.secondary }]} numberOfLines={3}>
         {message}
       </Text>
       {onRetry && (
@@ -64,7 +64,7 @@ export function ErrorBanner({
           accessibilityRole="button"
           accessibilityLabel="Retry"
         >
-          <Text style={[styles.retryText, { color: getThemeColors().accent.primary }]}>Retry</Text>
+          <Text style={[styles.retryText, { color: c.accent.primary }]}>Retry</Text>
         </TouchableOpacity>
       )}
       {onDismiss && (
@@ -75,7 +75,7 @@ export function ErrorBanner({
           accessibilityRole="button"
           accessibilityLabel="Dismiss"
         >
-          <Icon name="x" size={16} color={getThemeColors().text.muted} />
+          <Icon name="x" size={16} color={c.text.muted} />
         </TouchableOpacity>
       )}
     </Animated.View>
@@ -93,7 +93,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   message: {
     flex: 1,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.regular,
     lineHeight: typography.lineHeight.sm,
@@ -107,7 +107,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
   },
   retryText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
   },

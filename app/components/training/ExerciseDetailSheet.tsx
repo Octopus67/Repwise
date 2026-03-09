@@ -47,7 +47,7 @@ import {
   getExerciseTags,
 } from '../../utils/exerciseDetailLogic';
 import { MuscleGroupIcon } from '../exercise-picker/MuscleGroupIcon';
-import { getMuscleGroupConfig } from '../../config/muscleGroups';
+import { findMuscleGroupConfig } from '../../config/muscleGroups';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.7;
@@ -121,7 +121,7 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
   const tags = getExerciseTags(exercise);
   const hasInstructions = shouldShowInstructions(exercise);
   const hasTips = shouldShowTips(exercise);
-  const config = getMuscleGroupConfig(exercise.muscle_group);
+  const config = findMuscleGroupConfig(exercise.muscle_group);
   const mgColor = config?.color ?? '#2563EB';
 
   return (
@@ -134,7 +134,7 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
     >
       {/* Backdrop — tap to dismiss */}
       <TouchableWithoutFeedback onPress={dismiss} accessibilityRole="button" accessibilityLabel="Close exercise details">
-        <View style={[styles.backdrop, { backgroundColor: getThemeColors().bg.overlay }]} />
+        <View style={[styles.backdrop, { backgroundColor: c.bg.overlay }]} />
       </TouchableWithoutFeedback>
 
       {/* Sheet */}
@@ -144,7 +144,7 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
         >
         {/* Drag handle */}
         <View style={styles.handleRow}>
-          <View style={[styles.handle, { backgroundColor: getThemeColors().text.muted }]} />
+          <View style={[styles.handle, { backgroundColor: c.text.muted }]} />
         </View>
 
         <ScrollView
@@ -156,39 +156,39 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
           {hasImage && imageUrl ? (
             <Image
               source={{ uri: imageUrl }}
-              style={[styles.image, { backgroundColor: getThemeColors().bg.surfaceRaised }]}
+              style={[styles.image, { backgroundColor: c.bg.surfaceRaised }]}
               resizeMode="contain"
               accessibilityLabel={`${exercise.name} demonstration`}
             />
           ) : (
             <View style={[styles.placeholder, { backgroundColor: `${mgColor}15` }]}>
               <MuscleGroupIcon muscleGroup={exercise.muscle_group} size={48} color={mgColor} />
-              <Text style={[styles.placeholderText, { color: getThemeColors().text.muted }]}>No image available</Text>
+              <Text style={[styles.placeholderText, { color: c.text.muted }]}>No image available</Text>
             </View>
           )}
 
           {/* Exercise name */}
-          <Text style={[styles.exerciseName, { color: getThemeColors().text.primary }]}>{exercise.name}</Text>
+          <Text style={[styles.exerciseName, { color: c.text.primary }]}>{exercise.name}</Text>
 
           {/* Tags */}
           <View style={styles.tagRow}>
             {tags.map((tag, i) => (
-              <View key={i} style={[styles.tag, { backgroundColor: getThemeColors().bg.surfaceRaised }]}>
-                <Text style={[styles.tagText, { color: getThemeColors().text.secondary }]}>{tag}</Text>
+              <View key={i} style={[styles.tag, { backgroundColor: c.bg.surfaceRaised }]}>
+                <Text style={[styles.tagText, { color: c.text.secondary }]}>{tag}</Text>
               </View>
             ))}
           </View>
 
           {/* Muscles Targeted */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: getThemeColors().text.primary }]}>Muscles Targeted</Text>
-            <Text style={[styles.muscleLabel, { color: getThemeColors().text.secondary }]}>
-              Primary: <Text style={[styles.muscleValue, { color: getThemeColors().text.primary }]}>{muscles.primary.replace(/_/g, ' ')}</Text>
+            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Muscles Targeted</Text>
+            <Text style={[styles.muscleLabel, { color: c.text.secondary }]}>
+              Primary: <Text style={[styles.muscleValue, { color: c.text.primary }]}>{muscles.primary.replace(/_/g, ' ')}</Text>
             </Text>
             {muscles.secondary.length > 0 && (
-              <Text style={[styles.muscleLabel, { color: getThemeColors().text.secondary }]}>
+              <Text style={[styles.muscleLabel, { color: c.text.secondary }]}>
                 Secondary:{' '}
-                <Text style={[styles.muscleValue, { color: getThemeColors().text.primary }]}>
+                <Text style={[styles.muscleValue, { color: c.text.primary }]}>
                   {muscles.secondary.map((m) => m.replace(/_/g, ' ')).join(', ')}
                 </Text>
               </Text>
@@ -198,29 +198,29 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
           {/* Instructions */}
           {hasInstructions ? (
             <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: getThemeColors().text.primary }]}>Instructions</Text>
+              <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Instructions</Text>
               {exercise.instructions!.map((step, i) => (
                 <View key={i} style={styles.instructionRow}>
-                  <Text style={[styles.instructionNum, { color: getThemeColors().accent.primary }]}>{i + 1}.</Text>
-                  <Text style={[styles.instructionText, { color: getThemeColors().text.secondary }]}>{step}</Text>
+                  <Text style={[styles.instructionNum, { color: c.accent.primary }]}>{i + 1}.</Text>
+                  <Text style={[styles.instructionText, { color: c.text.secondary }]}>{step}</Text>
                 </View>
               ))}
             </View>
           ) : (
             <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: getThemeColors().text.primary }]}>Instructions</Text>
-              <Text style={[styles.noContent, { color: getThemeColors().text.muted }]}>No instructions available</Text>
+              <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Instructions</Text>
+              <Text style={[styles.noContent, { color: c.text.muted }]}>No instructions available</Text>
             </View>
           )}
 
           {/* Tips */}
           {hasTips && (
             <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: getThemeColors().text.primary }]}>Tips</Text>
+              <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Tips</Text>
               {exercise.tips!.map((tip, i) => (
                 <View key={i} style={styles.tipRow}>
-                  <Text style={[styles.tipBullet, { color: getThemeColors().accent.primary }]}>•</Text>
-                  <Text style={[styles.tipText, { color: getThemeColors().text.secondary }]}>{tip}</Text>
+                  <Text style={[styles.tipBullet, { color: c.accent.primary }]}>•</Text>
+                  <Text style={[styles.tipText, { color: c.text.secondary }]}>{tip}</Text>
                 </View>
               ))}
             </View>
@@ -239,7 +239,7 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.overlay,
+    backgroundColor: c.bg.overlay,
   },
   sheet: {
     position: 'absolute',
@@ -247,7 +247,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     left: 0,
     right: 0,
     height: SHEET_HEIGHT,
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
   },
@@ -259,7 +259,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: getThemeColors().text.muted,
+    backgroundColor: c.text.muted,
   },
   scrollContent: {
     flex: 1,
@@ -270,7 +270,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     height: 200,
     borderRadius: radius.md,
     marginBottom: spacing[3],
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
   },
   placeholder: {
     width: '100%',
@@ -281,12 +281,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
   },
   placeholderText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     marginTop: spacing[2],
   },
   exerciseName: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.bold,
     marginBottom: spacing[2],
@@ -298,13 +298,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[4],
   },
   tag: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.full,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
   },
   tagText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     textTransform: 'capitalize',
   },
@@ -312,18 +312,18 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[4],
   },
   sectionTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[2],
   },
   muscleLabel: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     marginBottom: spacing[1],
   },
   muscleValue: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     textTransform: 'capitalize',
   },
   instructionRow: {
@@ -331,19 +331,19 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[2],
   },
   instructionNum: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     width: 24,
   },
   instructionText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     flex: 1,
     lineHeight: typography.size.base * typography.lineHeight.normal,
   },
   noContent: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.base,
     fontStyle: 'italic',
   },
@@ -352,12 +352,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[2],
   },
   tipBullet: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.base,
     width: 20,
   },
   tipText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     flex: 1,
     lineHeight: typography.size.base * typography.lineHeight.normal,

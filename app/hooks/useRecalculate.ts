@@ -2,7 +2,7 @@ import { useRef, useCallback, useEffect } from 'react';
 import api from '../services/api';
 import { useStore } from '../store';
 
-const DEBOUNCE_MS = 1500;
+const DEBOUNCE_MS = 500;
 
 type MetricsPayload = Record<string, unknown>;
 type GoalsPayload = Record<string, unknown>;

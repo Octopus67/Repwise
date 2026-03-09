@@ -36,17 +36,17 @@ interface VolumeIndicatorPillProps {
   completedSetCounts: Record<string, number>;
 }
 
-const COLOR_MAP: Record<VolumeColor, string> = {
-  red: getThemeColors().semantic.negative,
-  yellow: getThemeColors().semantic.warning,
-  green: getThemeColors().semantic.positive,
-};
+const getCOLOR_MAP = (c: ThemeColors): Record<VolumeColor, string> => ({
+  red: c.semantic.negative,
+  yellow: c.semantic.warning,
+  green: c.semantic.positive,
+});
 
-const BG_COLOR_MAP: Record<VolumeColor, string> = {
-  red: getThemeColors().semantic.negativeSubtle,
-  yellow: getThemeColors().semantic.warningSubtle,
-  green: getThemeColors().semantic.positiveSubtle,
-};
+const getBG_COLOR_MAP = (c: ThemeColors): Record<VolumeColor, string> => ({
+  red: c.semantic.negativeSubtle,
+  yellow: c.semantic.warningSubtle,
+  green: c.semantic.positiveSubtle,
+});
 
 export function VolumeIndicatorPill({ muscleGroups, completedSetCounts }: VolumeIndicatorPillProps) {
   const c = useThemeColors();
@@ -111,8 +111,8 @@ export function VolumeIndicatorPill({ muscleGroups, completedSetCounts }: Volume
         const localIncrement = completedSetCounts[group] ?? 0;
         const totalSets = data.current_sets + localIncrement;
         const color = getVolumeColor(totalSets, data.mev, data.mav, data.mrv);
-        const textColor = COLOR_MAP[color];
-        const bgColor = BG_COLOR_MAP[color];
+        const textColor = getCOLOR_MAP(c)[color];
+        const bgColor = getBG_COLOR_MAP(c)[color];
         const displayName = group.charAt(0).toUpperCase() + group.slice(1);
 
         // WNS: show HU + local increment estimate, legacy: show sets
@@ -137,7 +137,7 @@ export function VolumeIndicatorPill({ muscleGroups, completedSetCounts }: Volume
           accessibilityLabel="How Hypertrophy Units work"
           accessibilityRole="button"
         >
-          <Text style={[styles.infoIcon, { color: getThemeColors().text.muted }]}>ⓘ</Text>
+          <Text style={[styles.infoIcon, { color: c.text.muted }]}>ⓘ</Text>
         </TouchableOpacity>
       )}
     </ScrollView>
@@ -171,6 +171,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   infoIcon: {
     fontSize: typography.size.base,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
   },
 });

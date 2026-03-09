@@ -48,6 +48,7 @@ from src.modules.training.analytics_schemas import (
     VolumeTrendPoint,
 )
 from src.modules.training.volume_schemas import (
+    ExerciseVolumeDetail,
     LandmarkConfigResponse,
     LandmarkUpdateRequest,
     MuscleGroupDetail,
@@ -569,6 +570,46 @@ async def get_muscle_volume_detail(
         from datetime import timedelta as _td
         if week_start.weekday() != 0:
             week_start = week_start - _td(days=week_start.weekday())
+
+    # Check WNS feature flag
+    from src.modules.feature_flags.service import FeatureFlagService
+    ff_svc = FeatureFlagService(db)
+    use_wns = await ff_svc.is_feature_enabled("wns_engine", user)
+
+    if use_wns:
+        from src.modules.training.wns_volume_service import WNSVolumeService
+        from src.modules.user.models import UserGoal
+        from sqlalchemy import select
+
+        goal_result = await db.execute(select(UserGoal).where(UserGoal.user_id == user.id))
+        user_goal = goal_result.scalar_one_or_none()
+        goal_type = user_goal.goal_type if user_goal else None
+        goal_rate = user_goal.goal_rate_per_week if user_goal else None
+
+        wns_svc = WNSVolumeService(db)
+        all_muscles = await wns_svc.get_weekly_muscle_volume(user.id, week_start, goal_type, goal_rate)
+        target = next((m for m in all_muscles if m.muscle_group == muscle_group), None)
+        if target is None:
+            raise NotFoundError(f"Muscle group '{muscle_group}' not found")
+
+        return MuscleGroupDetail(
+            muscle_group=muscle_group,
+            effective_sets=target.net_stimulus,
+            frequency=target.frequency,
+            volume_status=target.status,
+            mev=int(target.landmarks.mev),
+            mav=int(target.landmarks.mav_high),
+            mrv=int(target.landmarks.mrv),
+            exercises=[
+                ExerciseVolumeDetail(
+                    exercise_name=ec.exercise_name,
+                    working_sets=ec.sets_count,
+                    effective_sets=ec.contribution_hu,
+                    sets=[],
+                )
+                for ec in target.exercises
+            ],
+        )
 
     svc = VolumeCalculatorService(db)
     return await svc.get_muscle_group_detail(user.id, muscle_group, week_start)

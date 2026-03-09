@@ -14,7 +14,7 @@ export function SetupBanner({ onPress }: SetupBannerProps) {
   return (
     <TouchableOpacity style={styles.banner} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.content}>
-        <Icon name="lightning" size={18} color={getThemeColors().accent.primary} />
+        <Icon name="lightning" size={18} color={c.accent.primary} />
         <View style={styles.textContainer}>
           <Text style={styles.title}>Complete your profile to get personalized targets</Text>
           <Text style={styles.subtitle}>Tap to set up your goals and body stats</Text>
@@ -27,10 +27,10 @@ export function SetupBanner({ onPress }: SetupBannerProps) {
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   banner: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: getThemeColors().accent.primary,
+    borderColor: c.accent.primary,
     marginBottom: spacing[4],
     overflow: 'hidden',
   },
@@ -45,17 +45,17 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     flex: 1,
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
   },
   subtitle: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     marginTop: 2,
   },
   arrow: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.semibold,
   },

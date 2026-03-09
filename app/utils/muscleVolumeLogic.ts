@@ -5,7 +5,7 @@
  */
 
 import type { WNSLandmarks } from '../types/volume';
-import { getThemeColors } from '../hooks/useThemeColors';
+import { getThemeColors, type ThemeColors } from '../hooks/useThemeColors';
 
 const STATUS_COLORS: Record<string, string> = {
   below_mev: '#6B7280',
@@ -71,27 +71,27 @@ export function getStatusLabel(status: string): string {
 }
 
 /** 5-tier heat-map color based on effective sets relative to MEV / MRV. */
-export function getHeatMapColor(effectiveSets: number, mev: number, mrv: number): string {
+export function getHeatMapColor(effectiveSets: number, mev: number, mrv: number, c: ThemeColors = getThemeColors()): string {
   // Guard: invalid landmarks
-  if (mev <= 0 || mrv <= 0 || mev > mrv) return getThemeColors().heatmap.untrained;
+  if (mev <= 0 || mrv <= 0 || mev > mrv) return c.heatmap.untrained;
 
   const clamped = Math.max(0, effectiveSets);
 
-  if (clamped === 0) return getThemeColors().heatmap.untrained;
-  if (clamped < mev) return getThemeColors().heatmap.belowMev;
-  if (clamped <= mrv * 0.8) return getThemeColors().heatmap.optimal;
-  if (clamped <= mrv) return getThemeColors().heatmap.nearMrv;
-  return getThemeColors().heatmap.aboveMrv;
+  if (clamped === 0) return c.heatmap.untrained;
+  if (clamped < mev) return c.heatmap.belowMev;
+  if (clamped <= mrv * 0.8) return c.heatmap.optimal;
+  if (clamped <= mrv) return c.heatmap.nearMrv;
+  return c.heatmap.aboveMrv;
 }
 
 // ─── WNS Heat Map Color ──────────────────────────────────────────────────────
 
 /** 5-tier heat-map color based on HU relative to WNS landmarks. */
-export function getWNSHeatMapColor(hu: number, landmarks: WNSLandmarks): string {
-  if (landmarks.mev <= 0 || landmarks.mrv <= 0) return getThemeColors().heatmap.untrained;
-  if (hu === 0) return getThemeColors().heatmap.untrained;
-  if (hu < landmarks.mev) return getThemeColors().heatmap.belowMev;
-  if (hu <= landmarks.mav_high) return getThemeColors().heatmap.optimal;
-  if (hu <= landmarks.mrv) return getThemeColors().heatmap.nearMrv;
-  return getThemeColors().heatmap.aboveMrv;
+export function getWNSHeatMapColor(hu: number, landmarks: WNSLandmarks, c: ThemeColors = getThemeColors()): string {
+  if (landmarks.mev <= 0 || landmarks.mrv <= 0) return c.heatmap.untrained;
+  if (hu === 0) return c.heatmap.untrained;
+  if (hu < landmarks.mev) return c.heatmap.belowMev;
+  if (hu <= landmarks.mav_high) return c.heatmap.optimal;
+  if (hu <= landmarks.mrv) return c.heatmap.nearMrv;
+  return c.heatmap.aboveMrv;
 }

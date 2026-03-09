@@ -40,15 +40,15 @@ export function RPEEducationSheet({ visible, onClose, onDontShowAgain }: RPEEduc
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* RPE Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: getThemeColors().text.primary }]}>RPE — How hard was that set?</Text>
-          <Text style={[styles.sectionDesc, { color: getThemeColors().text.secondary }]}>
+          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>RPE — How hard was that set?</Text>
+          <Text style={[styles.sectionDesc, { color: c.text.secondary }]}>
             Scale: 1-10 where 10 = absolute maximum effort
           </Text>
           <View style={styles.guideList}>
             {RPE_GUIDE.map((item) => (
               <View key={item.rpe} style={styles.guideRow}>
-                <Text style={[styles.guideLabel, { color: getThemeColors().accent.primary }]}>{item.rpe}</Text>
-                <Text style={[styles.guideDesc, { color: getThemeColors().text.secondary }]}>{item.desc}</Text>
+                <Text style={[styles.guideLabel, { color: c.accent.primary }]}>{item.rpe}</Text>
+                <Text style={[styles.guideDesc, { color: c.text.secondary }]}>{item.desc}</Text>
               </View>
             ))}
           </View>
@@ -56,15 +56,15 @@ export function RPEEducationSheet({ visible, onClose, onDontShowAgain }: RPEEduc
 
         {/* RIR Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: getThemeColors().text.primary }]}>RIR — How many reps left in the tank?</Text>
-          <Text style={[styles.sectionDesc, { color: getThemeColors().text.secondary }]}>
+          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>RIR — How many reps left in the tank?</Text>
+          <Text style={[styles.sectionDesc, { color: c.text.secondary }]}>
             It's the inverse of RPE: RIR 2 = RPE 8
           </Text>
           <View style={styles.guideList}>
             {RIR_GUIDE.map((item) => (
               <View key={item.rir} style={styles.guideRow}>
-                <Text style={[styles.guideLabel, { color: getThemeColors().accent.primary }]}>{item.rir}</Text>
-                <Text style={[styles.guideDesc, { color: getThemeColors().text.secondary }]}>{item.desc}</Text>
+                <Text style={[styles.guideLabel, { color: c.accent.primary }]}>{item.rir}</Text>
+                <Text style={[styles.guideDesc, { color: c.text.secondary }]}>{item.desc}</Text>
               </View>
             ))}
           </View>
@@ -72,15 +72,15 @@ export function RPEEducationSheet({ visible, onClose, onDontShowAgain }: RPEEduc
 
         {/* Why it matters */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: getThemeColors().text.primary }]}>Why it matters</Text>
+          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Why it matters</Text>
           <View style={styles.benefitsList}>
-            <Text style={[styles.benefitItem, { color: getThemeColors().text.secondary }]}>
+            <Text style={[styles.benefitItem, { color: c.text.secondary }]}>
               Logging intensity helps the app track your training stimulus accurately
             </Text>
-            <Text style={[styles.benefitItem, { color: getThemeColors().text.secondary }]}>
+            <Text style={[styles.benefitItem, { color: c.text.secondary }]}>
               The WNS engine uses RPE/RIR to calculate Hypertrophy Units
             </Text>
-            <Text style={[styles.benefitItem, { color: getThemeColors().text.secondary }]}>
+            <Text style={[styles.benefitItem, { color: c.text.secondary }]}>
               Consistent intensity logging improves your volume recommendations
             </Text>
           </View>
@@ -90,12 +90,12 @@ export function RPEEducationSheet({ visible, onClose, onDontShowAgain }: RPEEduc
       {/* Bottom buttons */}
       <View style={styles.buttonRow}>
         <TouchableOpacity
-          style={[styles.primaryButton, { backgroundColor: getThemeColors().accent.primary }]}
+          style={[styles.primaryButton, { backgroundColor: c.accent.primary }]}
           onPress={onClose}
           accessibilityRole="button"
           accessibilityLabel="Got it"
         >
-          <Text style={[styles.primaryButtonText, { color: getThemeColors().text.inverse }]}>Got it</Text>
+          <Text style={[styles.primaryButtonText, { color: c.text.inverse }]}>Got it</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.secondaryButton}
@@ -103,7 +103,7 @@ export function RPEEducationSheet({ visible, onClose, onDontShowAgain }: RPEEduc
           accessibilityRole="button"
           accessibilityLabel="Don't show again"
         >
-          <Text style={[styles.secondaryButtonText, { color: getThemeColors().text.muted }]}>Don't show again</Text>
+          <Text style={[styles.secondaryButtonText, { color: c.text.muted }]}>Don't show again</Text>
         </TouchableOpacity>
       </View>
     </ModalContainer>
@@ -118,13 +118,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[5],
   },
   sectionTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[1],
   },
   sectionDesc: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: 20,
     marginBottom: spacing[3],
@@ -138,14 +138,14 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[3],
   },
   guideLabel: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     minWidth: 50,
   },
   guideDesc: {
     flex: 1,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: 18,
   },
@@ -153,7 +153,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[2],
   },
   benefitItem: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: 20,
   },
@@ -163,13 +163,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: spacing[4],
   },
   primaryButton: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.md,
     paddingVertical: spacing[3],
     alignItems: 'center',
   },
   primaryButtonText: {
-    color: getThemeColors().text.inverse,
+    color: c.text.inverse,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
   },
@@ -178,7 +178,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[2],
   },
   secondaryButtonText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },

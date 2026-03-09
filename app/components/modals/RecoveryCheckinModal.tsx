@@ -22,9 +22,10 @@ function Stepper({ label, value, onChange, labels }: {
   onChange: (v: number) => void;
   labels: string[];
 }) {
+  const c = useThemeColors();
   return (
     <View style={getStyles().stepperContainer}>
-      <Text style={[getStyles().stepperLabel, { color: getThemeColors().text.secondary }]}>{label}</Text>
+      <Text style={[getStyles().stepperLabel, { color: c.text.secondary }]}>{label}</Text>
       <View style={getStyles().stepperRow}>
         {[1, 2, 3, 4, 5].map((v) => (
           <TouchableOpacity
@@ -38,7 +39,7 @@ function Stepper({ label, value, onChange, labels }: {
           </TouchableOpacity>
         ))}
       </View>
-      <Text style={[getStyles().stepperHint, { color: getThemeColors().text.muted }]}>{labels[value - 1]}</Text>
+      <Text style={[getStyles().stepperHint, { color: c.text.muted }]}>{labels[value - 1]}</Text>
     </View>
   );
 }
@@ -87,12 +88,12 @@ export function RecoveryCheckinModal({ visible, onClose, onSuccess }: Props) {
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={[getStyles().overlay, { backgroundColor: getThemeColors().bg.overlay }]}>
-        <View style={[getStyles().sheet, { backgroundColor: getThemeColors().bg.surface }]}>
+      <View style={[getStyles().overlay, { backgroundColor: c.bg.overlay }]}>
+        <View style={[getStyles().sheet, { backgroundColor: c.bg.surface }]}>
           <View style={getStyles().header}>
-            <Text style={[getStyles().title, { color: getThemeColors().text.primary }]}>Recovery Check-in</Text>
+            <Text style={[getStyles().title, { color: c.text.primary }]}>Recovery Check-in</Text>
             <TouchableOpacity onPress={onClose} hitSlop={8} style={getStyles().closeBtn}>
-              <Text style={[getStyles().closeBtnText, { color: getThemeColors().text.secondary }]}>✕</Text>
+              <Text style={[getStyles().closeBtnText, { color: c.text.secondary }]}>✕</Text>
             </TouchableOpacity>
           </View>
           <Stepper label="Soreness" value={soreness} onChange={setSoreness} labels={LABELS.soreness} />
@@ -100,13 +101,13 @@ export function RecoveryCheckinModal({ visible, onClose, onSuccess }: Props) {
           <Stepper label="Sleep Quality" value={sleepQuality} onChange={setSleepQuality} labels={LABELS.sleep_quality} />
           <TouchableOpacity style={[getStyles().submitBtn, submitting && getStyles().submitBtnDisabled]} onPress={handleSubmit} disabled={submitting}>
             {submitting ? (
-              <ActivityIndicator color={getThemeColors().text.inverse} />
+              <ActivityIndicator color={c.text.inverse} />
             ) : (
-              <Text style={[getStyles().submitText, { color: getThemeColors().text.inverse }]}>Submit</Text>
+              <Text style={[getStyles().submitText, { color: c.text.inverse }]}>Submit</Text>
             )}
           </TouchableOpacity>
           <TouchableOpacity style={getStyles().cancelBtn} onPress={onClose}>
-            <Text style={[getStyles().cancelText, { color: getThemeColors().text.muted }]}>Skip</Text>
+            <Text style={[getStyles().cancelText, { color: c.text.muted }]}>Skip</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -120,18 +121,18 @@ function getStyles() { return getThemedStyles(getThemeColors()); }
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.overlay,
+    backgroundColor: c.bg.overlay,
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: spacing[5],
     paddingBottom: spacing[8],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
     textAlign: 'center',
@@ -147,14 +148,14 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     padding: spacing[2],
   },
   closeBtnText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.md,
   },
   stepperContainer: {
     marginBottom: spacing[4],
   },
   stepperLabel: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[2],
@@ -167,32 +168,32 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     flex: 1,
     height: 40,
     borderRadius: radius.sm,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   stepperBtnActive: {
-    backgroundColor: getThemeColors().accent.primaryMuted,
-    borderColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primaryMuted,
+    borderColor: c.accent.primary,
   },
   stepperBtnText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },
   stepperBtnTextActive: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
   },
   stepperHint: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     marginTop: spacing[1],
     textAlign: 'center',
   },
   submitBtn: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.sm,
     height: 48,
     alignItems: 'center',
@@ -203,7 +204,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     opacity: 0.6,
   },
   submitText: {
-    color: getThemeColors().text.inverse,
+    color: c.text.inverse,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
   },
@@ -212,7 +213,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: spacing[3],
   },
   cancelText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
   },
 });

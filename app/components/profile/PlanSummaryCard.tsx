@@ -35,9 +35,10 @@ interface PlanSummaryCardProps {
 const DASH = '—';
 
 function LabelValue({ label, value }: { label: string; value: string }) {
+  const c = useThemeColors();
   return (
     <View style={getStyles().labelValue}>
-      <Text style={[getStyles().label, { color: getThemeColors().text.muted }]}>{label}</Text>
+      <Text style={[getStyles().label, { color: c.text.muted }]}>{label}</Text>
       <Text style={[getStyles().value, value === DASH && getStyles().valueMuted]}>
         {value}
       </Text>
@@ -60,8 +61,8 @@ export function PlanSummaryCard({
     <Card>
       {/* Section header */}
       <View style={getStyles().header}>
-        <Icon name="clipboard" size={20} color={getThemeColors().accent.primary} />
-        <Text style={[getStyles().sectionTitle, { color: getThemeColors().text.primary }]}>My Plan</Text>
+        <Icon name="clipboard" size={20} color={c.accent.primary} />
+        <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>My Plan</Text>
       </View>
 
       {/* Body stats row */}
@@ -80,32 +81,32 @@ export function PlanSummaryCard({
       </View>
 
       {/* TDEE targets grid */}
-      <View style={[getStyles().divider, { backgroundColor: getThemeColors().border.subtle }]} />
-      <Text style={[getStyles().targetsHeader, { color: getThemeColors().text.secondary }]}>TDEE Targets</Text>
+      <View style={[getStyles().divider, { backgroundColor: c.border.subtle }]} />
+      <Text style={[getStyles().targetsHeader, { color: c.text.secondary }]}>TDEE Targets</Text>
       <View style={getStyles().targetsGrid}>
         <View style={getStyles().targetItem}>
-          <Text style={[getStyles().targetValue, { color: getThemeColors().macro.calories }, fields.calories === DASH && getStyles().valueMuted]}>
+          <Text style={[getStyles().targetValue, { color: c.macro.calories }, fields.calories === DASH && getStyles().valueMuted]}>
             {fields.calories}
           </Text>
-          <Text style={[getStyles().targetLabel, { color: getThemeColors().text.muted }]}>kcal</Text>
+          <Text style={[getStyles().targetLabel, { color: c.text.muted }]}>kcal</Text>
         </View>
         <View style={getStyles().targetItem}>
-          <Text style={[getStyles().targetValue, { color: getThemeColors().macro.protein }, fields.protein === DASH && getStyles().valueMuted]}>
+          <Text style={[getStyles().targetValue, { color: c.macro.protein }, fields.protein === DASH && getStyles().valueMuted]}>
             {fields.protein}
           </Text>
-          <Text style={[getStyles().targetLabel, { color: getThemeColors().text.muted }]}>protein</Text>
+          <Text style={[getStyles().targetLabel, { color: c.text.muted }]}>protein</Text>
         </View>
         <View style={getStyles().targetItem}>
-          <Text style={[getStyles().targetValue, { color: getThemeColors().macro.carbs }, fields.carbs === DASH && getStyles().valueMuted]}>
+          <Text style={[getStyles().targetValue, { color: c.macro.carbs }, fields.carbs === DASH && getStyles().valueMuted]}>
             {fields.carbs}
           </Text>
-          <Text style={[getStyles().targetLabel, { color: getThemeColors().text.muted }]}>carbs</Text>
+          <Text style={[getStyles().targetLabel, { color: c.text.muted }]}>carbs</Text>
         </View>
         <View style={getStyles().targetItem}>
-          <Text style={[getStyles().targetValue, { color: getThemeColors().macro.fat }, fields.fat === DASH && getStyles().valueMuted]}>
+          <Text style={[getStyles().targetValue, { color: c.macro.fat }, fields.fat === DASH && getStyles().valueMuted]}>
             {fields.fat}
           </Text>
-          <Text style={[getStyles().targetLabel, { color: getThemeColors().text.muted }]}>fat</Text>
+          <Text style={[getStyles().targetLabel, { color: c.text.muted }]}>fat</Text>
         </View>
       </View>
 
@@ -129,7 +130,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[3],
   },
   sectionTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
   },
@@ -144,26 +145,26 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[1],
   },
   label: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[1],
   },
   value: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
   valueMuted: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
   },
   divider: {
     height: 1,
-    backgroundColor: getThemeColors().border.subtle,
+    backgroundColor: c.border.subtle,
     marginBottom: spacing[3],
   },
   targetsHeader: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     textTransform: 'uppercase',
@@ -185,7 +186,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[1],
   },
   targetLabel: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
   },

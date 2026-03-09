@@ -61,7 +61,7 @@ export function VolumeBar({ landmarks, currentVolume, muscleGroup }: VolumeBarPr
       accessibilityRole="progressbar"
     >
       {/* Zone bar */}
-      <View style={[styles.barTrack, { backgroundColor: getThemeColors().bg.surfaceRaised }]}>
+      <View style={[styles.barTrack, { backgroundColor: c.bg.surfaceRaised }]}>
         {/* MV → MEV zone */}
         <View
           style={[
@@ -116,7 +116,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   barTrack: {
     height: BAR_HEIGHT,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: BAR_HEIGHT / 2,
     overflow: 'visible',
     position: 'relative',
@@ -133,9 +133,9 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     width: DOT_SIZE,
     height: DOT_SIZE,
     borderRadius: DOT_SIZE / 2,
-    backgroundColor: getThemeColors().text.primary,
+    backgroundColor: c.text.primary,
     borderWidth: 2,
-    borderColor: getThemeColors().bg.base,
+    borderColor: c.bg.base,
     marginLeft: -(DOT_SIZE / 2),
   },
   labels: {
@@ -146,7 +146,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   label: {
     position: 'absolute',
     fontSize: typography.size.xs - 2,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontWeight: typography.weight.medium,
     transform: [{ translateX: -12 }],
   },

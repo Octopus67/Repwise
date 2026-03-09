@@ -66,10 +66,10 @@ export function DateScroller({ selectedDate, onDateSelect, loggedDates }: DateSc
       {!isToday && (
         <TouchableOpacity
           onPress={() => { impact('light'); setWeekOffset(0); onDateSelect(today); }}
-          style={[styles.todayPill, { backgroundColor: getThemeColors().accent.primaryMuted }]}
+          style={[styles.todayPill, { backgroundColor: c.accent.primaryMuted }]}
           activeOpacity={0.7}
         >
-          <Text style={[styles.todayPillText, { color: getThemeColors().accent.primary }]}>↩ Today</Text>
+          <Text style={[styles.todayPillText, { color: c.accent.primary }]}>↩ Today</Text>
         </TouchableOpacity>
       )}
       <ScrollView
@@ -139,56 +139,56 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
   },
   dayCellSelected: {
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
     borderWidth: 1,
-    borderColor: getThemeColors().accent.primary,
+    borderColor: c.accent.primary,
   },
   dayCellToday: {
     borderWidth: 1,
-    borderColor: getThemeColors().border.hover,
+    borderColor: c.border.hover,
   },
   dayName: {
     fontSize: typography.size.xs,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[0.5],
     lineHeight: typography.lineHeight.xs,
   },
   dayNameSelected: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
   },
   dayNameToday: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontWeight: typography.weight.semibold,
   },
   dayNumber: {
     fontSize: typography.size.md,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.md,
   },
   dayNumberSelected: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
   },
   dayNumberToday: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontWeight: typography.weight.bold,
   },
   dot: {
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: getThemeColors().text.muted,
+    backgroundColor: c.text.muted,
     marginTop: spacing[1],
   },
   dotSelected: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
   },
   todayDot: {
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     marginTop: spacing[1],
   },
   todayPill: {
@@ -196,11 +196,11 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
     borderRadius: radius.full,
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
     marginBottom: spacing[2],
   },
   todayPillText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
   },

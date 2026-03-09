@@ -34,6 +34,7 @@ import {
   isPRSet,
   calculateDurationSeconds,
 } from '../../utils/sessionDetailLogic';
+import { bestE1RMForExercise } from '../../utils/e1rmCalculator';
 import api from '../../services/api';
 import type { TrainingSessionResponse } from '../../types/training';
 import type { Exercise } from '../../types/exercise';
@@ -46,9 +47,11 @@ interface SessionDetailScreenProps {
     goBack: () => void;
     push: (screen: string, params?: Record<string, unknown>) => void;
   };
+  /** When true, shows estimated 1RM badges per exercise. Defaults to true. */
+  showE1RM?: boolean;
 }
 
-export function SessionDetailScreen({ route, navigation }: SessionDetailScreenProps) {
+export function SessionDetailScreen({ route, navigation, showE1RM = true }: SessionDetailScreenProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const { sessionId } = route.params;
@@ -123,12 +126,12 @@ export function SessionDetailScreen({ route, navigation }: SessionDetailScreenPr
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: getThemeColors().bg.base }]} edges={['top']}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Icon name="chevron-left" />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: getThemeColors().text.primary }]}>Session Detail</Text>
+          <Text style={[styles.headerTitle, { color: c.text.primary }]}>Session Detail</Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.skeletonContainer}>
@@ -144,19 +147,19 @@ export function SessionDetailScreen({ route, navigation }: SessionDetailScreenPr
 
   if (error || !session) {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: getThemeColors().bg.base }]} edges={['top']}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Icon name="chevron-left" />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: getThemeColors().text.primary }]}>Session Detail</Text>
+          <Text style={[styles.headerTitle, { color: c.text.primary }]}>Session Detail</Text>
           <View style={styles.headerSpacer} />
         </View>
         <View style={styles.errorContainer}>
           <Icon name="alert-circle" />
-          <Text style={[styles.errorText, { color: getThemeColors().text.secondary }]}>{error ?? 'Session not found'}</Text>
-          <TouchableOpacity style={[styles.errorBackBtn, { backgroundColor: getThemeColors().accent.primaryMuted }]} onPress={() => navigation.goBack()}>
-            <Text style={[styles.errorBackText, { color: getThemeColors().accent.primary }]}>Go Back</Text>
+          <Text style={[styles.errorText, { color: c.text.secondary }]}>{error ?? 'Session not found'}</Text>
+          <TouchableOpacity style={[styles.errorBackBtn, { backgroundColor: c.accent.primaryMuted }]} onPress={() => navigation.goBack()}>
+            <Text style={[styles.errorBackText, { color: c.accent.primary }]}>Go Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -166,12 +169,12 @@ export function SessionDetailScreen({ route, navigation }: SessionDetailScreenPr
   const formattedDate = formatSessionDate(session.session_date);
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: getThemeColors().bg.base }]} edges={['top']} testID="session-detail-screen">
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="session-detail-screen">
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Icon name="chevron-left" />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: getThemeColors().text.primary }]}>Session Detail</Text>
+        <Text style={[styles.headerTitle, { color: c.text.primary }]}>Session Detail</Text>
         {sharingEnabled ? (
           <TouchableOpacity
             onPress={() => setShareModalVisible(true)}
@@ -180,7 +183,7 @@ export function SessionDetailScreen({ route, navigation }: SessionDetailScreenPr
             accessibilityRole="button"
             testID="share-session-button"
           >
-            <Icon name="share" size={20} color={getThemeColors().text.primary} />
+            <Icon name="share" size={20} color={c.text.primary} />
           </TouchableOpacity>
         ) : (
           <View style={styles.headerSpacer} />
@@ -189,25 +192,25 @@ export function SessionDetailScreen({ route, navigation }: SessionDetailScreenPr
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
         {/* Session date */}
-        <Text style={[styles.dateText, { color: getThemeColors().text.primary }]} testID="session-date">{formattedDate}</Text>
+        <Text style={[styles.dateText, { color: c.text.primary }]} testID="session-date">{formattedDate}</Text>
 
         {/* Summary row */}
         <View style={styles.summaryRow}>
           {showDuration && durationSeconds != null && (
-            <View style={[styles.summaryItem, { backgroundColor: getThemeColors().bg.surface }]} testID="session-duration">
-              <Text style={[styles.summaryLabel, { color: getThemeColors().text.muted }]}>Duration</Text>
-              <Text style={[styles.summaryValue, { color: getThemeColors().text.primary }]}>{formatDuration(durationSeconds)}</Text>
+            <View style={[styles.summaryItem, { backgroundColor: c.bg.surface }]} testID="session-duration">
+              <Text style={[styles.summaryLabel, { color: c.text.muted }]}>Duration</Text>
+              <Text style={[styles.summaryValue, { color: c.text.primary }]}>{formatDuration(durationSeconds)}</Text>
             </View>
           )}
-          <View style={[styles.summaryItem, { backgroundColor: getThemeColors().bg.surface }]}>
-            <Text style={[styles.summaryLabel, { color: getThemeColors().text.muted }]}>Volume</Text>
-            <Text style={[styles.summaryValue, { color: getThemeColors().text.primary }]}>
+          <View style={[styles.summaryItem, { backgroundColor: c.bg.surface }]}>
+            <Text style={[styles.summaryLabel, { color: c.text.muted }]}>Volume</Text>
+            <Text style={[styles.summaryValue, { color: c.text.primary }]}>
               {Math.round(workingVolume).toLocaleString()} {unitLabel}
             </Text>
           </View>
-          <View style={[styles.summaryItem, { backgroundColor: getThemeColors().bg.surface }]}>
-            <Text style={[styles.summaryLabel, { color: getThemeColors().text.muted }]}>Exercises</Text>
-            <Text style={[styles.summaryValue, { color: getThemeColors().text.primary }]}>{session.exercises.length}</Text>
+          <View style={[styles.summaryItem, { backgroundColor: c.bg.surface }]}>
+            <Text style={[styles.summaryLabel, { color: c.text.muted }]}>Exercises</Text>
+            <Text style={[styles.summaryValue, { color: c.text.primary }]}>{session.exercises.length}</Text>
           </View>
         </View>
 
@@ -226,16 +229,26 @@ export function SessionDetailScreen({ route, navigation }: SessionDetailScreenPr
                       accessibilityLabel={`${exercise.exercise_name} image`}
                     />
                   ) : (
-                    <View style={[styles.exerciseThumbPlaceholder, { backgroundColor: getThemeColors().bg.surfaceRaised }]}>
-                      <Icon name="dumbbell" size={16} color={getThemeColors().text.muted} />
+                    <View style={[styles.exerciseThumbPlaceholder, { backgroundColor: c.bg.surfaceRaised }]}>
+                      <Icon name="dumbbell" size={16} color={c.text.muted} />
                     </View>
                   )}
-                  <Text style={[styles.exerciseName, { color: getThemeColors().text.primary }]}>{exercise.exercise_name}</Text>
+                  <Text style={[styles.exerciseName, { color: c.text.primary }]}>{exercise.exercise_name}</Text>
                 </View>
+                {showE1RM && (() => {
+                  const e1rm = bestE1RMForExercise(exercise.sets);
+                  if (e1rm == null) return null;
+                  const display = convertWeight(e1rm, unitSystem);
+                  return (
+                    <Text style={[styles.e1rmBadge, { color: c.accent.primary }]}>
+                      Est. 1RM: {display} {unitLabel}
+                    </Text>
+                  );
+                })()}
               </View>
 
               {/* Set table header */}
-              <View style={[styles.setHeaderRow, { borderBottomColor: getThemeColors().border.subtle }]}>
+              <View style={[styles.setHeaderRow, { borderBottomColor: c.border.subtle }]}>
                 <Text style={[styles.setHeaderCell, styles.setNumCol]}>#</Text>
                 <Text style={[styles.setHeaderCell, styles.weightCol]}>{unitLabel}</Text>
                 <Text style={[styles.setHeaderCell, styles.repsCol]}>Reps</Text>
@@ -288,21 +301,21 @@ export function SessionDetailScreen({ route, navigation }: SessionDetailScreenPr
         {/* Notes section */}
         {notes ? (
           <Card style={styles.notesCard}>
-            <Text style={[styles.notesLabel, { color: getThemeColors().text.muted }]}>Notes</Text>
-            <Text style={[styles.notesText, { color: getThemeColors().text.secondary }]}>{notes}</Text>
+            <Text style={[styles.notesLabel, { color: c.text.muted }]}>Notes</Text>
+            <Text style={[styles.notesText, { color: c.text.secondary }]}>{notes}</Text>
           </Card>
         ) : null}
 
         {/* Edit button */}
         <TouchableOpacity
-          style={[styles.editButton, { backgroundColor: getThemeColors().accent.primary }]}
+          style={[styles.editButton, { backgroundColor: c.accent.primary }]}
           activeOpacity={0.8}
           testID="edit-session-button"
           onPress={() =>
             navigation.push('ActiveWorkout', { mode: 'edit', sessionId: session.id })
           }
         >
-          <Text style={[styles.editButtonText, { color: getThemeColors().text.inverse }]}>Edit Session</Text>
+          <Text style={[styles.editButtonText, { color: c.text.inverse }]}>Edit Session</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -327,16 +340,17 @@ const SET_TYPE_LABELS: Record<string, string> = {
   amrap: 'A',
 };
 
-const SET_TYPE_COLORS: Record<string, string> = {
-  normal: getThemeColors().text.muted,
-  'warm-up': getThemeColors().semantic.warning,
-  'drop-set': getThemeColors().semantic.negative,
-  amrap: getThemeColors().accent.primary,
-};
+const getSET_TYPE_COLORS = (c: ThemeColors): Record<string, string> => ({
+  normal: c.text.muted,
+  'warm-up': c.semantic.warning,
+  'drop-set': c.semantic.negative,
+  amrap: c.accent.primary,
+});
 
 function SetTypeBadge({ type }: { type: string }) {
+  const c = useThemeColors();
   const label = SET_TYPE_LABELS[type] ?? 'N';
-  const color = SET_TYPE_COLORS[type] ?? getThemeColors().text.muted;
+  const color = getSET_TYPE_COLORS(c)[type] ?? c.text.muted;
   return (
     <View style={[badgeStyles.badge, { borderColor: color }]}>
       <Text style={[badgeStyles.text, { color }]}>{label}</Text>
@@ -362,7 +376,7 @@ const badgeStyles = StyleSheet.create({
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: getThemeColors().bg.base },
+  safe: { flex: 1, backgroundColor: c.bg.base },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -378,7 +392,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   headerTitle: {
     flex: 1,
     textAlign: 'center',
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
   },
@@ -392,25 +406,25 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[3],
   },
   errorText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.md,
     textAlign: 'center',
   },
   errorBackBtn: {
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[2],
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
     borderRadius: radius.sm,
   },
   errorBackText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
   },
   scroll: { flex: 1 },
   scrollContent: { padding: spacing[4], paddingBottom: spacing[12] },
   dateText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[3],
@@ -422,19 +436,19 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   summaryItem: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     padding: spacing[3],
     alignItems: 'center',
   },
   summaryLabel: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[1],
   },
   summaryValue: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
@@ -446,6 +460,11 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing[2],
   },
+  e1rmBadge: {
+    color: c.accent.primary,
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.medium,
+  },
   exerciseNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -453,7 +472,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     flex: 1,
   },
   exerciseName: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     flex: 1,
@@ -467,7 +486,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -476,11 +495,11 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing[1],
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.subtle,
+    borderBottomColor: c.border.subtle,
     marginBottom: spacing[1],
   },
   setHeaderCell: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
   },
@@ -491,11 +510,11 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   setRowWarmup: { opacity: 0.6 },
   setRowAmrap: {
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
     borderRadius: 4,
   },
   setCell: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
   },
   setNumCol: { width: 28, textAlign: 'center' },
@@ -507,7 +526,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   prBadge: { fontSize: 14 },
   notesCard: { marginBottom: spacing[3] },
   notesLabel: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[1],
@@ -515,19 +534,19 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     letterSpacing: ls.wide,
   },
   notesText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     lineHeight: typography.size.base * typography.lineHeight.relaxed,
   },
   editButton: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.sm,
     paddingVertical: spacing[3],
     alignItems: 'center',
     marginTop: spacing[2],
   },
   editButtonText: {
-    color: getThemeColors().text.inverse,
+    color: c.text.inverse,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
   },

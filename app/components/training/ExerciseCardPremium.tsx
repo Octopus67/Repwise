@@ -8,7 +8,7 @@
  * Requirements: 2.4, 4.1, 12.1, 13.1, 17.1, 17.2, 17.4, 17.5, 18.1
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -22,9 +22,12 @@ import type {
   PreviousPerformanceData,
   OverloadSuggestion,
   UnitSystem,
+  SetType,
 } from '../../types/training';
 import { SetRowPremium } from './SetRowPremium';
 import { OverloadBadge } from './OverloadBadge';
+import { WarmUpSuggestion } from './WarmUpSuggestion';
+import type { WarmUpSet } from '../../utils/warmUpGenerator';
 import { typography, spacing, radius } from '../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 
@@ -41,11 +44,13 @@ export interface ExerciseCardPremiumProps {
   currentHU?: number;
   onSwap: () => void;
   onSkip: () => void;
-  onGenerateWarmUp: () => void;
+  onGenerateWarmUp: (sets?: WarmUpSet[]) => void;
   onRemove: () => void;
   onAddSet: () => void;
   onRemoveSet: (setLocalId: string) => void;
-  onReorder: () => void;
+  onReorder: (direction: 'up' | 'down') => void;
+  isFirst?: boolean;
+  isLast?: boolean;
   onUpdateSetField: (
     setLocalId: string,
     field: 'weight' | 'reps' | 'rpe' | 'rir',
@@ -54,9 +59,12 @@ export interface ExerciseCardPremiumProps {
   onToggleSetCompleted: (setLocalId: string) => void;
   onCopyPreviousToSet: (setLocalId: string) => void;
   onWeightStep: (setLocalId: string, direction: 'up' | 'down') => void;
+  onUpdateSetType?: (setLocalId: string, setType: SetType) => void;
   onApplyOverload?: () => void;
   onShowRpeEducation?: () => void;
+  onSetExerciseNotes?: (localId: string, notes: string) => void;
   onShowHUExplainer?: () => void;
+  onOpenPlateCalculator?: (weightKg: number) => void;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -76,19 +84,50 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
   onAddSet,
   onRemoveSet,
   onReorder,
+  isFirst,
+  isLast,
   onUpdateSetField,
   onToggleSetCompleted,
   onCopyPreviousToSet,
   onWeightStep,
+  onUpdateSetType,
   onApplyOverload,
   onShowRpeEducation,
+  onSetExerciseNotes,
   onShowHUExplainer,
+  onOpenPlateCalculator,
 }) => {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const [notesVisible, setNotesVisible] = useState(false);
   const [notesText, setNotesText] = useState(exercise.notes ?? '');
   const [menuVisible, setMenuVisible] = useState(false);
+  
+  // Sync notes from props (handles store rehydration)
+  useEffect(() => {
+    setNotesText(exercise.notes ?? '');
+  }, [exercise.notes]);
+  
+  // Debounce store updates to avoid re-render on every keystroke
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  const debouncedSetNotes = useCallback((localId: string, text: string) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      onSetExerciseNotes?.(localId, text);
+    }, 300);
+  }, [onSetExerciseNotes]);
 
   // ── Callbacks declared before use (project rule: no temporal dead zone) ──
 
@@ -134,15 +173,28 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
 
       {/* Header row: drag handle, name, progress, action menu */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={onReorder}
-          style={styles.dragHandle}
-          accessibilityLabel="Reorder exercise"
-          accessibilityRole="button"
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Text style={styles.dragHandleText}>☰</Text>
-        </TouchableOpacity>
+        <View style={styles.reorderButtons}>
+          <TouchableOpacity
+            onPress={() => onReorder('up')}
+            style={[styles.reorderBtn, isFirst && styles.reorderBtnDisabled]}
+            disabled={isFirst}
+            accessibilityLabel="Move exercise up"
+            accessibilityRole="button"
+            hitSlop={{ top: 4, bottom: 4, left: 8, right: 8 }}
+          >
+            <Text style={[styles.reorderBtnText, isFirst && styles.reorderBtnTextDisabled]}>▲</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => onReorder('down')}
+            style={[styles.reorderBtn, isLast && styles.reorderBtnDisabled]}
+            disabled={isLast}
+            accessibilityLabel="Move exercise down"
+            accessibilityRole="button"
+            hitSlop={{ top: 4, bottom: 4, left: 8, right: 8 }}
+          >
+            <Text style={[styles.reorderBtnText, isLast && styles.reorderBtnTextDisabled]}>▼</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.nameBlock}>
           <Text style={styles.exerciseName} numberOfLines={1}>
@@ -150,7 +202,11 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
           </Text>
 
           {/* Progress indicator: "2/4 sets ●●○○" */}
-          <View style={styles.progressRow}>
+          <View
+            style={styles.progressRow}
+            accessibilityLabel={`Set ${completedCount} of ${totalCount} completed`}
+            accessibilityRole="text"
+          >
             <Text style={styles.progressText}>
               {completedCount}/{totalCount} sets{' '}
             </Text>
@@ -158,6 +214,8 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
               <Text
                 key={s.localId}
                 style={s.completed ? styles.dotFilled : styles.dotEmpty}
+                importantForAccessibility="no"
+                accessibilityElementsHidden
               >
                 ●
               </Text>
@@ -226,10 +284,22 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
         </View>
       )}
 
+      {/* Warm-up suggestion (predictive from previous performance) */}
+      <WarmUpSuggestion
+        workingWeightKg={(() => {
+          const ws = exercise.sets.find((s) => s.setType === 'normal' && s.weight !== '');
+          return ws ? parseFloat(ws.weight) || 0 : 0;
+        })()}
+        barWeightKg={20}
+        previousBestWeight={previousPerformance?.sets?.reduce((max, s) => Math.max(max, s.weightKg || 0), 0) || undefined}
+        onGenerate={onGenerateWarmUp}
+      />
+
       {/* Column headers */}
       <View style={styles.columnHeaders}>
         <Text style={styles.columnHeaderSetNum}>#</Text>
-        <Text style={styles.columnHeaderPrev}>Previous</Text>
+        {onUpdateSetType && <Text style={styles.columnHeaderType}>Type</Text>}
+        <Text style={styles.columnHeaderPrev}>Prev</Text>
         <Text style={styles.columnHeaderReps}>Reps</Text>
         <Text style={styles.columnHeaderWeight}>Weight</Text>
         {showRpeRir && (
@@ -269,6 +339,8 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
             onCopyPrevious={() => onCopyPreviousToSet(set.localId)}
             onUpdateField={(field, value) => onUpdateSetField(set.localId, field, value)}
             onWeightStep={(dir) => onWeightStep(set.localId, dir)}
+            onSetTypeChange={onUpdateSetType ? (type) => onUpdateSetType(set.localId, type) : undefined}
+            onOpenPlateCalculator={onOpenPlateCalculator}
           />
         );
       })}
@@ -288,7 +360,10 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
         <TextInput
           style={styles.notesInput}
           value={notesText}
-          onChangeText={setNotesText}
+          onChangeText={(text) => {
+            setNotesText(text);
+            debouncedSetNotes(exercise.localId, text);
+          }}
           placeholder="Exercise notes..."
           placeholderTextColor={c.text.muted}
           multiline
@@ -337,13 +412,25 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[2],
     gap: spacing[2],
   },
-  dragHandle: {
+  reorderButtons: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 2,
+  },
+  reorderBtn: {
     width: 24,
+    height: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dragHandleText: {
-    fontSize: typography.size.md,
+  reorderBtnDisabled: {
+    opacity: 0.25,
+  },
+  reorderBtnText: {
+    fontSize: 10,
+    color: c.text.muted,
+  },
+  reorderBtnTextDisabled: {
     color: c.text.muted,
   },
   nameBlock: {
@@ -450,8 +537,15 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     color: c.text.muted,
     textAlign: 'center',
   },
+  columnHeaderType: {
+    width: 32,
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.medium,
+    color: c.text.muted,
+    textAlign: 'center',
+  },
   columnHeaderPrev: {
-    width: 68,
+    width: 60,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
     color: c.text.muted,

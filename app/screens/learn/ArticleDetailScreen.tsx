@@ -41,6 +41,7 @@ interface ArticleDetailScreenProps {
 export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDetailScreenProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const markdownStyles = getMarkdownStyles(c);
   const [article, setArticle] = useState<ArticleDetail | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,10 +118,10 @@ export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDeta
 
   if (!article) {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: getThemeColors().bg.base }]} edges={['top']} testID="article-detail-screen">
+      <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="article-detail-screen">
         <View style={styles.header}>
           <TouchableOpacity testID="article-detail-back" onPress={onBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ minWidth: 44, minHeight: 44, justifyContent: 'center' }}>
-            <Text style={[styles.backBtn, { color: getThemeColors().accent.primary }]}>← Back</Text>
+            <Text style={[styles.backBtn, { color: c.accent.primary }]}>← Back</Text>
           </TouchableOpacity>
         </View>
         {error ? (
@@ -128,23 +129,23 @@ export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDeta
             <ErrorBanner message={error} onRetry={loadArticle} onDismiss={() => setError(null)} />
           </View>
         ) : (
-          <ActivityIndicator size="large" color={getThemeColors().accent.primary} />
+          <ActivityIndicator size="large" color={c.accent.primary} />
         )}
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: getThemeColors().bg.base }]} edges={['top']} testID="article-detail-screen">
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="article-detail-screen">
       {/* Scroll progress bar */}
-      <View style={[styles.progressBar, { backgroundColor: getThemeColors().bg.surface }]}>
+      <View style={[styles.progressBar, { backgroundColor: c.bg.surface }]}>
         <Animated.View style={[styles.progressFill, progressBarStyle]} />
       </View>
 
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity testID="article-detail-back" onPress={onBack} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ minWidth: 44, minHeight: 44, justifyContent: 'center' }}>
-          <Text style={[styles.backBtn, { color: getThemeColors().accent.primary }]}>← Back</Text>
+          <Text style={[styles.backBtn, { color: c.accent.primary }]}>← Back</Text>
         </TouchableOpacity>
         <TouchableOpacity testID="article-detail-favorite" onPress={toggleFavorite} style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={[styles.favBtn, isFavorite && styles.favActive]}>
@@ -159,11 +160,11 @@ export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDeta
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-        <Text style={[styles.title, { color: getThemeColors().text.primary }]}>{article.title}</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>{article.title}</Text>
         <View style={styles.meta}>
-          <Text style={[styles.readTime, { color: getThemeColors().text.muted }]}>{article.estimated_read_time_min} min read</Text>
-          <Text style={[styles.dot, { color: getThemeColors().text.muted }]}>·</Text>
-          <Text style={[styles.date, { color: getThemeColors().text.muted }]}>
+          <Text style={[styles.readTime, { color: c.text.muted }]}>{article.estimated_read_time_min} min read</Text>
+          <Text style={[styles.dot, { color: c.text.muted }]}>·</Text>
+          <Text style={[styles.date, { color: c.text.muted }]}>
             {new Date(article.published_at).toLocaleDateString()}
           </Text>
         </View>
@@ -172,12 +173,12 @@ export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDeta
         {article.youtube_links?.map((url, i) => (
           <TouchableOpacity
             key={i}
-            style={[styles.videoCard, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.subtle }]}
+            style={[styles.videoCard, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
             onPress={() => Linking.openURL(url)}
             activeOpacity={0.8}
           >
-            <Text style={[styles.videoIcon, { color: getThemeColors().semantic.negative }]}>▶</Text>
-            <Text style={[styles.videoText, { color: getThemeColors().text.primary }]}>Watch Video</Text>
+            <Text style={[styles.videoIcon, { color: c.semantic.negative }]}>▶</Text>
+            <Text style={[styles.videoText, { color: c.text.primary }]}>Watch Video</Text>
           </TouchableOpacity>
         ))}
 
@@ -193,14 +194,14 @@ export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDeta
         {/* Tags */}
         <View style={styles.tags}>
           {article.tags?.map((tag) => (
-            <Text key={tag} style={[styles.tag, { color: getThemeColors().text.muted, backgroundColor: getThemeColors().bg.surfaceRaised }]}>{tag}</Text>
+            <Text key={tag} style={[styles.tag, { color: c.text.muted, backgroundColor: c.bg.surfaceRaised }]}>{tag}</Text>
           ))}
         </View>
 
         {/* See all articles link */}
         {onSeeAll && (
-          <TouchableOpacity onPress={onSeeAll} style={[styles.seeAllLink, { borderTopColor: getThemeColors().border.subtle }]} activeOpacity={0.7} accessibilityLabel="Browse all articles" accessibilityRole="button">
-            <Text style={[styles.seeAllText, { color: getThemeColors().accent.primary }]}>Browse all articles →</Text>
+          <TouchableOpacity onPress={onSeeAll} style={[styles.seeAllLink, { borderTopColor: c.border.subtle }]} activeOpacity={0.7} accessibilityLabel="Browse all articles" accessibilityRole="button">
+            <Text style={[styles.seeAllText, { color: c.accent.primary }]}>Browse all articles →</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -208,35 +209,35 @@ export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDeta
   );
 }
 
-const markdownStyles = StyleSheet.create({
-  body: { color: getThemeColors().text.primary, fontSize: typography.size.base, lineHeight: typography.size.base * typography.lineHeight.relaxed },
-  heading1: { color: getThemeColors().text.primary, fontSize: typography.size.xl, fontWeight: typography.weight.semibold, marginTop: spacing[6], marginBottom: spacing[3] },
-  heading2: { color: getThemeColors().text.primary, fontSize: typography.size.lg, fontWeight: typography.weight.semibold, marginTop: spacing[5], marginBottom: spacing[2] },
-  heading3: { color: getThemeColors().text.primary, fontSize: typography.size.md, fontWeight: typography.weight.semibold, marginTop: spacing[4], marginBottom: spacing[2] },
+const getMarkdownStyles = (c: ThemeColors) => StyleSheet.create({
+  body: { color: c.text.primary, fontSize: typography.size.base, lineHeight: typography.size.base * typography.lineHeight.relaxed },
+  heading1: { color: c.text.primary, fontSize: typography.size.xl, fontWeight: typography.weight.semibold, marginTop: spacing[6], marginBottom: spacing[3] },
+  heading2: { color: c.text.primary, fontSize: typography.size.lg, fontWeight: typography.weight.semibold, marginTop: spacing[5], marginBottom: spacing[2] },
+  heading3: { color: c.text.primary, fontSize: typography.size.md, fontWeight: typography.weight.semibold, marginTop: spacing[4], marginBottom: spacing[2] },
   paragraph: { marginBottom: spacing[4] },
   strong: { fontWeight: typography.weight.semibold },
-  link: { color: getThemeColors().accent.primary },
-  blockquote: { borderLeftWidth: 3, borderLeftColor: getThemeColors().accent.primary, paddingLeft: spacing[4], marginVertical: spacing[3] },
-  code_inline: { backgroundColor: getThemeColors().bg.surfaceRaised, color: getThemeColors().text.primary, paddingHorizontal: 4, borderRadius: 4, fontSize: typography.size.sm },
-  fence: { backgroundColor: getThemeColors().bg.surfaceRaised, padding: spacing[4], borderRadius: radius.sm, marginVertical: spacing[3] },
-  code_block: { color: getThemeColors().text.primary, fontSize: typography.size.sm },
+  link: { color: c.accent.primary },
+  blockquote: { borderLeftWidth: 3, borderLeftColor: c.accent.primary, paddingLeft: spacing[4], marginVertical: spacing[3] },
+  code_inline: { backgroundColor: c.bg.surfaceRaised, color: c.text.primary, paddingHorizontal: 4, borderRadius: 4, fontSize: typography.size.sm },
+  fence: { backgroundColor: c.bg.surfaceRaised, padding: spacing[4], borderRadius: radius.sm, marginVertical: spacing[3] },
+  code_block: { color: c.text.primary, fontSize: typography.size.sm },
   list_item: { marginBottom: spacing[1] },
 });
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: getThemeColors().bg.base },
-  loading: { color: getThemeColors().text.muted, textAlign: 'center', marginTop: spacing[10], fontSize: typography.size.base },
+  safe: { flex: 1, backgroundColor: c.bg.base },
+  loading: { color: c.text.muted, textAlign: 'center', marginTop: spacing[10], fontSize: typography.size.base },
   errorContainer: { alignItems: 'center', justifyContent: 'center', flex: 1, padding: spacing[8] },
-  errorText: { color: getThemeColors().semantic.negative, fontSize: typography.size.base, textAlign: 'center', marginBottom: spacing[4] },
-  retryBtn: { backgroundColor: getThemeColors().accent.primary, paddingHorizontal: spacing[6], paddingVertical: spacing[3], borderRadius: radius.sm },
-  retryText: { color: getThemeColors().text.inverse, fontSize: typography.size.sm, fontWeight: typography.weight.semibold },
+  errorText: { color: c.semantic.negative, fontSize: typography.size.base, textAlign: 'center', marginBottom: spacing[4] },
+  retryBtn: { backgroundColor: c.accent.primary, paddingHorizontal: spacing[6], paddingVertical: spacing[3], borderRadius: radius.sm },
+  retryText: { color: c.text.inverse, fontSize: typography.size.sm, fontWeight: typography.weight.semibold },
   progressBar: {
     height: 3,
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
   },
   header: {
     flexDirection: 'row',
@@ -244,13 +245,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     padding: spacing[4],
   },
-  backBtn: { color: getThemeColors().accent.primary, fontSize: typography.size.base, fontWeight: typography.weight.medium, lineHeight: typography.size.base * typography.lineHeight.normal },
-  favBtn: { fontSize: typography.size.xl, color: getThemeColors().text.muted },
-  favActive: { color: getThemeColors().semantic.warning },
+  backBtn: { color: c.accent.primary, fontSize: typography.size.base, fontWeight: typography.weight.medium, lineHeight: typography.size.base * typography.lineHeight.normal },
+  favBtn: { fontSize: typography.size.xl, color: c.text.muted },
+  favActive: { color: c.semantic.warning },
   scroll: { flex: 1 },
   content: { padding: spacing[4], paddingBottom: spacing[12] },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.size.xl * typography.lineHeight.tight,
@@ -262,27 +263,27 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: spacing[3],
     marginBottom: spacing[6],
   },
-  readTime: { color: getThemeColors().text.muted, fontSize: typography.size.sm, lineHeight: typography.size.sm * typography.lineHeight.normal },
-  dot: { color: getThemeColors().text.muted },
-  date: { color: getThemeColors().text.muted, fontSize: typography.size.sm, lineHeight: typography.size.sm * typography.lineHeight.normal },
+  readTime: { color: c.text.muted, fontSize: typography.size.sm, lineHeight: typography.size.sm * typography.lineHeight.normal },
+  dot: { color: c.text.muted },
+  date: { color: c.text.muted, fontSize: typography.size.sm, lineHeight: typography.size.sm * typography.lineHeight.normal },
   videoCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing[3],
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
     padding: spacing[4],
     marginBottom: spacing[4],
   },
-  videoIcon: { color: getThemeColors().semantic.negative, fontSize: typography.size.xl },
-  videoText: { color: getThemeColors().text.primary, fontSize: typography.size.base, fontWeight: typography.weight.medium, lineHeight: typography.size.base * typography.lineHeight.normal },
+  videoIcon: { color: c.semantic.negative, fontSize: typography.size.xl },
+  videoText: { color: c.text.primary, fontSize: typography.size.base, fontWeight: typography.weight.medium, lineHeight: typography.size.base * typography.lineHeight.normal },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginTop: spacing[6] },
   tag: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
     borderRadius: radius.full,
@@ -293,10 +294,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[4],
     marginTop: spacing[4],
     borderTopWidth: 1,
-    borderTopColor: getThemeColors().border.subtle,
+    borderTopColor: c.border.subtle,
   },
   seeAllText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },

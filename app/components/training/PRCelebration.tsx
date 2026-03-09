@@ -98,11 +98,11 @@ export function PRCelebration({
       <Animated.View style={[styles.overlay, animatedOverlay]}>
         <Animated.View style={[styles.banner, animatedBanner]} accessibilityRole="alert" accessibilityLabel={`${prs.length === 1 ? 'New personal record' : `${prs.length} new personal records`}`}>
           <Text style={styles.trophy}>🏆</Text>
-          <Text style={[styles.title, { color: getThemeColors().premium.gold }]}>
+          <Text style={[styles.title, { color: c.premium.gold }]}>
             {prs.length === 1 ? 'New PR!' : `${prs.length} New PRs!`}
           </Text>
           {prs.map((pr, i) => (
-            <Text key={`${pr.exercise_name}-${i}`} style={[styles.prText, { color: getThemeColors().text.primary }]}>
+            <Text key={`${pr.exercise_name}-${i}`} style={[styles.prText, { color: c.text.primary }]}>
               {pr.exercise_name} — {pr.new_weight_kg}kg × {pr.reps}
             </Text>
           ))}
@@ -121,10 +121,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     zIndex: 999,
   },
   banner: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: getThemeColors().premium.gold,
+    borderColor: c.premium.gold,
     paddingHorizontal: spacing[8],
     paddingVertical: spacing[6],
     alignItems: 'center',
@@ -135,14 +135,14 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[3],
   },
   title: {
-    color: getThemeColors().premium.gold,
+    color: c.premium.gold,
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.bold,
     lineHeight: typography.lineHeight['2xl'],
     marginBottom: spacing[3],
   },
   prText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
     marginBottom: spacing[1],

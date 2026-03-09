@@ -25,8 +25,8 @@ export function StreakIndicator({ count, type = 'week' }: StreakIndicatorProps) 
 
   return (
     <View style={styles.container}>
-      <Icon name="flame" size={18} color={getThemeColors().semantic.warning} />
-      <Text style={[styles.count, { color: getThemeColors().accent.primary }]}>{streakText}</Text>
+      <Icon name="flame" size={18} color={c.semantic.warning} />
+      <Text style={[styles.count, { color: c.accent.primary }]}>{streakText}</Text>
     </View>
   );
 }
@@ -39,7 +39,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   fire: {},
   count: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.sm,

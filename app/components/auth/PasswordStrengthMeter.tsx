@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { spacing, typography, radius } from '../../theme/tokens';
-import { getThemeColors } from '../../hooks/useThemeColors';
+import { getThemeColors, useThemeColors} from '../../hooks/useThemeColors';
 import type { PasswordStrengthResult, PasswordValidation } from '../../utils/passwordStrength';
 
 interface PasswordStrengthMeterProps {
@@ -18,17 +18,13 @@ const STRENGTH_CONFIG = {
 
 const RULES: { key: keyof PasswordValidation; label: string }[] = [
   { key: 'minLength', label: 'At least 8 characters' },
-  { key: 'hasUppercase', label: 'Uppercase letter' },
-  { key: 'hasLowercase', label: 'Lowercase letter' },
-  { key: 'hasNumber', label: 'Number' },
-  { key: 'hasSpecial', label: 'Special character' },
 ];
 
 export function PasswordStrengthMeter({ result, password }: PasswordStrengthMeterProps) {
+  const c = useThemeColors();
   if (!password) return null;
 
   const config = STRENGTH_CONFIG[result.level];
-  const c = getThemeColors();
 
   return (
     <View style={styles.container} accessibilityLabel={`Password strength: ${config.label}`}>

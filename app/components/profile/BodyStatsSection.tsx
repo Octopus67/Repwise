@@ -63,6 +63,8 @@ function ActivityLevelPicker({
   value: string;
   onChange: (level: string) => void;
 }) {
+  const c = useThemeColors();
+  const pickerStyles = getPickerStyles(c);
   return (
     <View style={pickerStyles.container}>
       <Text style={pickerStyles.label}>Activity Level</Text>
@@ -95,6 +97,7 @@ function ActivityLevelPicker({
 export function BodyStatsSection({ metrics, unitSystem }: BodyStatsSectionProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const editStyles = getEditStyles(c);
   const navigation = useNavigation<any>();
 
   const { recalculate } = useRecalculate();
@@ -258,7 +261,7 @@ export function BodyStatsSection({ metrics, unitSystem }: BodyStatsSectionProps)
     return (
       <Card>
         <EmptyState
-          icon={<Icon name="chart" size={28} color={getThemeColors().accent.primary} />}
+          icon={<Icon name="chart" size={28} color={c.accent.primary} />}
           title="Body Stats"
           description="Add your body stats to get personalized targets"
           actionLabel="Add Stats"
@@ -404,6 +407,8 @@ function EditAllMode({
   onSave,
   onCancel,
 }: EditAllModeProps) {
+  const c = useThemeColors();
+  const editStyles = getEditStyles(c);
   return (
     <View style={editStyles.container}>
       {/* Weight */}
@@ -417,7 +422,7 @@ function EditAllMode({
           onChangeText={setDraftWeight}
           keyboardType="decimal-pad"
           placeholder={unitSystem === 'imperial' ? 'e.g. 176' : 'e.g. 80'}
-          placeholderTextColor={getThemeColors().text.muted}
+          placeholderTextColor={c.text.muted}
         />
       </View>
 
@@ -432,7 +437,7 @@ function EditAllMode({
               onChangeText={setDraftFeet}
               keyboardType="number-pad"
               placeholder="ft"
-              placeholderTextColor={getThemeColors().text.muted}
+              placeholderTextColor={c.text.muted}
             />
             <Text style={editStyles.heightSep}>′</Text>
             <TextInput
@@ -441,7 +446,7 @@ function EditAllMode({
               onChangeText={setDraftInches}
               keyboardType="number-pad"
               placeholder="in"
-              placeholderTextColor={getThemeColors().text.muted}
+              placeholderTextColor={c.text.muted}
             />
             <Text style={editStyles.heightSep}>″</Text>
           </View>
@@ -455,7 +460,7 @@ function EditAllMode({
             onChangeText={setDraftHeightCm}
             keyboardType="number-pad"
             placeholder="e.g. 180"
-            placeholderTextColor={getThemeColors().text.muted}
+            placeholderTextColor={c.text.muted}
           />
         </View>
       )}
@@ -469,7 +474,7 @@ function EditAllMode({
           onChangeText={setDraftBodyFat}
           keyboardType="decimal-pad"
           placeholder="e.g. 16"
-          placeholderTextColor={getThemeColors().text.muted}
+          placeholderTextColor={c.text.muted}
         />
       </View>
 
@@ -488,7 +493,7 @@ function EditAllMode({
           activeOpacity={0.7}
         >
           {saving ? (
-            <ActivityIndicator color={getThemeColors().text.primary} size="small" />
+            <ActivityIndicator color={c.text.primary} size="small" />
           ) : (
             <Text style={editStyles.saveBtnText}>Save</Text>
           )}
@@ -507,7 +512,7 @@ function EditAllMode({
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   sectionTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.md,
@@ -520,22 +525,22 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: spacing[3],
     paddingTop: spacing[3],
     borderTopWidth: 1,
-    borderTopColor: getThemeColors().border.subtle,
+    borderTopColor: c.border.subtle,
   },
   lastUpdated: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
   },
   viewHistory: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
   },
 });
 
-const editStyles = StyleSheet.create({
+const getEditStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     paddingTop: spacing[2],
   },
@@ -543,20 +548,20 @@ const editStyles = StyleSheet.create({
     marginBottom: spacing[3],
   },
   label: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
     marginBottom: spacing[1],
   },
   input: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
   },
@@ -569,13 +574,13 @@ const editStyles = StyleSheet.create({
     flex: 1,
   },
   heightSep: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.md,
   },
   error: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     marginTop: spacing[2],
@@ -586,7 +591,7 @@ const editStyles = StyleSheet.create({
     marginTop: spacing[4],
   },
   saveBtn: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[6],
     paddingVertical: spacing[2],
@@ -598,7 +603,7 @@ const editStyles = StyleSheet.create({
     opacity: opacityScale.disabled,
   },
   saveBtnText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.base,
@@ -611,19 +616,19 @@ const editStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   cancelBtnText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.base,
   },
 });
 
-const pickerStyles = StyleSheet.create({
+const getPickerStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     marginBottom: spacing[3],
   },
   label: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
@@ -639,22 +644,22 @@ const pickerStyles = StyleSheet.create({
     paddingHorizontal: spacing[3],
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
-    backgroundColor: getThemeColors().bg.surface,
+    borderColor: c.border.default,
+    backgroundColor: c.bg.surface,
     minHeight: 44,
     justifyContent: 'center',
   },
   optionActive: {
-    borderColor: getThemeColors().accent.primary,
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    borderColor: c.accent.primary,
+    backgroundColor: c.accent.primaryMuted,
   },
   optionText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
   },
   optionTextActive: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
   },
 });

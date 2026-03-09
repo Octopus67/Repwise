@@ -30,7 +30,7 @@ const GOAL_LABELS: Record<string, string> = {
 
 const DIET_LABELS: Record<string, string> = {
   balanced: 'Balanced',
-  high_protein: 'High Protein',
+  high_protein: 'Performance',
   low_carb: 'Low Carb',
   keto: 'Keto',
 };

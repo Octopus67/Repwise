@@ -76,7 +76,7 @@ async def search_food_items(
         pass  # Graceful degradation — search works without personalization
 
     pagination = PaginationParams(page=page, limit=limit)
-    result = await service.search(q, pagination, category=category, region=region, user_prefs=user_prefs)
+    result = await service.search(q, pagination, category=category, region=region, user_prefs=user_prefs, user_id=user.id)
     return PaginatedResult(
         items=[FoodItemResponse.model_validate(item) for item in result.items],
         total_count=result.total_count,

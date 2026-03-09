@@ -78,12 +78,13 @@ function getGoalMultiplier(goalType: string, rate: number | null): number {
 }
 
 function getStatusLabel(status: WNSMuscleVolume['status']): { label: string; color: string } {
+  const c = useThemeColors();
   switch (status) {
-    case 'optimal': return { label: '✅ Optimal', color: getThemeColors().semantic.positive };
-    case 'below_mev': return { label: '⬇️ Below MEV', color: getThemeColors().semantic.warning };
-    case 'approaching_mrv': return { label: '⚠️ Near MRV', color: getThemeColors().semantic.warning };
-    case 'above_mrv': return { label: '🔴 Above MRV', color: getThemeColors().semantic.negative };
-    default: return { label: status, color: getThemeColors().text.secondary };
+    case 'optimal': return { label: '✅ Optimal', color: c.semantic.positive };
+    case 'below_mev': return { label: '⬇️ Below MEV', color: c.semantic.warning };
+    case 'approaching_mrv': return { label: '⚠️ Near MRV', color: c.semantic.warning };
+    case 'above_mrv': return { label: '🔴 Above MRV', color: c.semantic.negative };
+    default: return { label: status, color: c.text.secondary };
   }
 }
 
@@ -186,25 +187,25 @@ export function WeeklyReportScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={[getStyles().safe, { backgroundColor: getThemeColors().bg.base }]} edges={['top']}>
+    <SafeAreaView style={[getStyles().safe, { backgroundColor: c.bg.base }]} edges={['top']}>
       <ScrollView style={getStyles().container} contentContainerStyle={getStyles().content}>
         {/* Header */}
         <View style={getStyles().header}>
           <TouchableOpacity onPress={() => navigation?.goBack?.()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={[getStyles().backBtn, { color: getThemeColors().accent.primary }]}>‹ Back</Text>
+            <Text style={[getStyles().backBtn, { color: c.accent.primary }]}>‹ Back</Text>
           </TouchableOpacity>
-          <Text style={[getStyles().title, { color: getThemeColors().text.primary }]}>Weekly Report</Text>
+          <Text style={[getStyles().title, { color: c.text.primary }]}>Weekly Report</Text>
           <TouchableOpacity onPress={handleShare} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Icon name="share" size={20} color={getThemeColors().accent.primary} />
+            <Icon name="share" size={20} color={c.accent.primary} />
           </TouchableOpacity>
         </View>
 
         {/* Week Selector */}
         <View style={getStyles().weekSelector}>
           <TouchableOpacity onPress={() => changeWeek(-1)} style={getStyles().weekArrow}>
-            <Text style={[getStyles().arrowText, { color: getThemeColors().accent.primary }]}>‹</Text>
+            <Text style={[getStyles().arrowText, { color: c.accent.primary }]}>‹</Text>
           </TouchableOpacity>
-          <Text style={[getStyles().weekLabel, { color: getThemeColors().text.primary }]}>Week {week}, {year}</Text>
+          <Text style={[getStyles().weekLabel, { color: c.text.primary }]}>Week {week}, {year}</Text>
           <TouchableOpacity
             onPress={() => changeWeek(1)}
             style={[getStyles().weekArrow, isCurrentWeek && getStyles().weekArrowDisabled]}
@@ -223,11 +224,11 @@ export function WeeklyReportScreen({ navigation }: any) {
           </View>
         ) : error ? (
           <View style={getStyles().errorContainer}>
-            <Icon name="alert-circle" size={40} color={getThemeColors().semantic.negative} />
-            <Text style={[getStyles().errorTitle, { color: getThemeColors().text.primary }]}>Something went wrong</Text>
-            <Text style={[getStyles().errorMessage, { color: getThemeColors().text.secondary }]}>{error}</Text>
-            <TouchableOpacity style={[getStyles().retryButton, { backgroundColor: getThemeColors().accent.primary }]} onPress={handleRetry}>
-              <Text style={[getStyles().retryText, { color: getThemeColors().text.inverse }]}>Try Again</Text>
+            <Icon name="alert-circle" size={40} color={c.semantic.negative} />
+            <Text style={[getStyles().errorTitle, { color: c.text.primary }]}>Something went wrong</Text>
+            <Text style={[getStyles().errorMessage, { color: c.text.secondary }]}>{error}</Text>
+            <TouchableOpacity style={[getStyles().retryButton, { backgroundColor: c.accent.primary }]} onPress={handleRetry}>
+              <Text style={[getStyles().retryText, { color: c.text.inverse }]}>Try Again</Text>
             </TouchableOpacity>
           </View>
         ) : !report ? (
@@ -235,10 +236,10 @@ export function WeeklyReportScreen({ navigation }: any) {
         ) : (
           <>
             {/* Training Section */}
-            <Text style={[getStyles().sectionTitle, { color: getThemeColors().text.primary }]}>Training</Text>
+            <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Training</Text>
             <Card>
               {report.training.session_count === 0 ? (
-                <Text style={[getStyles().emptyText, { color: getThemeColors().text.muted }]}>No training sessions this week</Text>
+                <Text style={[getStyles().emptyText, { color: c.text.muted }]}>No training sessions this week</Text>
               ) : (
                 <View style={getStyles().metricsGrid}>
                   <MetricItem label="Total Volume" value={`${Math.round(report.training.total_volume)} kg`} />
@@ -247,17 +248,17 @@ export function WeeklyReportScreen({ navigation }: any) {
                     <MetricItem key={mg} label={mg} value={`${Math.round(vol)} kg`} />
                   ))}
                   {report.training.personal_records.map((pr, i) => (
-                    <Text key={i} style={[getStyles().prText, { color: getThemeColors().semantic.positive }]}>🏆 {pr.exercise_name}: {pr.new_weight_kg}kg × {pr.reps}</Text>
+                    <Text key={i} style={[getStyles().prText, { color: c.semantic.positive }]}>🏆 {pr.exercise_name}: {pr.new_weight_kg}kg × {pr.reps}</Text>
                   ))}
                 </View>
               )}
             </Card>
 
             {/* Nutrition Section */}
-            <Text style={[getStyles().sectionTitle, { color: getThemeColors().text.primary }]}>Nutrition</Text>
+            <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Nutrition</Text>
             <Card>
               {report.nutrition.days_logged === 0 ? (
-                <Text style={[getStyles().emptyText, { color: getThemeColors().text.muted }]}>No nutrition data this week</Text>
+                <Text style={[getStyles().emptyText, { color: c.text.muted }]}>No nutrition data this week</Text>
               ) : (
                 <View style={getStyles().metricsGrid}>
                   <MetricItem label="Avg Calories" value={`${Math.round(report.nutrition.avg_calories)} kcal`} />
@@ -275,10 +276,10 @@ export function WeeklyReportScreen({ navigation }: any) {
             </Card>
 
             {/* Body Section */}
-            <Text style={[getStyles().sectionTitle, { color: getThemeColors().text.primary }]}>Body</Text>
+            <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Body</Text>
             <Card>
               {report.body.start_weight_kg == null && report.body.end_weight_kg == null ? (
-                <Text style={[getStyles().emptyText, { color: getThemeColors().text.muted }]}>No bodyweight data this week</Text>
+                <Text style={[getStyles().emptyText, { color: c.text.muted }]}>No bodyweight data this week</Text>
               ) : (
                 <View style={getStyles().metricsGrid}>
                   {report.body.start_weight_kg != null && <MetricItem label="Start" value={`${report.body.start_weight_kg} kg`} />}
@@ -291,15 +292,15 @@ export function WeeklyReportScreen({ navigation }: any) {
             </Card>
 
             {/* Recommendations Section */}
-            <Text style={[getStyles().sectionTitle, { color: getThemeColors().text.primary }]}>Recommendations</Text>
+            <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Recommendations</Text>
             <Card>
               {report.recommendations.length === 0 ? (
-                <Text style={[getStyles().emptyText, { color: getThemeColors().text.muted }]}>No recommendations this week</Text>
+                <Text style={[getStyles().emptyText, { color: c.text.muted }]}>No recommendations this week</Text>
               ) : (
                 report.recommendations.map((rec, i) => (
                   <View key={i} style={getStyles().recRow}>
                     <Text style={getStyles().recBullet}>💡</Text>
-                    <Text style={[getStyles().recText, { color: getThemeColors().text.primary }]}>{rec}</Text>
+                    <Text style={[getStyles().recText, { color: c.text.primary }]}>{rec}</Text>
                   </View>
                 ))
               )}
@@ -308,11 +309,11 @@ export function WeeklyReportScreen({ navigation }: any) {
             {/* Volume Intelligence Section */}
             {isWNS && topMuscles.length > 0 && (
               <>
-                <Text style={[getStyles().sectionTitle, { color: getThemeColors().text.primary }]}>Volume Intelligence</Text>
+                <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Volume Intelligence</Text>
                 <Card>
                   {goals && (
                     <>
-                      <Text style={[getStyles().goalText, { color: getThemeColors().text.primary }]}>
+                      <Text style={[getStyles().goalText, { color: c.text.primary }]}>
                         Your goal: {GOAL_LABELS[goals.goalType] ?? goals.goalType}
                         {goals.goalRatePerWeek ? ` (${goals.goalRatePerWeek > 0 ? '+' : ''}${goals.goalRatePerWeek} kg/week)` : ''}
                       </Text>
@@ -321,7 +322,7 @@ export function WeeklyReportScreen({ navigation }: any) {
                         if (mult === 1.0) return null;
                         const pct = Math.round(Math.abs(1 - mult) * 100);
                         return (
-                          <Text style={[getStyles().adjustmentText, { color: getThemeColors().text.secondary }]}>
+                          <Text style={[getStyles().adjustmentText, { color: c.text.secondary }]}>
                             Volume adjustment: {mult < 1 ? `-${pct}%` : `+${pct}%`} (recovery capacity {mult < 1 ? 'reduced' : 'enhanced'})
                           </Text>
                         );
@@ -332,15 +333,15 @@ export function WeeklyReportScreen({ navigation }: any) {
                     const { label, color } = getStatusLabel(m.status);
                     const insight = getMuscleInsight(m);
                     return (
-                      <View key={m.muscle_group} style={[getStyles().muscleRow, { borderTopColor: getThemeColors().border.subtle }]}>
+                      <View key={m.muscle_group} style={[getStyles().muscleRow, { borderTopColor: c.border.subtle }]}>
                         <View style={getStyles().muscleHeader}>
-                          <Text style={[getStyles().muscleName, { color: getThemeColors().text.primary }]}>{m.muscle_group}</Text>
+                          <Text style={[getStyles().muscleName, { color: c.text.primary }]}>{m.muscle_group}</Text>
                           <Text style={[getStyles().muscleStatus, { color }]}>{label}</Text>
                         </View>
-                        <Text style={[getStyles().muscleHU, { color: getThemeColors().text.secondary }]}>
+                        <Text style={[getStyles().muscleHU, { color: c.text.secondary }]}>
                           {m.hypertrophy_units.toFixed(1)} / {m.landmarks.mav_high.toFixed(1)} HU
                         </Text>
-                        {insight && <Text style={[getStyles().insight, { color: getThemeColors().text.secondary }]}>💡 {insight}</Text>}
+                        {insight && <Text style={[getStyles().insight, { color: c.text.secondary }]}>💡 {insight}</Text>}
                       </View>
                     );
                   })}
@@ -358,10 +359,11 @@ export function WeeklyReportScreen({ navigation }: any) {
 }
 
 function MetricItem({ label, value }: { label: string; value: string }) {
+  const c = useThemeColors();
   return (
     <View style={getStyles().metricItem}>
-      <Text style={[getStyles().metricLabel, { color: getThemeColors().text.secondary }]}>{label}</Text>
-      <Text style={[getStyles().metricValue, { color: getThemeColors().text.primary }]}>{value}</Text>
+      <Text style={[getStyles().metricLabel, { color: c.text.secondary }]}>{label}</Text>
+      <Text style={[getStyles().metricValue, { color: c.text.primary }]}>{value}</Text>
     </View>
   );
 }
@@ -371,40 +373,40 @@ function MetricItem({ label, value }: { label: string; value: string }) {
 function getStyles() { return getThemedStyles(getThemeColors()); }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: getThemeColors().bg.base },
+  safe: { flex: 1, backgroundColor: c.bg.base },
   container: { flex: 1 },
   content: { padding: spacing[4], paddingBottom: spacing[12] },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[3] },
-  backBtn: { color: getThemeColors().accent.primary, fontSize: typography.size.lg },
-  title: { color: getThemeColors().text.primary, fontSize: typography.size.xl, fontWeight: typography.weight.semibold },
+  backBtn: { color: c.accent.primary, fontSize: typography.size.lg },
+  title: { color: c.text.primary, fontSize: typography.size.xl, fontWeight: typography.weight.semibold },
   weekSelector: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: spacing[4], gap: spacing[4] },
   weekArrow: { padding: spacing[2] },
   weekArrowDisabled: { opacity: 0.3 },
-  arrowText: { color: getThemeColors().accent.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold },
-  arrowDisabled: { color: getThemeColors().text.muted },
-  weekLabel: { color: getThemeColors().text.primary, fontSize: typography.size.lg, fontWeight: typography.weight.medium },
-  sectionTitle: { color: getThemeColors().text.primary, fontSize: typography.size.lg, fontWeight: typography.weight.semibold, marginTop: spacing[5], marginBottom: spacing[3] },
+  arrowText: { color: c.accent.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold },
+  arrowDisabled: { color: c.text.muted },
+  weekLabel: { color: c.text.primary, fontSize: typography.size.lg, fontWeight: typography.weight.medium },
+  sectionTitle: { color: c.text.primary, fontSize: typography.size.lg, fontWeight: typography.weight.semibold, marginTop: spacing[5], marginBottom: spacing[3] },
   skeletons: { gap: spacing[4] },
-  emptyText: { color: getThemeColors().text.muted, fontSize: typography.size.sm, textAlign: 'center', padding: spacing[4] },
+  emptyText: { color: c.text.muted, fontSize: typography.size.sm, textAlign: 'center', padding: spacing[4] },
   metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[3] },
   metricItem: { width: '45%', marginBottom: spacing[2] },
-  metricLabel: { color: getThemeColors().text.secondary, fontSize: typography.size.xs },
-  metricValue: { color: getThemeColors().text.primary, fontSize: typography.size.lg, fontWeight: typography.weight.semibold },
-  prText: { color: getThemeColors().semantic.positive, fontSize: typography.size.sm, marginTop: spacing[2] },
+  metricLabel: { color: c.text.secondary, fontSize: typography.size.xs },
+  metricValue: { color: c.text.primary, fontSize: typography.size.lg, fontWeight: typography.weight.semibold },
+  prText: { color: c.semantic.positive, fontSize: typography.size.sm, marginTop: spacing[2] },
   recRow: { flexDirection: 'row', gap: spacing[2], marginBottom: spacing[3] },
   recBullet: { fontSize: typography.size.base },
-  recText: { color: getThemeColors().text.primary, fontSize: typography.size.sm, flex: 1, lineHeight: 20 },
+  recText: { color: c.text.primary, fontSize: typography.size.sm, flex: 1, lineHeight: 20 },
   errorContainer: { alignItems: 'center', paddingVertical: spacing[10], gap: spacing[3] },
-  errorTitle: { color: getThemeColors().text.primary, fontSize: typography.size.lg, fontWeight: typography.weight.semibold },
-  errorMessage: { color: getThemeColors().text.secondary, fontSize: typography.size.sm, textAlign: 'center', paddingHorizontal: spacing[6] },
-  retryButton: { backgroundColor: getThemeColors().accent.primary, paddingHorizontal: spacing[6], paddingVertical: spacing[3], borderRadius: radius.sm, marginTop: spacing[2] },
-  retryText: { color: getThemeColors().text.inverse, fontSize: typography.size.sm, fontWeight: typography.weight.semibold },
-  goalText: { color: getThemeColors().text.primary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, marginBottom: spacing[1] },
-  adjustmentText: { color: getThemeColors().text.secondary, fontSize: typography.size.xs, marginBottom: spacing[3] },
-  muscleRow: { paddingVertical: spacing[3], borderTopWidth: 1, borderTopColor: getThemeColors().border.subtle },
+  errorTitle: { color: c.text.primary, fontSize: typography.size.lg, fontWeight: typography.weight.semibold },
+  errorMessage: { color: c.text.secondary, fontSize: typography.size.sm, textAlign: 'center', paddingHorizontal: spacing[6] },
+  retryButton: { backgroundColor: c.accent.primary, paddingHorizontal: spacing[6], paddingVertical: spacing[3], borderRadius: radius.sm, marginTop: spacing[2] },
+  retryText: { color: c.text.inverse, fontSize: typography.size.sm, fontWeight: typography.weight.semibold },
+  goalText: { color: c.text.primary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, marginBottom: spacing[1] },
+  adjustmentText: { color: c.text.secondary, fontSize: typography.size.xs, marginBottom: spacing[3] },
+  muscleRow: { paddingVertical: spacing[3], borderTopWidth: 1, borderTopColor: c.border.subtle },
   muscleHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  muscleName: { color: getThemeColors().text.primary, fontSize: typography.size.sm, fontWeight: typography.weight.semibold },
+  muscleName: { color: c.text.primary, fontSize: typography.size.sm, fontWeight: typography.weight.semibold },
   muscleStatus: { fontSize: typography.size.xs, fontWeight: typography.weight.medium },
-  muscleHU: { color: getThemeColors().text.secondary, fontSize: typography.size.xs, marginTop: spacing[1] },
-  insight: { color: getThemeColors().text.secondary, fontSize: typography.size.xs, marginTop: spacing[1], fontStyle: 'italic' },
+  muscleHU: { color: c.text.secondary, fontSize: typography.size.xs, marginTop: spacing[1] },
+  insight: { color: c.text.secondary, fontSize: typography.size.xs, marginTop: spacing[1], fontStyle: 'italic' },
 });

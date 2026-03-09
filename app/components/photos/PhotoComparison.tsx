@@ -78,7 +78,7 @@ export function PhotoComparison({ photos, pathMap }: PhotoComparisonProps) {
   if (sortedDates.length === 0) {
     return (
       <View style={getStyles().emptyContainer}>
-        <Text style={[getStyles().emptyText, { color: getThemeColors().text.muted }]}>No photos to compare yet.</Text>
+        <Text style={[getStyles().emptyText, { color: c.text.muted }]}>No photos to compare yet.</Text>
       </View>
     );
   }
@@ -91,7 +91,7 @@ export function PhotoComparison({ photos, pathMap }: PhotoComparisonProps) {
 
   return (
     <View style={getStyles().container}>
-      <Text style={[getStyles().title, { color: getThemeColors().text.primary }]}>Compare</Text>
+      <Text style={[getStyles().title, { color: c.text.primary }]}>Compare</Text>
       <View style={getStyles().row}>
         <ComparisonSide
           date={leftDate}
@@ -139,6 +139,7 @@ function ComparisonSide({
   imageErrors,
   onImageError,
 }: ComparisonSideProps) {
+  const c = useThemeColors();
   const fileUri = photo ? pathMap[photo.id] : undefined;
   const hasImageError = photo ? imageErrors[photo.id] === true : false;
   const dateLabel = new Date(date).toLocaleDateString(undefined, {
@@ -175,17 +176,17 @@ function ComparisonSide({
   );
 
   return (
-    <View style={[getStyles().side, { backgroundColor: getThemeColors().bg.surface }]} {...panResponder.panHandlers}>
+    <View style={[getStyles().side, { backgroundColor: c.bg.surface }]} {...panResponder.panHandlers}>
       {fileUri && !hasImageError ? (
         <Image
           source={{ uri: fileUri }}
-          style={[getStyles().photo, { backgroundColor: getThemeColors().bg.surfaceRaised }]}
+          style={[getStyles().photo, { backgroundColor: c.bg.surfaceRaised }]}
           resizeMode="cover"
           onError={() => photo && onImageError(photo.id)}
         />
       ) : (
         <View style={[getStyles().photo, getStyles().placeholder]}>
-          <Text style={[getStyles().placeholderText, { color: getThemeColors().text.muted }]}>
+          <Text style={[getStyles().placeholderText, { color: c.text.muted }]}>
             {hasImageError ? 'Failed to load photo' : 'No photo for this date'}
           </Text>
         </View>
@@ -199,8 +200,8 @@ function ComparisonSide({
           <Text style={[getStyles().navText, !canGoBack && getStyles().navDisabled]}>‹</Text>
         </TouchableOpacity>
         <View style={getStyles().dateInfo}>
-          <Text style={[getStyles().dateText, { color: getThemeColors().text.primary }]}>{dateLabel}</Text>
-          {weightLabel && <Text style={[getStyles().weightText, { color: getThemeColors().accent.primary }]}>{weightLabel}</Text>}
+          <Text style={[getStyles().dateText, { color: c.text.primary }]}>{dateLabel}</Text>
+          {weightLabel && <Text style={[getStyles().weightText, { color: c.accent.primary }]}>{weightLabel}</Text>}
         </View>
         <TouchableOpacity
           onPress={() => onNavigate(1)}
@@ -223,7 +224,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[4],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.lg,
@@ -237,19 +238,19 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     width: SIDE_WIDTH,
     borderRadius: radius.md,
     overflow: 'hidden',
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
   },
   photo: {
     width: SIDE_WIDTH,
     height: PHOTO_HEIGHT,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
   },
   placeholder: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   placeholderText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     textAlign: 'center',
@@ -269,13 +270,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
   },
   navText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.bold,
     lineHeight: typography.lineHeight.xl,
   },
   navDisabled: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     opacity: opacityScale.disabled,
   },
   dateInfo: {
@@ -283,13 +284,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     flex: 1,
   },
   dateText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.xs,
   },
   weightText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.xs,
@@ -300,7 +301,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
   },

@@ -14,19 +14,19 @@ export function TimeRangeSelector({ selected, onSelect }: TimeRangeSelectorProps
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   return (
-    <View style={[styles.container, { backgroundColor: getThemeColors().bg.surfaceRaised }]}>
+    <View style={[styles.container, { backgroundColor: c.bg.surfaceRaised }]}>
       {OPTIONS.map((option) => {
         const isActive = selected === option;
         return (
           <TouchableOpacity
             key={option}
-            style={[styles.segment, isActive && { backgroundColor: getThemeColors().accent.primary }]}
+            style={[styles.segment, isActive && { backgroundColor: c.accent.primary }]}
             onPress={() => onSelect(option)}
             accessibilityRole="button"
             accessibilityState={{ selected: isActive }}
             accessibilityLabel={`${option} time range`}
           >
-            <Text style={[styles.label, { color: isActive ? getThemeColors().text.inverse : getThemeColors().text.secondary }]}>
+            <Text style={[styles.label, { color: isActive ? c.text.inverse : c.text.secondary }]}>
               {option}
             </Text>
           </TouchableOpacity>
@@ -39,7 +39,7 @@ export function TimeRangeSelector({ selected, onSelect }: TimeRangeSelectorProps
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     padding: 2,
   },
@@ -50,15 +50,15 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: radius.sm - 2,
   },
   segmentActive: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
   },
   label: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
   labelActive: {
-    color: getThemeColors().text.inverse,
+    color: c.text.inverse,
     fontWeight: typography.weight.semibold,
   },
 });

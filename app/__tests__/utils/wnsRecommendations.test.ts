@@ -23,12 +23,16 @@ describe('getVolumeStatus', () => {
     expect(getVolumeStatus(10, LANDMARKS)).toBe('optimal');
   });
 
-  test('near MRV (≥90% of mavHigh)', () => {
-    expect(getVolumeStatus(13, LANDMARKS)).toBe('near_mrv');
+  test('approaching MRV (above mavHigh, at or below mrv)', () => {
+    expect(getVolumeStatus(15, LANDMARKS)).toBe('approaching_mrv');
+  });
+
+  test('at MRV = approaching_mrv', () => {
+    expect(getVolumeStatus(18, LANDMARKS)).toBe('approaching_mrv');
   });
 
   test('above MRV', () => {
-    expect(getVolumeStatus(18, LANDMARKS)).toBe('above_mrv');
+    expect(getVolumeStatus(19, LANDMARKS)).toBe('above_mrv');
   });
 
   test('well above MRV', () => {
@@ -54,8 +58,8 @@ describe('generateRecommendations', () => {
     expect(recs[0]).toContain('Great work');
   });
 
-  test('generates recommendation for near MRV', () => {
-    const recs = generateRecommendations({ chest: 13 }, { chest: LANDMARKS });
+  test('generates recommendation for approaching MRV', () => {
+    const recs = generateRecommendations({ chest: 15 }, { chest: LANDMARKS });
     expect(recs).toHaveLength(1);
     expect(recs[0]).toContain('near your recovery limit');
   });

@@ -100,6 +100,7 @@ function AuthNavigator() {
             onNavigateRegister={() => navigation.navigate('Register')}
             onLoginSuccess={(user, tokens) => handleLoginSuccess(user, tokens)}
             onNavigateForgotPassword={() => navigation.navigate('ForgotPassword')}
+            onNavigateEmailVerification={(email: string) => navigation.navigate('EmailVerification', { email })}
           />
         )}
       </AuthStack.Screen>

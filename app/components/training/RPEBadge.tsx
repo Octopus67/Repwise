@@ -1,22 +1,23 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { getRpeBadgeColor, RpeBadgeColor } from '../../utils/rpeBadgeColor';
 import { radius, typography } from '../../theme/tokens';
-import { useThemeColors, getThemeColors } from '../../hooks/useThemeColors';
+import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 
 interface RPEBadgeProps {
   rpeValue: number;
   mode: 'rpe' | 'rir';
 }
 
-const colorMap: Record<Exclude<RpeBadgeColor, 'none'>, { text: string; bg: string }> = {
-  green: { text: getThemeColors().semantic.positive, bg: getThemeColors().semantic.positiveSubtle },
-  yellow: { text: getThemeColors().semantic.warning, bg: getThemeColors().semantic.warningSubtle },
+const getColorMap = (c: ThemeColors): Record<Exclude<RpeBadgeColor, 'none'>, { text: string; bg: string }> => ({
+  green: { text: c.semantic.positive, bg: c.semantic.positiveSubtle },
+  yellow: { text: c.semantic.warning, bg: c.semantic.warningSubtle },
   orange: { text: '#F97316', bg: 'rgba(249,115,22,0.12)' },
-  red: { text: getThemeColors().semantic.negative, bg: getThemeColors().semantic.negativeSubtle },
-};
+  red: { text: c.semantic.negative, bg: c.semantic.negativeSubtle },
+});
 
 export function RPEBadge({ rpeValue, mode }: RPEBadgeProps) {
   const c = useThemeColors();
+  const colorMap = getColorMap(c);
   if (!rpeValue || isNaN(rpeValue)) return null;
 
   const badgeColor = getRpeBadgeColor(rpeValue);

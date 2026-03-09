@@ -51,7 +51,7 @@ export function WeeklyTrainingCalendar({ selectedDate, trainedDates }: WeeklyTra
                   <Icon
                     name="check"
                     size={12}
-                    color={getThemeColors().bg.base}
+                    color={c.bg.base}
                   />
                 </View>
               )}
@@ -81,15 +81,15 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
     backgroundColor: 'transparent',
   },
   dayCircleTrained: {
-    backgroundColor: getThemeColors().accent.primary,
-    borderColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
+    borderColor: c.accent.primary,
   },
   dayCircleToday: {
-    borderColor: getThemeColors().accent.primary,
+    borderColor: c.accent.primary,
     borderWidth: 2,
   },
   dayCircleFuture: {
@@ -98,19 +98,19 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   dayLetter: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     lineHeight: typography.lineHeight.sm,
   },
   dayLetterTrained: {
-    color: getThemeColors().bg.base,
+    color: c.bg.base,
     fontWeight: typography.weight.semibold,
   },
   dayLetterToday: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontWeight: typography.weight.semibold,
   },
   dayLetterFuture: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
   },
   checkIcon: {
     position: 'absolute',

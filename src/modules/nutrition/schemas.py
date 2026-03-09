@@ -28,6 +28,7 @@ class NutritionEntryCreate(BaseModel):
     micro_nutrients: Optional[dict[str, float]] = None
     entry_date: date
     source_meal_id: Optional[uuid.UUID] = None
+    food_item_id: Optional[uuid.UUID] = None
 
     @model_validator(mode='after')
     def validate_micro_nutrients(self) -> 'NutritionEntryCreate':

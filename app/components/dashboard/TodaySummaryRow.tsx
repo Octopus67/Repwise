@@ -21,13 +21,14 @@ export function TodaySummaryRow({ mealsLogged, workoutsCompleted }: TodaySummary
 }
 
 function SummaryItem({ icon, count, label }: { icon: React.ReactNode; count: number; label: string }) {
+  const c = useThemeColors();
   return (
     <View style={getStyles().item}>
       <View style={getStyles().icon}>{icon}</View>
-      <Text style={[getStyles().count, { color: count > 0 ? getThemeColors().semantic.positive : getThemeColors().text.muted }]}>
+      <Text style={[getStyles().count, { color: count > 0 ? c.semantic.positive : c.text.muted }]}>
         {count}
       </Text>
-      <Text style={[getStyles().label, { color: getThemeColors().text.secondary }]}>{label}</Text>
+      <Text style={[getStyles().label, { color: c.text.secondary }]}>{label}</Text>
     </View>
   );
 }
@@ -55,6 +56,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   label: {
     fontSize: typography.size.sm,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
   },
 });

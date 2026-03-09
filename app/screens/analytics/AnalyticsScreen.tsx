@@ -78,6 +78,7 @@ function ChartSkeleton() {
 export function AnalyticsScreen() {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const compStyles = getCompStyles(c);
   const store = useStore();
   const premium = isPremium(store);
   const unitSystem = store.unitSystem;
@@ -740,6 +741,8 @@ function ComparisonItem({
   target: number;
   unit: string;
 }) {
+  const c = useThemeColors();
+  const compStyles = getCompStyles(c);
   const pct = target > 0 ? Math.round((actual / target) * 100) : 0;
   const pctColor = getComparisonColor(actual, target);
 
@@ -755,20 +758,20 @@ function ComparisonItem({
   );
 }
 
-const compStyles = StyleSheet.create({
+const getCompStyles = (c: ThemeColors) => StyleSheet.create({
   item: { flex: 1, alignItems: 'center' },
-  label: { color: getThemeColors().text.secondary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm },
-  actual: { color: getThemeColors().text.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, marginTop: spacing[1], lineHeight: typography.lineHeight['2xl'] },
-  target: { color: getThemeColors().text.muted, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm },
+  label: { color: c.text.secondary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm },
+  actual: { color: c.text.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, marginTop: spacing[1], lineHeight: typography.lineHeight['2xl'] },
+  target: { color: c.text.muted, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm },
   diff: { fontSize: typography.size.sm, fontWeight: typography.weight.medium, marginTop: spacing[1], lineHeight: typography.lineHeight.sm },
 });
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: getThemeColors().bg.base },
+  safe: { flex: 1, backgroundColor: c.bg.base },
   container: { flex: 1 },
   content: { padding: spacing[4], paddingBottom: spacing[12] },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[4],
@@ -779,25 +782,25 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     padding: spacing[3],
     marginBottom: spacing[4],
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   nutritionReportText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.base,
   },
   nutritionReportArrow: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.lg,
   },
   sectionTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
     marginTop: spacing[6],
@@ -816,22 +819,22 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
     borderRadius: radius.full,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   exercisePillActive: {
-    backgroundColor: getThemeColors().accent.primaryMuted,
-    borderColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primaryMuted,
+    borderColor: c.accent.primary,
   },
   exercisePillText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.xs,
   },
   exercisePillTextActive: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
   },
   gapRow: {
     flexDirection: 'row',
@@ -839,19 +842,19 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[3],
     marginBottom: spacing[2],
   },
-  gapNutrient: { color: getThemeColors().text.secondary, fontSize: typography.size.sm, width: 80, lineHeight: typography.lineHeight.sm },
+  gapNutrient: { color: c.text.secondary, fontSize: typography.size.sm, width: 80, lineHeight: typography.lineHeight.sm },
   gapBar: {
     flex: 1,
     height: 6,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.full,
     overflow: 'hidden',
   },
   gapFill: { height: '100%', borderRadius: radius.full },
-  gapPct: { color: getThemeColors().semantic.negative, fontSize: typography.size.sm, fontWeight: typography.weight.medium, width: 44, textAlign: 'right', lineHeight: typography.lineHeight.sm },
+  gapPct: { color: c.semantic.negative, fontSize: typography.size.sm, fontWeight: typography.weight.medium, width: 44, textAlign: 'right', lineHeight: typography.lineHeight.sm },
   analyticsTabRow: {
     flexDirection: 'row',
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     padding: spacing[1],
     marginBottom: spacing[3],
@@ -862,16 +865,16 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     borderRadius: radius.sm,
   },
-  analyticsTabActive: { backgroundColor: getThemeColors().accent.primaryMuted },
-  analyticsTabText: { color: getThemeColors().text.muted, fontSize: typography.size.base, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.base },
-  analyticsTabTextActive: { color: getThemeColors().accent.primary },
+  analyticsTabActive: { backgroundColor: c.accent.primaryMuted },
+  analyticsTabText: { color: c.text.muted, fontSize: typography.size.base, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.base },
+  analyticsTabTextActive: { color: c.accent.primary },
   explainerCard: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     padding: spacing[3],
     marginTop: spacing[4],
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   explainerHeader: {
     flexDirection: 'row',
@@ -879,14 +882,14 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   explainerTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     flex: 1,
     lineHeight: typography.lineHeight.base,
   },
   chevron: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     marginLeft: spacing[2],
   },
@@ -894,7 +897,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: spacing[3],
   },
   explainerSubhead: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     marginTop: spacing[2],
@@ -902,12 +905,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     lineHeight: typography.lineHeight.sm,
   },
   explainerText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
   },
   explainerBullet: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     marginLeft: spacing[2],
@@ -915,14 +918,14 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   explainerBold: {
     fontWeight: typography.weight.semibold,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
   },
   learnMoreBtn: {
     marginTop: spacing[3],
     alignSelf: 'flex-start',
   },
   learnMoreText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,

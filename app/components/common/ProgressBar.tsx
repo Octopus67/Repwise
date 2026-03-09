@@ -56,7 +56,7 @@ export function ProgressBar({
           />
         </View>
         {showPercentage && (
-          <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>{fill.label}</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>{fill.label}</Text>
         )}
       </View>
     </View>
@@ -81,7 +81,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: 4,
   },
   label: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     minWidth: 32,

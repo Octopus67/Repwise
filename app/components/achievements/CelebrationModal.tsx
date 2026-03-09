@@ -58,18 +58,18 @@ export function CelebrationModal({
       <Pressable style={styles.backdrop} onPress={onDismiss}>
         <Animated.View
           entering={ZoomIn.duration(300)}
-          style={[styles.card, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.default }]}
+          style={[styles.card, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
         >
           <Pressable onPress={(e) => e.stopPropagation()}>
             <Animated.View entering={FadeIn.delay(100)} style={styles.content}>
-              <View style={[styles.iconCircle, { backgroundColor: getThemeColors().accent.primaryMuted }]}>
-                <Icon name="trophy" size={32} color={getThemeColors().accent.primary} />
+              <View style={[styles.iconCircle, { backgroundColor: c.accent.primaryMuted }]}>
+                <Icon name="trophy" size={32} color={c.accent.primary} />
               </View>
-              <Text style={[styles.congrats, { color: getThemeColors().accent.primary }]}>Achievement Unlocked!</Text>
-              <Text style={[styles.title, { color: getThemeColors().text.primary }]}>{current.title}</Text>
-              <Text style={[styles.description, { color: getThemeColors().text.secondary }]}>{current.description}</Text>
+              <Text style={[styles.congrats, { color: c.accent.primary }]}>Achievement Unlocked!</Text>
+              <Text style={[styles.title, { color: c.text.primary }]}>{current.title}</Text>
+              <Text style={[styles.description, { color: c.text.secondary }]}>{current.description}</Text>
               {achievements.length > 1 && (
-                <Text style={[styles.counter, { color: getThemeColors().text.muted }]}>
+                <Text style={[styles.counter, { color: c.text.muted }]}>
                   {currentIndex + 1} of {achievements.length}
                 </Text>
               )}
@@ -94,10 +94,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
   },
   card: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     padding: spacing[6],
     width: '85%',
     maxWidth: 360,
@@ -109,13 +109,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing[4],
   },
   congrats: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     textTransform: 'uppercase',
@@ -123,20 +123,20 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[2],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.bold,
     textAlign: 'center',
     marginBottom: spacing[2],
   },
   description: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     textAlign: 'center',
     marginBottom: spacing[3],
   },
   counter: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     marginBottom: spacing[3],
   },

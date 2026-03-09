@@ -4,7 +4,7 @@ import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThem
 
 const STYLES = [
   { value: 'balanced', title: 'Balanced', desc: 'Even split of carbs and fats' },
-  { value: 'high_protein', title: 'High Protein', desc: 'Extra protein emphasis' },
+  { value: 'high_protein', title: 'Performance', desc: 'Higher carbs for training energy' },
   { value: 'low_carb', title: 'Low Carb', desc: 'Mostly fats, fewer carbs' },
   { value: 'keto', title: 'Keto', desc: 'Very low carb, high fat' },
 ] as const;
@@ -43,33 +43,33 @@ export function DietStylePicker({ value, onChange }: Props) {
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: { marginBottom: spacing[3] },
   label: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
     marginBottom: spacing[2],
   },
   card: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     padding: spacing[3],
     marginBottom: spacing[2],
   },
   cardActive: {
-    borderColor: getThemeColors().accent.primary,
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    borderColor: c.accent.primary,
+    backgroundColor: c.accent.primaryMuted,
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.base,
   },
-  titleActive: { color: getThemeColors().accent.primary },
+  titleActive: { color: c.accent.primary },
   desc: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     lineHeight: typography.lineHeight.xs,
     marginTop: spacing[0.5],

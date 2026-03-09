@@ -160,9 +160,9 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.screen, { backgroundColor: getThemeColors().bg.base }]}>
+      <SafeAreaView style={[styles.screen, { backgroundColor: c.bg.base }]}>
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={getThemeColors().accent.primary} />
+          <ActivityIndicator size="large" color={c.accent.primary} />
         </View>
       </SafeAreaView>
     );
@@ -170,12 +170,12 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
 
   if (error) {
     return (
-      <SafeAreaView style={[styles.screen, { backgroundColor: getThemeColors().bg.base }]}>
+      <SafeAreaView style={[styles.screen, { backgroundColor: c.bg.base }]}>
         <View style={styles.center}>
           <Text style={styles.errorIcon}><Icon name="warning" /></Text>
-          <Text style={[styles.errorText, { color: getThemeColors().text.secondary }]}>Failed to load exercises</Text>
-          <TouchableOpacity style={[styles.retryBtn, { backgroundColor: getThemeColors().accent.primary }]} onPress={fetchData} activeOpacity={0.7}>
-            <Text style={[styles.retryText, { color: getThemeColors().text.primary }]}>Retry</Text>
+          <Text style={[styles.errorText, { color: c.text.secondary }]}>Failed to load exercises</Text>
+          <TouchableOpacity style={[styles.retryBtn, { backgroundColor: c.accent.primary }]} onPress={fetchData} activeOpacity={0.7}>
+            <Text style={[styles.retryText, { color: c.text.primary }]}>Retry</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -185,7 +185,7 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
   // Show custom exercise form (6.7)
   if (showCustomForm) {
     return (
-      <SafeAreaView style={[styles.screen, { backgroundColor: getThemeColors().bg.base }]}>
+      <SafeAreaView style={[styles.screen, { backgroundColor: c.bg.base }]}>
         <CustomExerciseForm
           initialName={searchText.trim()}
           onCreated={handleCustomExerciseCreated}
@@ -196,7 +196,7 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: getThemeColors().bg.base }]}>
+    <SafeAreaView style={[styles.screen, { backgroundColor: c.bg.base }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -205,9 +205,9 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
           accessibilityRole="button"
           style={styles.backBtn}
         >
-          <Text style={[styles.backText, { color: getThemeColors().text.primary }]}>←</Text>
+          <Text style={[styles.backText, { color: c.text.primary }]}>←</Text>
         </TouchableOpacity>
-        <Text style={[styles.title, { color: getThemeColors().text.primary }]}>Choose Exercise</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>Choose Exercise</Text>
         <View style={styles.backBtn} />
       </View>
 
@@ -248,11 +248,11 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
       {/* Muscle group header when filtered */}
       {selectedMuscleGroup && (
         <View style={styles.filterHeader}>
-          <Text style={[styles.filterLabel, { color: getThemeColors().text.primary }]}>
+          <Text style={[styles.filterLabel, { color: c.text.primary }]}>
             {selectedMuscleGroup.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
           </Text>
           <TouchableOpacity onPress={() => setSelectedMuscleGroup(null)} accessibilityLabel="Clear muscle group filter">
-            <Text style={[styles.clearFilter, { color: getThemeColors().accent.primary }]}><Icon name="close" /> Clear</Text>
+            <Text style={[styles.clearFilter, { color: c.accent.primary }]}><Icon name="close" /> Clear</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -268,18 +268,18 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
           />
         ) : (
           <View style={styles.center}>
-            <Text style={[styles.emptyText, { color: getThemeColors().text.muted }]}>No exercises match your search</Text>
+            <Text style={[styles.emptyText, { color: c.text.muted }]}>No exercises match your search</Text>
             {selectedMuscleGroup && (
-              <Text style={[styles.emptyHint, { color: getThemeColors().text.muted }]}>Try clearing the muscle group filter</Text>
+              <Text style={[styles.emptyHint, { color: c.text.muted }]}>Try clearing the muscle group filter</Text>
             )}
             <TouchableOpacity
-              style={[styles.createCustomBtn, { backgroundColor: getThemeColors().accent.primary }]}
+              style={[styles.createCustomBtn, { backgroundColor: c.accent.primary }]}
               onPress={() => setShowCustomForm(true)}
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel="Create custom exercise"
             >
-              <Text style={[styles.createCustomText, { color: getThemeColors().text.primary }]}>+ Create Custom Exercise</Text>
+              <Text style={[styles.createCustomText, { color: c.text.primary }]}>+ Create Custom Exercise</Text>
             </TouchableOpacity>
           </View>
         )
@@ -311,7 +311,7 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.base,
+    backgroundColor: c.bg.base,
   },
   header: {
     flexDirection: 'row',
@@ -325,12 +325,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   backText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xl,
     lineHeight: typography.lineHeight.xl,
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     lineHeight: typography.lineHeight.lg,
     fontWeight: typography.weight.semibold,
@@ -343,13 +343,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[2],
   },
   filterLabel: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     lineHeight: typography.lineHeight.md,
     fontWeight: typography.weight.semibold,
   },
   clearFilter: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
@@ -365,43 +365,43 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[3],
   },
   errorText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.md,
     lineHeight: typography.lineHeight.md,
     marginBottom: spacing[3],
   },
   retryBtn: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[6],
     paddingVertical: spacing[2],
   },
   retryText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.semibold,
   },
   emptyText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.md,
     lineHeight: typography.lineHeight.md,
   },
   emptyHint: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     marginTop: spacing[2],
   },
   createCustomBtn: {
     marginTop: spacing[4],
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[5],
     paddingVertical: spacing[2],
   },
   createCustomText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
     fontWeight: typography.weight.semibold,
@@ -421,21 +421,21 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
     borderRadius: radius.full,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   chipActive: {
-    backgroundColor: getThemeColors().accent.primaryMuted,
-    borderColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primaryMuted,
+    borderColor: c.accent.primary,
   },
   chipText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.medium,
   },
   chipTextActive: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
   },
 });

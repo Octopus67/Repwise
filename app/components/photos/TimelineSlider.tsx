@@ -84,17 +84,17 @@ export function TimelineSlider({
       const { dateLabel, weightLabel } = formatPhotoInfo(item);
 
       return (
-        <View style={[styles.item, { backgroundColor: getThemeColors().bg.surface }]}>
+        <View style={[styles.item, { backgroundColor: c.bg.surface }]}>
           {fileUri ? (
-            <Image source={{ uri: fileUri }} style={[styles.photo, { backgroundColor: getThemeColors().bg.surfaceRaised }]} resizeMode="cover" />
+            <Image source={{ uri: fileUri }} style={[styles.photo, { backgroundColor: c.bg.surfaceRaised }]} resizeMode="cover" />
           ) : (
             <View style={[styles.photo, styles.placeholder]}>
-              <Text style={[styles.placeholderText, { color: getThemeColors().text.muted }]}>Photo unavailable</Text>
+              <Text style={[styles.placeholderText, { color: c.text.muted }]}>Photo unavailable</Text>
             </View>
           )}
           <View style={styles.info}>
-            <Text style={[styles.dateLabel, { color: getThemeColors().text.primary }]}>{dateLabel}</Text>
-            {weightLabel && <Text style={[styles.weightLabel, { color: getThemeColors().accent.primary }]}>{weightLabel}</Text>}
+            <Text style={[styles.dateLabel, { color: c.text.primary }]}>{dateLabel}</Text>
+            {weightLabel && <Text style={[styles.weightLabel, { color: c.accent.primary }]}>{weightLabel}</Text>}
           </View>
         </View>
       );
@@ -123,7 +123,7 @@ export function TimelineSlider({
 
       {displayPhotos.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={[styles.emptyText, { color: getThemeColors().text.muted }]}>No photos for this filter</Text>
+          <Text style={[styles.emptyText, { color: c.text.muted }]}>No photos for this filter</Text>
         </View>
       ) : (
         <>
@@ -144,13 +144,13 @@ export function TimelineSlider({
 
           {/* Compare button */}
           {displayPhotos.length >= 2 && (
-            <TouchableOpacity style={[styles.compareBtn, { backgroundColor: getThemeColors().accent.primary }]} onPress={handleCompare} activeOpacity={0.8}>
-              <Text style={[styles.compareBtnText, { color: getThemeColors().text.inverse }]}>Compare</Text>
+            <TouchableOpacity style={[styles.compareBtn, { backgroundColor: c.accent.primary }]} onPress={handleCompare} activeOpacity={0.8}>
+              <Text style={[styles.compareBtnText, { color: c.text.inverse }]}>Compare</Text>
             </TouchableOpacity>
           )}
 
           {/* Page indicator */}
-          <Text style={[styles.pageIndicator, { color: getThemeColors().text.muted }]}>
+          <Text style={[styles.pageIndicator, { color: c.text.muted }]}>
             {currentIndex + 1} / {displayPhotos.length}
           </Text>
         </>
@@ -173,21 +173,21 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
     borderRadius: radius.full,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   filterPillActive: {
-    backgroundColor: getThemeColors().accent.primaryMuted,
-    borderColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primaryMuted,
+    borderColor: c.accent.primary,
   },
   filterText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
   },
   filterTextActive: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
   },
   listContent: {
     paddingHorizontal: spacing[4],
@@ -197,19 +197,19 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     width: ITEM_WIDTH,
     borderRadius: radius.md,
     overflow: 'hidden',
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
   },
   photo: {
     width: ITEM_WIDTH,
     height: ITEM_HEIGHT,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
   },
   placeholder: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   placeholderText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
   },
   info: {
@@ -217,31 +217,31 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   dateLabel: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },
   weightLabel: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     marginTop: 2,
   },
   compareBtn: {
     alignSelf: 'center',
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.sm,
     paddingVertical: spacing[2],
     paddingHorizontal: spacing[6],
     marginTop: spacing[3],
   },
   compareBtnText: {
-    color: getThemeColors().text.inverse,
+    color: c.text.inverse,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
   },
   pageIndicator: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     textAlign: 'center',
     marginTop: spacing[2],
@@ -253,7 +253,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     padding: spacing[8],
   },
   emptyText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.base,
   },
 });

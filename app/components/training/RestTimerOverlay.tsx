@@ -99,9 +99,9 @@ export function RestTimerOverlay({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
-      <View style={[styles.overlay, { backgroundColor: getThemeColors().bg.overlay }]}>
-        <View style={[styles.container, { backgroundColor: getThemeColors().bg.surfaceRaised }]}>
-          <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>Rest Timer</Text>
+      <View style={[styles.overlay, { backgroundColor: c.bg.overlay }]}>
+        <View style={[styles.container, { backgroundColor: c.bg.surfaceRaised }]}>
+          <Text style={[styles.label, { color: c.text.secondary }]}>Rest Timer</Text>
 
           {/* SVG Progress Ring */}
           <RestTimerRing
@@ -112,24 +112,24 @@ export function RestTimerOverlay({
 
           {/* Rest Complete indicator */}
           {state === 'COMPLETED' && (
-            <Text style={[styles.completeText, { color: getThemeColors().semantic.positive }]}>Rest Complete</Text>
+            <Text style={[styles.completeText, { color: c.semantic.positive }]}>Rest Complete</Text>
           )}
 
           {/* Adjust buttons */}
           <View style={styles.adjustRow}>
             <TouchableOpacity
-              style={[styles.adjustBtn, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.default }]}
+              style={[styles.adjustBtn, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
               onPress={() => handleAdjust(-15)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.adjustText, { color: getThemeColors().text.secondary }]}>-15s</Text>
+              <Text style={[styles.adjustText, { color: c.text.secondary }]}>-15s</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.adjustBtn, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.default }]}
+              style={[styles.adjustBtn, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
               onPress={() => handleAdjust(15)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.adjustText, { color: getThemeColors().text.secondary }]}>+15s</Text>
+              <Text style={[styles.adjustText, { color: c.text.secondary }]}>+15s</Text>
             </TouchableOpacity>
           </View>
 
@@ -137,21 +137,21 @@ export function RestTimerOverlay({
           <View style={styles.actionRow}>
             {state !== 'COMPLETED' && (
               <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: getThemeColors().accent.primary }]}
+                style={[styles.actionBtn, { backgroundColor: c.accent.primary }]}
                 onPress={handlePauseResume}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.actionText, { color: getThemeColors().text.primary }]}>
+                <Text style={[styles.actionText, { color: c.text.primary }]}>
                   {state === 'PAUSED' ? 'Resume' : 'Pause'}
                 </Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity
-              style={[styles.skipBtn, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.default }]}
+              style={[styles.skipBtn, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
               onPress={handleSkip}
               activeOpacity={0.7}
             >
-              <Text style={[styles.skipText, { color: getThemeColors().text.secondary }]}>Skip</Text>
+              <Text style={[styles.skipText, { color: c.text.secondary }]}>Skip</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -176,25 +176,25 @@ function playCompletionSound() {
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.overlay,
+    backgroundColor: c.bg.overlay,
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
     alignItems: 'center',
     padding: spacing[8],
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.lg,
     minWidth: 280,
   },
   label: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[4],
   },
   completeText: {
-    color: getThemeColors().semantic.positive,
+    color: c.semantic.positive,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
     marginTop: spacing[2],
@@ -207,15 +207,15 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[4],
   },
   adjustBtn: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[2],
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
   },
   adjustText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
@@ -224,26 +224,26 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[3],
   },
   actionBtn: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[6],
     paddingVertical: spacing[3],
   },
   actionText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
   },
   skipBtn: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[6],
     paddingVertical: spacing[3],
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
   },
   skipText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
   },

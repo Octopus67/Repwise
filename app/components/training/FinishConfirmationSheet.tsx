@@ -50,31 +50,31 @@ export function FinishConfirmationSheet({
   // ── Shared content (used by both native bottom sheet and web modal) ──
   const sheetContent = (
     <>
-      <Text style={[styles.title, { color: getThemeColors().text.primary }]}>Workout Summary</Text>
+      <Text style={[styles.title, { color: c.text.primary }]}>Workout Summary</Text>
 
       {/* Stats */}
-      <View style={[styles.statsRow, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.subtle }]}>
+      <View style={[styles.statsRow, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
         <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: getThemeColors().text.primary }]}>{summary.exerciseCount}</Text>
-          <Text style={[styles.statLabel, { color: getThemeColors().text.muted }]}>Exercises</Text>
+          <Text style={[styles.statValue, { color: c.text.primary }]}>{summary.exerciseCount}</Text>
+          <Text style={[styles.statLabel, { color: c.text.muted }]}>Exercises</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: getThemeColors().text.primary }]}>{summary.setCount}</Text>
-          <Text style={[styles.statLabel, { color: getThemeColors().text.muted }]}>Sets</Text>
+          <Text style={[styles.statValue, { color: c.text.primary }]}>{summary.setCount}</Text>
+          <Text style={[styles.statLabel, { color: c.text.muted }]}>Sets</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: getThemeColors().text.primary }]}>{volumeDisplay}</Text>
-          <Text style={[styles.statLabel, { color: getThemeColors().text.muted }]}>Volume</Text>
+          <Text style={[styles.statValue, { color: c.text.primary }]}>{volumeDisplay}</Text>
+          <Text style={[styles.statLabel, { color: c.text.muted }]}>Volume</Text>
         </View>
       </View>
 
       {/* PRs */}
       {prs.length > 0 && (
         <View style={styles.prSection}>
-          <Text style={[styles.prTitle, { color: getThemeColors().premium.gold }]}>🏆 Personal Records</Text>
+          <Text style={[styles.prTitle, { color: c.premium.gold }]}>🏆 Personal Records</Text>
           <ScrollView style={styles.prList} nestedScrollEnabled>
             {prs.map((pr, i) => (
-              <Text key={`${pr.exercise_name}-${i}`} style={[styles.prItem, { color: getThemeColors().text.secondary }]}>
+              <Text key={`${pr.exercise_name}-${i}`} style={[styles.prItem, { color: c.text.secondary }]}>
                 {pr.exercise_name}: {pr.new_weight_kg}kg × {pr.reps}
               </Text>
             ))}
@@ -85,23 +85,23 @@ export function FinishConfirmationSheet({
       {/* Actions */}
       <View style={styles.actions}>
         <TouchableOpacity
-          style={[styles.templateBtn, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.default }]}
+          style={[styles.templateBtn, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
           onPress={onSaveAsTemplate}
           accessibilityLabel="Save as Template"
           accessibilityRole="button"
           activeOpacity={0.7}
         >
-          <Text style={[styles.templateBtnText, { color: getThemeColors().text.secondary }]}>Save as Template</Text>
+          <Text style={[styles.templateBtnText, { color: c.text.secondary }]}>Save as Template</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.confirmBtn, { backgroundColor: getThemeColors().accent.primary }]}
+          style={[styles.confirmBtn, { backgroundColor: c.accent.primary }]}
           onPress={onConfirm}
           accessibilityLabel="Confirm and save workout"
           accessibilityRole="button"
           activeOpacity={0.7}
         >
-          <Text style={[styles.confirmBtnText, { color: getThemeColors().text.primary }]}>Confirm</Text>
+          <Text style={[styles.confirmBtnText, { color: c.text.primary }]}>Confirm</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -111,7 +111,7 @@ export function FinishConfirmationSheet({
           accessibilityRole="button"
           activeOpacity={0.7}
         >
-          <Text style={[styles.cancelBtnText, { color: getThemeColors().text.muted }]}>Cancel</Text>
+          <Text style={[styles.cancelBtnText, { color: c.text.muted }]}>Cancel</Text>
         </TouchableOpacity>
       </View>
     </>
@@ -127,7 +127,7 @@ export function FinishConfirmationSheet({
         onRequestClose={onCancel}
       >
         <Pressable style={styles.webOverlay} onPress={onCancel}>
-          <Pressable style={[styles.webSheet, { backgroundColor: getThemeColors().bg.surfaceRaised }]} onPress={(e) => e.stopPropagation()}>
+          <Pressable style={[styles.webSheet, { backgroundColor: c.bg.surfaceRaised }]} onPress={(e) => e.stopPropagation()}>
             {sheetContent}
           </Pressable>
         </Pressable>
@@ -156,10 +156,10 @@ export function FinishConfirmationSheet({
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   sheetBackground: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
   },
   handleIndicator: {
-    backgroundColor: getThemeColors().text.muted,
+    backgroundColor: c.text.muted,
   },
   content: {
     flex: 1,
@@ -167,7 +167,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingBottom: spacing[6],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.bold,
     lineHeight: typography.lineHeight.xl,
@@ -178,22 +178,22 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'space-around',
     marginBottom: spacing[4],
     paddingVertical: spacing[3],
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   statItem: {
     alignItems: 'center',
   },
   statValue: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
     lineHeight: typography.lineHeight.lg,
   },
   statLabel: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     lineHeight: typography.lineHeight.xs,
     marginTop: 2,
@@ -202,7 +202,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[4],
   },
   prTitle: {
-    color: getThemeColors().premium.gold,
+    color: c.premium.gold,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.base,
@@ -212,7 +212,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     maxHeight: 100,
   },
   prItem: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     marginBottom: spacing[1],
@@ -222,27 +222,27 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: 'auto' as unknown as number,
   },
   templateBtn: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     paddingVertical: spacing[3],
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
   },
   templateBtnText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.base,
   },
   confirmBtn: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.sm,
     paddingVertical: spacing[3],
     alignItems: 'center',
   },
   confirmBtnText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.base,
@@ -252,7 +252,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   cancelBtnText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
   },
@@ -262,7 +262,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'flex-end',
   },
   webSheet: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderTopLeftRadius: radius.md,
     borderTopRightRadius: radius.md,
     paddingHorizontal: spacing[5],

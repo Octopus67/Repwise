@@ -62,7 +62,7 @@ export function ShoppingListView({ route }: any) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={getThemeColors().accent.primary} />
+        <ActivityIndicator size="large" color={c.accent.primary} />
       </View>
     );
   }
@@ -70,9 +70,9 @@ export function ShoppingListView({ route }: any) {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={[styles.errorText, { color: getThemeColors().semantic.negative }]}>{error}</Text>
+        <Text style={[styles.errorText, { color: c.semantic.negative }]}>{error}</Text>
         <TouchableOpacity
-          style={[styles.retryBtn, { backgroundColor: getThemeColors().accent.primary }]}
+          style={[styles.retryBtn, { backgroundColor: c.accent.primary }]}
           onPress={() => {
             setError(null);
             setLoading(true);
@@ -86,18 +86,18 @@ export function ShoppingListView({ route }: any) {
               .finally(() => setLoading(false));
           }}
         >
-          <Text style={[styles.retryText, { color: getThemeColors().text.primary }]}>Retry</Text>
+          <Text style={[styles.retryText, { color: c.text.primary }]}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: getThemeColors().bg.base }]}>
-      <Text style={[styles.title, { color: getThemeColors().text.primary }]}>Shopping List</Text>
+    <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]}>
+      <Text style={[styles.title, { color: c.text.primary }]}>Shopping List</Text>
       {Object.entries(grouped).map(([category, catItems]) => (
         <View key={category} style={styles.section}>
-          <Text style={[styles.categoryLabel, { color: getThemeColors().accent.primary }]}>{category.charAt(0).toUpperCase() + category.slice(1)}</Text>
+          <Text style={[styles.categoryLabel, { color: c.accent.primary }]}>{category.charAt(0).toUpperCase() + category.slice(1)}</Text>
           {catItems.map((item) => (
             <TouchableOpacity
               key={item.name}
@@ -108,7 +108,7 @@ export function ShoppingListView({ route }: any) {
               <Text style={[styles.itemName, checked.has(item.name) && styles.strikethrough]}>
                 {item.name}
               </Text>
-              <Text style={[styles.itemQty, { color: getThemeColors().text.secondary }]}>
+              <Text style={[styles.itemQty, { color: c.text.secondary }]}>
                 {item.quantity} {item.unit}
               </Text>
             </TouchableOpacity>
@@ -120,18 +120,18 @@ export function ShoppingListView({ route }: any) {
 }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: getThemeColors().bg.base, padding: spacing[4] },
+  container: { flex: 1, backgroundColor: c.bg.base, padding: spacing[4] },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  errorText: { color: getThemeColors().semantic.negative, fontSize: typography.size.base, textAlign: 'center', marginBottom: spacing[3] },
-  retryBtn: { backgroundColor: getThemeColors().accent.primary, paddingHorizontal: spacing[5], paddingVertical: spacing[2], borderRadius: 8 },
-  retryText: { color: getThemeColors().text.primary, fontWeight: typography.weight.semibold },
-  title: { fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, color: getThemeColors().text.primary, marginBottom: spacing[4] },
+  errorText: { color: c.semantic.negative, fontSize: typography.size.base, textAlign: 'center', marginBottom: spacing[3] },
+  retryBtn: { backgroundColor: c.accent.primary, paddingHorizontal: spacing[5], paddingVertical: spacing[2], borderRadius: 8 },
+  retryText: { color: c.text.primary, fontWeight: typography.weight.semibold },
+  title: { fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, color: c.text.primary, marginBottom: spacing[4] },
   section: { marginBottom: spacing[4] },
-  categoryLabel: { fontSize: typography.size.lg, fontWeight: typography.weight.semibold, color: getThemeColors().accent.primary, marginBottom: spacing[2] },
+  categoryLabel: { fontSize: typography.size.lg, fontWeight: typography.weight.semibold, color: c.accent.primary, marginBottom: spacing[2] },
   itemRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing[2] },
-  checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: getThemeColors().text.muted, marginRight: spacing[3] },
-  checkboxChecked: { backgroundColor: getThemeColors().accent.primary, borderColor: getThemeColors().accent.primary },
-  itemName: { flex: 1, fontSize: typography.size.base, color: getThemeColors().text.primary },
-  strikethrough: { textDecorationLine: 'line-through', color: getThemeColors().text.muted },
-  itemQty: { fontSize: typography.size.sm, color: getThemeColors().text.secondary },
+  checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: c.text.muted, marginRight: spacing[3] },
+  checkboxChecked: { backgroundColor: c.accent.primary, borderColor: c.accent.primary },
+  itemName: { flex: 1, fontSize: typography.size.base, color: c.text.primary },
+  strikethrough: { textDecorationLine: 'line-through', color: c.text.muted },
+  itemQty: { fontSize: typography.size.sm, color: c.text.secondary },
 });

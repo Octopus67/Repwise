@@ -1,47 +1,26 @@
-import { useMemo, useRef, useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-} from 'react-native';
+import { useMemo, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { spacing, typography, radius } from '../../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../../hooks/useThemeColors';
 import { Button } from '../../../components/common/Button';
-import { Icon } from '../../../components/common/Icon';
 import { useOnboardingStore, DietStyle, computeAge } from '../../../store/onboardingSlice';
 import {
   computeTDEEBreakdown,
   computeCalorieBudget,
   computeMacroSplit,
-  getProteinRecommendation,
 } from '../../../utils/onboardingCalculations';
-import { useHaptics } from '../../../hooks/useHaptics';
 
 interface Props {
   onNext?: () => void;
   onBack?: () => void;
-  onSkip?: () => void;
-  onComplete?: () => void;
-  onEditStep?: (step: number) => void;
 }
 
 const DIET_STYLES: { type: DietStyle; title: string; desc: string }[] = [
-  { type: 'balanced', title: 'Balanced', desc: 'Even split of carbs and fats' },
-  { type: 'high_protein', title: 'Even Split', desc: 'Even split of carbs and fats, protein set by body weight' },
-  { type: 'low_carb', title: 'Low Carb', desc: 'Mostly fats, fewer carbs' },
-  { type: 'keto', title: 'Keto', desc: 'Very low carb, high fat' },
+  { type: 'balanced', title: 'Balanced', desc: 'Moderate carbs and fats for general health' },
+  { type: 'high_protein', title: 'Performance', desc: 'Higher carbs for training energy and recovery' },
+  { type: 'low_carb', title: 'Low Carb', desc: 'Lower carbs, higher fats for steady energy' },
+  { type: 'keto', title: 'Keto', desc: 'Very low carb (<50g) for ketosis' },
 ];
-
-const TICK_WIDTH = 40;
-const PROTEIN_MIN = 1.2;
-const PROTEIN_MAX = 3.0;
-const PROTEIN_STEP = 0.1;
-const PROTEIN_TICK_COUNT = Math.round((PROTEIN_MAX - PROTEIN_MIN) / PROTEIN_STEP) + 1; // 19
 
 export function DietStyleStep({ onNext }: Props) {
   const c = useThemeColors();
@@ -49,10 +28,17 @@ export function DietStyleStep({ onNext }: Props) {
   const store = useOnboardingStore();
   const age = computeAge(store.birthYear, store.birthMonth);
   const goalType = store.goalType ?? 'maintain';
-  const scrollRef = useRef<ScrollView>(null);
-  const lastProteinValue = useRef(store.proteinPerKg);
-  const [showProteinTip, setShowProteinTip] = useState(false);
-  const { impact } = useHaptics();
+
+  // Get protein recommendation based on goal
+  const proteinRec = useMemo(() => {
+    if (goalType === 'lose_fat') return { min: 1.6, max: 2.2, default: 1.8, label: 'Cutting' };
+    if (goalType === 'build_muscle') return { min: 1.6, max: 2.0, default: 1.7, label: 'Bulking' };
+    if (goalType === 'recomposition') return { min: 1.6, max: 2.2, default: 1.8, label: 'Recomp' };
+    return { min: 1.4, max: 1.8, default: 1.6, label: 'Maintenance' };
+  }, [goalType]);
+
+  // Initialize protein if not set
+  const [proteinPerKg, setProteinPerKg] = useState(store.proteinPerKg || proteinRec.default);
 
   const tdee = useMemo(() => {
     if (store.tdeeOverride) return store.tdeeOverride;
@@ -70,446 +56,331 @@ export function DietStyleStep({ onNext }: Props) {
     [tdee, goalType, store.rateKgPerWeek, store.sex],
   );
 
-  const proteinRec = useMemo(
-    () => getProteinRecommendation(goalType, store.exerciseTypes.length > 0 ? store.exerciseTypes : ['strength']),
-    [goalType, store.exerciseTypes],
-  );
-
-  // Auto-set protein to recommendation default on mount (only if user hasn't manually changed it)
-  useEffect(() => {
-    if (proteinRec && !store.proteinUserModified) {
-      store.updateField('proteinPerKg', proteinRec.default);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const macros = useMemo(
-    () => computeMacroSplit(budget, store.weightKg, store.proteinPerKg, store.dietStyle),
-    [budget, store.weightKg, store.proteinPerKg, store.dietStyle],
-  );
-
-  // Precompute macros for each diet style card
+  // Compute macros for each diet style with current protein
   const styleMacros = useMemo(
-    () =>
-      DIET_STYLES.map((d) =>
-        computeMacroSplit(budget, store.weightKg, store.proteinPerKg, d.type),
-      ),
-    [budget, store.weightKg, store.proteinPerKg],
+    () => DIET_STYLES.map((d) => ({
+      style: d.type,
+      macros: computeMacroSplit(budget, store.weightKg, proteinPerKg, d.type),
+    })),
+    [budget, store.weightKg, proteinPerKg],
   );
 
-  // Protein scale ticks
-  const proteinTicks = useMemo(() => {
-    const ticks: number[] = [];
-    for (let i = 0; i < PROTEIN_TICK_COUNT; i++) {
-      ticks.push(Math.round((PROTEIN_MIN + i * PROTEIN_STEP) * 10) / 10);
-    }
-    return ticks;
-  }, []);
+  const handleStyleSelect = (style: DietStyle) => {
+    store.updateField('dietStyle', style);
+  };
 
-  const handleScrollEnd = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const offset = e.nativeEvent.contentOffset.x;
-      const index = Math.round(offset / TICK_WIDTH);
-      const clamped = Math.max(0, Math.min(index, PROTEIN_TICK_COUNT - 1));
-      const value = Math.round((PROTEIN_MIN + clamped * PROTEIN_STEP) * 10) / 10;
-      if (value !== lastProteinValue.current) {
-        lastProteinValue.current = value;
-        store.updateField('proteinPerKg', value);
-        impact('light');
-        if (!store.proteinUserModified) {
-          store.updateField('proteinUserModified', true);
-        }
-      }
-    },
-    [store, impact],
-  );
+  const handleProteinChange = (value: number) => {
+    const rounded = Math.round(value * 10) / 10; // Round to 0.1
+    setProteinPerKg(rounded);
+    store.updateField('proteinPerKg', rounded);
+    store.updateField('proteinUserModified', true);
+  };
 
-  const handleResetProtein = useCallback(() => {
-    if (!proteinRec) return;
-    const defaultVal = proteinRec.default;
-    store.updateField('proteinPerKg', defaultVal);
-    store.updateField('proteinUserModified', false);
-    lastProteinValue.current = defaultVal;
-    impact('medium');
-    const idx = Math.round((defaultVal - PROTEIN_MIN) / PROTEIN_STEP);
-    scrollRef.current?.scrollTo({ x: idx * TICK_WIDTH, animated: true });
-  }, [proteinRec, store, impact]);
+  const handleNext = () => {
+    // Ensure protein is saved
+    store.updateField('proteinPerKg', proteinPerKg);
+    onNext?.();
+  };
+
+  const dailyProtein = Math.round(proteinPerKg * store.weightKg);
 
   return (
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-      <Text style={[styles.heading, { color: c.text.primary }]}>Diet Style</Text>
+      {/* Header */}
+      <Text style={[styles.heading, { color: c.text.primary }]}>Nutrition Style</Text>
       <Text style={[styles.subheading, { color: c.text.secondary }]}>
-        Choose your macro balance. Protein is set first from your body weight — these styles change how carbs and fat are split.
+        Choose how you prefer to eat
       </Text>
 
-      {/* Diet style cards */}
-      <View style={styles.cardsGrid}>
-        {DIET_STYLES.map((d, idx) => {
-          const selected = store.dietStyle === d.type;
-          const sm = styleMacros[idx];
-          const totalKcal = sm.proteinKcal + sm.carbsKcal + sm.fatKcal;
-          const pFlex = totalKcal > 0 ? sm.proteinKcal / totalKcal : 0;
-          const cFlex = totalKcal > 0 ? sm.carbsKcal / totalKcal : 0;
-          const fFlex = totalKcal > 0 ? sm.fatKcal / totalKcal : 0;
+      {/* Daily Calorie Budget */}
+      <View style={[styles.calorieCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.accent.primary }]}>
+        <Text style={[styles.calorieLabel, { color: c.text.secondary }]}>Your Daily Calorie Target</Text>
+        <Text style={[styles.calorieValue, { color: c.accent.primary }]}>{budget.toLocaleString()} kcal</Text>
+        <Text style={[styles.calorieNote, { color: c.text.muted }]}>
+          Based on your TDEE and {goalType === 'lose_fat' ? 'deficit' : goalType === 'build_muscle' ? 'surplus' : 'maintenance'} goal
+        </Text>
+      </View>
 
+      {/* Protein Target */}
+      <View style={[styles.section, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>PROTEIN TARGET</Text>
+        
+        <View style={styles.proteinStepper}>
+          <TouchableOpacity
+            style={[styles.stepperBtn, { borderColor: c.border.default }]}
+            onPress={() => handleProteinChange(Math.max(1.2, proteinPerKg - 0.1))}
+            disabled={proteinPerKg <= 1.2}
+          >
+            <Text style={[styles.stepperText, { color: proteinPerKg <= 1.2 ? c.text.muted : c.text.primary }]}>−</Text>
+          </TouchableOpacity>
+          
+          <View style={styles.proteinDisplay}>
+            <Text style={[styles.proteinValue, { color: c.accent.primary }]}>
+              {proteinPerKg.toFixed(1)} g/kg
+            </Text>
+            <Text style={[styles.proteinDaily, { color: c.text.muted }]}>
+              {dailyProtein}g per day
+            </Text>
+          </View>
+          
+          <TouchableOpacity
+            style={[styles.stepperBtn, { borderColor: c.border.default }]}
+            onPress={() => handleProteinChange(Math.min(2.4, proteinPerKg + 0.1))}
+            disabled={proteinPerKg >= 2.4}
+          >
+            <Text style={[styles.stepperText, { color: proteinPerKg >= 2.4 ? c.text.muted : c.text.primary }]}>+</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={[styles.recBadge, { backgroundColor: c.accent.primaryMuted }]}>
+          <Text style={[styles.recBadgeText, { color: c.accent.primary }]}>
+            Recommended: {proteinRec.min}-{proteinRec.max} g/kg for {proteinRec.label.toLowerCase()}
+          </Text>
+        </View>
+
+        <Text style={[styles.proteinNote, { color: c.text.muted }]}>
+          {proteinPerKg < proteinRec.min && 'Below recommended range for muscle preservation'}
+          {proteinPerKg >= proteinRec.min && proteinPerKg <= proteinRec.max && 'Optimal for your goal'}
+          {proteinPerKg > proteinRec.max && 'Above recommended range (not harmful, just expensive)'}
+        </Text>
+      </View>
+
+      {/* Diet Style Cards */}
+      <View style={styles.stylesContainer}>
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>DIET STYLE</Text>
+        
+        {DIET_STYLES.map((dietStyle, idx) => {
+          const isSelected = store.dietStyle === dietStyle.type;
+          const macros = styleMacros[idx]?.macros;
+          
           return (
             <TouchableOpacity
-              key={d.type}
-              style={[styles.card, selected && styles.cardSelected]}
-              onPress={() => store.updateField('dietStyle', d.type)}
+              key={dietStyle.type}
+              style={[
+                styles.styleCard,
+                { backgroundColor: c.bg.surfaceRaised, borderColor: isSelected ? c.accent.primary : c.border.default },
+                isSelected && styles.styleCardSelected,
+              ]}
+              onPress={() => handleStyleSelect(dietStyle.type)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.cardTitle, selected && styles.cardTitleSelected]}>{d.title}</Text>
-              <Text style={[styles.cardDesc, { color: c.text.muted }]}>{d.desc}</Text>
-
-              {/* Mini macro bar */}
-              <View style={styles.miniBar}>
-                <View style={[styles.miniBarSegment, { flex: pFlex, backgroundColor: c.macro.protein, borderTopLeftRadius: 3, borderBottomLeftRadius: 3 }]} />
-                <View style={[styles.miniBarSegment, { flex: cFlex, backgroundColor: c.macro.carbs }]} />
-                <View style={[styles.miniBarSegment, { flex: fFlex, backgroundColor: c.macro.fat, borderTopRightRadius: 3, borderBottomRightRadius: 3 }]} />
+              <View style={styles.styleHeader}>
+                <Text style={[styles.styleTitle, { color: isSelected ? c.accent.primary : c.text.primary }]}>
+                  {dietStyle.title}
+                </Text>
+                {isSelected && (
+                  <View style={[styles.checkmark, { backgroundColor: c.accent.primary }]}>
+                    <Text style={styles.checkmarkText}>✓</Text>
+                  </View>
+                )}
               </View>
-
-              <Text style={[styles.miniBarLabel, { color: c.text.secondary }]}>
-                P: {sm.proteinG}g · C: {sm.carbsG}g · F: {sm.fatG}g
-              </Text>
+              <Text style={[styles.styleDesc, { color: c.text.muted }]}>{dietStyle.desc}</Text>
+              
+              {macros && (
+                <View style={styles.macroRow}>
+                  <View style={styles.macroItem}>
+                    <Text style={[styles.macroValue, { color: c.macro.protein }]}>{macros.proteinG}g</Text>
+                    <Text style={[styles.macroLabel, { color: c.text.muted }]}>Protein</Text>
+                    <Text style={[styles.macroCalories, { color: c.text.muted }]}>{macros.proteinG * 4} cal</Text>
+                  </View>
+                  <View style={styles.macroItem}>
+                    <Text style={[styles.macroValue, { color: c.macro.carbs }]}>{macros.carbsG}g</Text>
+                    <Text style={[styles.macroLabel, { color: c.text.muted }]}>Carbs</Text>
+                    <Text style={[styles.macroCalories, { color: c.text.muted }]}>{macros.carbsG * 4} cal</Text>
+                  </View>
+                  <View style={styles.macroItem}>
+                    <Text style={[styles.macroValue, { color: c.macro.fat }]}>{macros.fatG}g</Text>
+                    <Text style={[styles.macroLabel, { color: c.text.muted }]}>Fat</Text>
+                    <Text style={[styles.macroCalories, { color: c.text.muted }]}>{macros.fatG * 9} cal</Text>
+                  </View>
+                </View>
+              )}
             </TouchableOpacity>
           );
         })}
       </View>
 
-      {/* Protein scale */}
-      <View style={styles.proteinLabelRow}>
-        <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Protein per kg body weight</Text>
-        <Pressable
-          onPress={() => setShowProteinTip((v) => !v)}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Protein info"
-        >
-          <Icon name="alert-circle" size={16} color={c.text.muted} />
-        </Pressable>
-      </View>
-      {showProteinTip && (
-        <View style={[styles.tooltip, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
-          <Text style={[styles.tooltipText, { color: c.text.secondary }]}>
-            Protein is based on body weight. Diet styles only change the carb/fat split.
-          </Text>
-        </View>
-      )}
-      <Text style={[styles.proteinValueDisplay, { color: c.text.primary }]}>
-        {store.proteinPerKg.toFixed(1)} g/kg · {Math.round(store.proteinPerKg * store.weightKg)}g/day
-      </Text>
-
-      <View style={styles.scaleContainer}>
-        {/* Center indicator line with drag handle */}
-        <View style={[styles.centerIndicator, { backgroundColor: c.accent.primary }]}>
-          <View style={[styles.dragHandle, { backgroundColor: c.accent.primary }]}>
-            <View style={[styles.dragHandleLine, { backgroundColor: '#fff' }]} />
-            <View style={[styles.dragHandleLine, { backgroundColor: '#fff' }]} />
-            <View style={[styles.dragHandleLine, { backgroundColor: '#fff' }]} />
-          </View>
-        </View>
-
-        <ScrollView
-          ref={scrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          snapToInterval={TICK_WIDTH}
-          decelerationRate="fast"
-          contentContainerStyle={styles.scaleContent}
-          onMomentumScrollEnd={handleScrollEnd}
-          onScrollEndDrag={handleScrollEnd}
-          contentOffset={{ x: Math.round((store.proteinPerKg - PROTEIN_MIN) / PROTEIN_STEP) * TICK_WIDTH, y: 0 }}
-        >
-          {proteinTicks.map((val, i) => {
-            const isMajor = Math.abs(val * 10 % 5) < 0.01;
-            const inRange = proteinRec && val >= proteinRec.min && val <= proteinRec.max;
-            return (
-              <View key={i} style={styles.tickContainer}>
-                {inRange && <View style={[styles.tickRecommendedBg, { backgroundColor: c.semantic.positiveSubtle }]} />}
-                <View
-                  style={[
-                    styles.tick,
-                    isMajor ? styles.tickMajor : styles.tickNormal,
-                  ]}
-                />
-                {isMajor && (
-                  <Text style={[styles.tickLabel, { color: c.text.secondary }]}>{val.toFixed(1)}</Text>
-                )}
-              </View>
-            );
-          })}
-        </ScrollView>
-      </View>
-
-      {proteinRec && (
-        <View style={styles.recRow}>
-          <Text style={[styles.recHint, { color: c.semantic.positive }]}>
-            Recommended: {proteinRec.min}–{proteinRec.max} g/kg
-          </Text>
-          {store.proteinUserModified && (
-            <TouchableOpacity
-              onPress={handleResetProtein}
-              style={[styles.resetBtn, { backgroundColor: c.accent.primaryMuted }]}
-              accessibilityRole="button"
-              accessibilityLabel="Reset to recommended protein"
-            >
-              <Text style={[styles.resetText, { color: c.accent.primary }]}>Reset</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-
-      {/* Protein info card */}
-      <View style={[styles.infoCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}>
-        <Text style={[styles.infoText, { color: c.text.muted }]}>
-          Protein preserves muscle during fat loss and supports growth during bulking. The green zone is optimal for your goal and training style.
-        </Text>
-      </View>
-
-      {/* Live macro display */}
-      <View style={[styles.macroCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
-        <View style={styles.macroRow}>
-          <View style={styles.macroItem}>
-            <View style={[styles.macroDot, { backgroundColor: c.macro.protein }]} />
-            <Text style={[styles.macroLabel, { color: c.text.muted }]}>Protein</Text>
-            <Text style={[styles.macroValue, { color: c.text.primary }]}>{macros.proteinG}g</Text>
-          </View>
-          <View style={styles.macroItem}>
-            <View style={[styles.macroDot, { backgroundColor: c.macro.carbs }]} />
-            <Text style={[styles.macroLabel, { color: c.text.muted }]}>Carbs</Text>
-            <Text style={[styles.macroValue, { color: c.text.primary }]}>{macros.carbsG}g</Text>
-          </View>
-          <View style={styles.macroItem}>
-            <View style={[styles.macroDot, { backgroundColor: c.macro.fat }]} />
-            <Text style={[styles.macroLabel, { color: c.text.muted }]}>Fat</Text>
-            <Text style={[styles.macroValue, { color: c.text.primary }]}>{macros.fatG}g</Text>
-          </View>
-        </View>
-      </View>
-
-      {onNext && <Button title="Next" onPress={onNext} style={styles.btn} />}
+      {onNext && <Button title="Continue" onPress={handleNext} style={styles.btn} />}
     </ScrollView>
   );
 }
 
-
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  scroll: { paddingBottom: spacing[8] },
+  scroll: { paddingHorizontal: spacing[4], paddingBottom: spacing[8] },
   heading: {
-    color: c.text.primary,
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.bold,
     marginBottom: spacing[2],
     lineHeight: typography.lineHeight['2xl'],
   },
   subheading: {
-    color: c.text.secondary,
     fontSize: typography.size.base,
-    marginBottom: spacing[6],
+    marginBottom: spacing[4],
     lineHeight: typography.lineHeight.base,
   },
-
-  /* Diet style cards */
-  cardsGrid: { marginBottom: spacing[6] },
-  card: {
-    backgroundColor: c.bg.surfaceRaised,
+  calorieCard: {
     borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: c.border.default,
+    borderWidth: 2,
     padding: spacing[4],
-    marginBottom: spacing[3],
-  },
-  cardSelected: {
-    borderColor: c.accent.primary,
-    backgroundColor: c.accent.primaryMuted,
-  },
-  cardTitle: {
-    color: c.text.primary,
-    fontSize: typography.size.md,
-    fontWeight: typography.weight.semibold,
-    marginBottom: spacing[0.5],
-    lineHeight: typography.lineHeight.md,
-  },
-  cardTitleSelected: { color: c.accent.primary },
-  cardDesc: {
-    color: c.text.muted,
-    fontSize: typography.size.sm,
-    marginBottom: spacing[2],
-    lineHeight: typography.lineHeight.sm,
-  },
-  miniBar: {
-    flexDirection: 'row',
-    height: 6,
-    borderRadius: 3,
-    overflow: 'hidden',
-    marginBottom: spacing[1],
-  },
-  miniBarSegment: {
-    height: 6,
-  },
-  miniBarLabel: {
-    color: c.text.secondary,
-    fontSize: typography.size.xs,
-    lineHeight: typography.lineHeight.xs,
-  },
-
-  /* Protein scale */
-  proteinLabelRow: {
-    flexDirection: 'row',
+    marginBottom: spacing[4],
     alignItems: 'center',
-    gap: spacing[2],
-    marginBottom: spacing[1],
   },
-  tooltip: {
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    padding: spacing[3],
-    marginBottom: spacing[2],
-  },
-  tooltipText: {
-    fontSize: typography.size.sm,
-    lineHeight: typography.lineHeight.sm,
-  },
-  sectionLabel: {
-    color: c.text.secondary,
+  calorieLabel: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[1],
-    lineHeight: typography.lineHeight.sm,
   },
-  proteinValueDisplay: {
-    color: c.text.primary,
-    fontSize: typography.size.lg,
+  calorieValue: {
+    fontSize: typography.size['3xl'],
     fontWeight: typography.weight.bold,
-    marginBottom: spacing[3],
+    fontVariant: ['tabular-nums'],
+    marginBottom: spacing[1],
+  },
+  calorieNote: {
+    fontSize: typography.size.xs,
     textAlign: 'center',
-    lineHeight: typography.lineHeight.lg,
   },
-  scaleContainer: {
-    height: 60,
-    marginBottom: spacing[2],
-    position: 'relative',
+  section: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing[4],
+    marginBottom: spacing[4],
   },
-  centerIndicator: {
-    position: 'absolute',
-    left: '50%',
-    top: 0,
-    bottom: 0,
-    width: 2,
-    backgroundColor: c.accent.primary,
-    zIndex: 10,
-    alignItems: 'center',
-  },
-  dragHandle: {
-    position: 'absolute',
-    top: -6,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
-  },
-  dragHandleLine: {
-    width: 8,
-    height: 1,
-    borderRadius: 0.5,
-  },
-  scaleContent: {
-    paddingHorizontal: '50%',
-    alignItems: 'flex-end',
-  },
-  tickContainer: {
-    width: TICK_WIDTH,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    height: 50,
-    position: 'relative',
-  },
-  tickRecommendedBg: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: c.semantic.positiveSubtle,
-  },
-  tick: {
-    width: 2,
-    backgroundColor: c.text.muted,
-  },
-  tickNormal: {
-    height: 20,
-  },
-  tickMajor: {
-    height: 30,
-  },
-  tickLabel: {
-    color: c.text.secondary,
+  sectionTitle: {
     fontSize: typography.size.xs,
-    marginTop: spacing[0.5],
-    lineHeight: typography.lineHeight.xs,
+    fontWeight: typography.weight.bold,
+    letterSpacing: 0.5,
+    marginBottom: spacing[3],
+    textTransform: 'uppercase',
   },
-  recHint: {
-    color: c.semantic.positive,
-    fontSize: typography.size.xs,
-    lineHeight: typography.lineHeight.xs,
+  proteinHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing[3],
   },
-  recRow: {
+  proteinStepper: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     marginBottom: spacing[3],
+    gap: spacing[3],
   },
-  resetBtn: {
+  stepperBtn: {
+    width: 44,
+    height: 44,
     borderRadius: radius.full,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1],
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  resetText: {
+  stepperText: {
+    fontSize: typography.size.xl,
+    fontWeight: typography.weight.bold,
+  },
+  proteinDisplay: {
+    alignItems: 'center',
+    minWidth: 120,
+  },
+  proteinValue: {
+    fontSize: typography.size['2xl'],
+    fontWeight: typography.weight.bold,
+    fontVariant: ['tabular-nums'],
+  },
+  proteinDaily: {
+    fontSize: typography.size.sm,
+    marginTop: spacing[1],
+  },
+  recBadge: {
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+    borderRadius: radius.sm,
+    marginBottom: spacing[2],
+  },
+  recBadgeText: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
-    lineHeight: typography.lineHeight.xs,
   },
-
-  /* Protein info card */
-  infoCard: {
-    backgroundColor: c.bg.surfaceRaised,
-    borderRadius: radius.md,
-    padding: spacing[4],
-    marginBottom: spacing[6],
-    borderWidth: 1,
-    borderColor: c.border.subtle,
+  slider: {
+    width: '100%',
+    height: 40,
   },
-  infoText: {
-    color: c.text.muted,
-    fontSize: typography.size.sm,
-    lineHeight: typography.size.sm * typography.lineHeight.relaxed,
+  sliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: spacing[1],
   },
-
-  /* Live macro display */
-  macroCard: {
-    backgroundColor: c.bg.surfaceRaised,
-    borderRadius: radius.md,
-    padding: spacing[4],
-    marginBottom: spacing[6],
-    borderWidth: 1,
-    borderColor: c.border.default,
-  },
-  macroRow: { flexDirection: 'row', justifyContent: 'space-around' },
-  macroItem: { alignItems: 'center' },
-  macroDot: { width: 8, height: 8, borderRadius: 4, marginBottom: spacing[1] },
-  macroLabel: {
-    color: c.text.muted,
+  sliderLabel: {
     fontSize: typography.size.xs,
-    marginBottom: spacing[0.5],
-    lineHeight: typography.lineHeight.xs,
   },
-  macroValue: {
-    color: c.text.primary,
+  proteinNote: {
+    fontSize: typography.size.sm,
+    marginTop: spacing[2],
+    textAlign: 'center',
+    lineHeight: typography.lineHeight.sm,
+  },
+  stylesContainer: {
+    marginBottom: spacing[4],
+  },
+  styleCard: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing[4],
+    marginBottom: spacing[3],
+  },
+  styleCardSelected: {
+    borderWidth: 2,
+  },
+  styleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing[1],
+  },
+  styleTitle: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
-    lineHeight: typography.lineHeight.lg,
   },
-  btn: { marginTop: spacing[2] },
+  checkmark: {
+    width: 24,
+    height: 24,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkmarkText: {
+    color: '#fff',
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.bold,
+  },
+  styleDesc: {
+    fontSize: typography.size.sm,
+    marginBottom: spacing[3],
+    lineHeight: typography.lineHeight.sm,
+  },
+  macroRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingTop: spacing[2],
+    borderTopWidth: 1,
+    borderTopColor: c.border.subtle,
+  },
+  macroItem: {
+    alignItems: 'center',
+  },
+  macroValue: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.bold,
+    fontVariant: ['tabular-nums'],
+  },
+  macroLabel: {
+    fontSize: typography.size.xs,
+    marginTop: spacing[0.5],
+  },
+  macroCalories: {
+    fontSize: typography.size.xs,
+    marginTop: spacing[0.5],
+    fontVariant: ['tabular-nums'],
+  },
+  btn: { marginTop: spacing[4] },
 });

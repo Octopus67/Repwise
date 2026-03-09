@@ -34,18 +34,18 @@ export function ShareableCard({
 
   return (
     <View>
-      <View ref={cardRef} style={[styles.card, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.default }]}>
-        <View style={[styles.iconCircle, { backgroundColor: getThemeColors().accent.primaryMuted }]}>
-          <Icon name="trophy" size={28} color={getThemeColors().accent.primary} />
+      <View ref={cardRef} style={[styles.card, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}>
+        <View style={[styles.iconCircle, { backgroundColor: c.accent.primaryMuted }]}>
+          <Icon name="trophy" size={28} color={c.accent.primary} />
         </View>
-        <Text style={[styles.title, { color: getThemeColors().text.primary }]}>{title}</Text>
-        <Text style={[styles.description, { color: getThemeColors().text.secondary }]}>{description}</Text>
-        <Text style={[styles.date, { color: getThemeColors().text.muted }]}>
+        <Text style={[styles.title, { color: c.text.primary }]}>{title}</Text>
+        <Text style={[styles.description, { color: c.text.secondary }]}>{description}</Text>
+        <Text style={[styles.date, { color: c.text.muted }]}>
           Unlocked {new Date(unlockedAt).toLocaleDateString(undefined, {
             month: 'long', day: 'numeric', year: 'numeric',
           })}
         </Text>
-        <Text style={[styles.branding, { color: getThemeColors().accent.primary }]}>Repwise</Text>
+        <Text style={[styles.branding, { color: c.accent.primary }]}>Repwise</Text>
       </View>
       {Platform.OS !== 'web' && onShare && (
         <Button title="Share" onPress={handleShare} style={styles.shareBtn} />
@@ -56,10 +56,10 @@ export function ShareableCard({
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   card: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     padding: spacing[6],
     alignItems: 'center',
   },
@@ -67,31 +67,31 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing[3],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
     textAlign: 'center',
     marginBottom: spacing[1],
   },
   description: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     textAlign: 'center',
     marginBottom: spacing[2],
   },
   date: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     marginBottom: spacing[3],
   },
   branding: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
     letterSpacing: ls.wider,

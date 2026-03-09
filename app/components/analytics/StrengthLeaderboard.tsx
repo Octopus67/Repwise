@@ -36,15 +36,15 @@ export function StrengthLeaderboard({ classifications }: StrengthLeaderboardProp
   const styles = getThemedStyles(c);
   // Separate lifts with data from those without
   const withData = [...classifications].sort((a, b) => b.bodyweight_ratio - a.bodyweight_ratio);
-  const withDataNames = new Set(withData.map((c) => c.exercise_name.toLowerCase()));
+  const withDataNames = new Set(withData.map((d) => d.exercise_name.toLowerCase()));
   const noData = SUPPORTED_LIFTS.filter((l) => !withDataNames.has(l));
 
   if (withData.length === 0) {
     return (
       <Card>
         <View style={styles.emptyContainer}>
-          <Icon name="chart" size={24} color={getThemeColors().text.muted} />
-          <Text style={[styles.emptyText, { color: getThemeColors().text.muted }]}>No strength data yet</Text>
+          <Icon name="chart" size={24} color={c.text.muted} />
+          <Text style={[styles.emptyText, { color: c.text.muted }]}>No strength data yet</Text>
         </View>
       </Card>
     );
@@ -52,17 +52,17 @@ export function StrengthLeaderboard({ classifications }: StrengthLeaderboardProp
 
   return (
     <Card>
-      {withData.map((c, idx) => {
+      {withData.map((item, idx) => {
         const isStrongest = idx === 0 && withData.length >= 2;
         const isWeakest = idx === withData.length - 1 && withData.length >= 2;
         const highlightColor = isStrongest
-          ? getThemeColors().accent.primary
+          ? c.accent.primary
           : isWeakest
-            ? getThemeColors().semantic.warning
+            ? c.semantic.warning
             : undefined;
 
         return (
-          <View key={c.exercise_name} style={[styles.row, idx > 0 && styles.rowBorder]}>
+          <View key={item.exercise_name} style={[styles.row, idx > 0 && styles.rowBorder]}>
             <View style={styles.rankCol}>
               <Text style={[styles.rank, highlightColor ? { color: highlightColor } : undefined]}>
                 #{idx + 1}
@@ -70,15 +70,15 @@ export function StrengthLeaderboard({ classifications }: StrengthLeaderboardProp
             </View>
             <View style={styles.nameCol}>
               <Text style={[styles.exerciseName, highlightColor ? { color: highlightColor } : undefined]}>
-                {formatExerciseName(c.exercise_name)}
+                {formatExerciseName(item.exercise_name)}
               </Text>
-              <Text style={[styles.level, { color: getThemeColors().text.secondary }]}>
-                {c.level.charAt(0).toUpperCase() + c.level.slice(1)}
+              <Text style={[styles.level, { color: c.text.secondary }]}>
+                {item.level.charAt(0).toUpperCase() + item.level.slice(1)}
               </Text>
             </View>
             <View style={styles.statsCol}>
-              <Text style={[styles.e1rm, { color: getThemeColors().text.primary }]}>{Math.round(c.e1rm_kg)} kg</Text>
-              <Text style={[styles.ratio, { color: getThemeColors().text.secondary }]}>{c.bodyweight_ratio.toFixed(2)}×</Text>
+              <Text style={[styles.e1rm, { color: c.text.primary }]}>{Math.round(item.e1rm_kg)} kg</Text>
+              <Text style={[styles.ratio, { color: c.text.secondary }]}>{item.bodyweight_ratio.toFixed(2)}×</Text>
             </View>
           </View>
         );
@@ -88,13 +88,13 @@ export function StrengthLeaderboard({ classifications }: StrengthLeaderboardProp
       {noData.map((lift) => (
         <View key={lift} style={[styles.row, styles.rowBorder]}>
           <View style={styles.rankCol}>
-            <Text style={[styles.rankMuted, { color: getThemeColors().text.muted }]}>—</Text>
+            <Text style={[styles.rankMuted, { color: c.text.muted }]}>—</Text>
           </View>
           <View style={styles.nameCol}>
-            <Text style={[styles.exerciseNameMuted, { color: getThemeColors().text.muted }]}>{formatExerciseName(lift)}</Text>
+            <Text style={[styles.exerciseNameMuted, { color: c.text.muted }]}>{formatExerciseName(lift)}</Text>
           </View>
           <View style={styles.statsCol}>
-            <Text style={[styles.noData, { color: getThemeColors().text.muted }]}>No data</Text>
+            <Text style={[styles.noData, { color: c.text.muted }]}>No data</Text>
           </View>
         </View>
       ))}
@@ -109,7 +109,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[4],
   },
   emptyText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     textAlign: 'center',
   },
@@ -120,46 +120,46 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   rowBorder: {
     borderTopWidth: 1,
-    borderTopColor: getThemeColors().border.subtle,
+    borderTopColor: c.border.subtle,
   },
   rankCol: { width: 32 },
   rank: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.bold,
   },
   rankMuted: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
   },
   nameCol: { flex: 1 },
   exerciseName: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
   exerciseNameMuted: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
   },
   level: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.xs,
     marginTop: 1,
   },
   statsCol: { alignItems: 'flex-end' },
   e1rm: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
   ratio: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.xs,
     marginTop: 1,
   },
   noData: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     fontStyle: 'italic',
   },

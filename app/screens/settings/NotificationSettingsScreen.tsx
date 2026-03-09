@@ -131,7 +131,7 @@ export function NotificationSettingsScreen() {
 
   const cycleTime = (current: string | null, direction: 'up' | 'down'): string => {
     const [h, m] = (current ?? '22:00').split(':').map(Number);
-    let totalMins = h * 60 + m + (direction === 'up' ? 30 : -30);
+    let totalMins = h * 60 + m + (direction === 'up' ? 15 : -15);
     if (totalMins < 0) totalMins += 24 * 60;
     if (totalMins >= 24 * 60) totalMins -= 24 * 60;
     const newH = String(Math.floor(totalMins / 60)).padStart(2, '0');
@@ -342,12 +342,12 @@ export function NotificationSettingsScreen() {
 }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: getThemeColors().bg.base },
+  safe: { flex: 1, backgroundColor: c.bg.base },
   container: { flex: 1 },
   content: { padding: spacing[4], paddingBottom: spacing[12], gap: spacing[4] },
   header: { marginBottom: spacing[2] },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.bold,
     lineHeight: typography.lineHeight.xl,
@@ -365,25 +365,25 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   rowText: { flex: 1, marginRight: spacing[3] },
   label: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.base,
   },
   description: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     marginTop: spacing[0.5],
   },
   statusBadge: {
-    backgroundColor: getThemeColors().semantic.positiveSubtle,
+    backgroundColor: c.semantic.positiveSubtle,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
     borderRadius: radius.full,
   },
   statusText: {
-    color: getThemeColors().semantic.positive,
+    color: c.semantic.positive,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },

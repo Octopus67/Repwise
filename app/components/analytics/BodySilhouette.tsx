@@ -83,7 +83,7 @@ export function BodySilhouette({ view, regions, outline, volumeMap, onRegionPres
       <Path
         d={outline.path}
         fill="none"
-        stroke={getThemeColors().heatmap.silhouetteStroke}
+        stroke={c.heatmap.silhouetteStroke}
         strokeWidth={1}
       />
 
@@ -101,7 +101,7 @@ export function BodySilhouette({ view, regions, outline, volumeMap, onRegionPres
               key={region.id}
               region={region}
               color={color}
-              baseOpacity={getThemeColors().heatmap.regionOpacity}
+              baseOpacity={c.heatmap.regionOpacity}
               onPress={onRegionPress}
               reduceMotion={reduceMotion}
             />
@@ -116,7 +116,7 @@ export function BodySilhouette({ view, regions, outline, volumeMap, onRegionPres
             key={`border-${region.id}`}
             d={region.path}
             fill="none"
-            stroke={getThemeColors().heatmap.regionBorder}
+            stroke={c.heatmap.regionBorder}
             strokeWidth={0.8}
           />
         ))}

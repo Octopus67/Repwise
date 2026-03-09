@@ -6,12 +6,13 @@
  * RPE and RIR are both shown when showRpeRir is true — neither is mandatory.
  */
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
+  Pressable,
   StyleSheet,
 } from 'react-native';
 import Animated, {
@@ -19,9 +20,12 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import type { ActiveSet } from '../../types/training';
+import type { ActiveSet, SetType } from '../../types/training';
 import type { UnitSystem } from '../../utils/unitConversion';
+import { SetTypeSelector } from './SetTypeSelector';
 import { convertWeight } from '../../utils/unitConversion';
+import { RPEPicker } from './RPEPicker';
+import { rpeToRir } from '../../utils/rpeConversion';
 import { typography, spacing, radius, springs } from '../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { useHaptics } from '../../hooks/useHaptics';
@@ -41,6 +45,8 @@ export interface SetRowPremiumProps {
   onCopyPrevious: () => void;
   onUpdateField: (field: 'weight' | 'reps' | 'rpe' | 'rir', value: string) => void;
   onWeightStep: (direction: 'up' | 'down') => void;
+  onSetTypeChange?: (setType: SetType) => void;
+  onOpenPlateCalculator?: (weightKg: number) => void;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -56,6 +62,8 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
   onCopyPrevious,
   onUpdateField,
   onWeightStep,
+  onSetTypeChange,
+  onOpenPlateCalculator,
 }) => {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
@@ -70,6 +78,24 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
   const checkAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: checkScale.value }],
   }));
+
+  // RPE/RIR picker modal state
+  const [pickerMode, setPickerMode] = useState<'rpe' | 'rir' | null>(null);
+
+  const handleOpenRpePicker = useCallback(() => setPickerMode('rpe'), []);
+  const handleOpenRirPicker = useCallback(() => setPickerMode('rir'), []);
+  const handleDismissPicker = useCallback(() => setPickerMode(null), []);
+
+  const handlePickerSelect = useCallback((rpeValue: string) => {
+    if (pickerMode === 'rpe') {
+      onUpdateField('rpe', rpeValue);
+    } else if (pickerMode === 'rir') {
+      const rir = rpeToRir(parseFloat(rpeValue));
+      onUpdateField('rir', String(rir));
+    }
+    // Use setTimeout to ensure state update happens after onUpdateField completes
+    setTimeout(() => setPickerMode(null), 0);
+  }, [pickerMode, onUpdateField]);
 
   const handleRepsSubmit = React.useCallback(() => {
     weightRef.current?.focus();
@@ -88,14 +114,17 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
   }, []);
 
   const handleRirSubmit = React.useCallback(() => {
-    onToggleComplete();
-    notification('success');
-    if (!reduceMotion) {
-      checkScale.value = withSpring(1.3, springs.snappy, () => {
-        checkScale.value = withSpring(1, springs.gentle);
-      });
+    // Only celebrate on completion, not un-completion
+    if (!isCompleted) {
+      notification('success');
+      if (!reduceMotion) {
+        checkScale.value = withSpring(1.3, springs.snappy, () => {
+          checkScale.value = withSpring(1, springs.gentle);
+        });
+      }
     }
-  }, [onToggleComplete, notification, reduceMotion, checkScale]);
+    onToggleComplete();
+  }, [isCompleted, onToggleComplete, notification, reduceMotion, checkScale]);
 
   const handleStepUp = React.useCallback(() => {
     impact('light');
@@ -106,6 +135,15 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
     impact('light');
     onWeightStep('down');
   }, [onWeightStep, impact]);
+
+  const handleWeightLongPress = React.useCallback(() => {
+    if (!onOpenPlateCalculator) return;
+    const weightKg = parseFloat(set.weight) || 0;
+    // Don't open calculator for zero/empty weight
+    if (weightKg <= 0) return;
+    impact('heavy');
+    onOpenPlateCalculator(weightKg);
+  }, [onOpenPlateCalculator, impact, set.weight]);
 
   const previousText = previousSet
     ? `${convertWeight(previousSet.weightKg, unitSystem)}${unitSystem === 'metric' ? 'kg' : 'lb'}×${previousSet.reps}`
@@ -121,6 +159,14 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
     >
       {/* Set number */}
       <Text style={styles.setNumber}>{setIndex + 1}</Text>
+
+      {/* Set type selector */}
+      {onSetTypeChange && (
+        <SetTypeSelector
+          value={set.setType}
+          onChange={onSetTypeChange}
+        />
+      )}
 
       {/* Previous performance */}
       <View style={styles.previousContainer}>
@@ -165,20 +211,22 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
           <Text style={styles.stepperText}>−</Text>
         </TouchableOpacity>
 
-        <TextInput
-          ref={weightRef}
-          style={[styles.input, styles.weightInput]}
-          value={set.weight}
-          onChangeText={(v) => onUpdateField('weight', v)}
-          onSubmitEditing={handleWeightSubmit}
-          keyboardType="decimal-pad"
-          returnKeyType={showRpeRir ? 'next' : 'done'}
-          placeholder={unitSystem === 'metric' ? 'kg' : 'lbs'}
-          placeholderTextColor={c.text.muted}
-          accessibilityLabel={`Weight for set ${setIndex + 1}`}
-          blurOnSubmit={false}
-          maxLength={6}
-        />
+        <Pressable onLongPress={handleWeightLongPress} delayLongPress={400}>
+          <TextInput
+            ref={weightRef}
+            style={[styles.input, styles.weightInput]}
+            value={set.weight}
+            onChangeText={(v) => onUpdateField('weight', v)}
+            onSubmitEditing={handleWeightSubmit}
+            keyboardType="decimal-pad"
+            returnKeyType={showRpeRir ? 'next' : 'done'}
+            placeholder={unitSystem === 'metric' ? 'kg' : 'lbs'}
+            placeholderTextColor={c.text.muted}
+            accessibilityLabel={`Weight for set ${setIndex + 1}, long press for plate calculator`}
+            blurOnSubmit={false}
+            maxLength={6}
+          />
+        </Pressable>
 
         <TouchableOpacity
           onPress={handleStepUp}
@@ -191,39 +239,55 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* RPE input */}
+      {/* RPE input — tap opens picker */}
       {showRpeRir && (
-        <TextInput
-          ref={rpeRef}
-          style={[styles.input, styles.intensityInput]}
-          value={set.rpe}
-          onChangeText={(v) => onUpdateField('rpe', v)}
-          onSubmitEditing={handleRpeSubmit}
-          keyboardType="decimal-pad"
-          returnKeyType="next"
-          placeholder="RPE"
-          placeholderTextColor={c.text.muted}
-          accessibilityLabel={`RPE for set ${setIndex + 1}`}
-          blurOnSubmit={false}
-          maxLength={4}
-        />
+        <Pressable onPress={handleOpenRpePicker}>
+          <TextInput
+            ref={rpeRef}
+            style={[styles.input, styles.intensityInput]}
+            value={set.rpe}
+            onChangeText={(v) => onUpdateField('rpe', v)}
+            onSubmitEditing={handleRpeSubmit}
+            onFocus={handleOpenRpePicker}
+            keyboardType="decimal-pad"
+            returnKeyType="next"
+            placeholder="RPE"
+            placeholderTextColor={c.text.muted}
+            accessibilityLabel={`RPE for set ${setIndex + 1}, tap to pick`}
+            blurOnSubmit={false}
+            maxLength={4}
+          />
+        </Pressable>
       )}
 
-      {/* RIR input */}
+      {/* RIR input — tap opens picker */}
       {showRpeRir && (
-        <TextInput
-          ref={rirRef}
-          style={[styles.input, styles.intensityInput]}
-          value={set.rir}
-          onChangeText={(v) => onUpdateField('rir', v)}
-          onSubmitEditing={handleRirSubmit}
-          keyboardType="number-pad"
-          returnKeyType="done"
-          placeholder="RIR"
-          placeholderTextColor={c.text.muted}
-          accessibilityLabel={`RIR for set ${setIndex + 1}`}
-          blurOnSubmit={false}
-          maxLength={2}
+        <Pressable onPress={handleOpenRirPicker}>
+          <TextInput
+            ref={rirRef}
+            style={[styles.input, styles.intensityInput]}
+            value={set.rir}
+            onChangeText={(v) => onUpdateField('rir', v)}
+            onSubmitEditing={handleRirSubmit}
+            onFocus={handleOpenRirPicker}
+            keyboardType="number-pad"
+            returnKeyType="done"
+            placeholder="RIR"
+            placeholderTextColor={c.text.muted}
+            accessibilityLabel={`RIR for set ${setIndex + 1}, tap to pick`}
+            blurOnSubmit={false}
+            maxLength={2}
+          />
+        </Pressable>
+      )}
+
+      {/* RPE/RIR Picker Modal */}
+      {showRpeRir && pickerMode !== null && (
+        <RPEPicker
+          visible
+          mode={pickerMode}
+          onSelect={handlePickerSelect}
+          onDismiss={handleDismissPicker}
         />
       )}
 
@@ -231,13 +295,16 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
       <Animated.View style={checkAnimatedStyle}>
         <TouchableOpacity
           onPress={() => {
-            onToggleComplete();
-            notification('success');
-            if (!reduceMotion) {
-              checkScale.value = withSpring(1.3, springs.snappy, () => {
-                checkScale.value = withSpring(1, springs.gentle);
-              });
+            // Only celebrate on completion, not un-completion
+            if (!isCompleted) {
+              notification('success');
+              if (!reduceMotion) {
+                checkScale.value = withSpring(1.3, springs.snappy, () => {
+                  checkScale.value = withSpring(1, springs.gentle);
+                });
+              }
             }
+            onToggleComplete();
           }}
           style={[styles.checkBtn, isCompleted && styles.checkBtnCompleted]}
           accessibilityLabel={`Complete set ${setIndex + 1}`}

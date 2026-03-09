@@ -19,12 +19,12 @@ export interface VolumePillsProps {
   goalMultiplier?: number;
 }
 
-function getPillColor(current: number, mavLow: number, mavHigh: number) {
-  if (mavHigh <= 0) return { bg: getThemeColors().bg.surfaceRaised, text: getThemeColors().text.secondary };
-  if (current > mavHigh) return { bg: getThemeColors().semantic.negativeSubtle, text: getThemeColors().semantic.negative };
-  if (current >= mavHigh * 0.9) return { bg: getThemeColors().semantic.warningSubtle, text: getThemeColors().semantic.warning };
-  if (current >= mavLow) return { bg: getThemeColors().semantic.positiveSubtle, text: getThemeColors().semantic.positive };
-  return { bg: getThemeColors().bg.surfaceRaised, text: getThemeColors().text.secondary };
+function getPillColor(current: number, mavLow: number, mavHigh: number, c: ThemeColors) {
+  if (mavHigh <= 0) return { bg: c.bg.surfaceRaised, text: c.text.secondary };
+  if (current > mavHigh) return { bg: c.semantic.negativeSubtle, text: c.semantic.negative };
+  if (current >= mavHigh * 0.9) return { bg: c.semantic.warningSubtle, text: c.semantic.warning };
+  if (current >= mavLow) return { bg: c.semantic.positiveSubtle, text: c.semantic.positive };
+  return { bg: c.bg.surfaceRaised, text: c.text.secondary };
 }
 
 export const VolumePills: React.FC<VolumePillsProps> = ({ muscleVolumes, goalMultiplier }) => {
@@ -40,7 +40,7 @@ export const VolumePills: React.FC<VolumePillsProps> = ({ muscleVolumes, goalMul
       contentContainerStyle={styles.content}
     >
       {muscleVolumes.map((entry) => {
-        const pillColor = getPillColor(entry.currentSets, entry.mavLow, entry.mavHigh);
+        const pillColor = getPillColor(entry.currentSets, entry.mavLow, entry.mavHigh, c);
         return (
           <View
             key={entry.muscleGroup}
@@ -86,7 +86,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   adjustmentText: {
     fontSize: typography.size.xs,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     marginTop: spacing[0.5],
   },
 });

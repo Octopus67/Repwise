@@ -20,11 +20,11 @@ export interface OverloadBadgeProps {
   onApply: () => void;
 }
 
-const CONFIDENCE_COLORS: Record<string, string> = {
-  high: getThemeColors().semantic.positive,
-  medium: getThemeColors().semantic.warning,
-  low: getThemeColors().text.muted,
-};
+const getCONFIDENCE_COLORS = (c: ThemeColors): Record<string, string> => ({
+  high: c.semantic.positive,
+  medium: c.semantic.warning,
+  low: c.text.muted,
+});
 
 export const OverloadBadge: React.FC<OverloadBadgeProps> = ({
   suggestion,
@@ -37,7 +37,7 @@ export const OverloadBadge: React.FC<OverloadBadgeProps> = ({
 
   const displayWeight = convertWeight(suggestion.suggested_weight_kg, unitSystem);
   const unit = unitSystem === 'metric' ? 'kg' : 'lbs';
-  const dotColor = CONFIDENCE_COLORS[suggestion.confidence] ?? getThemeColors().text.muted;
+  const dotColor = getCONFIDENCE_COLORS(c)[suggestion.confidence] ?? c.text.muted;
 
   return (
     <TouchableOpacity
@@ -59,7 +59,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
     paddingVertical: spacing[1],
     paddingHorizontal: spacing[2],
     borderRadius: radius.full,
@@ -74,7 +74,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   text: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
   },
 });
 

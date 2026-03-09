@@ -20,8 +20,6 @@ import { GoalStep } from './steps/GoalStep';
 import { DietStyleStep } from './steps/DietStyleStep';
 import { FoodDNAStep } from './steps/FoodDNAStep';
 import { SummaryStep } from './steps/SummaryStep';
-import { OnboardingTrialPrompt } from '../../components/premium/OnboardingTrialPrompt';
-import { useTrial } from '../../hooks/useTrial';
 
 import { ONBOARDING_STEPS, TOTAL_STEPS } from './stepConstants';
 
@@ -35,8 +33,6 @@ export function OnboardingWizard({ onComplete }: Props) {
   const currentStep = useOnboardingStore((s) => s.currentStep);
   const setStep = useOnboardingStore((s) => s.setStep);
   const reset = useOnboardingStore((s) => s.reset);
-  const goalType = useOnboardingStore((s) => s.goalType);
-  const { startTrial, loading: trialLoading } = useTrial();
 
   // Progress bar animation
   const progress = useSharedValue(currentStep / TOTAL_STEPS);
@@ -85,15 +81,7 @@ export function OnboardingWizard({ onComplete }: Props) {
       case ONBOARDING_STEPS.GOAL: return <GoalStep onNext={goNext} onBack={goBack} />;
       case ONBOARDING_STEPS.DIET_STYLE: return <DietStyleStep onNext={goNext} onBack={goBack} />;
       case ONBOARDING_STEPS.FOOD_DNA: return <FoodDNAStep onNext={goNext} onBack={goBack} onSkip={goNext} />;
-      case ONBOARDING_STEPS.SUMMARY: return <SummaryStep onComplete={goNext} onBack={goBack} onEditStep={jumpToStep} />;
-      case ONBOARDING_STEPS.TRIAL_PROMPT: return (
-        <OnboardingTrialPrompt
-          onStartTrial={async () => { await startTrial(); handleComplete(); }}
-          onSkip={handleComplete}
-          loading={trialLoading}
-          goalLabel={goalType === 'lose_fat' ? 'fat loss' : goalType === 'build_muscle' ? 'muscle building' : goalType === 'recomposition' ? 'recomposition' : goalType === 'eat_healthier' ? 'healthier eating' : undefined}
-        />
-      );
+      case ONBOARDING_STEPS.SUMMARY: return <SummaryStep onComplete={handleComplete} onBack={goBack} onEditStep={jumpToStep} />;
       default: return null;
     }
   };

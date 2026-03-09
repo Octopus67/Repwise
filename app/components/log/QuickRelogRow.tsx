@@ -21,7 +21,7 @@ export function QuickRelogRow({ items, onTapItem, loading }: QuickRelogRowProps)
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.sectionLabel, { color: getThemeColors().text.primary }]}>⚡ Quick Re-log</Text>
+      <Text style={[styles.sectionLabel, { color: c.text.primary }]}>⚡ Quick Re-log</Text>
 
       {loading ? (
         <View style={styles.skeletonRow}>
@@ -38,14 +38,14 @@ export function QuickRelogRow({ items, onTapItem, loading }: QuickRelogRowProps)
           {items.map((item, index) => (
             <TouchableOpacity
               key={`${item.name}-${index}`}
-              style={[styles.chip, { backgroundColor: getThemeColors().bg.surfaceRaised }]}
+              style={[styles.chip, { backgroundColor: c.bg.surfaceRaised }]}
               onPress={() => onTapItem(item)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.chipName, { color: getThemeColors().text.primary }]} numberOfLines={1}>
+              <Text style={[styles.chipName, { color: c.text.primary }]} numberOfLines={1}>
                 {item.name.slice(0, 12)}
               </Text>
-              <Text style={[styles.chipCalories, { color: getThemeColors().text.secondary }]}>
+              <Text style={[styles.chipCalories, { color: c.text.secondary }]}>
                 {Math.round(item.calories) + ' cal'}
               </Text>
             </TouchableOpacity>
@@ -63,7 +63,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   sectionLabel: {
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     marginBottom: spacing[2],
     paddingHorizontal: spacing[4],
   },
@@ -77,7 +77,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[2],
   },
   chip: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
@@ -86,11 +86,11 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   chipName: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     marginBottom: 2,
   },
   chipCalories: {
     fontSize: typography.size.xs,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
   },
 });

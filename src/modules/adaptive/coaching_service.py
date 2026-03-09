@@ -81,7 +81,10 @@ class CoachingService:
         weight_kg = bw_entries[-1][1]  # latest weight
         height_cm = metrics.height_cm if metrics and metrics.height_cm else 170.0  # fallback to 170cm
         age_years = metrics.age_years if metrics and hasattr(metrics, "age_years") else 30  # fallback to 30yo
-        sex = "male"  # default; could be stored on profile
+        prefs = profile.preferences if profile and profile.preferences else {}
+        sex = prefs.get("sex", "male")
+        if sex not in ("male", "female"):
+            sex = "male"
         
         if not metrics or not metrics.height_cm:
             logger.warning("Using fallback height (170cm) and age (30yo) for user %s", user_id)

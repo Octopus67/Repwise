@@ -79,24 +79,24 @@ export function MealPlanScreen({ navigation }: any) {
   const weeklySummary = daySummaries.length > 0 ? computeWeeklySummary(daySummaries) : null;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: getThemeColors().bg.base }]}>
-      <Text style={[styles.title, { color: getThemeColors().text.primary }]}>Meal Prep</Text>
+    <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]}>
+      <Text style={[styles.title, { color: c.text.primary }]}>Meal Prep</Text>
 
       {weeklySummary && (
         <Card style={styles.weeklyCard}>
-          <Text style={[styles.weeklyLabel, { color: getThemeColors().text.muted }]}>Weekly Totals</Text>
-          <Text style={[styles.macroText, { color: getThemeColors().text.primary }]}>
+          <Text style={[styles.weeklyLabel, { color: c.text.muted }]}>Weekly Totals</Text>
+          <Text style={[styles.macroText, { color: c.text.primary }]}>
             {weeklySummary.calories} cal · {weeklySummary.protein_g}g P ·{' '}
             {weeklySummary.carbs_g}g C · {weeklySummary.fat_g}g F
           </Text>
         </Card>
       )}
 
-      {loading && <ActivityIndicator size="large" color={getThemeColors().accent.primary} />}
+      {loading && <ActivityIndicator size="large" color={c.accent.primary} />}
       {error && (
-        <TouchableOpacity onPress={() => setError(null)} style={[styles.errorRow, { backgroundColor: getThemeColors().semantic.negativeSubtle }]}>
-          <Text style={[styles.error, { color: getThemeColors().semantic.negative }]}>{error}</Text>
-          <Text style={[styles.errorDismiss, { color: getThemeColors().semantic.negative }]}>✕</Text>
+        <TouchableOpacity onPress={() => setError(null)} style={[styles.errorRow, { backgroundColor: c.semantic.negativeSubtle }]}>
+          <Text style={[styles.error, { color: c.semantic.negative }]}>{error}</Text>
+          <Text style={[styles.errorDismiss, { color: c.semantic.negative }]}>✕</Text>
         </TouchableOpacity>
       )}
 
@@ -104,21 +104,21 @@ export function MealPlanScreen({ navigation }: any) {
         const summary = computeDaySummary(day.assignments);
         return (
           <Card key={day.day_index} style={styles.dayCard}>
-            <Text style={[styles.dayLabel, { color: getThemeColors().text.primary }]}>{DAY_LABELS[day.day_index] ?? `Day ${day.day_index + 1}`}</Text>
+            <Text style={[styles.dayLabel, { color: c.text.primary }]}>{DAY_LABELS[day.day_index] ?? `Day ${day.day_index + 1}`}</Text>
             {day.assignments.map((a, i) => (
               <View key={i} style={styles.slotRow}>
-                <Text style={[styles.slotName, { color: getThemeColors().text.muted }]}>{a.slot}</Text>
-                <Text style={[styles.foodName, { color: getThemeColors().text.primary }]}>{a.name}</Text>
-                <Text style={[styles.slotCal, { color: getThemeColors().text.secondary }]}>{a.calories} cal</Text>
+                <Text style={[styles.slotName, { color: c.text.muted }]}>{a.slot}</Text>
+                <Text style={[styles.foodName, { color: c.text.primary }]}>{a.name}</Text>
+                <Text style={[styles.slotCal, { color: c.text.secondary }]}>{a.calories} cal</Text>
               </View>
             ))}
             {day.unfilled_slots.map((s) => (
               <View key={s} style={styles.slotRow}>
-                <Text style={[styles.slotName, { color: getThemeColors().text.muted }]}>{s}</Text>
-                <Text style={[styles.unfilled, { color: getThemeColors().semantic.negative }]}>Unfilled</Text>
+                <Text style={[styles.slotName, { color: c.text.muted }]}>{s}</Text>
+                <Text style={[styles.unfilled, { color: c.semantic.negative }]}>Unfilled</Text>
               </View>
             ))}
-            <Text style={[styles.daySummary, { color: getThemeColors().text.muted }]}>
+            <Text style={[styles.daySummary, { color: c.text.muted }]}>
               {summary.calories} cal · {summary.protein_g}g P · {summary.carbs_g}g C · {summary.fat_g}g F
             </Text>
           </Card>
@@ -132,9 +132,9 @@ export function MealPlanScreen({ navigation }: any) {
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator color={getThemeColors().text.primary} size="small" />
+            <ActivityIndicator color={c.text.primary} size="small" />
           ) : (
-            <Text style={[styles.btnText, { color: getThemeColors().text.primary }]}>Generate Plan</Text>
+            <Text style={[styles.btnText, { color: c.text.primary }]}>Generate Plan</Text>
           )}
         </TouchableOpacity>
         {plan && (
@@ -145,16 +145,16 @@ export function MealPlanScreen({ navigation }: any) {
               disabled={saving}
             >
               {saving ? (
-                <ActivityIndicator color={getThemeColors().text.primary} size="small" />
+                <ActivityIndicator color={c.text.primary} size="small" />
               ) : (
-                <Text style={[styles.btnText, { color: getThemeColors().text.primary }]}>Save Plan</Text>
+                <Text style={[styles.btnText, { color: c.text.primary }]}>Save Plan</Text>
               )}
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.btnSecondary, { backgroundColor: getThemeColors().bg.surface }]}
+              style={[styles.btnSecondary, { backgroundColor: c.bg.surface }]}
               onPress={() => navigation?.navigate?.('ShoppingList')}
             >
-              <Text style={[styles.btnText, { color: getThemeColors().text.primary }]}>Shopping List</Text>
+              <Text style={[styles.btnText, { color: c.text.primary }]}>Shopping List</Text>
             </TouchableOpacity>
           </>
         )}
@@ -164,25 +164,25 @@ export function MealPlanScreen({ navigation }: any) {
 }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: getThemeColors().bg.base, padding: spacing[4] },
-  title: { fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, color: getThemeColors().text.primary, marginBottom: spacing[4] },
+  container: { flex: 1, backgroundColor: c.bg.base, padding: spacing[4] },
+  title: { fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, color: c.text.primary, marginBottom: spacing[4] },
   weeklyCard: { marginBottom: spacing[4], padding: spacing[3] },
-  weeklyLabel: { fontSize: typography.size.sm, color: getThemeColors().text.muted, marginBottom: spacing[1] },
-  macroText: { fontSize: typography.size.base, color: getThemeColors().text.primary },
+  weeklyLabel: { fontSize: typography.size.sm, color: c.text.muted, marginBottom: spacing[1] },
+  macroText: { fontSize: typography.size.base, color: c.text.primary },
   dayCard: { marginBottom: spacing[3], padding: spacing[3] },
-  dayLabel: { fontSize: typography.size.lg, fontWeight: typography.weight.semibold, color: getThemeColors().text.primary, marginBottom: spacing[2] },
+  dayLabel: { fontSize: typography.size.lg, fontWeight: typography.weight.semibold, color: c.text.primary, marginBottom: spacing[2] },
   slotRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing[1] },
-  slotName: { fontSize: typography.size.sm, color: getThemeColors().text.muted, width: 80 },
-  foodName: { flex: 1, fontSize: typography.size.sm, color: getThemeColors().text.primary },
-  slotCal: { fontSize: typography.size.sm, color: getThemeColors().text.secondary },
-  unfilled: { fontSize: typography.size.sm, color: getThemeColors().semantic.negative, fontStyle: 'italic' },
-  daySummary: { fontSize: typography.size.xs, color: getThemeColors().text.muted, marginTop: spacing[2], textAlign: 'right' },
+  slotName: { fontSize: typography.size.sm, color: c.text.muted, width: 80 },
+  foodName: { flex: 1, fontSize: typography.size.sm, color: c.text.primary },
+  slotCal: { fontSize: typography.size.sm, color: c.text.secondary },
+  unfilled: { fontSize: typography.size.sm, color: c.semantic.negative, fontStyle: 'italic' },
+  daySummary: { fontSize: typography.size.xs, color: c.text.muted, marginTop: spacing[2], textAlign: 'right' },
   actions: { flexDirection: 'row', gap: spacing[2], marginTop: spacing[4], marginBottom: spacing[8] },
-  btn: { flex: 1, backgroundColor: getThemeColors().accent.primary, padding: spacing[3], borderRadius: 8, alignItems: 'center' },
+  btn: { flex: 1, backgroundColor: c.accent.primary, padding: spacing[3], borderRadius: 8, alignItems: 'center' },
   btnDisabled: { opacity: 0.5 },
-  btnSecondary: { flex: 1, backgroundColor: getThemeColors().bg.surface, padding: spacing[3], borderRadius: 8, alignItems: 'center' },
-  btnText: { color: getThemeColors().text.primary, fontWeight: typography.weight.semibold },
-  error: { color: getThemeColors().semantic.negative, flex: 1 },
-  errorRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing[2], backgroundColor: getThemeColors().semantic.negativeSubtle ?? getThemeColors().bg.surface, padding: spacing[2], borderRadius: 6 },
-  errorDismiss: { color: getThemeColors().semantic.negative, fontWeight: typography.weight.bold, paddingLeft: spacing[2] },
+  btnSecondary: { flex: 1, backgroundColor: c.bg.surface, padding: spacing[3], borderRadius: 8, alignItems: 'center' },
+  btnText: { color: c.text.primary, fontWeight: typography.weight.semibold },
+  error: { color: c.semantic.negative, flex: 1 },
+  errorRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing[2], backgroundColor: c.semantic.negativeSubtle ?? c.bg.surface, padding: spacing[2], borderRadius: 6 },
+  errorDismiss: { color: c.semantic.negative, fontWeight: typography.weight.bold, paddingLeft: spacing[2] },
 });

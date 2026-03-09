@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { radius, spacing, typography } from '../../theme/tokens';
-import { getThemeColors } from '../../hooks/useThemeColors';
+import { getThemeColors, useThemeColors} from '../../hooks/useThemeColors';
 import { Button } from '../../components/common/Button';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { Icon } from '../../components/common/Icon';
@@ -30,7 +30,7 @@ interface ResetPasswordScreenProps {
 }
 
 export function ResetPasswordScreen({ email, onResetSuccess, onBack }: ResetPasswordScreenProps) {
-  const c = getThemeColors();
+  const c = useThemeColors();
   const styles = getThemedStyles(c);
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');

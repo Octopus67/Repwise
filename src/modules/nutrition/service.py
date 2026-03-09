@@ -55,6 +55,36 @@ class NutritionService:
         self.session.add(entry)
         await self.session.flush()
 
+        # --- Food frequency tracking (never breaks entry creation) ---
+        if data.food_item_id:
+            try:
+                from src.modules.food_database.models import UserFoodFrequency
+
+                now_utc = datetime.now(timezone.utc)
+                dialect = self.session.bind.dialect.name if self.session.bind else "postgresql"
+                if dialect == "sqlite":
+                    from sqlalchemy.dialects.sqlite import insert as upsert_insert
+                else:
+                    from sqlalchemy.dialects.postgresql import insert as upsert_insert
+
+                stmt = upsert_insert(UserFoodFrequency).values(
+                    user_id=user_id,
+                    food_item_id=data.food_item_id,
+                    log_count=1,
+                    last_logged_at=now_utc,
+                )
+                stmt = stmt.on_conflict_do_update(
+                    index_elements=["user_id", "food_item_id"],
+                    set_={
+                        "log_count": UserFoodFrequency.log_count + 1,
+                        "last_logged_at": now_utc,
+                    },
+                )
+                await self.session.execute(stmt)
+                await self.session.flush()
+            except Exception as e:
+                logger.warning(f"Food frequency tracking failed: {e}")
+
         # --- Achievement evaluation (never breaks entry creation) ---
         newly_unlocked: list = []
         try:

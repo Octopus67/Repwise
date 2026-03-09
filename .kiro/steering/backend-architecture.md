@@ -71,12 +71,12 @@ All mounted at `/api/v1/<prefix>`:
 ## Key Services
 
 ### WNS Volume Engine (`src/modules/training/`)
-- `wns_engine.py` — Pure functions: stimulating_reps, diminishing_returns (K=1.69), atrophy
+- `wns_engine.py` — Pure functions: stimulating_reps, diminishing_returns (K=0.96), atrophy
 - `wns_volume_service.py` — DB-backed WNS calculation per muscle group
 - `exercise_coefficients.py` — Direct (1.0) / fractional (0.5) muscle attribution
 - `volume_service.py` — Legacy volume calculation (RPE-tier based)
 - Feature flag `wns_engine` controls which engine is used (currently ON by default)
-- Constants: MAX_STIM_REPS=5, DEFAULT_RIR=3.0 (RPE 7), DIMINISHING_K=1.69
+- Constants: MAX_STIM_REPS=5, DEFAULT_RIR=2.0 (RPE 8), DIMINISHING_K=0.96
 
 ### Fatigue Engine (`src/modules/training/`)
 - `fatigue_engine.py` — Pure functions: e1RM regression, composite fatigue score

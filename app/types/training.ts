@@ -86,7 +86,7 @@ export interface ActiveWorkoutActions {
     templateExercises?: ActiveExercise[];
     sessionDate?: string;
   }) => void;
-  finishWorkout: () => ActiveWorkoutPayload;
+  finishWorkout: (unitSystem?: UnitSystem) => ActiveWorkoutPayload;
   discardWorkout: () => void;
 
   // Exercise CRUD

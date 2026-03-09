@@ -1,3 +1,11 @@
+/**
+ * @deprecated Use FinishConfirmationSheet instead.
+ * This component is superseded by FinishConfirmationSheet which uses
+ * @gorhom/bottom-sheet on native and Modal on web, accepts a pre-computed
+ * WorkoutSummaryResult, and displays personal records.
+ *
+ * Retained temporarily for test compatibility — remove once tests are migrated.
+ */
 import { useState, useEffect } from 'react';
 import { View, Text, Modal, TouchableOpacity, Switch, ScrollView, StyleSheet } from 'react-native';
 import { ActiveExercise } from '../../types/training';
@@ -105,7 +113,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
     padding: spacing[6],
@@ -114,7 +122,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   header: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     marginBottom: spacing[4],
   },
   exerciseList: {
@@ -127,16 +135,16 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[3],
   },
   exerciseName: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     flex: 1,
   },
   setProgress: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
   },
   skippedText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
   },
   statsRow: {
@@ -147,12 +155,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[3],
   },
   statText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.bold,
   },
   statDivider: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.md,
   },
   templateRow: {
@@ -162,18 +170,18 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[4],
   },
   templateLabel: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
   },
   saveButton: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.md,
     paddingVertical: spacing[4],
     alignItems: 'center',
     marginTop: spacing[3],
   },
   saveButtonText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontWeight: typography.weight.bold,
     fontSize: typography.size.md,
   },
@@ -182,7 +190,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[4],
   },
   cancelText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.md,
   },
 });

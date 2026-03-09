@@ -66,7 +66,7 @@ export function PreviousPerformance({ exerciseName }: PreviousPerformanceProps) 
   if (!data) {
     return (
       <View style={styles.container}>
-        <Text style={[styles.firstTime, { color: getThemeColors().text.muted }]}>First time</Text>
+        <Text style={[styles.firstTime, { color: c.text.muted }]}>First time</Text>
       </View>
     );
   }
@@ -75,7 +75,7 @@ export function PreviousPerformance({ exerciseName }: PreviousPerformanceProps) 
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.previousText, { color: getThemeColors().text.secondary }]}>{formatted}</Text>
+      <Text style={[styles.previousText, { color: c.text.secondary }]}>{formatted}</Text>
     </View>
   );
 }
@@ -98,16 +98,16 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingBottom: spacing[1],
   },
   skeleton: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
   },
   firstTime: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     fontStyle: 'italic',
   },
   previousText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.xs,
   },
 });

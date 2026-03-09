@@ -255,7 +255,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[2],
   },
   headerTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.md,
@@ -264,7 +264,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: spacing[4],
   },
   sectionTitle: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.sm,
@@ -274,17 +274,17 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: getThemeColors().border.subtle,
+    backgroundColor: c.border.subtle,
     marginVertical: spacing[4],
   },
   error: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     marginBottom: spacing[2],
   },
   success: {
-    color: getThemeColors().semantic.positive,
+    color: c.semantic.positive,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     marginBottom: spacing[2],

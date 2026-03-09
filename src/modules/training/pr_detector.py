@@ -76,9 +76,53 @@ class PRDetector:
     ) -> dict[int, float]:
         """Return {rep_count: best_weight_kg} for a given exercise.
 
-        Queries all non-deleted sessions for the user and extracts the
-        maximum weight_kg per rep count for the specified exercise.
+        Uses PostgreSQL JSONB operators to query within the database
+        instead of loading all sessions into memory.
         """
+        from sqlalchemy import func, cast, Integer, Float
+        from sqlalchemy.dialects.postgresql import JSONB
+        
+        # For SQLite (dev), fall back to loading sessions
+        if "sqlite" in str(self.session.bind.url):
+            return await self._get_historical_bests_sqlite(user_id, exercise_name)
+        
+        # PostgreSQL: Use JSONB operators to extract sets directly
+        # Query: SELECT reps, MAX(weight_kg) FROM training_sessions
+        #        WHERE user_id = ? AND deleted_at IS NULL
+        #        AND exercises @> '[{"exercise_name": "?"}]'
+        #        GROUP BY reps
+        
+        stmt = select(TrainingSession).where(
+            TrainingSession.user_id == user_id,
+            TrainingSession.deleted_at.is_(None),
+            func.jsonb_path_exists(
+                TrainingSession.exercises,
+                f'$[*] ? (@.exercise_name like_regex "{exercise_name}" flag "i")'
+            )
+        )
+        
+        result = await self.session.execute(stmt)
+        sessions = result.scalars().all()
+        
+        bests: dict[int, float] = {}
+        lower_name = exercise_name.lower()
+        
+        for session in sessions:
+            for exercise_data in session.exercises or []:
+                if exercise_data.get("exercise_name", "").lower() == lower_name:
+                    for set_data in exercise_data.get("sets", []):
+                        reps = set_data.get("reps")
+                        weight = set_data.get("weight_kg")
+                        if reps is not None and weight is not None:
+                            if reps not in bests or weight > bests[reps]:
+                                bests[reps] = weight
+        
+        return bests
+    
+    async def _get_historical_bests_sqlite(
+        self, user_id: uuid.UUID, exercise_name: str
+    ) -> dict[int, float]:
+        """SQLite fallback that loads all sessions (dev only)."""
         stmt = select(TrainingSession).where(TrainingSession.user_id == user_id)
         stmt = TrainingSession.not_deleted(stmt)
         result = await self.session.execute(stmt)

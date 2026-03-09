@@ -21,12 +21,12 @@ Only the last ~5 reps before failure drive hypertrophy:
 - RIR 2: 3 stim reps
 - RIR 3: 2 stim reps
 - RIR 4+: 0 stim reps (junk volume)
-- **Default when no RPE/RIR logged: RIR 3 (RPE 7)**
+- **Default when no RPE/RIR logged: RIR 2 (RPE 8)**
 
 ### Diminishing Returns
 ```python
-factor = 1.0 / (1.0 + 1.69 * set_index)
-# K=1.69 fitted to Schoenfeld meta-analysis: 6 sets ≈ 2x stimulus of 1 set
+factor = 1.0 / (1.0 + 0.96 * set_index)
+# K=0.96 — updated from 1.69 based on revised meta-analysis fitting
 ```
 
 ### Muscle Attribution
@@ -45,8 +45,8 @@ atrophy = atrophy_days * daily_rate
 | Constant | Value | Source |
 |----------|-------|--------|
 | MAX_STIM_REPS | 5.0 | Beardsley (2019) |
-| DEFAULT_RIR | 3.0 | Conservative default (RPE 7) — assumes moderate effort when user doesn't log RPE/RIR |
-| DIMINISHING_K | 1.69 | Fitted to Schoenfeld meta-analysis: 6 sets = 2.0x stimulus of 1 set |
+| DEFAULT_RIR | 2.0 | Default (RPE 8) — updated from 3.0 to better reflect typical training effort |
+| DIMINISHING_K | 0.96 | Updated from 1.69 based on revised meta-analysis fitting |
 | STIMULUS_DURATION | 2.0 days | MPS elevation research |
 | MAINTENANCE_SETS | 3.0/week | Beardsley recommendation |
 

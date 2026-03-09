@@ -132,20 +132,20 @@ export function ProgressPhotoGrid({ photos, onPhotosChange, loading }: ProgressP
 
   const renderItem = ({ item }: { item: PhotoItem }) => (
     <TouchableOpacity
-      style={[styles.photoCard, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.subtle }]}
+      style={[styles.photoCard, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
       onLongPress={() => handleDelete(item)}
       activeOpacity={0.8}
       accessibilityLabel={`Progress photo from ${item.date}. Long press to delete.`}
       accessibilityRole="image"
     >
-      <Image source={{ uri: item.uri }} style={[styles.photoImage, { backgroundColor: getThemeColors().bg.surfaceRaised }]} />
-      <Text style={[styles.photoDate, { color: getThemeColors().text.secondary }]}>{item.date}</Text>
+      <Image source={{ uri: item.uri }} style={[styles.photoImage, { backgroundColor: c.bg.surfaceRaised }]} />
+      <Text style={[styles.photoDate, { color: c.text.secondary }]}>{item.date}</Text>
     </TouchableOpacity>
   );
 
   const renderAddButton = () => (
     <TouchableOpacity
-      style={[styles.addCard, { backgroundColor: getThemeColors().accent.primaryMuted, borderColor: getThemeColors().accent.primary }]}
+      style={[styles.addCard, { backgroundColor: c.accent.primaryMuted, borderColor: c.accent.primary }]}
       onPress={showAddOptions}
       disabled={saving}
       activeOpacity={0.7}
@@ -153,11 +153,11 @@ export function ProgressPhotoGrid({ photos, onPhotosChange, loading }: ProgressP
       accessibilityLabel="Add progress photo"
     >
       {saving ? (
-        <ActivityIndicator color={getThemeColors().accent.primary} size="small" />
+        <ActivityIndicator color={c.accent.primary} size="small" />
       ) : (
         <>
-          <Icon name="camera" size={24} color={getThemeColors().accent.primary} />
-          <Text style={[styles.addText, { color: getThemeColors().accent.primary }]}>Add Photo</Text>
+          <Icon name="camera" size={24} color={c.accent.primary} />
+          <Text style={[styles.addText, { color: c.accent.primary }]}>Add Photo</Text>
         </>
       )}
     </TouchableOpacity>
@@ -166,7 +166,7 @@ export function ProgressPhotoGrid({ photos, onPhotosChange, loading }: ProgressP
   if (loading) {
     return (
       <View style={styles.loadingWrap}>
-        <ActivityIndicator color={getThemeColors().accent.primary} size="large" />
+        <ActivityIndicator color={c.accent.primary} size="large" />
       </View>
     );
   }
@@ -193,24 +193,24 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   gridRow: { gap: COLUMN_GAP },
   photoCard: {
     flex: 1, marginBottom: spacing[3], borderRadius: radius.md,
-    overflow: 'hidden', backgroundColor: getThemeColors().bg.surface,
-    borderWidth: 1, borderColor: getThemeColors().border.subtle,
+    overflow: 'hidden', backgroundColor: c.bg.surface,
+    borderWidth: 1, borderColor: c.border.subtle,
   },
   photoImage: {
-    width: '100%', aspectRatio: 3 / 4, backgroundColor: getThemeColors().bg.surfaceRaised,
+    width: '100%', aspectRatio: 3 / 4, backgroundColor: c.bg.surfaceRaised,
   },
   photoDate: {
-    color: getThemeColors().text.secondary, fontSize: typography.size.xs,
+    color: c.text.secondary, fontSize: typography.size.xs,
     textAlign: 'center', paddingVertical: spacing[2],
   },
   addCard: {
     flex: 1, aspectRatio: 3 / 4, marginBottom: spacing[3],
     borderRadius: radius.md, borderWidth: 1, borderStyle: 'dashed',
-    borderColor: getThemeColors().accent.primary, backgroundColor: getThemeColors().accent.primaryMuted,
+    borderColor: c.accent.primary, backgroundColor: c.accent.primaryMuted,
     alignItems: 'center', justifyContent: 'center', gap: spacing[2],
   },
   addText: {
-    color: getThemeColors().accent.primary, fontSize: typography.size.sm,
+    color: c.accent.primary, fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
   loadingWrap: {

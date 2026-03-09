@@ -88,10 +88,10 @@ export function TDEERevealStep({ onNext }: Props) {
   const animatedTDEE = useCountingValue(effectiveTDEE, 600);
 
   const components: { key: 'bmr' | 'neat' | 'eat' | 'tef'; value: number }[] = [
-    { key: 'bmr', value: breakdown.bmr },
-    { key: 'neat', value: breakdown.neat },
-    { key: 'eat', value: breakdown.eat },
-    { key: 'tef', value: breakdown.tef },
+    { key: 'bmr', value: breakdown.bmr || 0 },
+    { key: 'neat', value: breakdown.neat || 0 },
+    { key: 'eat', value: breakdown.eat || 0 },
+    { key: 'tef', value: breakdown.tef || 0 },
   ];
 
   const maxVal = Math.max(...components.map((comp) => comp.value), 1);

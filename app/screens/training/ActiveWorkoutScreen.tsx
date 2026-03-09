@@ -44,6 +44,7 @@ import { FinishConfirmationSheet } from '../../components/training/FinishConfirm
 import { ExercisePickerSheet } from '../../components/training/ExercisePickerSheet';
 import { PRCelebration } from '../../components/training/PRCelebration';
 import { RPEEducationSheet } from '../../components/training/RPEEducationSheet';
+import { PlateCalculatorSheet } from '../../components/training/PlateCalculatorSheet';
 import { HUFloatingPill } from '../../components/training/HUFloatingPill';
 import { HUExplainerModal } from '../../components/training/HUExplainerModal';
 import { WorkoutSummaryModal } from '../../components/training/WorkoutSummaryModal';
@@ -54,6 +55,8 @@ import { computeWorkoutSummary } from '../../utils/workoutSummary';
 import { stepWeight } from '../../utils/weightStepper';
 import { aggregateVolume } from '../../utils/volumeAggregator';
 import { hasUnsavedData } from '../../utils/setCompletionLogic';
+import { getRestDuration } from '../../utils/getRestDuration';
+import { shouldStartRestTimer } from '../../utils/supersetLogic';
 import { activeExercisesToPayload } from '../../utils/sessionEditConversion';
 import { sessionResponseToActiveExercises } from '../../utils/sessionEditConversion';
 import { templateToActiveExercises } from '../../utils/templateConversion';
@@ -106,10 +109,13 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   const [huExplainerExercise, setHuExplainerExercise] = useState<string | undefined>();
   const [huExplainerHU, setHuExplainerHU] = useState<number | undefined>();
   const [workoutSummaryVisible, setWorkoutSummaryVisible] = useState(false);
+  const [plateCalcVisible, setPlateCalcVisible] = useState(false);
+  const [plateCalcWeightKg, setPlateCalcWeightKg] = useState(0);
   const [summaryHU, setSummaryHU] = useState<Record<string, number>>({});
   const [summaryRecs, setSummaryRecs] = useState<string[]>([]);
   const initialized = useRef(false);
   const isNavigatingAway = useRef(false);
+  const summaryDataRef = useRef<any>(null); // Store navigation params for PR celebration
 
   // ── Duration timer (Req 9.1, 9.2) ──
 
@@ -343,12 +349,22 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
     const exercise = store.exercises.find((e) => e.localId === exerciseLocalId);
     if (!exercise) return;
     const workingSet = exercise.sets.find((s) => s.setType === 'normal' && s.weight !== '');
-    if (!workingSet) {
+    const workingWeight = workingSet ? parseFloat(workingSet.weight) || 0 : 0;
+
+    // Predictive fallback: use previous performance best weight
+    const prevKey = exercise.exerciseName.toLowerCase();
+    const prevPerf = store.previousPerformance[prevKey];
+    const prevBest = prevPerf?.sets?.reduce((max: number, s: any) => Math.max(max, s.weightKg || 0), 0) || 0;
+
+    if (workingWeight <= 0 && prevBest <= 0) {
       showAlert('Enter a working weight first.');
       return;
     }
+
     const { generateWarmUpSets } = require('../../utils/warmUpGenerator');
-    const sets = generateWarmUpSets(parseFloat(workingSet.weight) || 0);
+    const sets = workingWeight > 0
+      ? generateWarmUpSets(workingWeight)
+      : generateWarmUpSets(undefined, { previousBestWeight: prevBest });
     store.insertWarmUpSets(exerciseLocalId, sets);
   }, [store]);
 
@@ -365,7 +381,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   const handleConfirmFinish = useCallback(async () => {
     setSaving(true);
     try {
-      const payload = store.finishWorkout();
+      const payload = store.finishWorkout(unitSystem);
 
       let response: any;
       if (store.mode === 'edit' && store.editSessionId) {
@@ -399,34 +415,53 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
           };
         });
 
-      // Navigate to WorkoutSummary
+      // Check for personal records
       const prs: PersonalRecordResponse[] = response.data?.personal_records ?? [];
       
-      // Compute final HU for summary
-      const finalHU = { ...sessionHU };
-      const finalRecs = generateRecommendations(finalHU, {});
-      
-      store.discardWorkout();
-      isNavigatingAway.current = true;
-      
-      navigation.navigate('WorkoutSummary', {
-        summary,
-        duration: elapsedSeconds,
-        personalRecords: prs,
-        exerciseBreakdown,
-        huByMuscle: finalHU,
-        recommendations: finalRecs,
-      });
+      // Compute summary inside callback (fresh values)
+      const currentSummary = computeWorkoutSummary(store.exercises);
+      const finalRecs = generateRecommendations(sessionHURef.current, {});
+
+      const navigateToSummary = () => {
+        store.discardWorkout();
+        isNavigatingAway.current = true;
+        navigation.navigate('WorkoutSummary', {
+          summary: currentSummary,
+          duration: elapsedSeconds,
+          personalRecords: prs,
+          exerciseBreakdown,
+          huByMuscle: sessionHURef.current,
+          recommendations: finalRecs,
+        });
+      };
+
+      // Show PR celebration before navigating, or navigate immediately
+      if (prs.length > 0) {
+        // Store navigation data in ref for PR celebration onDismiss
+        summaryDataRef.current = {
+          summary: currentSummary,
+          duration: elapsedSeconds,
+          personalRecords: prs,
+          exerciseBreakdown,
+          huByMuscle: sessionHURef.current,
+          recommendations: finalRecs,
+        };
+        setPrData(prs);
+        setPrCelebrationVisible(true);
+        // Navigation will be triggered by PRCelebration onDismiss callback
+      } else {
+        navigateToSummary();
+      }
     } catch (error: any) {
       const errorMessage = error?.response?.data?.detail || error?.message || 'Could not save workout. Please try again.';
       showAlert('Save Failed', errorMessage);
     } finally {
       setSaving(false);
     }
-  }, [store, navigation]);
+  }, [store, navigation, unitSystem, elapsedSeconds, muscleGroupMap]);
 
   const handleSaveAsTemplate = useCallback(async () => {
-    const payload = store.finishWorkout();
+    const payload = store.finishWorkout(unitSystem);
     const templateName = `Workout - ${store.sessionDate || new Date().toLocaleDateString('en-CA')}`;
     try {
       await api.post('training/user-templates', { name: templateName, exercises: payload.exercises });
@@ -452,6 +487,11 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
     dismissRpeRirTooltip();
     setRpeEducationVisible(false);
   }, [dismissRpeRirTooltip]);
+
+  const handleOpenPlateCalculator = useCallback((weightKg: number) => {
+    setPlateCalcWeightKg(weightKg);
+    setPlateCalcVisible(true);
+  }, []);
 
   // ── Derived state ──
 
@@ -481,6 +521,9 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
     return calculateSessionStimulus(exerciseData, muscleGroupMap);
   }, [store.exercises, muscleGroupMap]);
 
+  const sessionHURef = useRef(sessionHU);
+  sessionHURef.current = sessionHU;
+
   const exerciseHUMap = React.useMemo(() => {
     const map: Record<string, number> = {};
     for (const ex of store.exercises) {
@@ -502,12 +545,12 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   // ── Render ──
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: getThemeColors().bg.base }]} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
       {/* Header: date, duration, overflow menu */}
-      <View style={[styles.topBar, { borderBottomColor: getThemeColors().border.subtle }]}>
+      <View style={[styles.topBar, { borderBottomColor: c.border.subtle }]}>
         <View style={styles.headerLeft}>
-          <Text style={[styles.dateText, { color: getThemeColors().accent.primary }]}>{formattedDate}</Text>
-          <Text style={[styles.durationText, { color: getThemeColors().text.secondary }]}>{durationFormatted}</Text>
+          <Text style={[styles.dateText, { color: c.accent.primary }]}>{formattedDate}</Text>
+          <Text style={[styles.durationText, { color: c.text.secondary }]}>{durationFormatted}</Text>
         </View>
         <TouchableOpacity
           onPress={() => setOverflowMenuVisible(!overflowMenuVisible)}
@@ -515,7 +558,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
           accessibilityRole="button"
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Text style={[styles.overflowBtn, { color: getThemeColors().text.muted }]}>•••</Text>
+          <Text style={[styles.overflowBtn, { color: c.text.muted }]}>•••</Text>
         </TouchableOpacity>
       </View>
 
@@ -523,7 +566,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
       {overflowMenuVisible && (
         <>
           <Pressable style={styles.overflowBackdrop} onPress={() => setOverflowMenuVisible(false)} />
-          <View style={[styles.overflowMenu, { backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]}>
+          <View style={[styles.overflowMenu, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
             <TouchableOpacity
               style={styles.overflowMenuItem}
               onPress={() => { 
@@ -538,12 +581,12 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
               accessibilityLabel={showRpeRir ? 'Hide RPE/RIR column' : 'Show RPE/RIR column'}
               accessibilityRole="button"
             >
-              <Text style={[styles.overflowMenuItemText, { color: getThemeColors().text.primary }]}>
+              <Text style={[styles.overflowMenuItemText, { color: c.text.primary }]}>
                 {showRpeRir ? 'Hide RPE/RIR' : 'Show RPE/RIR'}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.overflowMenuItem} onPress={handleDiscard}>
-              <Text style={[styles.overflowMenuItemTextDanger, { color: getThemeColors().semantic.negative }]}>Discard Workout</Text>
+              <Text style={[styles.overflowMenuItemTextDanger, { color: c.semantic.negative }]}>Discard Workout</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -586,11 +629,22 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
               currentHU={exerciseHUMap[exercise.localId]}
               onSwap={() => handleSwapExercise(exercise.localId)}
               onSkip={() => store.toggleExerciseSkip(exercise.localId)}
-              onGenerateWarmUp={() => handleGenerateWarmUp(exercise.localId)}
+              onGenerateWarmUp={(sets) => {
+                if (sets?.length) {
+                  store.insertWarmUpSets(exercise.localId, sets);
+                } else {
+                  handleGenerateWarmUp(exercise.localId);
+                }
+              }}
               onRemove={() => store.removeExercise(exercise.localId)}
               onAddSet={() => store.addSet(exercise.localId)}
               onRemoveSet={(setLocalId) => store.removeSet(exercise.localId, setLocalId)}
-              onReorder={() => {}}
+              onReorder={(direction) => {
+                const newIdx = direction === 'up' ? idx - 1 : idx + 1;
+                store.reorderExercises(idx, newIdx);
+              }}
+              isFirst={idx === 0}
+              isLast={idx === store.exercises.length - 1}
               onUpdateSetField={(setLocalId, field, value) =>
                 store.updateSetField(exercise.localId, setLocalId, field, value)
               }
@@ -599,6 +653,22 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
                 if (result.validationError) {
                   showAlert('Missing Fields', result.validationError);
                 }
+                if (result.completed) {
+                  const currentSet = exercise.sets.find((s) => s.localId === setLocalId);
+                  const normalSets = exercise.sets.filter((s) => s.setType === 'normal');
+                  const isLastNormalSet = normalSets[normalSets.length - 1]?.localId === setLocalId;
+                  
+                  // Skip timer for warm-up and drop-set (no rest by definition)
+                  const shouldSkip = currentSet?.setType === 'warm-up' || currentSet?.setType === 'drop-set';
+                  
+                  // Check if this exercise is mid-superset (should not rest)
+                  const canStartTimer = shouldStartRestTimer(store.supersetGroups, exercise.localId);
+                  
+                  if (!isLastNormalSet && !shouldSkip && canStartTimer) {
+                    const duration = getRestDuration(exercise.exerciseName, profile?.preferences?.rest_timer);
+                    store.startRestTimer(exercise.exerciseName, duration);
+                  }
+                }
               }}
               onCopyPreviousToSet={(setLocalId) =>
                 store.copyPreviousToSet(exercise.localId, setLocalId)
@@ -606,13 +676,18 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
               onWeightStep={(setLocalId, direction) =>
                 handleWeightStep(exercise.localId, setLocalId, direction)
               }
+              onUpdateSetType={(setLocalId, setType) =>
+                store.updateSetType(exercise.localId, setLocalId, setType)
+              }
               onApplyOverload={() => handleApplyOverload(exercise.localId)}
+              onSetExerciseNotes={(localId, notes) => store.setExerciseNotes(localId, notes)}
               onShowRpeEducation={() => setRpeEducationVisible(true)}
               onShowHUExplainer={() => {
                 setHuExplainerExercise(exercise.exerciseName);
                 setHuExplainerHU(exerciseHUMap[exercise.localId]);
                 setHuExplainerVisible(true);
               }}
+              onOpenPlateCalculator={handleOpenPlateCalculator}
               />
             </ExerciseCardWrapper>
           );
@@ -620,12 +695,12 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
 
         {/* Add Exercise button */}
         <TouchableOpacity
-          style={[styles.addExerciseBtn, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.default }]}
+          style={[styles.addExerciseBtn, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
           onPress={() => setExercisePickerVisible(true)}
           accessibilityLabel="Add exercise"
           accessibilityRole="button"
         >
-          <Text style={[styles.addExerciseText, { color: getThemeColors().accent.primary }]}>+ Add Exercise</Text>
+          <Text style={[styles.addExerciseText, { color: c.accent.primary }]}>+ Add Exercise</Text>
         </TouchableOpacity>
 
         {/* Bottom spacer for sticky bars */}
@@ -678,7 +753,16 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
       <PRCelebration
         prs={prData}
         visible={prCelebrationVisible}
-        onDismiss={() => setPrCelebrationVisible(false)}
+        onDismiss={() => {
+          setPrCelebrationVisible(false);
+          // Navigate using stored params from ref
+          if (summaryDataRef.current) {
+            store.discardWorkout();
+            isNavigatingAway.current = true;
+            navigation.navigate('WorkoutSummary', summaryDataRef.current);
+            summaryDataRef.current = null;
+          }
+        }}
       />
 
       {/* HU Explainer modal */}
@@ -704,6 +788,14 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
           setHuExplainerVisible(true);
         }}
       />
+
+      {/* Plate Calculator */}
+      <PlateCalculatorSheet
+        weightKg={plateCalcWeightKg}
+        unitSystem={unitSystem}
+        visible={plateCalcVisible}
+        onClose={() => setPlateCalcVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -722,7 +814,7 @@ function getWeekMonday(): string {
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: getThemeColors().bg.base },
+  safe: { flex: 1, backgroundColor: c.bg.base },
 
   topBar: {
     flexDirection: 'row',
@@ -731,7 +823,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[3],
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.subtle,
+    borderBottomColor: c.border.subtle,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -739,18 +831,18 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[3],
   },
   dateText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },
   durationText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     fontVariant: ['tabular-nums'],
   },
   overflowBtn: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
     paddingHorizontal: spacing[2],
@@ -769,10 +861,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     position: 'absolute',
     top: 56,
     right: spacing[4],
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     zIndex: 100,
     ...shadows.md,
     minWidth: 180,
@@ -782,12 +874,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing[4],
   },
   overflowMenuItemTextDanger: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },
   overflowMenuItemText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },
@@ -796,17 +888,17 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   scrollContent: { padding: spacing[4], paddingBottom: spacing[4] },
 
   addExerciseBtn: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     borderStyle: 'dashed',
     paddingVertical: spacing[4],
     alignItems: 'center',
     marginBottom: spacing[4],
   },
   addExerciseText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
   },

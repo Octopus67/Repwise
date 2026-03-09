@@ -1,0 +1,84 @@
+import { useCallback } from 'react';
+import { useHaptics } from './useHaptics';
+import { isPremiumWorkoutLoggerEnabled } from '../utils/featureFlags';
+
+interface NavigationActions {
+  navigate?: (...args: any[]) => void;
+  push?: (...args: any[]) => void;
+}
+
+interface UseDashboardNavigationParams {
+  navigation: NavigationActions;
+  openNutrition: (mealName?: string) => void;
+  openTraining: () => void;
+  openMealBuilder: () => void;
+  openBodyweight: () => void;
+  openCheckin: () => void;
+  openUpgrade: () => void;
+}
+
+export function useDashboardNavigation({
+  navigation,
+  openNutrition,
+  openTraining,
+  openMealBuilder,
+  openBodyweight,
+  openCheckin,
+  openUpgrade,
+}: UseDashboardNavigationParams) {
+  const { impact } = useHaptics();
+
+  const handleArticlePress = useCallback((articleId: string) => {
+    navigation?.navigate?.('ArticleDetail', { articleId });
+  }, [navigation]);
+
+  const handleAddToSlot = useCallback((slotName: string) => {
+    openNutrition(slotName);
+  }, [openNutrition]);
+
+  const handleQuickAction = useCallback((action: () => void) => {
+    impact('light');
+    action();
+  }, [impact]);
+
+  const handleStartWorkout = useCallback(() => {
+    if (isPremiumWorkoutLoggerEnabled()) {
+      navigation.push?.('ActiveWorkout', { mode: 'new' });
+    } else {
+      openTraining();
+    }
+  }, [navigation, openTraining]);
+
+  const handleSessionPress = useCallback((sessionId: string) => {
+    navigation?.navigate?.('SessionDetail', { sessionId });
+  }, [navigation]);
+
+  const handleResumeWorkout = useCallback(() => {
+    navigation?.navigate?.('ActiveWorkout');
+  }, [navigation]);
+
+  const handleNavigateAnalytics = useCallback((params?: any) => {
+    navigation?.navigate?.('Analytics', params);
+  }, [navigation]);
+
+  const handleNavigateLearn = useCallback(() => {
+    navigation?.navigate?.('Learn');
+  }, [navigation]);
+
+  return {
+    handleArticlePress,
+    handleAddToSlot,
+    handleQuickAction,
+    handleStartWorkout,
+    handleSessionPress,
+    handleResumeWorkout,
+    handleNavigateAnalytics,
+    handleNavigateLearn,
+    openNutrition,
+    openTraining,
+    openMealBuilder,
+    openBodyweight,
+    openCheckin,
+    openUpgrade,
+  };
+}

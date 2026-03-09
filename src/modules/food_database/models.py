@@ -43,7 +43,7 @@ class FoodItem(SoftDeleteMixin, Base):
         String(20), nullable=False, default="community", index=True
     )  # valid: usda, verified, community, custom
     barcode: Mapped[Optional[str]] = mapped_column(
-        String(50), nullable=True, unique=True, index=True
+        String(50), nullable=True, unique=True
     )
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     total_servings: Mapped[Optional[float]] = mapped_column(
@@ -108,6 +108,29 @@ class RecipeIngredient(Base):
     )
 
 
+class UserFoodFrequency(Base):
+    """Tracks how often a user logs a specific food item.
+
+    Used for personalized food search ranking — frequently logged items
+    appear higher in results.
+    """
+
+    __tablename__ = "user_food_frequency"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    food_item_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("food_items.id", ondelete="CASCADE"), nullable=False
+    )
+    log_count: Mapped[int] = mapped_column(default=0, server_default=text("0"))
+    last_logged_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+
+    __table_args__ = (
+        Index("ix_user_food_frequency_user_food", "user_id", "food_item_id", unique=True),
+    )
+
+
 class BarcodeCache(Base):
     """Cache for barcode lookup results from external APIs (OFF, USDA).
 
@@ -118,7 +141,7 @@ class BarcodeCache(Base):
     __tablename__ = "barcode_cache"
 
     barcode: Mapped[str] = mapped_column(
-        String(50), unique=True, nullable=False, index=True
+        String(50), unique=True, nullable=False
     )
     food_item_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("food_items.id", ondelete="CASCADE"), nullable=False

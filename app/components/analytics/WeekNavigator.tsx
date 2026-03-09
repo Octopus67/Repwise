@@ -22,9 +22,9 @@ export function WeekNavigator({ currentWeekStart, onWeekChange, disableNext }: W
         hitSlop={8}
         style={styles.arrow}
       >
-        <Icon name="chevron-left" size={20} color={getThemeColors().text.primary} />
+        <Icon name="chevron-left" size={20} color={c.text.primary} />
       </TouchableOpacity>
-      <Text style={[styles.label, { color: getThemeColors().text.primary }]}>{formatWeekRange(currentWeekStart)}</Text>
+      <Text style={[styles.label, { color: c.text.primary }]}>{formatWeekRange(currentWeekStart)}</Text>
       <TouchableOpacity
         onPress={() => !nextDisabled && onWeekChange(getAdjacentWeek(currentWeekStart, 'next'))}
         hitSlop={8}
@@ -34,7 +34,7 @@ export function WeekNavigator({ currentWeekStart, onWeekChange, disableNext }: W
         <Icon
           name="chevron-right"
           size={20}
-          color={nextDisabled ? getThemeColors().text.muted : getThemeColors().text.primary}
+          color={nextDisabled ? c.text.muted : c.text.primary}
         />
       </TouchableOpacity>
     </View>
@@ -50,7 +50,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   arrow: { padding: spacing[2] },
   label: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },

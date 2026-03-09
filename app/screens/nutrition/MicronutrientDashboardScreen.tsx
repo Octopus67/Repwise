@@ -32,6 +32,7 @@ import {
 import { getWeekStart, formatWeekRange, getAdjacentWeek, isCurrentOrFutureWeek } from '../../utils/muscleVolumeLogic';
 
 function NutrientRow({ nutrient }: { nutrient: NutrientSummary }) {
+  const c = useThemeColors();
   const hasData = nutrient.status !== 'no_data' && (nutrient as any).has_data !== false;
   const barWidth = hasData ? clampPct(nutrient.rda_pct) : 0;
   const barColor = hasData ? getStatusColor(nutrient.status) : '#6B7280';
@@ -39,14 +40,14 @@ function NutrientRow({ nutrient }: { nutrient: NutrientSummary }) {
   return (
     <View style={getStyles().nutrientRow}>
       <View style={getStyles().nutrientHeader}>
-        <Text style={[getStyles().nutrientLabel, { color: getThemeColors().text.primary }]}>{nutrient.label}</Text>
-        <Text style={[getStyles().nutrientValue, { color: getThemeColors().text.muted }]}>
+        <Text style={[getStyles().nutrientLabel, { color: c.text.primary }]}>{nutrient.label}</Text>
+        <Text style={[getStyles().nutrientValue, { color: c.text.muted }]}>
           {hasData
             ? `${formatNutrientValue(nutrient.daily_average, nutrient.unit)} / ${formatNutrientValue(nutrient.rda, nutrient.unit)}`
             : 'No data'}
         </Text>
       </View>
-      <View style={[getStyles().barBg, { backgroundColor: getThemeColors().bg.surfaceRaised }]}>
+      <View style={[getStyles().barBg, { backgroundColor: c.bg.surfaceRaised }]}>
         <View style={[getStyles().barFill, { width: `${barWidth}%`, backgroundColor: barColor }]} />
       </View>
       <Text style={[getStyles().rdaPct, { color: barColor }]}>
@@ -57,12 +58,13 @@ function NutrientRow({ nutrient }: { nutrient: NutrientSummary }) {
 }
 
 function DeficiencyCard({ alert }: { alert: DeficiencyAlert }) {
+  const c = useThemeColors();
   return (
-    <View style={[getStyles().deficiencyCard, { backgroundColor: getThemeColors().semantic.negativeSubtle }]}>
-      <View style={[getStyles().deficiencyDot, { backgroundColor: getThemeColors().semantic.negative }]} />
+    <View style={[getStyles().deficiencyCard, { backgroundColor: c.semantic.negativeSubtle }]}>
+      <View style={[getStyles().deficiencyDot, { backgroundColor: c.semantic.negative }]} />
       <View style={getStyles().deficiencyContent}>
-        <Text style={[getStyles().deficiencyLabel, { color: getThemeColors().text.primary }]}>{alert.label}</Text>
-        <Text style={[getStyles().deficiencyDetail, { color: getThemeColors().text.muted }]}>
+        <Text style={[getStyles().deficiencyLabel, { color: c.text.primary }]}>{alert.label}</Text>
+        <Text style={[getStyles().deficiencyDetail, { color: c.text.muted }]}>
           {alert.deficit_pct.toFixed(0)}% below RDA · {alert.days_below_50pct}/{alert.total_days} days deficient
         </Text>
       </View>
@@ -220,22 +222,22 @@ export function MicronutrientDashboardScreen() {
 function getStyles() { return getThemedStyles(getThemeColors()); }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: getThemeColors().bg.base },
+  container: { flex: 1, backgroundColor: c.bg.base },
   content: { padding: spacing[4], paddingBottom: spacing[8] },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  errorText: { color: getThemeColors().semantic.negative, fontSize: typography.size.sm },
+  errorText: { color: c.semantic.negative, fontSize: typography.size.sm },
   emptyState: { alignItems: 'center', paddingVertical: spacing[8] },
-  emptyTitle: { fontSize: typography.size.lg, fontWeight: typography.weight.semibold, color: getThemeColors().text.primary, marginBottom: spacing[2] },
-  emptySubtext: { fontSize: typography.size.sm, color: getThemeColors().text.muted, textAlign: 'center', lineHeight: 20, paddingHorizontal: spacing[4] },
+  emptyTitle: { fontSize: typography.size.lg, fontWeight: typography.weight.semibold, color: c.text.primary, marginBottom: spacing[2] },
+  emptySubtext: { fontSize: typography.size.sm, color: c.text.muted, textAlign: 'center', lineHeight: 20, paddingHorizontal: spacing[4] },
   weekNav: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[4] },
-  navArrow: { fontSize: 24, color: getThemeColors().accent.primary, paddingHorizontal: spacing[3] },
+  navArrow: { fontSize: 24, color: c.accent.primary, paddingHorizontal: spacing[3] },
   navDisabled: { opacity: 0.3 },
-  weekLabel: { fontSize: typography.size.sm, color: getThemeColors().text.primary, fontWeight: typography.weight.medium },
+  weekLabel: { fontSize: typography.size.sm, color: c.text.primary, fontWeight: typography.weight.medium },
   scoreCard: {
     flexDirection: 'row', alignItems: 'center', gap: spacing[4],
-    backgroundColor: getThemeColors().bg.surface, borderRadius: radius.lg,
+    backgroundColor: c.bg.surface, borderRadius: radius.lg,
     padding: spacing[4], marginBottom: spacing[4],
-    borderWidth: 1, borderColor: getThemeColors().border.subtle,
+    borderWidth: 1, borderColor: c.border.subtle,
   },
   scoreRing: {
     width: 72, height: 72, borderRadius: 36, borderWidth: 4,
@@ -244,28 +246,28 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   scoreNumber: { fontSize: 24, fontWeight: typography.weight.bold },
   scoreInfo: { flex: 1 },
   scoreLabel: { fontSize: typography.size.lg, fontWeight: typography.weight.semibold },
-  scoreSubtext: { fontSize: typography.size.xs, color: getThemeColors().text.muted, marginTop: 2 },
+  scoreSubtext: { fontSize: typography.size.xs, color: c.text.muted, marginTop: 2 },
   section: { marginBottom: spacing[4] },
-  sectionTitle: { fontSize: typography.size.sm, fontWeight: typography.weight.semibold, color: getThemeColors().text.primary, marginBottom: spacing[2] },
+  sectionTitle: { fontSize: typography.size.sm, fontWeight: typography.weight.semibold, color: c.text.primary, marginBottom: spacing[2] },
   deficiencyCard: {
     flexDirection: 'row', alignItems: 'center', gap: spacing[3],
-    backgroundColor: getThemeColors().semantic.negativeSubtle, borderRadius: radius.md,
+    backgroundColor: c.semantic.negativeSubtle, borderRadius: radius.md,
     padding: spacing[3], marginBottom: spacing[2],
   },
-  deficiencyDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: getThemeColors().semantic.negative },
+  deficiencyDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: c.semantic.negative },
   deficiencyContent: { flex: 1 },
-  deficiencyLabel: { fontSize: typography.size.sm, fontWeight: typography.weight.medium, color: getThemeColors().text.primary },
-  deficiencyDetail: { fontSize: typography.size.xs, color: getThemeColors().text.muted },
+  deficiencyLabel: { fontSize: typography.size.sm, fontWeight: typography.weight.medium, color: c.text.primary },
+  deficiencyDetail: { fontSize: typography.size.xs, color: c.text.muted },
   topWorstRow: { flexDirection: 'row', gap: spacing[3], marginBottom: spacing[4] },
-  topWorstCol: { flex: 1, backgroundColor: getThemeColors().bg.surface, borderRadius: radius.md, padding: spacing[3], borderWidth: 1, borderColor: getThemeColors().border.subtle },
-  topWorstItem: { fontSize: typography.size.xs, color: getThemeColors().text.secondary, marginTop: 4 },
+  topWorstCol: { flex: 1, backgroundColor: c.bg.surface, borderRadius: radius.md, padding: spacing[3], borderWidth: 1, borderColor: c.border.subtle },
+  topWorstItem: { fontSize: typography.size.xs, color: c.text.secondary, marginTop: 4 },
   groupSection: { marginBottom: spacing[4] },
-  groupTitle: { fontSize: typography.size.xs, fontWeight: typography.weight.semibold, color: getThemeColors().text.muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: spacing[2] },
+  groupTitle: { fontSize: typography.size.xs, fontWeight: typography.weight.semibold, color: c.text.muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: spacing[2] },
   nutrientRow: { marginBottom: spacing[3] },
   nutrientHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  nutrientLabel: { fontSize: typography.size.sm, color: getThemeColors().text.primary },
-  nutrientValue: { fontSize: typography.size.xs, color: getThemeColors().text.muted },
-  barBg: { height: 6, backgroundColor: getThemeColors().bg.surfaceRaised, borderRadius: 3, overflow: 'hidden' },
+  nutrientLabel: { fontSize: typography.size.sm, color: c.text.primary },
+  nutrientValue: { fontSize: typography.size.xs, color: c.text.muted },
+  barBg: { height: 6, backgroundColor: c.bg.surfaceRaised, borderRadius: 3, overflow: 'hidden' },
   barFill: { height: 6, borderRadius: 3 },
   rdaPct: { fontSize: typography.size.xs, marginTop: 2 },
 });

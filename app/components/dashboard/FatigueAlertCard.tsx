@@ -49,14 +49,14 @@ export function FatigueAlertCard({ suggestions, onPress }: Props) {
     >
       <View style={styles.header}>
         <Icon name="alert-triangle" size={16} color={borderColor} />
-        <Text style={[styles.title, { color: getThemeColors().text.primary }]}>Fatigue Alert</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>Fatigue Alert</Text>
       </View>
-      <Text style={[styles.muscle, { color: getThemeColors().text.primary }]}>{top.muscle_group}</Text>
-      <Text style={[styles.message, { color: getThemeColors().text.secondary }]} numberOfLines={2}>
+      <Text style={[styles.muscle, { color: c.text.primary }]}>{top.muscle_group}</Text>
+      <Text style={[styles.message, { color: c.text.secondary }]} numberOfLines={2}>
         {top.message || 'Consider reducing volume for this muscle group.'}
       </Text>
       {valid.length > 1 && (
-        <Text style={[styles.more, { color: getThemeColors().text.muted }]}>+{valid.length - 1} more muscle groups</Text>
+        <Text style={[styles.more, { color: c.text.muted }]}>+{valid.length - 1} more muscle groups</Text>
       )}
     </TouchableOpacity>
   );
@@ -64,13 +64,13 @@ export function FatigueAlertCard({ suggestions, onPress }: Props) {
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   card: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     padding: spacing[3],
     marginTop: spacing[3],
     borderLeftWidth: 4,
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   header: {
     flexDirection: 'row',
@@ -79,23 +79,23 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[1],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
   },
   muscle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.bold,
     textTransform: 'capitalize',
     marginBottom: spacing[1],
   },
   message: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
   },
   more: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     marginTop: spacing[1],
   },

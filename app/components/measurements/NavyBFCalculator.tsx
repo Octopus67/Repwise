@@ -77,7 +77,7 @@ export function NavyBFCalculator({ visible, onClose, onResult }: NavyBFCalculato
     <ModalContainer visible={visible} onClose={onClose} title="Navy BF Calculator" testID="navy-bf-modal">
       <ScrollView keyboardShouldPersistTaps="handled">
         {/* Sex selector */}
-        <View style={[styles.segmentRow, { backgroundColor: getThemeColors().bg.surfaceRaised }]}>
+        <View style={[styles.segmentRow, { backgroundColor: c.bg.surfaceRaised }]}>
           {(['male', 'female'] as const).map((s) => (
             <TouchableOpacity
               key={s}
@@ -95,52 +95,52 @@ export function NavyBFCalculator({ visible, onClose, onResult }: NavyBFCalculato
 
         {/* Inputs */}
         <View style={styles.field}>
-          <Text style={[styles.label, { color: getThemeColors().text.muted }]}>Height ({lengthUnit})</Text>
+          <Text style={[styles.label, { color: c.text.muted }]}>Height ({lengthUnit})</Text>
           <TextInput
-            style={[styles.input, { color: getThemeColors().text.primary, backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]} value={height} onChangeText={setHeight}
+            style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]} value={height} onChangeText={setHeight}
             keyboardType="decimal-pad" placeholder={isImperial ? '70' : '178'}
-            placeholderTextColor={getThemeColors().text.muted} accessibilityLabel={`Height in ${lengthUnit}`}
+            placeholderTextColor={c.text.muted} accessibilityLabel={`Height in ${lengthUnit}`}
           />
         </View>
 
         <View style={styles.field}>
-          <Text style={[styles.label, { color: getThemeColors().text.muted }]}>Waist ({lengthUnit})</Text>
+          <Text style={[styles.label, { color: c.text.muted }]}>Waist ({lengthUnit})</Text>
           <TextInput
-            style={[styles.input, { color: getThemeColors().text.primary, backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]} value={waist} onChangeText={setWaist}
+            style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]} value={waist} onChangeText={setWaist}
             keyboardType="decimal-pad" placeholder={isImperial ? '34' : '86'}
-            placeholderTextColor={getThemeColors().text.muted} accessibilityLabel={`Waist in ${lengthUnit}`}
+            placeholderTextColor={c.text.muted} accessibilityLabel={`Waist in ${lengthUnit}`}
           />
         </View>
 
         <View style={styles.field}>
-          <Text style={[styles.label, { color: getThemeColors().text.muted }]}>Neck ({lengthUnit})</Text>
+          <Text style={[styles.label, { color: c.text.muted }]}>Neck ({lengthUnit})</Text>
           <TextInput
-            style={[styles.input, { color: getThemeColors().text.primary, backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]} value={neck} onChangeText={setNeck}
+            style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]} value={neck} onChangeText={setNeck}
             keyboardType="decimal-pad" placeholder={isImperial ? '15' : '38'}
-            placeholderTextColor={getThemeColors().text.muted} accessibilityLabel={`Neck in ${lengthUnit}`}
+            placeholderTextColor={c.text.muted} accessibilityLabel={`Neck in ${lengthUnit}`}
           />
         </View>
 
         {sex === 'female' && (
           <View style={styles.field}>
-            <Text style={[styles.label, { color: getThemeColors().text.muted }]}>Hips ({lengthUnit})</Text>
+            <Text style={[styles.label, { color: c.text.muted }]}>Hips ({lengthUnit})</Text>
             <TextInput
-              style={[styles.input, { color: getThemeColors().text.primary, backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]} value={hips} onChangeText={setHips}
+              style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]} value={hips} onChangeText={setHips}
               keyboardType="decimal-pad" placeholder={isImperial ? '38' : '96'}
-              placeholderTextColor={getThemeColors().text.muted} accessibilityLabel={`Hips in ${lengthUnit}`}
+              placeholderTextColor={c.text.muted} accessibilityLabel={`Hips in ${lengthUnit}`}
             />
           </View>
         )}
 
-        {error && <Text style={[styles.errorText, { color: getThemeColors().semantic.negative }]}>{error}</Text>}
+        {error && <Text style={[styles.errorText, { color: c.semantic.negative }]}>{error}</Text>}
 
         <Button title="Calculate" onPress={handleCalculate} style={styles.calcBtn} testID="navy-bf-calculate-btn" />
 
         {/* Result */}
         {result !== null && (
-          <View style={[styles.resultCard, { backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().accent.primaryMuted }]}>
-            <Text style={[styles.resultLabel, { color: getThemeColors().text.secondary }]}>Estimated Body Fat</Text>
-            <Text style={[styles.resultValue, { color: getThemeColors().accent.primary }]}>{result.toFixed(1)}%</Text>
+          <View style={[styles.resultCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.accent.primaryMuted }]}>
+            <Text style={[styles.resultLabel, { color: c.text.secondary }]}>Estimated Body Fat</Text>
+            <Text style={[styles.resultValue, { color: c.accent.primary }]}>{result.toFixed(1)}%</Text>
             {onResult && (
               <Button
                 title="Use This Value"
@@ -159,45 +159,45 @@ export function NavyBFCalculator({ visible, onClose, onResult }: NavyBFCalculato
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   segmentRow: {
-    flexDirection: 'row', backgroundColor: getThemeColors().bg.surfaceRaised,
+    flexDirection: 'row', backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm, padding: 2, marginBottom: spacing[4],
   },
   segment: {
     flex: 1, alignItems: 'center', paddingVertical: spacing[2], borderRadius: radius.sm - 2,
   },
-  segmentActive: { backgroundColor: getThemeColors().accent.primary },
+  segmentActive: { backgroundColor: c.accent.primary },
   segmentText: {
-    color: getThemeColors().text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium,
+    color: c.text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium,
   },
-  segmentTextActive: { color: getThemeColors().text.inverse, fontWeight: typography.weight.semibold },
+  segmentTextActive: { color: c.text.inverse, fontWeight: typography.weight.semibold },
   field: { marginBottom: spacing[3] },
   label: {
-    color: getThemeColors().text.muted, fontSize: typography.size.sm,
+    color: c.text.muted, fontSize: typography.size.sm,
     fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.sm,
     marginBottom: spacing[1],
   },
   input: {
-    color: getThemeColors().text.primary, fontSize: typography.size.base,
-    backgroundColor: getThemeColors().bg.surfaceRaised, borderRadius: radius.sm,
-    borderWidth: 1, borderColor: getThemeColors().border.default,
+    color: c.text.primary, fontSize: typography.size.base,
+    backgroundColor: c.bg.surfaceRaised, borderRadius: radius.sm,
+    borderWidth: 1, borderColor: c.border.default,
     paddingHorizontal: spacing[3], paddingVertical: spacing[2],
   },
   errorText: {
-    color: getThemeColors().semantic.negative, fontSize: typography.size.sm,
+    color: c.semantic.negative, fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm, marginBottom: spacing[2], textAlign: 'center',
   },
   calcBtn: { marginTop: spacing[2] },
   resultCard: {
-    backgroundColor: getThemeColors().bg.surfaceRaised, borderRadius: radius.md,
-    borderWidth: 1, borderColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.bg.surfaceRaised, borderRadius: radius.md,
+    borderWidth: 1, borderColor: c.accent.primaryMuted,
     padding: spacing[4], marginTop: spacing[4], alignItems: 'center',
   },
   resultLabel: {
-    color: getThemeColors().text.secondary, fontSize: typography.size.sm,
+    color: c.text.secondary, fontSize: typography.size.sm,
     fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.sm,
   },
   resultValue: {
-    color: getThemeColors().accent.primary, fontSize: typography.size['2xl'],
+    color: c.accent.primary, fontSize: typography.size['2xl'],
     fontWeight: typography.weight.bold, marginTop: spacing[1],
     fontVariant: ['tabular-nums'], lineHeight: typography.lineHeight['2xl'],
   },

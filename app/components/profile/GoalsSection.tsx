@@ -48,6 +48,8 @@ function GoalTypePicker({
   value: string;
   onChange: (type: string) => void;
 }) {
+  const c = useThemeColors();
+  const pickerStyles = getPickerStyles(c);
   return (
     <View style={pickerStyles.container}>
       <Text style={pickerStyles.label}>Goal Type</Text>
@@ -82,31 +84,33 @@ function MacroTargets({
 }: {
   targets: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
 }) {
+  const c = useThemeColors();
+  const targetStyles = getTargetStyles(c);
   return (
     <View>
       <View style={targetStyles.divider} />
       <Text style={targetStyles.header}>Current Targets</Text>
       <View style={targetStyles.grid}>
         <View style={targetStyles.item}>
-          <Text style={[targetStyles.value, { color: getThemeColors().macro.calories }]}>
+          <Text style={[targetStyles.value, { color: c.macro.calories }]}>
             {Math.round(targets.calories)}
           </Text>
           <Text style={targetStyles.label}>kcal</Text>
         </View>
         <View style={targetStyles.item}>
-          <Text style={[targetStyles.value, { color: getThemeColors().macro.protein }]}>
+          <Text style={[targetStyles.value, { color: c.macro.protein }]}>
             {Math.round(targets.protein_g)}g
           </Text>
           <Text style={targetStyles.label}>protein</Text>
         </View>
         <View style={targetStyles.item}>
-          <Text style={[targetStyles.value, { color: getThemeColors().macro.carbs }]}>
+          <Text style={[targetStyles.value, { color: c.macro.carbs }]}>
             {Math.round(targets.carbs_g)}g
           </Text>
           <Text style={targetStyles.label}>carbs</Text>
         </View>
         <View style={targetStyles.item}>
-          <Text style={[targetStyles.value, { color: getThemeColors().macro.fat }]}>
+          <Text style={[targetStyles.value, { color: c.macro.fat }]}>
             {Math.round(targets.fat_g)}g
           </Text>
           <Text style={targetStyles.label}>fat</Text>
@@ -119,6 +123,7 @@ function MacroTargets({
 export function GoalsSection({ goals, adaptiveTargets, unitSystem }: GoalsSectionProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const editStyles = getEditStyles(c);
   const { recalculate } = useRecalculate();
 
   const [editingGoalType, setEditingGoalType] = useState(false);
@@ -207,7 +212,7 @@ export function GoalsSection({ goals, adaptiveTargets, unitSystem }: GoalsSectio
     return (
       <Card>
         <EmptyState
-          icon={<Icon name="target" size={28} color={getThemeColors().accent.primary} />}
+          icon={<Icon name="target" size={28} color={c.accent.primary} />}
           title="Goals"
           description="Set your first goal to get personalized calorie and macro targets"
           actionLabel="Set Goal"
@@ -225,7 +230,7 @@ export function GoalsSection({ goals, adaptiveTargets, unitSystem }: GoalsSectio
                 activeOpacity={0.7}
               >
                 {savingGoalType ? (
-                  <ActivityIndicator color={getThemeColors().text.primary} size="small" />
+                  <ActivityIndicator color={c.text.primary} size="small" />
                 ) : (
                   <Text style={editStyles.saveBtnText}>Save</Text>
                 )}
@@ -274,7 +279,7 @@ export function GoalsSection({ goals, adaptiveTargets, unitSystem }: GoalsSectio
               activeOpacity={0.7}
             >
               {savingGoalType ? (
-                <ActivityIndicator color={getThemeColors().text.primary} size="small" />
+                <ActivityIndicator color={c.text.primary} size="small" />
               ) : (
                 <Text style={editStyles.saveBtnText}>Save</Text>
               )}
@@ -291,7 +296,7 @@ export function GoalsSection({ goals, adaptiveTargets, unitSystem }: GoalsSectio
           <Text style={styles.goalTypeLabel}>Goal Type</Text>
           <View style={styles.goalTypeValueRow}>
             <Text style={styles.goalTypeValue}>{goalTypeLabel}</Text>
-            <Icon name="edit" size={14} color={getThemeColors().text.muted} />
+            <Icon name="edit" size={14} color={c.text.muted} />
           </View>
         </TouchableOpacity>
       )}
@@ -323,7 +328,7 @@ export function GoalsSection({ goals, adaptiveTargets, unitSystem }: GoalsSectio
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   sectionTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.md,
@@ -332,10 +337,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   goalTypeRow: {
     paddingVertical: spacing[3],
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.subtle,
+    borderBottomColor: c.border.subtle,
   },
   goalTypeLabel: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
@@ -347,7 +352,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   goalTypeValue: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.base,
@@ -355,12 +360,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
 });
 
-const editStyles = StyleSheet.create({
+const getEditStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     paddingTop: spacing[2],
   },
   error: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     marginTop: spacing[2],
@@ -371,7 +376,7 @@ const editStyles = StyleSheet.create({
     marginTop: spacing[4],
   },
   saveBtn: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[6],
     paddingVertical: spacing[2],
@@ -383,7 +388,7 @@ const editStyles = StyleSheet.create({
     opacity: 0.5,
   },
   saveBtnText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.base,
@@ -396,19 +401,19 @@ const editStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   cancelBtnText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.base,
   },
 });
 
-const pickerStyles = StyleSheet.create({
+const getPickerStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     marginBottom: spacing[3],
   },
   label: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
@@ -424,35 +429,35 @@ const pickerStyles = StyleSheet.create({
     paddingHorizontal: spacing[3],
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
-    backgroundColor: getThemeColors().bg.surface,
+    borderColor: c.border.default,
+    backgroundColor: c.bg.surface,
     minHeight: 44,
     justifyContent: 'center',
   },
   optionActive: {
-    borderColor: getThemeColors().accent.primary,
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    borderColor: c.accent.primary,
+    backgroundColor: c.accent.primaryMuted,
   },
   optionText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
   },
   optionTextActive: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
   },
 });
 
-const targetStyles = StyleSheet.create({
+const getTargetStyles = (c: ThemeColors) => StyleSheet.create({
   divider: {
     height: 1,
-    backgroundColor: getThemeColors().border.subtle,
+    backgroundColor: c.border.subtle,
     marginTop: spacing[4],
     marginBottom: spacing[3],
   },
   header: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.sm,
@@ -475,7 +480,7 @@ const targetStyles = StyleSheet.create({
     marginBottom: spacing[1],
   },
   label: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.xs,

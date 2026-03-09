@@ -69,6 +69,7 @@ function SkeletonCards() {
 export function LogsScreen() {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const pillStyles = getPillStyles(c);
   const navigation = useNavigation<StackNavigationProp<LogsStackParamList>>();
   const fabAnim = useStaggeredEntrance(0, 200);
   const { impact } = useHaptics();
@@ -605,6 +606,8 @@ export function LogsScreen() {
 }
 
 function MacroPill({ label, value, color }: { label: string; value: number; color: string }) {
+  const c = useThemeColors();
+  const pillStyles = getPillStyles(c);
   return (
     <View style={[pillStyles.pill, { borderColor: color }]}>
       <Text style={[pillStyles.value, { color }]}>{Math.round(value)}</Text>
@@ -613,7 +616,7 @@ function MacroPill({ label, value, color }: { label: string; value: number; colo
   );
 }
 
-const pillStyles = StyleSheet.create({
+const getPillStyles = (c: ThemeColors) => StyleSheet.create({
   pill: {
     borderWidth: 1,
     borderRadius: radius.sm,
@@ -623,13 +626,13 @@ const pillStyles = StyleSheet.create({
     minWidth: 52,
   },
   value: { fontSize: typography.size.base, fontWeight: typography.weight.semibold },
-  label: { fontSize: typography.size.xs, color: getThemeColors().text.muted },
+  label: { fontSize: typography.size.xs, color: c.text.muted },
 });
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: getThemeColors().bg.base },
+  safe: { flex: 1, backgroundColor: c.bg.base },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.semibold,
     padding: spacing[4],
@@ -639,7 +642,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   tabs: {
     flexDirection: 'row',
     marginHorizontal: spacing[4],
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     padding: spacing[1],
     marginBottom: spacing[2],
@@ -650,9 +653,9 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     borderRadius: radius.sm,
   },
-  tabActive: { backgroundColor: getThemeColors().accent.primaryMuted },
-  tabText: { color: getThemeColors().text.muted, fontSize: typography.size.base, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.base },
-  tabTextActive: { color: getThemeColors().accent.primary },
+  tabActive: { backgroundColor: c.accent.primaryMuted },
+  tabText: { color: c.text.muted, fontSize: typography.size.base, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.base },
+  tabTextActive: { color: c.accent.primary },
   dateNav: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -662,7 +665,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[2],
   },
   dateArrow: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.semibold,
     paddingHorizontal: spacing[3],
@@ -673,7 +676,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     lineHeight: typography.lineHeight['2xl'],
   },
   dateText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.base,
@@ -681,7 +684,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   list: { flex: 1 },
   listContent: { padding: spacing[4], paddingTop: 0, paddingBottom: spacing[12] },
   dateHeader: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     marginTop: spacing[4],
@@ -702,19 +705,19 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     flex: 1,
   },
   entryName: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.base,
   },
   entryTimestamp: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     lineHeight: typography.lineHeight.xs,
   },
   macroRow: { flexDirection: 'row', gap: spacing[2] },
-  exerciseText: { color: getThemeColors().text.secondary, fontSize: typography.size.sm, marginTop: spacing[1], lineHeight: typography.lineHeight.sm },
-  moreText: { color: getThemeColors().text.muted, fontSize: typography.size.xs, marginTop: spacing[1], lineHeight: typography.lineHeight.xs },
+  exerciseText: { color: c.text.secondary, fontSize: typography.size.sm, marginTop: spacing[1], lineHeight: typography.lineHeight.sm },
+  moreText: { color: c.text.muted, fontSize: typography.size.xs, marginTop: spacing[1], lineHeight: typography.lineHeight.xs },
   fab: {
     position: 'absolute',
     bottom: spacing[6],
@@ -724,17 +727,17 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 6,
-    shadowColor: getThemeColors().bg.base,
+    shadowColor: c.bg.base,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.4,
     shadowRadius: 6,
   },
   fabText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.semibold,
     lineHeight: 28,
@@ -746,7 +749,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   // ── Meal slot styles ────────────────────────────────────────────────────
   slotContainer: {
     marginBottom: spacing[3],
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.md,
     overflow: 'hidden',
   },
@@ -756,17 +759,17 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing[2],
     paddingHorizontal: spacing[3],
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
   },
   slotName: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     lineHeight: typography.lineHeight.base,
   },
   slotCalories: {
     fontSize: typography.size.sm,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
   },
@@ -774,13 +777,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing[2],
     borderTopWidth: 1,
-    borderTopColor: getThemeColors().border.subtle,
+    borderTopColor: c.border.subtle,
     minHeight: 44,
     justifyContent: 'center',
   },
   slotAddText: {
     fontSize: typography.size.sm,
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
   },
@@ -790,29 +793,29 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing[2],
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.subtle,
+    borderBottomColor: c.border.subtle,
   },
   favoriteName: {
     fontSize: typography.size.base,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.base,
   },
   favoriteMacros: {
     fontSize: typography.size.sm,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     lineHeight: typography.lineHeight.sm,
   },
   favoriteLogBtn: {
     fontSize: typography.size.sm,
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontWeight: typography.weight.semibold,
     paddingHorizontal: spacing[3],
     lineHeight: typography.lineHeight.sm,
   },
   emptyFavText: {
     fontSize: typography.size.sm,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     textAlign: 'center',
     paddingVertical: spacing[2],
     lineHeight: typography.lineHeight.sm,
@@ -824,7 +827,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   browseLinkText: {
     fontSize: typography.size.sm,
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
   },

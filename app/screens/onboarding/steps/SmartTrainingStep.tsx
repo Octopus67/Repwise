@@ -1,173 +1,125 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { spacing, typography, radius } from '../../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../../hooks/useThemeColors';
 import { Button } from '../../../components/common/Button';
 import { useOnboardingStore } from '../../../store/onboardingSlice';
-import type { GoalType } from '../../../store/onboardingSlice';
-import { useState } from 'react';
 
 interface Props {
   onNext?: () => void;
   onBack?: () => void;
 }
 
-interface GoalCard {
-  emoji: string;
-  title: string;
-  bullets: string[];
-}
-
-const GOAL_CARDS: Record<string, GoalCard> = {
-  cutting: {
-    emoji: '🔥',
-    title: 'Cutting',
-    bullets: [
-      '→ 15% less volume recommended',
-      '→ Prioritizes muscle preservation',
-      '→ Matches your recovery capacity',
-    ],
-  },
-  bulking: {
-    emoji: '💪',
-    title: 'Bulking',
-    bullets: [
-      '→ 10% more volume capacity',
-      '→ Maximizes growth stimulus',
-      '→ Leverages your surplus',
-    ],
-  },
-  maintain: {
-    emoji: '⚖️',
-    title: 'Maintaining',
-    bullets: [
-      '→ Baseline volume targets',
-      '→ Balanced recovery & stimulus',
-      '→ Steady progress over time',
-    ],
-  },
-};
-
-function getCardKey(goal: GoalType | null): string {
-  if (goal === 'lose_fat') return 'cutting';
-  if (goal === 'build_muscle') return 'bulking';
-  return 'maintain';
-}
-
-function getGoalLabel(goal: GoalType | null): string {
-  if (goal === 'lose_fat') return 'fat loss';
-  if (goal === 'build_muscle') return 'muscle building';
-  if (goal === 'recomposition') return 'recomposition';
-  if (goal === 'eat_healthier') return 'healthier eating';
-  return 'maintenance';
-}
-
 export function SmartTrainingStep({ onNext }: Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
-  const { goalType, rateKgPerWeek, exerciseSessionsPerWeek } = useOnboardingStore();
-  const [showComparison, setShowComparison] = useState(false);
+  const { goalType, exerciseSessionsPerWeek } = useOnboardingStore();
 
-  const key = getCardKey(goalType);
-  const card = GOAL_CARDS[key];
-  const showRate = goalType === 'lose_fat' || goalType === 'build_muscle';
-  const rateLabel = showRate && rateKgPerWeek > 0 ? ` (${rateKgPerWeek} kg/week)` : '';
+  const goalLabel = goalType === 'lose_fat' ? 'fat loss' 
+    : goalType === 'build_muscle' ? 'muscle building'
+    : goalType === 'recomposition' ? 'body recomposition'
+    : 'maintenance';
 
-  // User's actual volume numbers based on sessions/week
-  const baseVolume = exerciseSessionsPerWeek * 4; // ~4 sets per muscle group per session
-  const adjustedVolume = key === 'cutting'
-    ? Math.round(baseVolume * 0.85)
-    : key === 'bulking'
-      ? Math.round(baseVolume * 1.1)
-      : baseVolume;
+  // Calculate volume ranges based on goal
+  const baseVolume = exerciseSessionsPerWeek * 4;
+  const volumeMultiplier = goalType === 'lose_fat' ? 0.85 
+    : goalType === 'build_muscle' ? 1.1 
+    : 1.0;
+  const adjustedVolume = Math.round(baseVolume * volumeMultiplier);
+
+  // Major muscle groups with volume ranges
+  const muscleGroups = [
+    { name: 'Chest', min: Math.round(adjustedVolume * 0.9), max: Math.round(adjustedVolume * 1.2) },
+    { name: 'Back', min: Math.round(adjustedVolume * 0.9), max: Math.round(adjustedVolume * 1.2) },
+    { name: 'Shoulders', min: Math.round(adjustedVolume * 0.8), max: Math.round(adjustedVolume * 1.1) },
+    { name: 'Legs', min: Math.round(adjustedVolume * 1.0), max: Math.round(adjustedVolume * 1.3) },
+  ];
+
+  // Example 4-week progression
+  const exampleWeeks = [
+    { week: 1, sets: adjustedVolume, indicator: '✓', reason: 'On track', color: c.semantic.positive },
+    { week: 2, sets: Math.round(adjustedVolume * 1.15), indicator: '↑', reason: 'Good recovery', color: c.semantic.positive },
+    { week: 3, sets: Math.round(adjustedVolume * 0.85), indicator: '↓', reason: 'Fatigue detected', color: c.semantic.warning },
+    { week: 4, sets: adjustedVolume, indicator: '→', reason: 'Back to baseline', color: c.text.secondary },
+  ];
 
   return (
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-      <Text style={[styles.heading, { color: c.text.primary }]}>Your Training Adapts Too</Text>
-      <Text style={[styles.subheading, { color: c.accent.primary }]}>
-        Adjusted for your {getGoalLabel(goalType)} goal
+      {/* Header */}
+      <Text style={[styles.heading, { color: c.text.primary }]}>Smart Training</Text>
+      <Text style={[styles.subheading, { color: c.text.secondary }]}>
+        Personalized for {goalLabel}
       </Text>
 
-      {/* User's volume numbers */}
-      <View style={[styles.volumeCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
-        <Text style={[styles.volumeLabel, { color: c.text.secondary }]}>Your weekly volume target</Text>
-        <Text style={[styles.volumeValue, { color: c.accent.primary }]}>~{adjustedVolume} sets/muscle</Text>
-        <Text style={[styles.volumeHint, { color: c.text.muted }]}>
-          Based on {exerciseSessionsPerWeek} sessions/week
-        </Text>
-      </View>
-
-      {/* Personalized card */}
-      <View style={[styles.card, styles.cardHighlight, { backgroundColor: c.bg.surfaceRaised, borderColor: c.accent.primary }]}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.emoji}>{card.emoji}</Text>
-          <Text style={[styles.cardTitle, { color: c.text.primary }]}>{card.title}{rateLabel}</Text>
-        </View>
-        <View style={styles.cardContent}>
-          {card.bullets.map((b) => (
-            <Text key={b} style={[styles.cardText, { color: c.text.secondary }]}>{b}</Text>
-          ))}
-        </View>
-      </View>
-
-      {/* Compare toggle */}
-      <TouchableOpacity
-        style={[styles.toggleBtn, { borderColor: c.border.default }]}
-        onPress={() => setShowComparison((v) => !v)}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-        accessibilityLabel="Compare all scenarios"
-      >
-        <Text style={[styles.toggleText, { color: c.accent.primary }]}>
-          {showComparison ? 'Hide comparison' : 'Compare all scenarios'}
-        </Text>
-      </TouchableOpacity>
-
-      {showComparison && (
-        <View style={styles.comparisonGrid}>
-          {Object.entries(GOAL_CARDS).map(([k, gc]) => {
-            const isActive = k === key;
-            const vol = k === 'cutting'
-              ? Math.round(baseVolume * 0.85)
-              : k === 'bulking'
-                ? Math.round(baseVolume * 1.1)
-                : baseVolume;
-            return (
-              <View
-                key={k}
+      {/* Weekly Training Volume */}
+      <View style={[styles.section, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>YOUR WEEKLY TRAINING VOLUME</Text>
+        
+        {muscleGroups.map((muscle) => (
+          <View key={muscle.name} style={styles.muscleRow}>
+            <Text style={[styles.muscleName, { color: c.text.secondary }]}>{muscle.name}</Text>
+            <View style={[styles.barTrack, { backgroundColor: c.bg.surface }]}>
+              <View 
                 style={[
-                  styles.compCard,
-                  { backgroundColor: c.bg.surfaceRaised, borderColor: isActive ? c.accent.primary : c.border.default },
-                  isActive && { borderWidth: 2 },
-                ]}
-              >
-                <Text style={styles.emoji}>{gc.emoji}</Text>
-                <Text style={[styles.compTitle, { color: isActive ? c.accent.primary : c.text.primary }]}>{gc.title}</Text>
-                <Text style={[styles.compVolume, { color: c.text.secondary }]}>~{vol} sets/muscle</Text>
-              </View>
-            );
-          })}
-        </View>
-      )}
-
-      {/* Science Badge */}
-      <View style={[styles.scienceBadge, { backgroundColor: c.accent.primaryMuted }]}>
-        <Text style={[styles.scienceText, { color: c.accent.primary }]}>
-          Based on peer-reviewed research (Pelland 2024, Schoenfeld 2017)
-        </Text>
-        <Text style={[styles.scienceSubtext, { color: c.text.secondary }]}>
-          Not guesswork. Personalized to YOUR goal.
+                  styles.barFill, 
+                  { width: '75%', backgroundColor: c.accent.primary }
+                ]} 
+              />
+            </View>
+            <Text style={[styles.muscleValue, { color: c.text.primary }]}>
+              {muscle.min}-{muscle.max} sets
+            </Text>
+          </View>
+        ))}
+        
+        <Text style={[styles.sectionNote, { color: c.text.muted }]}>
+          Based on {exerciseSessionsPerWeek} sessions per week
         </Text>
       </View>
 
-      {/* Value Prop */}
-      <View style={styles.valueProp}>
-        <Text style={[styles.valueTitle, { color: c.text.primary }]}>Why This Matters</Text>
-        <Text style={[styles.valueText, { color: c.text.secondary }]}>
-          Other apps give you the same training advice whether you're eating 1500 or 3500 calories.
+      {/* Comparison: Static vs Adaptive */}
+      <View style={styles.comparisonContainer}>
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>WHY ADAPTIVE TRAINING</Text>
+        
+        <View style={styles.comparisonGrid}>
+          {/* Static Plans */}
+          <View style={[styles.compCard, styles.compCardStatic, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
+            <Text style={[styles.compCardTitle, { color: c.text.secondary }]}>Static Plans</Text>
+            <View style={[styles.compCardDivider, { backgroundColor: c.border.default }]} />
+            <Text style={[styles.compCardItem, { color: c.text.muted }]}>Same volume every week</Text>
+            <Text style={[styles.compCardItem, { color: c.text.muted }]}>Ignores calorie intake</Text>
+            <Text style={[styles.compCardItem, { color: c.text.muted }]}>No recovery adjustment</Text>
+            <View style={styles.compCardSpacer} />
+            <Text style={[styles.compCardResult, { color: c.semantic.negative }]}>Risk: Overtraining or plateau</Text>
+          </View>
+
+          {/* Repwise Adaptive */}
+          <View style={[styles.compCard, styles.compCardAdaptive, { backgroundColor: c.bg.surfaceRaised, borderColor: c.accent.primary }]}>
+            <Text style={[styles.compCardTitle, { color: c.accent.primary }]}>Repwise Adaptive</Text>
+            <View style={[styles.compCardDivider, { backgroundColor: c.accent.primary }]} />
+            <Text style={[styles.compCardItem, { color: c.text.secondary }]}>Adjusts weekly</Text>
+            <Text style={[styles.compCardItem, { color: c.text.secondary }]}>Matches your calories</Text>
+            <Text style={[styles.compCardItem, { color: c.text.secondary }]}>Responds to recovery</Text>
+            <View style={styles.compCardSpacer} />
+            <Text style={[styles.compCardResult, { color: c.semantic.positive }]}>Result: Optimal progress</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Example Timeline */}
+      <View style={[styles.section, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>WHAT YOU'LL SEE</Text>
+        <Text style={[styles.sectionSubtitle, { color: c.text.muted }]}>
+          Example: 4-week adaptation
         </Text>
-        <Text style={[styles.valueText, { color: c.text.secondary }]}>
-          Repwise knows that recovery capacity changes with your calorie balance — and adjusts your targets accordingly.
-        </Text>
+        
+        {exampleWeeks.map((week) => (
+          <View key={week.week} style={styles.weekRow}>
+            <Text style={[styles.weekLabel, { color: c.text.secondary }]}>Week {week.week}</Text>
+            <Text style={[styles.weekSets, { color: c.text.primary }]}>{week.sets} sets</Text>
+            <Text style={[styles.weekIndicator, { color: week.color }]}>{week.indicator}</Text>
+            <Text style={[styles.weekReason, { color: c.text.muted }]}>{week.reason}</Text>
+          </View>
+        ))}
       </View>
 
       {onNext && <Button title="Continue" onPress={onNext} style={styles.btn} />}
@@ -176,147 +128,139 @@ export function SmartTrainingStep({ onNext }: Props) {
 }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  scroll: { paddingBottom: spacing[8] },
+  scroll: { paddingHorizontal: spacing[4], paddingBottom: spacing[8] },
   heading: {
-    color: c.text.primary,
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.bold,
     marginBottom: spacing[2],
     lineHeight: typography.lineHeight['2xl'],
   },
   subheading: {
-    color: c.accent.primary,
     fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
     marginBottom: spacing[6],
     lineHeight: typography.lineHeight.base,
   },
-  card: {
-    backgroundColor: c.bg.surfaceRaised,
+  section: {
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: c.border.default,
     padding: spacing[4],
+    marginBottom: spacing[4],
+  },
+  sectionTitle: {
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.bold,
+    letterSpacing: 0.5,
     marginBottom: spacing[3],
+    textTransform: 'uppercase',
   },
-  cardHighlight: {
-    borderWidth: 2,
-    borderColor: c.accent.primary,
+  sectionSubtitle: {
+    fontSize: typography.size.sm,
+    marginBottom: spacing[3],
+    lineHeight: typography.lineHeight.sm,
   },
-  cardHeader: {
+  sectionNote: {
+    fontSize: typography.size.xs,
+    marginTop: spacing[2],
+    lineHeight: typography.lineHeight.xs,
+  },
+  muscleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: spacing[2],
     gap: spacing[2],
   },
-  emoji: { fontSize: 24 },
-  cardTitle: {
-    color: c.text.primary,
-    fontSize: typography.size.lg,
+  muscleName: {
+    fontSize: typography.size.sm,
+    width: 80,
+    fontWeight: typography.weight.medium,
+  },
+  barTrack: {
+    flex: 1,
+    height: 8,
+    borderRadius: radius.full,
+    overflow: 'hidden',
+  },
+  barFill: {
+    height: '100%',
+    borderRadius: radius.full,
+  },
+  muscleValue: {
+    fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
-    lineHeight: typography.lineHeight.lg,
-  },
-  cardContent: { gap: spacing[1] },
-  cardText: {
-    color: c.text.secondary,
-    fontSize: typography.size.base,
-    lineHeight: typography.lineHeight.base,
-  },
-  scienceBadge: {
-    backgroundColor: c.accent.primaryMuted,
-    borderRadius: radius.sm,
-    padding: spacing[3],
-    marginTop: spacing[4],
-    marginBottom: spacing[4],
-  },
-  scienceText: {
-    color: c.accent.primary,
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
-    textAlign: 'center',
-    lineHeight: typography.lineHeight.sm,
-  },
-  scienceSubtext: {
-    color: c.text.secondary,
-    fontSize: typography.size.xs,
-    textAlign: 'center',
-    marginTop: spacing[1],
-    lineHeight: typography.lineHeight.xs,
-  },
-  valueProp: { marginBottom: spacing[6] },
-  volumeCard: {
-    borderRadius: radius.md,
-    borderWidth: 1,
-    padding: spacing[4],
-    marginBottom: spacing[4],
-    alignItems: 'center',
-  },
-  volumeLabel: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
-    lineHeight: typography.lineHeight.sm,
-  },
-  volumeValue: {
-    fontSize: typography.size.xl,
-    fontWeight: typography.weight.bold,
-    marginTop: spacing[1],
+    width: 80,
+    textAlign: 'right',
     fontVariant: ['tabular-nums'],
-    lineHeight: typography.lineHeight.xl,
   },
-  volumeHint: {
-    fontSize: typography.size.xs,
-    marginTop: spacing[1],
-    lineHeight: typography.lineHeight.xs,
-  },
-  toggleBtn: {
-    borderWidth: 1,
-    borderRadius: radius.sm,
-    paddingVertical: spacing[2],
-    paddingHorizontal: spacing[4],
-    alignSelf: 'center',
+  comparisonContainer: {
     marginBottom: spacing[4],
-  },
-  toggleText: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    lineHeight: typography.lineHeight.sm,
   },
   comparisonGrid: {
     flexDirection: 'row',
-    gap: spacing[2],
-    marginBottom: spacing[4],
+    gap: spacing[3],
+    marginTop: spacing[3],
   },
   compCard: {
     flex: 1,
-    borderRadius: radius.sm,
+    borderRadius: radius.md,
     borderWidth: 1,
-    padding: spacing[3],
-    alignItems: 'center',
+    padding: spacing[4],
   },
-  compTitle: {
+  compCardStatic: {
+    opacity: 0.7,
+  },
+  compCardAdaptive: {
+    borderWidth: 2,
+  },
+  compCardTitle: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.bold,
+    marginBottom: spacing[2],
+    textAlign: 'center',
+  },
+  compCardDivider: {
+    height: 2,
+    marginBottom: spacing[3],
+  },
+  compCardItem: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    marginTop: spacing[1],
+    marginBottom: spacing[1],
     lineHeight: typography.lineHeight.sm,
   },
-  compVolume: {
-    fontSize: typography.size.xs,
-    marginTop: spacing[0.5],
-    fontVariant: ['tabular-nums'],
-    lineHeight: typography.lineHeight.xs,
+  compCardSpacer: {
+    height: spacing[2],
   },
-  valueTitle: {
-    color: c.text.primary,
-    fontSize: typography.size.lg,
+  compCardResult: {
+    fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
-    marginBottom: spacing[2],
-    lineHeight: typography.lineHeight.lg,
+    marginTop: spacing[2],
+    lineHeight: typography.lineHeight.sm,
   },
-  valueText: {
-    color: c.text.secondary,
+  weekRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing[2],
+    gap: spacing[3],
+  },
+  weekLabel: {
+    fontSize: typography.size.sm,
+    width: 60,
+    fontWeight: typography.weight.medium,
+  },
+  weekSets: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+    width: 70,
+    fontVariant: ['tabular-nums'],
+  },
+  weekIndicator: {
     fontSize: typography.size.base,
-    marginBottom: spacing[2],
-    lineHeight: typography.lineHeight.base,
+    width: 20,
+    textAlign: 'center',
   },
-  btn: { marginTop: spacing[2] },
+  weekReason: {
+    fontSize: typography.size.sm,
+    flex: 1,
+    lineHeight: typography.lineHeight.sm,
+  },
+  btn: { marginTop: spacing[4] },
 });

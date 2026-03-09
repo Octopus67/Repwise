@@ -7,7 +7,7 @@ import Animated, {
   interpolateColor,
 } from 'react-native-reanimated';
 import { radius, spacing, typography, motion } from '../../theme/tokens';
-import { useThemeColors, getThemeColors } from '../../hooks/useThemeColors';
+import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { usePressAnimation } from '../../hooks/usePressAnimation';
 import { useHoverState } from '../../hooks/useHoverState';
 
@@ -21,22 +21,22 @@ interface FilterPillProps {
  * Returns computed styles for a given active state.
  * Exported for testing (Property 11).
  */
-export function getFilterPillStyles(active: boolean): {
+export function getFilterPillStyles(active: boolean, c: ThemeColors = getThemeColors()): {
   backgroundColor: string;
   borderColor: string;
   textColor: string;
 } {
   if (active) {
     return {
-      backgroundColor: getThemeColors().accent.primaryMuted,
-      borderColor: getThemeColors().accent.primary,
-      textColor: getThemeColors().accent.primary,
+      backgroundColor: c.accent.primaryMuted,
+      borderColor: c.accent.primary,
+      textColor: c.accent.primary,
     };
   }
   return {
-    backgroundColor: getThemeColors().bg.surface,
-    borderColor: getThemeColors().border.subtle,
-    textColor: getThemeColors().text.muted,
+    backgroundColor: c.bg.surface,
+    borderColor: c.border.subtle,
+    textColor: c.text.muted,
   };
 }
 
@@ -56,12 +56,12 @@ export function FilterPill({ label, active, onPress }: FilterPillProps) {
     const backgroundColor = interpolateColor(
       progress.value,
       [0, 1],
-      [getThemeColors().bg.surface, getThemeColors().accent.primaryMuted],
+      [c.bg.surface, c.accent.primaryMuted],
     );
     const borderColor = interpolateColor(
       progress.value,
       [0, 1],
-      [getThemeColors().border.subtle, getThemeColors().accent.primary],
+      [c.border.subtle, c.accent.primary],
     );
     return { backgroundColor, borderColor };
   });
@@ -70,13 +70,13 @@ export function FilterPill({ label, active, onPress }: FilterPillProps) {
     const color = interpolateColor(
       progress.value,
       [0, 1],
-      [getThemeColors().text.muted, getThemeColors().accent.primary],
+      [c.text.muted, c.accent.primary],
     );
     return { color };
   });
 
   const hoverBorderStyle = Platform.OS === 'web' && isHovered
-    ? { borderColor: getThemeColors().accent.primary }
+    ? { borderColor: c.accent.primary }
     : undefined;
 
   return (

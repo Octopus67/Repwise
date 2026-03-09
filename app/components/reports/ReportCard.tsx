@@ -38,7 +38,6 @@ export const ReportCard = forwardRef<View, ReportCardProps>(({ report }, ref) =>
 });
 
 function StatBox({ label, value }: { label: string; value: string }) {
-  const c = useThemeColors();
   return (
     <View style={getStyles().statBox}>
       <Text style={getStyles().statValue}>{value}</Text>
@@ -52,15 +51,15 @@ function getStyles() { return getThemedStyles(getThemeColors()); }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   card: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.md,
     padding: spacing[5],
     marginTop: spacing[6],
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   weekLabel: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
     textAlign: 'center',
@@ -68,8 +67,8 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   statBox: { alignItems: 'center', flex: 1 },
-  statValue: { color: getThemeColors().text.primary, fontSize: typography.size.xl, fontWeight: typography.weight.bold },
-  statLabel: { color: getThemeColors().text.secondary, fontSize: typography.size.xs, marginTop: spacing[1] },
-  rec: { color: getThemeColors().text.primary, fontSize: typography.size.sm, marginTop: spacing[4], textAlign: 'center', lineHeight: 20 },
-  brand: { color: getThemeColors().text.muted, fontSize: typography.size.xs, textAlign: 'center', marginTop: spacing[4] },
+  statValue: { color: c.text.primary, fontSize: typography.size.xl, fontWeight: typography.weight.bold },
+  statLabel: { color: c.text.secondary, fontSize: typography.size.xs, marginTop: spacing[1] },
+  rec: { color: c.text.primary, fontSize: typography.size.sm, marginTop: spacing[4], textAlign: 'center', lineHeight: 20 },
+  brand: { color: c.text.muted, fontSize: typography.size.xs, textAlign: 'center', marginTop: spacing[4] },
 });

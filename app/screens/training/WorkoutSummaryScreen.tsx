@@ -47,11 +47,12 @@ interface WorkoutSummaryScreenProps {
 // ─── Components ──────────────────────────────────────────────────────────────
 
 function CheckmarkIcon() {
+  const c = useThemeColors();
   return (
     <Svg width={48} height={48} viewBox="0 0 24 24" fill="none">
       <Path
         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-        stroke={getThemeColors().semantic.positive}
+        stroke={c.semantic.positive}
         strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -61,10 +62,11 @@ function CheckmarkIcon() {
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
+  const c = useThemeColors();
   return (
-    <View style={[getStyles().statCard, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.default }]}>
-      <Text style={[getStyles().statValue, { color: getThemeColors().text.primary }]}>{value}</Text>
-      <Text style={[getStyles().statLabel, { color: getThemeColors().text.secondary }]}>{label}</Text>
+    <View style={[getStyles().statCard, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}>
+      <Text style={[getStyles().statValue, { color: c.text.primary }]}>{value}</Text>
+      <Text style={[getStyles().statLabel, { color: c.text.secondary }]}>{label}</Text>
     </View>
   );
 }
@@ -101,12 +103,12 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
   };
 
   return (
-    <SafeAreaView style={[getStyles().container, { backgroundColor: getThemeColors().bg.base }]} edges={['top']}>
+    <SafeAreaView style={[getStyles().container, { backgroundColor: c.bg.base }]} edges={['top']}>
       <ScrollView style={getStyles().scroll} contentContainerStyle={getStyles().scrollContent}>
         {/* Header */}
         <View style={getStyles().header}>
           <CheckmarkIcon />
-          <Text style={[getStyles().title, { color: getThemeColors().text.primary }]}>Workout Complete</Text>
+          <Text style={[getStyles().title, { color: c.text.primary }]}>Workout Complete</Text>
         </View>
 
         {/* Stats Row */}
@@ -119,8 +121,8 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
 
         {/* Exercise Breakdown */}
         <View style={getStyles().section}>
-          <Text style={[getStyles().sectionTitle, { color: getThemeColors().text.primary }]}>Exercise Breakdown</Text>
-          <View style={[getStyles().sectionContent, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.default }]}>
+          <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Exercise Breakdown</Text>
+          <View style={[getStyles().sectionContent, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}>
             {exerciseBreakdown.map((exercise, index) => (
               <View
                 key={index}
@@ -130,11 +132,11 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
                 ]}
               >
                 <View style={getStyles().exerciseHeader}>
-                  <Text style={[getStyles().exerciseName, { color: getThemeColors().text.primary }]}>{exercise.exerciseName}</Text>
-                  <Text style={[getStyles().setsCount, { color: getThemeColors().text.secondary }]}>{exercise.setsCompleted} sets</Text>
+                  <Text style={[getStyles().exerciseName, { color: c.text.primary }]}>{exercise.exerciseName}</Text>
+                  <Text style={[getStyles().setsCount, { color: c.text.secondary }]}>{exercise.setsCompleted} sets</Text>
                 </View>
                 {exercise.bestSet && (
-                  <Text style={[getStyles().bestSet, { color: getThemeColors().text.muted }]}>
+                  <Text style={[getStyles().bestSet, { color: c.text.muted }]}>
                     Best: {exercise.bestSet.weight}kg × {exercise.bestSet.reps}
                   </Text>
                 )}
@@ -146,8 +148,8 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
         {/* Personal Records */}
         {personalRecords.length > 0 && (
           <View style={getStyles().section}>
-            <Text style={[getStyles().sectionTitle, { color: getThemeColors().text.primary }]}>Personal Records</Text>
-            <View style={[getStyles().sectionContent, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.default }]}>
+            <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Personal Records</Text>
+            <View style={[getStyles().sectionContent, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}>
               {personalRecords.map((pr, index) => (
                 <View
                   key={index}
@@ -157,14 +159,14 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
                   ]}
                 >
                   <View style={getStyles().prHeader}>
-                    <Text style={[getStyles().prExercise, { color: getThemeColors().text.primary }]}>{pr.exercise_name}</Text>
-                    <Text style={[getStyles().prImprovement, { color: getThemeColors().accent.primary }]}>
+                    <Text style={[getStyles().prExercise, { color: c.text.primary }]}>{pr.exercise_name}</Text>
+                    <Text style={[getStyles().prImprovement, { color: c.accent.primary }]}>
                       {pr.previous_weight_kg
                         ? `+${(pr.new_weight_kg - pr.previous_weight_kg).toFixed(1)}kg`
                         : 'New PR!'}
                     </Text>
                   </View>
-                  <Text style={[getStyles().prDetails, { color: getThemeColors().text.secondary }]}>
+                  <Text style={[getStyles().prDetails, { color: c.text.secondary }]}>
                     {pr.new_weight_kg}kg × {pr.reps} reps
                   </Text>
                 </View>
@@ -175,18 +177,18 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
         {/* Share Prompt — shown when PRs exist and sharing enabled */}
         {sharingEnabled && personalRecords.length > 0 && !sharePromptDismissed && (
           <TouchableOpacity
-            style={[getStyles().sharePrompt, { backgroundColor: getThemeColors().accent.primaryMuted, borderColor: getThemeColors().accent.primary }]}
+            style={[getStyles().sharePrompt, { backgroundColor: c.accent.primaryMuted, borderColor: c.accent.primary }]}
             onPress={handleShareWorkout}
             accessibilityLabel="Share your personal records"
             accessibilityRole="button"
             testID="share-pr-prompt"
           >
-            <Icon name="share" size={20} color={getThemeColors().accent.primary} />
+            <Icon name="share" size={20} color={c.accent.primary} />
             <View style={getStyles().sharePromptText}>
-              <Text style={[getStyles().sharePromptTitle, { color: getThemeColors().text.primary }]}>
+              <Text style={[getStyles().sharePromptTitle, { color: c.text.primary }]}>
                 New PR{personalRecords.length > 1 ? 's' : ''}! Share your achievement?
               </Text>
-              <Text style={[getStyles().sharePromptSub, { color: getThemeColors().text.secondary }]}>
+              <Text style={[getStyles().sharePromptSub, { color: c.text.secondary }]}>
                 Create a branded card to share with friends
               </Text>
             </View>
@@ -195,14 +197,14 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
       </ScrollView>
 
       {/* Done Button */}
-      <View style={[getStyles().bottomBar, { borderTopColor: getThemeColors().border.subtle }]}>
+      <View style={[getStyles().bottomBar, { borderTopColor: c.border.subtle }]}>
         <TouchableOpacity
-          style={[getStyles().doneButton, { backgroundColor: getThemeColors().accent.primary }]}
+          style={[getStyles().doneButton, { backgroundColor: c.accent.primary }]}
           onPress={handleDone}
           accessibilityLabel="Done"
           accessibilityRole="button"
         >
-          <Text style={[getStyles().doneButtonText, { color: getThemeColors().text.primary }]}>Done</Text>
+          <Text style={[getStyles().doneButtonText, { color: c.text.primary }]}>Done</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -225,7 +227,7 @@ function getStyles() { return getThemedStyles(getThemeColors()); }
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.base,
+    backgroundColor: c.bg.base,
   },
   scroll: {
     flex: 1,
@@ -239,7 +241,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[8],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.semibold,
     marginTop: spacing[3],
@@ -252,22 +254,22 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     padding: spacing[4],
     alignItems: 'center',
     ...shadows.sm,
   },
   statValue: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
     fontVariant: ['tabular-nums'],
   },
   statLabel: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     marginTop: spacing[1],
@@ -277,23 +279,23 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[6],
   },
   sectionTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[3],
   },
   sectionContent: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     ...shadows.sm,
   },
 
   exerciseItem: {
     padding: spacing[4],
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.subtle,
+    borderBottomColor: c.border.subtle,
   },
   exerciseItemLast: {
     borderBottomWidth: 0,
@@ -305,18 +307,18 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[1],
   },
   exerciseName: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     flex: 1,
   },
   setsCount: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
   bestSet: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     fontVariant: ['tabular-nums'],
   },
@@ -324,8 +326,8 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   prItem: {
     padding: spacing[4],
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.subtle,
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    borderBottomColor: c.border.subtle,
+    backgroundColor: c.accent.primaryMuted,
   },
   prItemLast: {
     borderBottomWidth: 0,
@@ -337,18 +339,18 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[1],
   },
   prExercise: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     flex: 1,
   },
   prImprovement: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
   },
   prDetails: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontVariant: ['tabular-nums'],
   },
@@ -356,7 +358,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   bottomBar: {
     padding: spacing[4],
     borderTopWidth: 1,
-    borderTopColor: getThemeColors().border.subtle,
+    borderTopColor: c.border.subtle,
   },
   sharePrompt: {
     flexDirection: 'row',
@@ -377,14 +379,14 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: 2,
   },
   doneButton: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.md,
     paddingVertical: spacing[4],
     alignItems: 'center',
     ...shadows.sm,
   },
   doneButtonText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
   },

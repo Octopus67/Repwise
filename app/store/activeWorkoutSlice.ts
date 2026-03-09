@@ -18,6 +18,7 @@ import type {
   ActiveWorkoutActions,
   ActiveExercise,
   ActiveSet,
+  UnitSystem,
   SetType,
   ActiveWorkoutPayload,
   PreviousPerformanceData,
@@ -108,13 +109,10 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
         set({ ...defaultState });
       },
 
-      finishWorkout: () => {
+      finishWorkout: (unitSystem: UnitSystem = 'metric') => {
         const state = get();
-        // Build payload — uses metric conversion (unitSystem passed externally
-        // by the screen; here we default to 'metric' since the store doesn't
-        // know the user's preference. The screen should call
-        // activeExercisesToPayload directly with the correct unitSystem.)
-        const exercisePayload = activeExercisesToPayload(state.exercises, 'metric');
+        // Build payload with proper unit conversion
+        const exercisePayload = activeExercisesToPayload(state.exercises, unitSystem);
 
         const supersetGroupsPayload = state.supersetGroups.map((sg) => ({
           id: sg.id,

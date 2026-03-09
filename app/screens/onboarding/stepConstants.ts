@@ -14,7 +14,6 @@ export const ONBOARDING_STEPS = {
   DIET_STYLE: 9,
   FOOD_DNA: 10,
   SUMMARY: 11,
-  TRIAL_PROMPT: 12,
 } as const;
 
 export type OnboardingStepName = keyof typeof ONBOARDING_STEPS;

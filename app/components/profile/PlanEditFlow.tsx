@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { radius, spacing, typography } from '../../theme/tokens';
-import { useThemeColors, getThemeColors } from '../../hooks/useThemeColors';
+import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import api from '../../services/api';
 import {
   initializeDraft,
@@ -100,6 +100,9 @@ function BodyStatsStep({
   unitSystem: 'metric' | 'imperial';
   onDraftChange: (patch: Partial<EditDraft>) => void;
 }) {
+  const c = useThemeColors();
+  const fieldStyles = getFieldStyles(c);
+  const pickerStyles = getPickerStyles(c);
   return (
     <View>
       {/* Weight */}
@@ -113,7 +116,7 @@ function BodyStatsStep({
           onChangeText={(v) => onDraftChange({ weight: v })}
           keyboardType="decimal-pad"
           placeholder={unitSystem === 'imperial' ? 'e.g. 176' : 'e.g. 80'}
-          placeholderTextColor={getThemeColors().text.muted}
+          placeholderTextColor={c.text.muted}
         />
         {fieldErrors.weight && (
           <Text style={fieldStyles.errorText}>{fieldErrors.weight}</Text>
@@ -135,7 +138,7 @@ function BodyStatsStep({
               onChangeText={(v) => onDraftChange({ heightFeet: v })}
               keyboardType="number-pad"
               placeholder="ft"
-              placeholderTextColor={getThemeColors().text.muted}
+              placeholderTextColor={c.text.muted}
             />
             <Text style={fieldStyles.heightSep}>′</Text>
             <TextInput
@@ -148,7 +151,7 @@ function BodyStatsStep({
               onChangeText={(v) => onDraftChange({ heightInches: v })}
               keyboardType="number-pad"
               placeholder="in"
-              placeholderTextColor={getThemeColors().text.muted}
+              placeholderTextColor={c.text.muted}
             />
             <Text style={fieldStyles.heightSep}>″</Text>
           </View>
@@ -167,7 +170,7 @@ function BodyStatsStep({
             onChangeText={(v) => onDraftChange({ heightCm: v })}
             keyboardType="number-pad"
             placeholder="e.g. 180"
-            placeholderTextColor={getThemeColors().text.muted}
+            placeholderTextColor={c.text.muted}
           />
           {fieldErrors.heightCm && (
             <Text style={fieldStyles.errorText}>{fieldErrors.heightCm}</Text>
@@ -184,7 +187,7 @@ function BodyStatsStep({
           onChangeText={(v) => onDraftChange({ bodyFatPct: v })}
           keyboardType="decimal-pad"
           placeholder="optional"
-          placeholderTextColor={getThemeColors().text.muted}
+          placeholderTextColor={c.text.muted}
         />
         {fieldErrors.bodyFatPct && (
           <Text style={fieldStyles.errorText}>{fieldErrors.bodyFatPct}</Text>
@@ -234,6 +237,9 @@ function GoalsStep({
   unitSystem: 'metric' | 'imperial';
   onDraftChange: (patch: Partial<EditDraft>) => void;
 }) {
+  const c = useThemeColors();
+  const fieldStyles = getFieldStyles(c);
+  const pickerStyles = getPickerStyles(c);
   const isMaintaining = draft.goalType === 'maintaining';
   const weightSuffix = unitSystem === 'imperial' ? 'lbs' : 'kg';
   const rateSuffix = unitSystem === 'imperial' ? 'lbs/week' : 'kg/week';
@@ -316,6 +322,9 @@ export function PlanEditFlow({
   onCancel,
 }: PlanEditFlowProps) {
   const c = useThemeColors();
+  const flowStyles = getFlowStyles(c);
+  const pickerStyles = getPickerStyles(c);
+  const fieldStyles = getFieldStyles(c);
   const [draft, setDraft] = useState<EditDraft>(() =>
     initializeDraft(metrics, goals, unitSystem),
   );
@@ -471,7 +480,7 @@ export function PlanEditFlow({
               activeOpacity={0.7}
             >
               {saving ? (
-                <ActivityIndicator color={getThemeColors().text.primary} size="small" />
+                <ActivityIndicator color={c.text.primary} size="small" />
               ) : (
                 <Text style={flowStyles.primaryBtnText}>Save</Text>
               )}
@@ -501,29 +510,29 @@ export function PlanEditFlow({
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
-const fieldStyles = StyleSheet.create({
+const getFieldStyles = (c: ThemeColors) => StyleSheet.create({
   field: {
     marginBottom: spacing[3],
   },
   label: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[1],
   },
   input: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
   },
   inputError: {
-    borderColor: getThemeColors().semantic.negative,
+    borderColor: c.semantic.negative,
   },
   heightRow: {
     flexDirection: 'row',
@@ -534,23 +543,23 @@ const fieldStyles = StyleSheet.create({
     flex: 1,
   },
   heightSep: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
   },
   errorText: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.xs,
     marginTop: spacing[1],
   },
 });
 
-const pickerStyles = StyleSheet.create({
+const getPickerStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     marginBottom: spacing[3],
   },
   label: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[2],
@@ -565,29 +574,29 @@ const pickerStyles = StyleSheet.create({
     paddingHorizontal: spacing[3],
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
-    backgroundColor: getThemeColors().bg.surface,
+    borderColor: c.border.default,
+    backgroundColor: c.bg.surface,
   },
   optionActive: {
-    borderColor: getThemeColors().accent.primary,
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    borderColor: c.accent.primary,
+    backgroundColor: c.accent.primaryMuted,
   },
   optionText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
   optionTextActive: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
   },
 });
 
-const flowStyles = StyleSheet.create({
+const getFlowStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     paddingTop: spacing[2],
   },
   error: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.sm,
     marginTop: spacing[2],
   },
@@ -597,7 +606,7 @@ const flowStyles = StyleSheet.create({
     marginTop: spacing[4],
   },
   primaryBtn: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[6],
     paddingVertical: spacing[2],
@@ -609,7 +618,7 @@ const flowStyles = StyleSheet.create({
     opacity: 0.5,
   },
   primaryBtnText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
   },
@@ -620,10 +629,10 @@ const flowStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
   },
   secondaryBtnText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },
@@ -635,7 +644,7 @@ const flowStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   cancelBtnText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },

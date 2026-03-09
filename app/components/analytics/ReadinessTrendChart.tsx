@@ -62,7 +62,7 @@ export function ReadinessTrendChart({ timeRange }: Props) {
     <Card>
       <TrendLineChart
         data={data}
-        color={getThemeColors().semantic.positive}
+        color={c.semantic.positive}
         suffix=""
         emptyMessage="No readiness data for this period"
       />

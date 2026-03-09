@@ -45,18 +45,86 @@ class FoodDatabaseService:
         category: Optional[str] = None,
         region: Optional[str] = None,
         user_prefs: Optional[dict] = None,
+        user_id: Optional[uuid.UUID] = None,
     ) -> PaginatedResult[Any]:
         """Search food items by name.
 
         Uses FTS5 on SQLite for fast full-text search (~5ms vs ~3s for LIKE).
         Falls back to LIKE for PostgreSQL or when FTS table doesn't exist.
+        When user_id is provided and food_search_ranking flag is enabled,
+        applies frequency-based weighted ranking.
         """
         # Try FTS5 path for text queries on SQLite
         if query and await self._has_fts_table():
-            return await self._search_fts(query, pagination, category, region, user_prefs)
+            result = await self._search_fts(query, pagination, category, region, user_prefs)
+        else:
+            # Fallback: original LIKE-based search
+            result = await self._search_like(query, pagination, category, region, user_prefs)
 
-        # Fallback: original LIKE-based search
-        return await self._search_like(query, pagination, category, region, user_prefs)
+        # Apply frequency-based re-ranking if user_id provided
+        if user_id and result.items:
+            result = await self._apply_frequency_ranking(result, user_id)
+
+        return result
+
+    async def _apply_frequency_ranking(
+        self,
+        result: PaginatedResult[Any],
+        user_id: uuid.UUID,
+    ) -> PaginatedResult[Any]:
+        """Re-rank search results using user food frequency data."""
+        import math
+        from datetime import datetime, timezone
+
+        try:
+            from src.modules.food_database.models import UserFoodFrequency
+
+            item_ids = [item.id for item in result.items if hasattr(item, "id")]
+            if not item_ids:
+                return result
+
+            stmt = select(UserFoodFrequency).where(
+                UserFoodFrequency.user_id == user_id,
+                UserFoodFrequency.food_item_id.in_(item_ids),
+            )
+            freq_result = await self.db.execute(stmt)
+            freq_map = {
+                f.food_item_id: f for f in freq_result.scalars().all()
+            }
+
+            now = datetime.now(timezone.utc)
+            frequency_weight = 0.3
+            recency_weight = 0.1
+
+            scored: list[tuple[float, int, Any]] = []
+            for idx, item in enumerate(result.items):
+                base_score = len(result.items) - idx  # preserve original order as base
+                freq = freq_map.get(item.id)
+                if freq and freq.log_count > 0:
+                    freq_bonus = frequency_weight * math.log(1 + freq.log_count)
+                    days_since = (
+                        (now - freq.last_logged_at).days
+                        if freq.last_logged_at
+                        else 999
+                    )
+                    recency_bonus = recency_weight * (1.0 / (1 + days_since / 30))
+                    total = base_score + freq_bonus + recency_bonus
+                else:
+                    total = base_score
+                scored.append((total, idx, item))
+
+            scored.sort(key=lambda x: -x[0])
+            reranked = [item for _, _, item in scored]
+
+            return PaginatedResult(
+                items=reranked,
+                total_count=result.total_count,
+                page=result.page,
+                limit=result.limit,
+            )
+        except Exception as e:
+            logger.warning(f"Frequency ranking failed, using default order: {e}")
+            return result
 
     async def _get_popular_items(
         self,
@@ -93,17 +161,25 @@ class FoodDatabaseService:
         )
 
     async def _has_fts_table(self) -> bool:
-        """Check if the FTS5 virtual table exists (cached after first check)."""
-        if not hasattr(FoodDatabaseService, "_fts_available"):
-            try:
-                from sqlalchemy import text
-                result = await self.db.execute(
-                    text("SELECT 1 FROM sqlite_master WHERE type='table' AND name='food_items_fts' LIMIT 1")
-                )
-                FoodDatabaseService._fts_available = result.scalar_one_or_none() is not None
-            except Exception:
-                FoodDatabaseService._fts_available = False
-        return FoodDatabaseService._fts_available
+        """Check if the FTS5 virtual table exists (cached with 60s TTL)."""
+        import time
+        from sqlalchemy.exc import SQLAlchemyError
+
+        now = time.monotonic()
+        cache = getattr(FoodDatabaseService, "_fts_cache", None)
+        if cache is not None and (now - cache[1]) < 60:
+            return cache[0]
+
+        try:
+            from sqlalchemy import text
+            result = await self.db.execute(
+                text("SELECT 1 FROM sqlite_master WHERE type='table' AND name='food_items_fts' LIMIT 1")
+            )
+            available = result.scalar_one_or_none() is not None
+        except SQLAlchemyError:
+            available = False
+        FoodDatabaseService._fts_cache = (available, now)
+        return available
 
     async def _search_fts(
         self,
@@ -286,7 +362,8 @@ class FoodDatabaseService:
         base = FoodItem.not_deleted(base)
 
         if query:
-            base = base.where(func.lower(FoodItem.name).like(func.lower(f"%{query}%")))
+            escaped = query.replace("%", r"\%").replace("_", r"\_")
+            base = base.where(func.lower(FoodItem.name).like(func.lower(f"%{escaped}%"), escape="\\"))
 
         if category:
             base = base.where(FoodItem.category == category)

@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { radius, spacing, typography } from '../../theme/tokens';
-import { getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { getThemeColors, ThemeColors, useThemeColors} from '../../hooks/useThemeColors';
 import { Button } from '../../components/common/Button';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
 import api from '../../services/api';
@@ -27,7 +27,8 @@ interface EmailVerificationScreenProps {
 }
 
 export function EmailVerificationScreen({ email, onVerified, onBack }: EmailVerificationScreenProps) {
-  const styles = getThemedStyles(getThemeColors());
+  const c = useThemeColors();
+  const styles = getThemedStyles(c);
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -80,7 +81,6 @@ export function EmailVerificationScreen({ email, onVerified, onBack }: EmailVeri
     }
   };
 
-  const c = getThemeColors();
 
   return (
     <KeyboardAvoidingView

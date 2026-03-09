@@ -145,19 +145,29 @@ async def get_micronutrient_dashboard(
     db: AsyncSession = Depends(get_db),
     start_date: Optional[date] = Query(default=None),
     end_date: Optional[date] = Query(default=None),
-    sex: str = Query(default="male"),
 ) -> dict:
     """Get consolidated micronutrient dashboard with scores and deficiency alerts.
 
     Defaults to the last 7 days if no dates provided.
+    Reads sex from user profile preferences.
     """
     from dataclasses import asdict
     from datetime import timedelta
     from src.modules.nutrition.micro_dashboard_service import MicronutrientDashboardService
+    from src.modules.user.service import UserService
 
     if end_date is None:
         end_date = date.today()
     if start_date is None:
+        start_date = end_date - timedelta(days=6)
+    
+    # Read sex from user profile
+    user_service = UserService(db)
+    profile = await user_service.get_profile(user.id)
+    prefs = profile.preferences if profile and profile.preferences else {}
+    sex = prefs.get("sex", "male")
+    if sex not in ("male", "female"):
+        sex = "male"
         start_date = end_date - timedelta(days=6)
 
     svc = MicronutrientDashboardService(db)

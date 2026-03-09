@@ -150,7 +150,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[3],
   },
   empty: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     textAlign: 'center',
     paddingVertical: spacing[4],
@@ -159,7 +159,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[4],
   },
   sectionTitle: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[2],
@@ -177,11 +177,11 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: spacing[2],
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[2],
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: 8,
   },
   retryText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
   },

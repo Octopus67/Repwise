@@ -2,7 +2,7 @@
  * HUFloatingPill — Floating pill showing cumulative session HU.
  *
  * Positioned above the exercise list. Color-coded by volume status:
- * green = optimal, yellow = below MEV, orange = near MRV, red = above MRV.
+ * green = optimal, yellow = below MEV, orange = approaching MRV, red = above MRV.
  *
  * Requirements: Feature 6, Step 4
  */
@@ -26,7 +26,7 @@ function useStatusColors() {
   return {
     below_mev: { bg: c.semantic.warningSubtle, text: c.semantic.warning },
     optimal: { bg: c.semantic.positiveSubtle, text: c.semantic.positive },
-    near_mrv: { bg: c.semantic.cautionSubtle, text: c.semantic.caution },
+    approaching_mrv: { bg: c.semantic.cautionSubtle, text: c.semantic.caution },
     above_mrv: { bg: c.semantic.negativeSubtle, text: c.semantic.negative },
   } as const;
 }
@@ -35,13 +35,12 @@ function getBestStatus(statusByMuscle: Record<string, VolumeStatus> | undefined)
   if (!statusByMuscle) return 'optimal';
   const statuses = Object.values(statusByMuscle);
   if (statuses.includes('above_mrv')) return 'above_mrv';
-  if (statuses.includes('near_mrv')) return 'near_mrv';
+  if (statuses.includes('approaching_mrv')) return 'approaching_mrv';
   if (statuses.includes('below_mev')) return 'below_mev';
   return 'optimal';
 }
 
 export function HUFloatingPill({ huByMuscle, statusByMuscle, onPress }: HUFloatingPillProps) {
-  const c = useThemeColors();
   const STATUS_COLORS = useStatusColors();
   const entries = Object.entries(huByMuscle).filter(([, hu]) => hu > 0);
   if (entries.length === 0) return null;

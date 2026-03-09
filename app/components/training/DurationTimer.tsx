@@ -34,7 +34,7 @@ export function DurationTimer({ startedAt }: DurationTimerProps) {
     };
   }, [startedAt]);
 
-  return <Text style={[styles.timer, { color: getThemeColors().text.primary }]}>{formatDuration(elapsed)}</Text>;
+  return <Text style={[styles.timer, { color: c.text.primary }]}>{formatDuration(elapsed)}</Text>;
 }
 
 function calcElapsed(startedAt: string): number {
@@ -43,7 +43,7 @@ function calcElapsed(startedAt: string): number {
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   timer: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',

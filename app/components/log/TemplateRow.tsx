@@ -12,15 +12,15 @@ export function TemplateRow({ name, exerciseCount, onStart }: TemplateRowProps) 
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   return (
-    <View style={[styles.card, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.subtle }]}>
+    <View style={[styles.card, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
       <View style={styles.content}>
-        <Text style={[styles.name, { color: getThemeColors().text.primary }]} numberOfLines={1}>{name}</Text>
-        <Text style={[styles.badge, { color: getThemeColors().text.secondary }]}>
+        <Text style={[styles.name, { color: c.text.primary }]} numberOfLines={1}>{name}</Text>
+        <Text style={[styles.badge, { color: c.text.secondary }]}>
           {exerciseCount} {exerciseCount === 1 ? 'exercise' : 'exercises'}
         </Text>
       </View>
-      <TouchableOpacity style={[styles.startButton, { backgroundColor: getThemeColors().accent.primary }]} onPress={onStart} activeOpacity={0.8}>
-        <Text style={[styles.startText, { color: getThemeColors().text.inverse }]}>Start</Text>
+      <TouchableOpacity style={[styles.startButton, { backgroundColor: c.accent.primary }]} onPress={onStart} activeOpacity={0.8}>
+        <Text style={[styles.startText, { color: c.text.inverse }]}>Start</Text>
       </TouchableOpacity>
     </View>
   );
@@ -33,8 +33,8 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     padding: spacing[4],
     borderRadius: radius.md,
     borderWidth: 1,
-    backgroundColor: getThemeColors().bg.surface,
-    borderColor: getThemeColors().border.subtle,
+    backgroundColor: c.bg.surface,
+    borderColor: c.border.subtle,
   },
   content: {
     flex: 1,
@@ -44,17 +44,17 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   name: {
     flex: 1,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },
   badge: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.regular,
   },
   startButton: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[2],
     borderRadius: radius.sm,
@@ -62,7 +62,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     ...shadows.sm,
   },
   startText: {
-    color: getThemeColors().text.inverse,
+    color: c.text.inverse,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
   },

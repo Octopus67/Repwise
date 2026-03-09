@@ -8,33 +8,20 @@ describe('getPasswordStrength', () => {
   });
 
   it('validates minimum length', () => {
-    expect(getPasswordStrength('Ab1!').validation.minLength).toBe(false);
-    expect(getPasswordStrength('Abcdefg1!').validation.minLength).toBe(true);
+    expect(getPasswordStrength('short').validation.minLength).toBe(false);
+    expect(getPasswordStrength('longenough').validation.minLength).toBe(true);
   });
 
-  it('validates uppercase requirement', () => {
-    expect(getPasswordStrength('abcdefg1!').validation.hasUppercase).toBe(false);
-    expect(getPasswordStrength('Abcdefg1!').validation.hasUppercase).toBe(true);
+  it('isValid is true when length >= 8', () => {
+    expect(getPasswordStrength('12345678').isValid).toBe(true);
+    expect(getPasswordStrength('abcdefgh').isValid).toBe(true);
+    expect(getPasswordStrength('1234567').isValid).toBe(false);
   });
 
-  it('validates lowercase requirement', () => {
-    expect(getPasswordStrength('ABCDEFG1!').validation.hasLowercase).toBe(false);
-    expect(getPasswordStrength('Abcdefg1!').validation.hasLowercase).toBe(true);
-  });
-
-  it('validates number requirement', () => {
-    expect(getPasswordStrength('Abcdefg!').validation.hasNumber).toBe(false);
-    expect(getPasswordStrength('Abcdefg1!').validation.hasNumber).toBe(true);
-  });
-
-  it('validates special character requirement', () => {
-    expect(getPasswordStrength('Abcdefg1').validation.hasSpecial).toBe(false);
-    expect(getPasswordStrength('Abcdefg1!').validation.hasSpecial).toBe(true);
-  });
-
-  it('isValid is true only when all rules pass', () => {
-    expect(getPasswordStrength('Abcdefg1!').isValid).toBe(true);
-    expect(getPasswordStrength('abcdefg1!').isValid).toBe(false); // no uppercase
+  it('does not require uppercase, lowercase, number, or special char', () => {
+    const result = getPasswordStrength('alllowercase');
+    expect(result.isValid).toBe(true);
+    expect(result.validation).toEqual({ minLength: true });
   });
 
   it('returns strong for complex passwords', () => {

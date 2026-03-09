@@ -13,11 +13,12 @@ function getAchievementIcon(iconStr: string): IconName {
 }
 
 function getAchievementColor(iconStr: string): string {
-  if (iconStr.includes('bench') || iconStr.includes('squat') || iconStr.includes('dl') || iconStr.includes('deadlift')) return getThemeColors().macro.protein;
-  if (iconStr.includes('streak')) return getThemeColors().semantic.warning;
+  const c = useThemeColors();
+  if (iconStr.includes('bench') || iconStr.includes('squat') || iconStr.includes('dl') || iconStr.includes('deadlift')) return c.macro.protein;
+  if (iconStr.includes('streak')) return c.semantic.warning;
   if (iconStr.includes('vol')) return '#8B5CF6';
-  if (iconStr.includes('nutr')) return getThemeColors().macro.calories;
-  return getThemeColors().accent.primary;
+  if (iconStr.includes('nutr')) return c.macro.calories;
+  return c.accent.primary;
 }
 
 interface AchievementCardProps {
@@ -59,18 +60,18 @@ export function AchievementCard({
         <Icon
           name={getAchievementIcon(definition.icon)}
           size={20}
-          color={unlocked ? categoryColor : getThemeColors().text.muted}
+          color={unlocked ? categoryColor : c.text.muted}
         />
       </View>
       <Text style={[styles.title, !unlocked && styles.titleLocked]} numberOfLines={1}>
         {definition.title}
       </Text>
       {unlocked && unlockedAt ? (
-        <Text style={[styles.date, { color: getThemeColors().text.muted }]}>
+        <Text style={[styles.date, { color: c.text.muted }]}>
           {new Date(unlockedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
         </Text>
       ) : (
-        <View style={[styles.progressTrack, { backgroundColor: getThemeColors().bg.surfaceRaised }]}>
+        <View style={[styles.progressTrack, { backgroundColor: c.bg.surfaceRaised }]}>
           <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
         </View>
       )}
@@ -80,16 +81,16 @@ export function AchievementCard({
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   card: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
     padding: spacing[3],
     alignItems: 'center',
     margin: spacing[1],
   },
   cardUnlocked: {
-    borderColor: getThemeColors().accent.primaryMuted,
+    borderColor: c.accent.primaryMuted,
   },
   iconCircle: {
     width: 40,
@@ -100,35 +101,35 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[2],
   },
   iconUnlocked: {
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
   },
   iconLocked: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
     textAlign: 'center',
     marginBottom: spacing[1],
   },
   titleLocked: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
   },
   date: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: 10,
   },
   progressTrack: {
     width: '100%',
     height: 3,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: 2,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: 2,
   },
 });

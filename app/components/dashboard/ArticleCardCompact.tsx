@@ -17,15 +17,16 @@ interface ArticleCardCompactProps {
 }
 
 function getCategoryColor(moduleName: string): string {
+  const c = useThemeColors();
   switch (moduleName) {
     case 'nutrition':
-      return getThemeColors().macro.calories;
+      return c.macro.calories;
     case 'training':
-      return getThemeColors().macro.protein;
+      return c.macro.protein;
     case 'recovery':
-      return getThemeColors().macro.carbs;
+      return c.macro.carbs;
     default:
-      return getThemeColors().accent.primary;
+      return c.accent.primary;
   }
 }
 
@@ -37,14 +38,14 @@ export function ArticleCardCompact({ article, onPress }: ArticleCardCompactProps
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
       <Card style={[styles.card, { borderTopColor: categoryColor }]}>
-        <Text style={[styles.title, { color: getThemeColors().text.primary }]} numberOfLines={2}>
+        <Text style={[styles.title, { color: c.text.primary }]} numberOfLines={2}>
           {article.title}
         </Text>
         <View style={styles.footer}>
-          <Text style={[styles.readTime, { color: getThemeColors().text.muted }]}>
+          <Text style={[styles.readTime, { color: c.text.muted }]}>
             {article.estimated_read_time_min} min read
           </Text>
-          <Text style={[styles.arrow, { color: getThemeColors().text.muted }]}>→</Text>
+          <Text style={[styles.arrow, { color: c.text.muted }]}>→</Text>
         </View>
       </Card>
     </TouchableOpacity>
@@ -59,7 +60,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   title: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     marginBottom: spacing[2],
   },
   footer: {
@@ -70,10 +71,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   readTime: {
     fontSize: typography.size.xs,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
   },
   arrow: {
     fontSize: typography.size.md,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
   },
 });

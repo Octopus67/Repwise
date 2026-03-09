@@ -52,7 +52,7 @@ export function VolumeLandmarksCard({
     <Card variant="flat" style={styles.card}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: getThemeColors().text.primary }]}>{displayName}</Text>
+        <Text style={[styles.title, { color: c.text.primary }]}>{displayName}</Text>
         <View
           style={[styles.badge, { backgroundColor: statusCfg.bg }]}
           accessibilityLabel={`Status: ${statusCfg.label}`}
@@ -66,7 +66,7 @@ export function VolumeLandmarksCard({
 
       {/* Current volume + info icons */}
       <View style={styles.infoRow}>
-        <Text style={[styles.volumeText, { color: getThemeColors().text.secondary }]}>
+        <Text style={[styles.volumeText, { color: c.text.secondary }]}>
           {currentVolume} HU this week
         </Text>
         <View style={styles.infoIcons}>
@@ -78,7 +78,7 @@ export function VolumeLandmarksCard({
               accessibilityLabel={`Learn about ${key.toUpperCase()}`}
               accessibilityRole="button"
             >
-              <Text style={[styles.infoIcon, { color: getThemeColors().text.muted }]}>{key.toUpperCase()} ⓘ</Text>
+              <Text style={[styles.infoIcon, { color: c.text.muted }]}>{key.toUpperCase()} ⓘ</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -91,7 +91,7 @@ export function VolumeLandmarksCard({
         accessibilityLabel={expanded ? 'Hide trend chart' : 'Show trend chart'}
         accessibilityRole="button"
       >
-        <Text style={[styles.expandText, { color: getThemeColors().accent.primary }]}>
+        <Text style={[styles.expandText, { color: c.accent.primary }]}>
           {expanded ? '▾ Hide Trend' : '▸ Show Trend'}
         </Text>
       </TouchableOpacity>
@@ -123,7 +123,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[2],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
   },
@@ -143,7 +143,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: spacing[1],
   },
   volumeText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
   },
   infoIcons: {
@@ -151,7 +151,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     gap: spacing[3],
   },
   infoIcon: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs - 1,
     fontWeight: typography.weight.medium,
   },
@@ -160,7 +160,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[1],
   },
   expandText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
   },

@@ -66,11 +66,11 @@ export function EditableField({
           value={draft}
           onChangeText={setDraft}
           autoFocus
-          placeholderTextColor={getThemeColors().text.muted}
+          placeholderTextColor={c.text.muted}
         />
         <View style={styles.actions}>
           {saving ? (
-            <ActivityIndicator color={getThemeColors().accent.primary} size="small" />
+            <ActivityIndicator color={c.accent.primary} size="small" />
           ) : (
             <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.7}>
               <Text style={styles.saveBtnText}>Save</Text>
@@ -93,7 +93,7 @@ export function EditableField({
         <Text style={styles.label}>{label}</Text>
         <View style={styles.viewRow}>
           <Text style={styles.value} numberOfLines={1}>{value || '—'}</Text>
-          <Icon name="lock" size={14} color={getThemeColors().text.muted} />
+          <Icon name="lock" size={14} color={c.text.muted} />
         </View>
       </View>
     );
@@ -105,7 +105,7 @@ export function EditableField({
       <Text style={styles.label}>{label}</Text>
       <View style={styles.viewRow}>
         <Text style={styles.value} numberOfLines={1}>{value || '—'}</Text>
-        <Icon name="edit" size={14} color={getThemeColors().text.muted} />
+        <Icon name="edit" size={14} color={c.text.muted} />
       </View>
     </TouchableOpacity>
   );
@@ -115,10 +115,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     paddingVertical: spacing[3],
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.subtle,
+    borderBottomColor: c.border.subtle,
   },
   label: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[1],
@@ -129,20 +129,20 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   value: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     flex: 1,
   },
   icon: {},
   input: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.focus,
+    borderColor: c.border.focus,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
   },
@@ -152,13 +152,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: spacing[2],
   },
   saveBtn: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[1],
   },
   saveBtnText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
   },
@@ -168,7 +168,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[1],
   },
   cancelBtnText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },

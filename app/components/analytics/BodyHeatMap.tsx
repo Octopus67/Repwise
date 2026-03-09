@@ -44,8 +44,8 @@ export function BodyHeatMap({ muscleVolumes, onMusclePress, isLoading, error }: 
   if (error) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={[styles.errorText, { color: getThemeColors().semantic.negative }]}>Unable to load volume data</Text>
-        <Text style={[styles.errorDetail, { color: getThemeColors().text.muted }]}>{error}</Text>
+        <Text style={[styles.errorText, { color: c.semantic.negative }]}>Unable to load volume data</Text>
+        <Text style={[styles.errorDetail, { color: c.text.muted }]}>{error}</Text>
       </View>
     );
   }
@@ -58,11 +58,11 @@ export function BodyHeatMap({ muscleVolumes, onMusclePress, isLoading, error }: 
   return (
     <View>
       {!hasData && (
-        <Text style={[styles.noDataText, { color: getThemeColors().text.muted }]}>No training data for this week</Text>
+        <Text style={[styles.noDataText, { color: c.text.muted }]}>No training data for this week</Text>
       )}
       <View style={styles.diagramRow}>
         <View style={styles.diagramCol}>
-          <Text style={[styles.viewLabel, { color: getThemeColors().text.secondary }]}>Front</Text>
+          <Text style={[styles.viewLabel, { color: c.text.secondary }]}>Front</Text>
           <BodySilhouette
             view="front"
             regions={frontRegions}
@@ -72,7 +72,7 @@ export function BodyHeatMap({ muscleVolumes, onMusclePress, isLoading, error }: 
           />
         </View>
         <View style={styles.diagramCol}>
-          <Text style={[styles.viewLabel, { color: getThemeColors().text.secondary }]}>Back</Text>
+          <Text style={[styles.viewLabel, { color: c.text.secondary }]}>Back</Text>
           <BodySilhouette
             view="back"
             regions={backRegions}
@@ -94,18 +94,18 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   errorText: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[1],
   },
   errorDetail: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     textAlign: 'center',
   },
   noDataText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     textAlign: 'center',
     marginBottom: spacing[2],
@@ -116,7 +116,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   diagramCol: { flex: 1, alignItems: 'center' },
   viewLabel: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[1],

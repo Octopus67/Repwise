@@ -85,17 +85,17 @@ export function ExercisePickerSheet({
   const renderItem = useCallback(
     ({ item }: { item: ListItem }) => {
       if (item.type === 'header') {
-        return <Text style={[styles.sectionTitle, { color: getThemeColors().text.muted }]}>{item.label}</Text>;
+        return <Text style={[styles.sectionTitle, { color: c.text.muted }]}>{item.label}</Text>;
       }
       return (
         <TouchableOpacity
-          style={[styles.exerciseItem, { borderBottomColor: getThemeColors().border.subtle }]}
+          style={[styles.exerciseItem, { borderBottomColor: c.border.subtle }]}
           onPress={() => handleSelect(item.name)}
           accessibilityLabel={`Select ${item.name}`}
           accessibilityRole="button"
           activeOpacity={0.7}
         >
-          <Text style={[styles.exerciseName, { color: getThemeColors().text.primary }]}>{item.name}</Text>
+          <Text style={[styles.exerciseName, { color: c.text.primary }]}>{item.name}</Text>
         </TouchableOpacity>
       );
     },
@@ -120,9 +120,9 @@ export function ExercisePickerSheet({
     >
       <View style={styles.searchContainer}>
         <TextInput
-          style={[styles.searchInput, { color: getThemeColors().text.primary, backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.default }]}
+          style={[styles.searchInput, { color: c.text.primary, backgroundColor: c.bg.surface, borderColor: c.border.default }]}
           placeholder="Search exercises…"
-          placeholderTextColor={getThemeColors().text.muted}
+          placeholderTextColor={c.text.muted}
           value={searchInput}
           onChangeText={setSearchInput}
           autoCapitalize="none"
@@ -139,7 +139,7 @@ export function ExercisePickerSheet({
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
-          <Text style={[styles.emptyText, { color: getThemeColors().text.muted }]}>
+          <Text style={[styles.emptyText, { color: c.text.muted }]}>
             {query ? 'No exercises found' : 'No exercises available'}
           </Text>
         }
@@ -150,23 +150,23 @@ export function ExercisePickerSheet({
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   sheetBackground: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
   },
   handleIndicator: {
-    backgroundColor: getThemeColors().text.muted,
+    backgroundColor: c.text.muted,
   },
   searchContainer: {
     paddingHorizontal: spacing[4],
     paddingBottom: spacing[2],
   },
   searchInput: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[3],
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
   },
   listContent: {
@@ -174,7 +174,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingBottom: spacing[8],
   },
   sectionTitle: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
     textTransform: 'uppercase',
@@ -186,15 +186,15 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[3],
     paddingHorizontal: spacing[3],
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.subtle,
+    borderBottomColor: c.border.subtle,
   },
   exerciseName: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
   },
   emptyText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     textAlign: 'center',
     marginTop: spacing[8],

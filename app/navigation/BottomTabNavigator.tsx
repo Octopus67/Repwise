@@ -29,9 +29,10 @@ import { MealPlanScreen } from '../screens/meal-prep/MealPlanScreen';
 import { ShoppingListView } from '../screens/meal-prep/ShoppingListView';
 import { PrepSundayFlow } from '../screens/meal-prep/PrepSundayFlow';
 import { WeeklyReportScreen } from '../screens/reports/WeeklyReportScreen';
-import { SessionDetailView } from '../screens/training/SessionDetailView';
+import { SessionDetailScreen } from '../screens/training/SessionDetailScreen';
 import { ActiveWorkoutScreen } from '../screens/training/ActiveWorkoutScreen';
 import { WorkoutSummaryScreen } from '../screens/training/WorkoutSummaryScreen';
+import { DataExportScreen } from '../screens/profile/DataExportScreen';
 import type { ActiveWorkoutScreenParams } from '../types/training';
 
 // ─── Param lists ─────────────────────────────────────────────────────────────
@@ -92,6 +93,7 @@ export type ProfileStackParamList = {
   ShoppingList: { planId: string };
   PrepSunday: undefined;
   NotificationSettings: undefined;
+  DataExport: undefined;
 };
 
 export type BottomTabParamList = {
@@ -105,7 +107,7 @@ export type BottomTabParamList = {
 
 export const TAB_NAMES: (keyof BottomTabParamList)[] = ['Home', 'Log', 'Analytics', 'Profile'];
 export const PROFILE_STACK_ROUTES: (keyof ProfileStackParamList)[] = [
-  'ProfileHome', 'Learn', 'ArticleDetail', 'Coaching', 'Community', 'FounderStory', 'ProgressPhotos', 'Measurements', 'MealPlan', 'ShoppingList', 'PrepSunday', 'NotificationSettings',
+  'ProfileHome', 'Learn', 'ArticleDetail', 'Coaching', 'Community', 'FounderStory', 'ProgressPhotos', 'Measurements', 'MealPlan', 'ShoppingList', 'PrepSunday', 'NotificationSettings', 'DataExport',
 ];
 
 // ─── Custom card style interpolator ──────────────────────────────────────────
@@ -138,15 +140,6 @@ const popTransitionSpec = {
   animation: 'timing' as const,
   config: { duration: motion.duration.default, easing: Easing.inOut(Easing.ease) },
 };
-
-// ─── Placeholder screens (replaced in steps 15-16) ──────────────────────────
-
-// ActiveWorkoutPlaceholder replaced by real ActiveWorkoutScreen
-
-function SessionDetailPlaceholder() {
-  // Replaced by real SessionDetailView — kept for reference only
-  return null;
-}
 
 // ─── Stack navigators ────────────────────────────────────────────────────────
 
@@ -226,7 +219,7 @@ function LogsStackScreen() {
       <LogsStack.Screen name="ExercisePicker" component={ExercisePickerScreen} />
       <LogsStack.Screen name="ActiveWorkout" component={ActiveWorkoutScreen} options={{ headerShown: false }} />
       <LogsStack.Screen name="WorkoutSummary" component={WorkoutSummaryScreen} options={{ headerShown: false }} />
-      <LogsStack.Screen name="SessionDetail" component={SessionDetailView} options={{ headerShown: false }} />
+      <LogsStack.Screen name="SessionDetail" component={SessionDetailScreen} options={{ headerShown: false }} />
     </LogsStack.Navigator>
     </ErrorBoundary>
   );
@@ -300,6 +293,7 @@ function ProfileStackScreen() {
       <ProfileStack.Screen name="ShoppingList" component={ShoppingListView} />
       <ProfileStack.Screen name="PrepSunday" component={PrepSundayFlow} />
       <ProfileStack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+      <ProfileStack.Screen name="DataExport" component={DataExportScreen} />
     </ProfileStack.Navigator>
     </ErrorBoundary>
   );
@@ -388,7 +382,7 @@ function getStyles() { return getThemedStyles(getThemeColors()); }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   tabBar: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderTopColor: 'rgba(255,255,255,0.06)',
     borderTopWidth: 1,
     height: 64,
@@ -408,35 +402,35 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: 8,
   },
   iconWrapActive: {
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    backgroundColor: c.accent.primaryMuted,
   },
   errorFallback: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.base,
+    backgroundColor: c.bg.base,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing[6],
   },
   errorTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[2],
   },
   errorMessage: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     textAlign: 'center',
     marginBottom: spacing[4],
   },
   retryButton: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     paddingHorizontal: spacing[6],
     paddingVertical: spacing[3],
     borderRadius: 8,
   },
   retryText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
   },

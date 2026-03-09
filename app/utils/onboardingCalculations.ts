@@ -88,6 +88,8 @@ export function computeBMR(
       return Math.round(femaleBMR);
     case 'other':
       return Math.round((maleBMR + femaleBMR) / 2);
+    default:
+      return Math.round((maleBMR + femaleBMR) / 2); // Fallback to average
   }
 }
 
@@ -284,7 +286,7 @@ export function computeCalorieBudget(
  * Protein is set first from weight × protein_per_kg. Remaining calories are split
  * between carbs and fat based on diet style:
  *   balanced:     55% carbs / 45% fat
- *   high_protein: 50% carbs / 50% fat
+ *   high_protein: 73% carbs / 27% fat (performance/training focused)
  *   low_carb:     30% carbs / 70% fat
  *   keto:         10% carbs / 90% fat
  *
@@ -307,10 +309,10 @@ export function computeMacroSplit(
   const remaining = Math.max(0, budget - proteinKcal);
 
   const ratios: Record<DietStyle, { carb: number; fat: number }> = {
-    balanced: { carb: 0.55, fat: 0.45 },
-    high_protein: { carb: 0.50, fat: 0.50 },
-    low_carb: { carb: 0.30, fat: 0.70 },
-    keto: { carb: 0.10, fat: 0.90 },
+    balanced: { carb: 0.66, fat: 0.34 },      // 66% carbs, 34% fats - general health
+    high_protein: { carb: 0.73, fat: 0.27 },  // 73% carbs, 27% fats - performance/training focused
+    low_carb: { carb: 0.35, fat: 0.65 },      // 35% carbs, 65% fats - low carb
+    keto: { carb: 0.10, fat: 0.90 },          // 10% carbs, 90% fats - ketosis
   };
 
   const { carb: carbRatio, fat: fatRatio } = ratios[dietStyle];

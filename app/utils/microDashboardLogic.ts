@@ -3,17 +3,17 @@
  */
 
 ;
-import { getThemeColors } from '../hooks/useThemeColors';
+import { getThemeColors, type ThemeColors } from '../hooks/useThemeColors';
 
 export type NutrientStatus = 'deficient' | 'low' | 'adequate' | 'excess' | 'no_data';
 
-export function getStatusColor(status: NutrientStatus): string {
+export function getStatusColor(status: NutrientStatus, c: ThemeColors = getThemeColors()): string {
   switch (status) {
-    case 'deficient': return getThemeColors().semantic.negative;
-    case 'low': return getThemeColors().semantic.warning;
-    case 'adequate': return getThemeColors().semantic.positive;
-    case 'excess': return getThemeColors().accent.primary;
-    case 'no_data': return getThemeColors().text.muted;
+    case 'deficient': return c.semantic.negative;
+    case 'low': return c.semantic.warning;
+    case 'adequate': return c.semantic.positive;
+    case 'excess': return c.accent.primary;
+    case 'no_data': return c.text.muted;
   }
 }
 
@@ -27,12 +27,12 @@ export function getStatusLabel(status: NutrientStatus): string {
   }
 }
 
-export function getScoreColor(score: number): string {
-  if (score >= 80) return getThemeColors().semantic.positive;
-  if (score >= 60) return getThemeColors().semantic.positive;
-  if (score >= 40) return getThemeColors().semantic.warning;
-  if (score >= 20) return getThemeColors().semantic.warning;
-  return getThemeColors().semantic.negative;
+export function getScoreColor(score: number, c: ThemeColors = getThemeColors()): string {
+  if (score >= 80) return c.semantic.positive;
+  if (score >= 60) return c.semantic.positive;
+  if (score >= 40) return c.semantic.warning;
+  if (score >= 20) return c.semantic.warning;
+  return c.semantic.negative;
 }
 
 export function getScoreLabel(score: number): string {

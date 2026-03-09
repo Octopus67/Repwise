@@ -51,6 +51,7 @@ export function RPEPicker({ visible, mode, onSelect, onDismiss }: RPEPickerProps
     // Always store as RPE
     const rpeValue = mode === 'rir' ? rirToRpe(value) : value;
     onSelect(String(rpeValue));
+    onDismiss(); // Dismiss modal after selection
   };
 
   const getLabel = (value: number): string => {
@@ -61,16 +62,16 @@ export function RPEPicker({ visible, mode, onSelect, onDismiss }: RPEPickerProps
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onDismiss}>
-        <View style={[styles.pickerContainer, { backgroundColor: getThemeColors().bg.surface }]}>
-          <Text style={[styles.modeLabel, { color: getThemeColors().text.secondary }]}>{mode === 'rpe' ? 'RPE' : 'RIR'}</Text>
+        <View style={[styles.pickerContainer, { backgroundColor: c.bg.surface }]}>
+          <Text style={[styles.modeLabel, { color: c.text.secondary }]}>{mode === 'rpe' ? 'RPE' : 'RIR'}</Text>
           <View style={styles.buttonRow}>
             {values.map((value) => (
               <TouchableOpacity
                 key={value}
-                style={[styles.valueButton, { backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]}
+                style={[styles.valueButton, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                 onPress={() => handleSelect(value)}
               >
-                <Text style={[styles.valueText, { color: getThemeColors().text.primary }]}>{getLabel(value)}</Text>
+                <Text style={[styles.valueText, { color: c.text.primary }]}>{getLabel(value)}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -90,14 +91,14 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   pickerContainer: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.md,
     padding: spacing[4],
     minWidth: 280,
     alignItems: 'center',
   },
   modeLabel: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     marginBottom: spacing[3],
@@ -110,14 +111,14 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
   },
   valueText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
   },

@@ -111,14 +111,14 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
     <ModalContainer visible={visible} onClose={onClose} title={title}>
       <ScrollView style={styles.scroll}>
         {error && (
-          <View style={[styles.errorBanner, { backgroundColor: getThemeColors().semantic.warningSubtle }]}>
-            <Text style={[styles.errorText, { color: getThemeColors().semantic.warning }]}>⚠️ {error}</Text>
+          <View style={[styles.errorBanner, { backgroundColor: c.semantic.warningSubtle }]}>
+            <Text style={[styles.errorText, { color: c.semantic.warning }]}>⚠️ {error}</Text>
           </View>
         )}
         {loading ? (
-          <ActivityIndicator color={getThemeColors().accent.primary} style={{ marginTop: spacing[6] }} />
+          <ActivityIndicator color={c.accent.primary} style={{ marginTop: spacing[6] }} />
         ) : !data || data.exercises.length === 0 ? (
-          <Text style={[styles.empty, { color: getThemeColors().text.muted }]}>No training data for this muscle group this week.</Text>
+          <Text style={[styles.empty, { color: c.text.muted }]}>No training data for this muscle group this week.</Text>
         ) : (
           <>
             {/* Summary */}
@@ -126,40 +126,40 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
               <View style={[styles.statusBadge, { backgroundColor: getStatusColor(data.status ?? data.volume_status) }]}>
                 <Text style={styles.statusText}>{getStatusLabel(data.status ?? data.volume_status)}</Text>
               </View>
-              <Text style={[styles.setsText, { color: getThemeColors().text.primary }]}>
+              <Text style={[styles.setsText, { color: c.text.primary }]}>
                 {data.hypertrophy_units != null
                   ? `${data.hypertrophy_units} HU`
                   : `${data.effective_sets} effective sets`}
               </Text>
             </View>
             {data.landmarks ? (
-              <Text style={[styles.landmarkText, { color: getThemeColors().text.muted }]}>
+              <Text style={[styles.landmarkText, { color: c.text.muted }]}>
                 MEV {data.landmarks.mev} · MAV {data.landmarks.mav_low}–{data.landmarks.mav_high} · MRV {data.landmarks.mrv} HU
               </Text>
             ) : (
-              <Text style={[styles.landmarkText, { color: getThemeColors().text.muted }]}>
+              <Text style={[styles.landmarkText, { color: c.text.muted }]}>
                 MEV {data.mev} · MAV {data.mav} · MRV {data.mrv}
               </Text>
             )}
             {data.gross_stimulus != null && (
-              <Text style={[styles.landmarkText, { color: getThemeColors().text.muted }]}>
+              <Text style={[styles.landmarkText, { color: c.text.muted }]}>
                 Gross stimulus: {data.gross_stimulus} · Atrophy: −{data.atrophy_effect}
               </Text>
             )}
 
             {/* Exercises */}
             {data.exercises.map((ex) => (
-              <View key={ex.exercise_name} style={[styles.exerciseBlock, { borderTopColor: getThemeColors().border.subtle }]}>
+              <View key={ex.exercise_name} style={[styles.exerciseBlock, { borderTopColor: c.border.subtle }]}>
                 <View style={styles.exerciseHeader}>
-                  <Text style={[styles.exerciseName, { color: getThemeColors().text.primary }]}>
+                  <Text style={[styles.exerciseName, { color: c.text.primary }]}>
                     {ex.exercise_name}
                     {ex.coefficient != null && (
-                      <Text style={[styles.coeffBadge, { color: getThemeColors().text.muted }]}>
+                      <Text style={[styles.coeffBadge, { color: c.text.muted }]}>
                         {' '}{ex.coefficient === 1.0 ? '(Direct)' : `(${ex.coefficient}×)`}
                       </Text>
                     )}
                   </Text>
-                  <Text style={[styles.exerciseSets, { color: getThemeColors().text.secondary }]}>
+                  <Text style={[styles.exerciseSets, { color: c.text.secondary }]}>
                     {ex.contribution_hu != null
                       ? `${ex.contribution_hu} HU · ${ex.sets_count ?? ex.working_sets} sets`
                       : `${ex.working_sets} sets · ${ex.effective_sets} eff`}
@@ -167,11 +167,11 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
                 </View>
                 {ex.sets?.map((s, i) => (
                   <View key={i} style={styles.setRow}>
-                    <Text style={[styles.setDetail, { color: getThemeColors().text.secondary }]}>
+                    <Text style={[styles.setDetail, { color: c.text.secondary }]}>
                       {s.weight_kg}kg × {s.reps}
                       {s.rpe != null ? ` @RPE ${s.rpe}` : ''}
                     </Text>
-                    <Text style={[styles.setEffort, { color: getThemeColors().text.muted }]}>×{s.effort}</Text>
+                    <Text style={[styles.setEffort, { color: c.text.muted }]}>×{s.effort}</Text>
                   </View>
                 ))}
               </View>
@@ -186,7 +186,7 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
           accessibilityLabel="How Hypertrophy Units are calculated"
           accessibilityRole="button"
         >
-          <Text style={[styles.explainerText, { color: getThemeColors().accent.primary }]}>ⓘ How is this calculated?</Text>
+          <Text style={[styles.explainerText, { color: c.accent.primary }]}>ⓘ How is this calculated?</Text>
         </TouchableOpacity>
       )}
       <HUExplainerSheet visible={explainerVisible} onClose={() => setExplainerVisible(false)} />
@@ -197,18 +197,18 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   scroll: { maxHeight: 400 },
   errorBanner: {
-    backgroundColor: getThemeColors().semantic.warningSubtle,
+    backgroundColor: c.semantic.warningSubtle,
     padding: spacing[3],
     borderRadius: 6,
     marginBottom: spacing[3],
   },
   errorText: {
-    color: getThemeColors().semantic.warning,
+    color: c.semantic.warning,
     fontSize: typography.size.sm,
     textAlign: 'center',
   },
   empty: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     textAlign: 'center',
     marginTop: spacing[6],
@@ -230,19 +230,19 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: typography.weight.semibold,
   },
   setsText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },
   landmarkText: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     marginBottom: spacing[4],
   },
   exerciseBlock: {
     marginBottom: spacing[3],
     borderTopWidth: 1,
-    borderTopColor: getThemeColors().border.subtle,
+    borderTopColor: c.border.subtle,
     paddingTop: spacing[3],
   },
   exerciseHeader: {
@@ -251,13 +251,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[2],
   },
   exerciseName: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     flex: 1,
   },
   exerciseSets: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.xs,
   },
   setRow: {
@@ -266,9 +266,9 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingLeft: spacing[3],
     marginBottom: 2,
   },
-  setDetail: { color: getThemeColors().text.secondary, fontSize: typography.size.xs },
-  setEffort: { color: getThemeColors().text.muted, fontSize: typography.size.xs },
-  coeffBadge: { color: getThemeColors().text.muted, fontSize: typography.size.xs, fontWeight: typography.weight.regular },
+  setDetail: { color: c.text.secondary, fontSize: typography.size.xs },
+  setEffort: { color: c.text.muted, fontSize: typography.size.xs },
+  coeffBadge: { color: c.text.muted, fontSize: typography.size.xs, fontWeight: typography.weight.regular },
   explainerLink: { paddingVertical: spacing[3], alignItems: 'center' },
-  explainerText: { color: getThemeColors().accent.primary, fontSize: typography.size.sm },
+  explainerText: { color: c.accent.primary, fontSize: typography.size.sm },
 });

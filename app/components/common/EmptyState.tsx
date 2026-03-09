@@ -27,8 +27,8 @@ export function EmptyState({
   return (
     <Animated.View entering={FadeIn.duration(300)} style={styles.container}>
       <View style={styles.iconWrap} accessibilityLabel={`${title} illustration`}>{icon}</View>
-      <Text style={[styles.title, { color: getThemeColors().text.secondary }]}>{title}</Text>
-      <Text style={[styles.description, { color: getThemeColors().text.muted }]}>{description}</Text>
+      <Text style={[styles.title, { color: c.text.secondary }]}>{title}</Text>
+      <Text style={[styles.description, { color: c.text.muted }]}>{description}</Text>
       {children}
       {actionLabel ? (
         <Button
@@ -59,7 +59,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   title: {
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     letterSpacing: letterSpacing.tight,
     marginBottom: spacing[2],
     textAlign: 'center',
@@ -67,7 +67,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   description: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.regular,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     textAlign: 'center',
     marginBottom: spacing[4],
   },

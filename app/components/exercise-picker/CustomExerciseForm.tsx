@@ -84,24 +84,24 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
   }, [form, onCreated]);
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: getThemeColors().bg.base }]} contentContainerStyle={styles.content}>
-      <Text style={[styles.heading, { color: getThemeColors().text.primary }]}>Create Custom Exercise</Text>
+    <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]} contentContainerStyle={styles.content}>
+      <Text style={[styles.heading, { color: c.text.primary }]}>Create Custom Exercise</Text>
 
       {/* Name */}
-      <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>Name *</Text>
+      <Text style={[styles.label, { color: c.text.secondary }]}>Name *</Text>
       <TextInput
         style={[styles.input, errors.name ? styles.inputError : null]}
         value={form.name}
         onChangeText={(t) => updateField('name', t)}
         placeholder="e.g. Landmine Press"
-        placeholderTextColor={getThemeColors().text.muted}
+        placeholderTextColor={c.text.muted}
         maxLength={200}
         accessibilityLabel="Exercise name"
       />
-      {errors.name && <Text style={[styles.errorText, { color: getThemeColors().semantic.negative }]}>{errors.name}</Text>}
+      {errors.name && <Text style={[styles.errorText, { color: c.semantic.negative }]}>{errors.name}</Text>}
 
       {/* Muscle Group */}
-      <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>Muscle Group *</Text>
+      <Text style={[styles.label, { color: c.text.secondary }]}>Muscle Group *</Text>
       <View style={styles.chipGrid}>
         {MUSCLE_GROUPS.map((mg) => (
           <TouchableOpacity
@@ -117,10 +117,10 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
           </TouchableOpacity>
         ))}
       </View>
-      {errors.muscleGroup && <Text style={[styles.errorText, { color: getThemeColors().semantic.negative }]}>{errors.muscleGroup}</Text>}
+      {errors.muscleGroup && <Text style={[styles.errorText, { color: c.semantic.negative }]}>{errors.muscleGroup}</Text>}
 
       {/* Equipment */}
-      <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>Equipment *</Text>
+      <Text style={[styles.label, { color: c.text.secondary }]}>Equipment *</Text>
       <View style={styles.chipGrid}>
         {EQUIPMENT_TYPES.map((eq) => (
           <TouchableOpacity
@@ -136,10 +136,10 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
           </TouchableOpacity>
         ))}
       </View>
-      {errors.equipment && <Text style={[styles.errorText, { color: getThemeColors().semantic.negative }]}>{errors.equipment}</Text>}
+      {errors.equipment && <Text style={[styles.errorText, { color: c.semantic.negative }]}>{errors.equipment}</Text>}
 
       {/* Category */}
-      <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>Category</Text>
+      <Text style={[styles.label, { color: c.text.secondary }]}>Category</Text>
       <View style={styles.chipGrid}>
         {CATEGORIES.map((cat) => (
           <TouchableOpacity
@@ -157,7 +157,7 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
       </View>
 
       {/* Secondary Muscles */}
-      <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>Secondary Muscles (optional)</Text>
+      <Text style={[styles.label, { color: c.text.secondary }]}>Secondary Muscles (optional)</Text>
       <View style={styles.chipGrid}>
         {MUSCLE_GROUPS.filter((mg) => mg !== form.muscleGroup).map((mg) => (
           <TouchableOpacity
@@ -175,13 +175,13 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
       </View>
 
       {/* Notes */}
-      <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>Notes (optional)</Text>
+      <Text style={[styles.label, { color: c.text.secondary }]}>Notes (optional)</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
         value={form.notes}
         onChangeText={(t) => updateField('notes', t)}
         placeholder="Any notes about this exercise..."
-        placeholderTextColor={getThemeColors().text.muted}
+        placeholderTextColor={c.text.muted}
         multiline
         numberOfLines={3}
         accessibilityLabel="Exercise notes"
@@ -189,8 +189,8 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
 
       {/* Actions */}
       <View style={styles.actions}>
-        <TouchableOpacity style={[styles.cancelBtn, { borderColor: getThemeColors().border.subtle }]} onPress={onCancel} activeOpacity={0.7}>
-          <Text style={[styles.cancelText, { color: getThemeColors().text.secondary }]}>Cancel</Text>
+        <TouchableOpacity style={[styles.cancelBtn, { borderColor: c.border.subtle }]} onPress={onCancel} activeOpacity={0.7}>
+          <Text style={[styles.cancelText, { color: c.text.secondary }]}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.submitBtn, submitting && styles.submitBtnDisabled]}
@@ -201,9 +201,9 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
           accessibilityLabel="Save custom exercise"
         >
           {submitting ? (
-            <ActivityIndicator size="small" color={getThemeColors().text.primary} />
+            <ActivityIndicator size="small" color={c.text.primary} />
           ) : (
-            <Text style={[styles.submitText, { color: getThemeColors().text.primary }]}>Save Exercise</Text>
+            <Text style={[styles.submitText, { color: c.text.primary }]}>Save Exercise</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -215,44 +215,44 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.base,
+    backgroundColor: c.bg.base,
   },
   content: {
     padding: spacing[4],
     paddingBottom: spacing[8],
   },
   heading: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
     marginBottom: spacing[4],
   },
   label: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     marginTop: spacing[3],
     marginBottom: spacing[1],
   },
   input: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
-    color: getThemeColors().text.primary,
+    borderColor: c.border.subtle,
+    color: c.text.primary,
     fontSize: typography.size.base,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
   },
   inputError: {
-    borderColor: getThemeColors().semantic.negative,
+    borderColor: c.semantic.negative,
   },
   textArea: {
     minHeight: 80,
     textAlignVertical: 'top',
   },
   errorText: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.xs,
     marginTop: spacing[1],
   },
@@ -266,21 +266,21 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
     borderRadius: radius.full,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   selectChipActive: {
-    backgroundColor: getThemeColors().accent.primaryMuted,
-    borderColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primaryMuted,
+    borderColor: c.accent.primary,
   },
   selectChipText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
   selectChipTextActive: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
   },
   actions: {
     flexDirection: 'row',
@@ -293,10 +293,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingVertical: spacing[2],
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
   },
   cancelText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },
@@ -304,13 +304,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing[6],
     paddingVertical: spacing[2],
     borderRadius: radius.sm,
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
   },
   submitBtnDisabled: {
     opacity: 0.6,
   },
   submitText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
   },

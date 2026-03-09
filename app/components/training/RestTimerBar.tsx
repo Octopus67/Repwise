@@ -58,8 +58,8 @@ export function RestTimerBar({
     : formatRestTimer(remainingSeconds);
 
   const timeLabelColor = completed
-    ? getThemeColors().semantic.positive
-    : getThemeColors().text.primary;
+    ? c.semantic.positive
+    : c.text.primary;
 
   return (
     <Animated.View style={[styles.bar, animatedBarStyle]}>
@@ -88,7 +88,7 @@ export function RestTimerBar({
         accessibilityRole="button"
         accessibilityLabel="Skip rest timer"
       >
-        <Text style={[styles.skipText, { color: getThemeColors().text.muted }]}>Skip</Text>
+        <Text style={[styles.skipText, { color: c.text.muted }]}>Skip</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -102,9 +102,9 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing[4],
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderTopWidth: 1,
-    borderTopColor: getThemeColors().border.subtle,
+    borderTopColor: c.border.subtle,
     ...shadows.md,
   },
   content: {
@@ -120,6 +120,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   skipText: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
   },
 });

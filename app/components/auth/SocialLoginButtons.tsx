@@ -8,7 +8,7 @@ import {
   Platform,
 } from 'react-native';
 import { radius, spacing, typography } from '../../theme/tokens';
-import { getThemeColors } from '../../hooks/useThemeColors';
+import { getThemeColors, useThemeColors} from '../../hooks/useThemeColors';
 import {
   signInWithGoogle,
   getGoogleSignInError,
@@ -24,9 +24,9 @@ interface SocialLoginButtonsProps {
 }
 
 export function SocialLoginButtons({ onSuccess, onError }: SocialLoginButtonsProps) {
+  const c = useThemeColors();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
-  const c = getThemeColors();
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
@@ -58,16 +58,10 @@ export function SocialLoginButtons({ onSuccess, onError }: SocialLoginButtonsPro
 
   return (
     <View style={styles.container}>
-      <View style={styles.dividerRow}>
-        <View style={[styles.dividerLine, { backgroundColor: c.border.subtle }]} />
-        <Text style={[styles.dividerText, { color: c.text.muted }]}>or</Text>
-        <View style={[styles.dividerLine, { backgroundColor: c.border.subtle }]} />
-      </View>
-
       {isGoogleSignInAvailable && (
         <TouchableOpacity
           testID="google-signin-button"
-          style={[styles.socialBtn, { borderColor: c.border.default }]}
+          style={[styles.socialBtn, { borderColor: c.border.default, backgroundColor: c.bg.surfaceRaised }]}
           onPress={handleGoogle}
           disabled={isLoading}
           activeOpacity={0.8}
@@ -90,7 +84,7 @@ export function SocialLoginButtons({ onSuccess, onError }: SocialLoginButtonsPro
       {isAppleAuthAvailable && (
         <TouchableOpacity
           testID="apple-signin-button"
-          style={[styles.socialBtn, { borderColor: c.border.default }]}
+          style={[styles.socialBtn, { borderColor: c.border.default, backgroundColor: c.bg.surfaceRaised }]}
           onPress={handleApple}
           disabled={isLoading}
           activeOpacity={0.8}
@@ -109,18 +103,25 @@ export function SocialLoginButtons({ onSuccess, onError }: SocialLoginButtonsPro
           )}
         </TouchableOpacity>
       )}
+
+      <View style={styles.dividerRow}>
+        <View style={[styles.dividerLine, { backgroundColor: c.border.subtle }]} />
+        <Text style={[styles.dividerText, { color: c.text.muted }]}>or continue with email</Text>
+        <View style={[styles.dividerLine, { backgroundColor: c.border.subtle }]} />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: spacing[4],
+    marginBottom: spacing[2],
   },
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing[4],
+    marginTop: spacing[2],
+    marginBottom: spacing[2],
   },
   dividerLine: {
     flex: 1,
@@ -137,14 +138,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderRadius: radius.md,
-    paddingVertical: spacing[3],
+    paddingVertical: spacing[4],
     paddingHorizontal: spacing[4],
     marginBottom: spacing[3],
-    minHeight: 44,
+    minHeight: 48,
   },
   socialBtnText: {
     fontSize: typography.size.base,
-    fontWeight: typography.weight.medium,
+    fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.base,
   },
   googleIcon: {

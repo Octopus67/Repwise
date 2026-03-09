@@ -6,16 +6,16 @@
  */
 
 ;
-import { getThemeColors } from '../hooks/useThemeColors';
+import { getThemeColors, type ThemeColors } from '../hooks/useThemeColors';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-export const PHASE_COLORS: Record<string, string> = {
-  accumulation: getThemeColors().chart.calories,
-  intensification: getThemeColors().accent.primary,
-  deload: getThemeColors().semantic.positive,
-  peak: getThemeColors().semantic.warning,
-};
+export const getPhaseColors = (c: ThemeColors): Record<string, string> => ({
+  accumulation: c.chart.calories,
+  intensification: c.accent.primary,
+  deload: c.semantic.positive,
+  peak: c.semantic.warning,
+});
 
 export const NUTRITION_LABELS: Record<string, string> = {
   bulk: 'Bulk',
@@ -78,8 +78,8 @@ function addDays(d: Date, n: number): Date {
 
 // ─── Public Functions ────────────────────────────────────────────────────────
 
-export function getPhaseColor(phaseType: string): string {
-  return PHASE_COLORS[phaseType] ?? getThemeColors().text.muted;
+export function getPhaseColor(phaseType: string, c: ThemeColors = getThemeColors()): string {
+  return getPhaseColors(c)[phaseType] ?? c.text.muted;
 }
 
 export function getNutritionLabel(nutritionPhase: string | null): string | null {

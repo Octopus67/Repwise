@@ -53,19 +53,19 @@ export const FinishBar = ({
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     height: 72,
-    backgroundColor: getThemeColors().bg.base,
+    backgroundColor: c.bg.base,
     borderTopWidth: 1,
-    borderTopColor: getThemeColors().border.subtle,
+    borderTopColor: c.border.subtle,
     paddingHorizontal: spacing[4],
     justifyContent: 'center',
   },
   summaryText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     marginBottom: spacing[1],
   },
   button: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.md,
     paddingVertical: spacing[3],
     alignItems: 'center',
@@ -74,7 +74,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     opacity: 0.5,
   },
   buttonText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontWeight: typography.weight.bold,
     fontSize: typography.size.md,
   },

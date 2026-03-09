@@ -14,6 +14,8 @@ from src.modules.auth.models import User
 from src.modules.readiness.readiness_schemas import (
     CheckinRequest,
     CheckinResponse,
+    CombinedRecoveryFactorResponse,
+    CombinedRecoveryResponse,
     HealthMetricsRequest,
     ReadinessHistoryResponse,
     ReadinessScoreResponse,
@@ -54,3 +56,57 @@ async def get_history(
 ) -> ReadinessHistoryResponse:
     service = ReadinessService(db)
     return await service.get_history(user.id, start_date, end_date)
+
+
+@router.get("/combined", response_model=CombinedRecoveryResponse)
+async def get_combined_recovery(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> CombinedRecoveryResponse:
+    """Combined fatigue + readiness score with volume multiplier.
+
+    Gated behind the 'combined_readiness' feature flag.
+    """
+    from src.modules.feature_flags.service import FeatureFlagService
+
+    flag_service = FeatureFlagService(db)
+    if not await flag_service.is_feature_enabled("combined_readiness", user):
+        from src.shared.errors import NotFoundError
+        raise NotFoundError("Combined readiness endpoint not available")
+
+    from src.modules.readiness.readiness_schemas import HealthMetricsRequest
+    from src.modules.training.fatigue_service import FatigueService
+    from src.modules.readiness.combined_score import compute_combined_recovery
+
+    # Get readiness score (use defaults for health metrics if none provided)
+    readiness_service = ReadinessService(db)
+    try:
+        readiness_resp = await readiness_service.compute_score(
+            user.id, HealthMetricsRequest()
+        )
+        readiness_score = readiness_resp.score
+    except Exception:
+        readiness_score = None
+
+    # Get fatigue scores
+    fatigue_service = FatigueService(db)
+    try:
+        fatigue_resp = await fatigue_service.analyze_fatigue(user.id)
+        fatigue_scores = fatigue_resp.scores
+    except Exception:
+        fatigue_scores = []
+
+    result = compute_combined_recovery(
+        readiness_score=readiness_score,
+        fatigue_scores=fatigue_scores,
+    )
+
+    return CombinedRecoveryResponse(
+        score=result.score,
+        volume_multiplier=result.volume_multiplier,
+        label=result.label,
+        factors=[
+            CombinedRecoveryFactorResponse(name=f.name, value=f.value, source=f.source)
+            for f in result.factors
+        ],
+    )

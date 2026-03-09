@@ -22,7 +22,7 @@ export function WaterTracker({
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>Water Intake</Text>
+      <Text style={[styles.label, { color: c.text.secondary }]}>Water Intake</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -36,11 +36,11 @@ export function WaterTracker({
             style={styles.glassBtn}
             activeOpacity={0.7}
           >
-            {filled ? <Icon name="droplet-filled" size={20} color={getThemeColors().accent.primary} /> : <Icon name="droplet-empty" size={20} color={getThemeColors().text.muted} />}
+            {filled ? <Icon name="droplet-filled" size={20} color={c.accent.primary} /> : <Icon name="droplet-empty" size={20} color={c.text.muted} />}
           </TouchableOpacity>
         ))}
       </ScrollView>
-      <Text style={[styles.summary, { color: getThemeColors().text.muted }]}>
+      <Text style={[styles.summary, { color: c.text.muted }]}>
         {glasses} glasses ({glasses * 250}ml)
       </Text>
     </View>
@@ -52,7 +52,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[3],
   },
   label: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
@@ -75,7 +75,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   glassIcon: {},
   summary: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     marginTop: spacing[1],

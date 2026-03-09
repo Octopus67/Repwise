@@ -165,12 +165,15 @@ describe('Macro Split — diet style variations', () => {
     expect(result.carbsG).toBeLessThan(60);
   });
 
-  test('high_protein split has equal carb/fat calorie ratio', () => {
+  test('high_protein (Performance) split has more carbs than fats', () => {
     const result = computeMacroSplit(budget, weightKg, proteinPerKg, 'high_protein');
     expect(result.proteinG).toBe(160);
-    // 50/50 split of remaining calories between carbs and fat
-    // Carb kcal and fat kcal should be roughly equal (within rounding)
-    expect(Math.abs(result.carbsKcal - result.fatKcal)).toBeLessThan(50);
+    // 73/27 split - carbs should be significantly higher than fats
+    expect(result.carbsKcal).toBeGreaterThan(result.fatKcal);
+    // Carbs should be roughly 2.7x fats (73/27 ratio)
+    const ratio = result.carbsKcal / result.fatKcal;
+    expect(ratio).toBeGreaterThan(2.0);
+    expect(ratio).toBeLessThan(3.5);
   });
 
   test('low_carb split has more fat than carbs', () => {

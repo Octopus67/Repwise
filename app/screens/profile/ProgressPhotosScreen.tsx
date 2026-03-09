@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { documentDirectory, getInfoAsync, makeDirectoryAsync, copyAsync, deleteAsync } from 'expo-file-system/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveImageToGallery } from '../../services/sharing';
 import { radius, spacing, typography, shadows } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import api from '../../services/api';
@@ -121,6 +122,19 @@ export function ProgressPhotosScreen() {
     ]);
   };
 
+  const handleExportAll = async () => {
+    const uris = Object.values(pathMap).filter(Boolean);
+    if (uris.length === 0) {
+      Alert.alert('No Photos', 'No local photos to export.');
+      return;
+    }
+    let saved = 0;
+    for (const uri of uris) {
+      if (await saveImageToGallery(uri)) saved++;
+    }
+    Alert.alert('Export Complete', `${saved}/${uris.length} photos saved to your device gallery.`);
+  };
+
   const showAddOptions = () => {
     Alert.alert('Add Photo', 'Choose source', [
       { text: 'Camera', onPress: () => handleAdd('camera') },
@@ -166,8 +180,13 @@ export function ProgressPhotosScreen() {
       {/* Local-only warning banner */}
       <View style={[styles.warningBanner, { backgroundColor: c.semantic.warningSubtle }]}>
         <Text style={[styles.warningText, { color: c.semantic.warning }]}>
-          ⚠ Photos are stored locally on this device only. They are not backed up to the cloud and will be lost if you uninstall the app.
+          ⚠ Photos are stored locally only and will be lost if you uninstall the app or switch devices. Export them to your gallery for safekeeping.
         </Text>
+        {photos.length > 0 && (
+          <TouchableOpacity onPress={handleExportAll} style={[styles.exportBtn, { borderColor: c.semantic.warning }]}>
+            <Text style={[styles.exportBtnText, { color: c.semantic.warning }]}>Export All to Gallery</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {photos.length === 0 ? (
@@ -194,25 +213,27 @@ export function ProgressPhotosScreen() {
 }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: getThemeColors().bg.base },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing[4], paddingVertical: spacing[3], borderBottomWidth: 1, borderBottomColor: getThemeColors().border.subtle },
+  safe: { flex: 1, backgroundColor: c.bg.base },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing[4], paddingVertical: spacing[3], borderBottomWidth: 1, borderBottomColor: c.border.subtle },
   backBtn: { width: 60, minHeight: 44, justifyContent: 'center' },
-  backText: { color: getThemeColors().accent.primary, fontSize: typography.size.base },
-  title: { color: getThemeColors().text.primary, fontSize: typography.size.lg, fontWeight: typography.weight.semibold },
-  count: { color: getThemeColors().text.muted, fontSize: typography.size.sm, width: 60, textAlign: 'right' },
+  backText: { color: c.accent.primary, fontSize: typography.size.base },
+  title: { color: c.text.primary, fontSize: typography.size.lg, fontWeight: typography.weight.semibold },
+  count: { color: c.text.muted, fontSize: typography.size.sm, width: 60, textAlign: 'right' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing[8] },
-  emptyTitle: { color: getThemeColors().text.primary, fontSize: typography.size.xl, fontWeight: typography.weight.semibold, marginBottom: spacing[2] },
-  emptySubtitle: { color: getThemeColors().text.secondary, fontSize: typography.size.base, textAlign: 'center', lineHeight: 22 },
+  emptyTitle: { color: c.text.primary, fontSize: typography.size.xl, fontWeight: typography.weight.semibold, marginBottom: spacing[2] },
+  emptySubtitle: { color: c.text.secondary, fontSize: typography.size.base, textAlign: 'center', lineHeight: 22 },
   grid: { padding: spacing[3] },
   gridRow: { gap: spacing[3] },
-  photoCard: { flex: 1, marginBottom: spacing[3], borderRadius: radius.md, overflow: 'hidden', backgroundColor: getThemeColors().bg.surface, borderWidth: 1, borderColor: getThemeColors().border.subtle },
-  photoImage: { width: '100%', aspectRatio: 3 / 4, backgroundColor: getThemeColors().bg.surfaceRaised },
-  photoPlaceholder: { width: '100%', aspectRatio: 3 / 4, backgroundColor: getThemeColors().bg.surfaceRaised, alignItems: 'center', justifyContent: 'center' },
-  placeholderText: { color: getThemeColors().text.muted, fontSize: typography.size.xs },
-  photoDate: { color: getThemeColors().text.secondary, fontSize: typography.size.xs, textAlign: 'center', paddingVertical: spacing[2] },
-  fab: { position: 'absolute', bottom: spacing[8], right: spacing[4], width: 56, height: 56, borderRadius: radius.full, backgroundColor: getThemeColors().accent.primary, alignItems: 'center', justifyContent: 'center', ...shadows.md },
+  photoCard: { flex: 1, marginBottom: spacing[3], borderRadius: radius.md, overflow: 'hidden', backgroundColor: c.bg.surface, borderWidth: 1, borderColor: c.border.subtle },
+  photoImage: { width: '100%', aspectRatio: 3 / 4, backgroundColor: c.bg.surfaceRaised },
+  photoPlaceholder: { width: '100%', aspectRatio: 3 / 4, backgroundColor: c.bg.surfaceRaised, alignItems: 'center', justifyContent: 'center' },
+  placeholderText: { color: c.text.muted, fontSize: typography.size.xs },
+  photoDate: { color: c.text.secondary, fontSize: typography.size.xs, textAlign: 'center', paddingVertical: spacing[2] },
+  fab: { position: 'absolute', bottom: spacing[8], right: spacing[4], width: 56, height: 56, borderRadius: radius.full, backgroundColor: c.accent.primary, alignItems: 'center', justifyContent: 'center', ...shadows.md },
   fabDisabled: { opacity: 0.5 },
   fabText: { color: '#fff', fontSize: 28, fontWeight: typography.weight.bold },
   warningBanner: { marginHorizontal: spacing[4], marginTop: spacing[2], padding: spacing[3], borderRadius: radius.md },
   warningText: { fontSize: typography.size.xs, lineHeight: typography.lineHeight.sm },
+  exportBtn: { marginTop: spacing[2], paddingVertical: spacing[2], paddingHorizontal: spacing[3], borderRadius: radius.md, borderWidth: 1, alignSelf: 'flex-start' },
+  exportBtnText: { fontSize: typography.size.xs, fontWeight: typography.weight.semibold },
 });

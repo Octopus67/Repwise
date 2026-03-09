@@ -23,10 +23,10 @@ interface LandmarkInfo {
   citation: string;
 }
 
-const LANDMARK_INFO: Record<LandmarkKey, LandmarkInfo> = {
+const getLANDMARK_INFO = (c: ThemeColors): Record<LandmarkKey, LandmarkInfo> => ({
   mv: {
     title: 'Minimum Volume (MV)',
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     description:
       'The lowest amount of training volume needed to maintain your current muscle mass. Below this, you risk losing gains.',
     advice:
@@ -35,7 +35,7 @@ const LANDMARK_INFO: Record<LandmarkKey, LandmarkInfo> = {
   },
   mev: {
     title: 'Minimum Effective Volume (MEV)',
-    color: getThemeColors().semantic.warning,
+    color: c.semantic.warning,
     description:
       'The minimum volume needed to stimulate measurable muscle growth. This is where hypertrophy begins.',
     advice:
@@ -44,7 +44,7 @@ const LANDMARK_INFO: Record<LandmarkKey, LandmarkInfo> = {
   },
   mav: {
     title: 'Maximum Adaptive Volume (MAV)',
-    color: getThemeColors().semantic.positive,
+    color: c.semantic.positive,
     description:
       'The volume range producing the best hypertrophy response relative to fatigue. This is your sweet spot.',
     advice:
@@ -53,19 +53,19 @@ const LANDMARK_INFO: Record<LandmarkKey, LandmarkInfo> = {
   },
   mrv: {
     title: 'Maximum Recoverable Volume (MRV)',
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     description:
       'The highest volume you can recover from. Exceeding MRV leads to overtraining, excessive fatigue, and potential regression.',
     advice:
       'Only approach MRV at the end of a mesocycle before deloading. If you\'re consistently above MRV, reduce volume immediately.',
     citation: 'Helms, Cronin & Storey (2020) — Application of the Repetitions in Reserve-Based Rating of Perceived Exertion Scale',
   },
-};
+});
 
 export function LandmarkExplainer({ landmark, onClose, visible }: LandmarkExplainerProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
-  const info = LANDMARK_INFO[landmark];
+  const info = getLANDMARK_INFO(c)[landmark];
 
   return (
     <ModalContainer
@@ -79,13 +79,13 @@ export function LandmarkExplainer({ landmark, onClose, visible }: LandmarkExplai
           <Text style={[styles.colorBadgeText, { color: info.color }]}>{info.title}</Text>
         </View>
 
-        <Text style={[styles.sectionTitle, { color: getThemeColors().text.primary }]}>What is it?</Text>
-        <Text style={[styles.body, { color: getThemeColors().text.secondary }]}>{info.description}</Text>
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>What is it?</Text>
+        <Text style={[styles.body, { color: c.text.secondary }]}>{info.description}</Text>
 
-        <Text style={[styles.sectionTitle, { color: getThemeColors().text.primary }]}>Practical Advice</Text>
-        <Text style={[styles.body, { color: getThemeColors().text.secondary }]}>{info.advice}</Text>
+        <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Practical Advice</Text>
+        <Text style={[styles.body, { color: c.text.secondary }]}>{info.advice}</Text>
 
-        <Text style={[styles.citation, { color: getThemeColors().text.muted, borderTopColor: getThemeColors().border.subtle }]}>{info.citation}</Text>
+        <Text style={[styles.citation, { color: c.text.muted, borderTopColor: c.border.subtle }]}>{info.citation}</Text>
       </ScrollView>
     </ModalContainer>
   );
@@ -107,24 +107,24 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: typography.weight.semibold,
   },
   sectionTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[1],
     marginTop: spacing[3],
   },
   body: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
   },
   citation: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs - 1,
     fontStyle: 'italic',
     marginTop: spacing[4],
     paddingTop: spacing[3],
     borderTopWidth: 1,
-    borderTopColor: getThemeColors().border.subtle,
+    borderTopColor: c.border.subtle,
   },
 });

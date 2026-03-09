@@ -21,17 +21,17 @@ export function MealSlotGroup({ slot, onAddToSlot }: MealSlotGroupProps) {
     <View style={styles.container}>
       {/* Header */}
       <TouchableOpacity
-        style={[styles.header, { backgroundColor: getThemeColors().bg.surfaceRaised }]}
+        style={[styles.header, { backgroundColor: c.bg.surfaceRaised }]}
         onPress={() => hasEntries && setExpanded(!expanded)}
         activeOpacity={hasEntries ? 0.7 : 1}
       >
         <View style={styles.headerLeft}>
-          <Text style={[styles.slotName, { color: getThemeColors().text.primary }]}>{slot.name}</Text>
+          <Text style={[styles.slotName, { color: c.text.primary }]}>{slot.name}</Text>
           {hasEntries && (
-            <Text style={[styles.chevron, { color: getThemeColors().text.muted }]}>{expanded ? '▾' : '▸'}</Text>
+            <Text style={[styles.chevron, { color: c.text.muted }]}>{expanded ? '▾' : '▸'}</Text>
           )}
         </View>
-        <Text style={[styles.slotCalories, { color: getThemeColors().text.secondary }]}>
+        <Text style={[styles.slotCalories, { color: c.text.secondary }]}>
           {Math.round(slot.totals.calories)} kcal
         </Text>
       </TouchableOpacity>
@@ -42,16 +42,16 @@ export function MealSlotGroup({ slot, onAddToSlot }: MealSlotGroupProps) {
           {sorted.map((entry) => {
             const time = formatEntryTime(entry.created_at);
             return (
-              <View key={entry.id} style={[styles.entryRow, { borderBottomColor: getThemeColors().border.subtle }]}>
+              <View key={entry.id} style={[styles.entryRow, { borderBottomColor: c.border.subtle }]}>
                 <View style={styles.entryInfo}>
-                  <Text style={[styles.entryName, { color: getThemeColors().text.primary }]} numberOfLines={1}>
+                  <Text style={[styles.entryName, { color: c.text.primary }]} numberOfLines={1}>
                     {entry.meal_name}
                   </Text>
                   {time !== '' && (
-                    <Text style={[styles.entryTime, { color: getThemeColors().text.muted }]}>{time}</Text>
+                    <Text style={[styles.entryTime, { color: c.text.muted }]}>{time}</Text>
                   )}
                 </View>
-                <Text style={[styles.entryCal, { color: getThemeColors().text.secondary }]}>{Math.round(entry.calories)} kcal</Text>
+                <Text style={[styles.entryCal, { color: c.text.secondary }]}>{Math.round(entry.calories)} kcal</Text>
               </View>
             );
           })}
@@ -64,7 +64,7 @@ export function MealSlotGroup({ slot, onAddToSlot }: MealSlotGroupProps) {
         onPress={() => onAddToSlot(slot.name)}
         activeOpacity={0.7}
       >
-        <Text style={[styles.addButtonText, { color: getThemeColors().accent.primary }]}>+</Text>
+        <Text style={[styles.addButtonText, { color: c.accent.primary }]}>+</Text>
       </TouchableOpacity>
     </View>
   );
@@ -81,7 +81,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing[2],
     paddingHorizontal: spacing[3],
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
   },
   headerLeft: {
@@ -92,15 +92,15 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   slotName: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
   },
   chevron: {
     fontSize: typography.size.sm,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
   },
   slotCalories: {
     fontSize: typography.size.sm,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontWeight: typography.weight.medium,
   },
   body: {
@@ -113,7 +113,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing[1],
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.subtle,
+    borderBottomColor: c.border.subtle,
   },
   entryInfo: {
     flex: 1,
@@ -121,16 +121,16 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   entryName: {
     fontSize: typography.size.sm,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
   },
   entryTime: {
     fontSize: typography.size.xs,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     marginTop: 1,
   },
   entryCal: {
     fontSize: typography.size.sm,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
   },
   addButton: {
     alignItems: 'center',
@@ -138,7 +138,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   addButtonText: {
     fontSize: typography.size.lg,
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontWeight: typography.weight.bold,
   },
 });

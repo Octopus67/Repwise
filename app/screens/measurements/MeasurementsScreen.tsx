@@ -172,17 +172,17 @@ export function MeasurementsScreen() {
 }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: getThemeColors().bg.base },
+  safe: { flex: 1, backgroundColor: c.bg.base },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing[4], paddingVertical: spacing[3],
-    borderBottomWidth: 1, borderBottomColor: getThemeColors().border.subtle,
+    borderBottomWidth: 1, borderBottomColor: c.border.subtle,
   },
   backBtn: { width: 60, minHeight: 44, justifyContent: 'center' },
-  backText: { color: getThemeColors().accent.primary, fontSize: typography.size.base },
+  backText: { color: c.accent.primary, fontSize: typography.size.base },
   title: {
-    color: getThemeColors().text.primary, fontSize: typography.size.lg,
+    color: c.text.primary, fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
   },
   tabBar: {
@@ -193,16 +193,16 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     flex: 1, alignItems: 'center', paddingVertical: spacing[2],
     borderBottomWidth: 2, borderBottomColor: 'transparent',
   },
-  tabActive: { borderBottomColor: getThemeColors().accent.primary },
+  tabActive: { borderBottomColor: c.accent.primary },
   tabText: {
-    color: getThemeColors().text.secondary, fontSize: typography.size.sm,
+    color: c.text.secondary, fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
-  tabTextActive: { color: getThemeColors().accent.primary, fontWeight: typography.weight.semibold },
+  tabTextActive: { color: c.accent.primary, fontWeight: typography.weight.semibold },
   content: { flex: 1, paddingHorizontal: spacing[4], paddingTop: spacing[3] },
   formSection: { marginTop: spacing[2] },
   sectionTitle: {
-    color: getThemeColors().text.primary, fontSize: typography.size.md,
+    color: c.text.primary, fontSize: typography.size.md,
     fontWeight: typography.weight.semibold, lineHeight: typography.lineHeight.md,
     marginBottom: spacing[3],
   },

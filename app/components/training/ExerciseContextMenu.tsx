@@ -52,7 +52,7 @@ export function ExerciseContextMenu({
         <View style={styles.backdrop} />
       </TouchableWithoutFeedback>
 
-      <View style={[styles.menu, { backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]}>
+      <View style={[styles.menu, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
         {items.map((item, index) => (
           <TouchableOpacity
             key={item.label}
@@ -60,7 +60,7 @@ export function ExerciseContextMenu({
             onPress={() => handleItemPress(item.onPress)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.menuItemText, { color: getThemeColors().text.primary }]}>{item.label}</Text>
+            <Text style={[styles.menuItemText, { color: c.text.primary }]}>{item.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -82,9 +82,9 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     right: 0,
     top: '100%',
     zIndex: 100,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     borderRadius: radius.md,
     minWidth: 200,
     overflow: 'hidden',
@@ -96,10 +96,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   menuItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.default,
+    borderBottomColor: c.border.default,
   },
   menuItemText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },

@@ -64,14 +64,14 @@ function getStyles() { return getThemedStyles(getThemeColors()); }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   deleteAction: {
-    backgroundColor: getThemeColors().semantic.negative,
+    backgroundColor: c.semantic.negative,
     justifyContent: 'center',
     alignItems: 'center',
     width: 80,
     height: '100%',
   },
   deleteText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
   },

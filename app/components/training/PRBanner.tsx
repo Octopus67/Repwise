@@ -88,14 +88,14 @@ export function PRBanner({ prs, visible, onDismiss }: PRBannerProps) {
     >
       <Animated.View style={[styles.banner, animatedStyle]}>
         <Text style={styles.trophy}>🏆</Text>
-        <Text style={[styles.title, { color: getThemeColors().premium.gold }]}>New Personal Record!</Text>
+        <Text style={[styles.title, { color: c.premium.gold }]}>New Personal Record!</Text>
         {prs.map((pr, i) => (
           <View key={i} style={styles.prRow}>
-            <Text style={[styles.prType, { color: getThemeColors().text.secondary }]}>
+            <Text style={[styles.prType, { color: c.text.secondary }]}>
               {PR_TYPE_LABELS[pr.type] ?? pr.type}
             </Text>
-            <Text style={[styles.prExercise, { color: getThemeColors().text.primary }]}>{pr.exerciseName}</Text>
-            <Text style={[styles.prValue, { color: getThemeColors().premium.gold }]}>{pr.value}</Text>
+            <Text style={[styles.prExercise, { color: c.text.primary }]}>{pr.exerciseName}</Text>
+            <Text style={[styles.prValue, { color: c.premium.gold }]}>{pr.value}</Text>
           </View>
         ))}
       </Animated.View>
@@ -111,10 +111,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     zIndex: 999,
   },
   banner: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: getThemeColors().premium.gold,
+    borderColor: c.premium.gold,
     padding: spacing[6],
     alignItems: 'center',
     minWidth: 260,
@@ -125,7 +125,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[2],
   },
   title: {
-    color: getThemeColors().premium.gold,
+    color: c.premium.gold,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
     marginBottom: spacing[3],
@@ -135,17 +135,17 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[2],
   },
   prType: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
   prExercise: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
   },
   prValue: {
-    color: getThemeColors().premium.gold,
+    color: c.premium.gold,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.bold,
   },

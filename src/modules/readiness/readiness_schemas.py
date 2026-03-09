@@ -71,3 +71,16 @@ class ReadinessHistoryResponse(BaseModel):
     items: List[ReadinessScoreResponse] = Field(default_factory=list)
     start_date: date
     end_date: date
+
+
+class CombinedRecoveryFactorResponse(BaseModel):
+    name: str
+    value: float
+    source: str  # "readiness" or "fatigue"
+
+
+class CombinedRecoveryResponse(BaseModel):
+    score: int = Field(ge=0, le=100)
+    volume_multiplier: float = Field(ge=0.5, le=1.2)
+    label: str
+    factors: List[CombinedRecoveryFactorResponse] = Field(default_factory=list)

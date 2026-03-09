@@ -31,7 +31,7 @@ export function Skeleton({
       <View
         style={[
           styles.base,
-          { width, height, borderRadius: resolvedRadius, opacity: 0.5, backgroundColor: getThemeColors().bg.surfaceRaised },
+          { width, height, borderRadius: resolvedRadius, opacity: 0.5, backgroundColor: c.bg.surfaceRaised },
         ]}
       />
     );
@@ -51,7 +51,7 @@ export function Skeleton({
     <Animated.View
       style={[
         styles.base,
-        { width, height, borderRadius: resolvedRadius, backgroundColor: getThemeColors().bg.surfaceRaised },
+        { width, height, borderRadius: resolvedRadius, backgroundColor: c.bg.surfaceRaised },
         animatedStyle,
       ]}
     />
@@ -60,6 +60,6 @@ export function Skeleton({
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   base: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
   },
 });

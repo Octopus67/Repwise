@@ -40,10 +40,10 @@ export function QuickActionButton({
           <View style={styles.iconArea}>
             <Icon name={icon} size={24} color={accentColor} />
           </View>
-          <Text style={[styles.label, { color: getThemeColors().text.secondary }]}>{label}</Text>
+          <Text style={[styles.label, { color: c.text.secondary }]}>{label}</Text>
           {completed && (
-            <View style={[styles.badge, { backgroundColor: getThemeColors().semantic.positive }]} testID="checkmark-badge">
-              <Icon name="check" size={12} color={getThemeColors().semantic.positive} />
+            <View style={[styles.badge, { backgroundColor: c.semantic.positive }]} testID="checkmark-badge">
+              <Icon name="check" size={12} color={c.semantic.positive} />
             </View>
           )}
         </Card>
@@ -69,7 +69,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   label: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     marginTop: spacing[1],
   },
   badge: {
@@ -79,7 +79,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: getThemeColors().semantic.positive,
+    backgroundColor: c.semantic.positive,
     justifyContent: 'center',
     alignItems: 'center',
   },

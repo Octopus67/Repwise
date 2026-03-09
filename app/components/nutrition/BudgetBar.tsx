@@ -27,8 +27,8 @@ export function BudgetBar({ consumed, targets }: BudgetBarProps) {
   // No targets set
   if (!targets || targets.calories <= 0) {
     return (
-      <View style={[getStyles().container, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.subtle }]}>
-        <Text style={[getStyles().noTargetsText, { color: getThemeColors().text.muted }]}>Set targets in profile</Text>
+      <View style={[getStyles().container, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
+        <Text style={[getStyles().noTargetsText, { color: c.text.muted }]}>Set targets in profile</Text>
       </View>
     );
   }
@@ -36,28 +36,28 @@ export function BudgetBar({ consumed, targets }: BudgetBarProps) {
   const remaining = computeRemaining(targets, safeConsumed);
   const progressRatio = computeProgressRatio(safeConsumed.calories, targets.calories);
   const isOver = remaining.calories < 0;
-  const calorieColor = getOverTargetColor(safeConsumed.calories, targets.calories, getThemeColors().text.primary);
+  const calorieColor = getOverTargetColor(safeConsumed.calories, targets.calories, c.text.primary);
 
   return (
-    <View style={[getStyles().container, { backgroundColor: getThemeColors().bg.surface, borderColor: getThemeColors().border.subtle }]}>
+    <View style={[getStyles().container, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
       {/* Remaining calories */}
       <View style={getStyles().calorieRow}>
         <Text style={[getStyles().calorieNumber, { color: calorieColor }]}>
           {Math.round(remaining.calories)}
         </Text>
-        <Text style={[getStyles().calorieLabel, { color: getThemeColors().text.secondary }]}>
+        <Text style={[getStyles().calorieLabel, { color: c.text.secondary }]}>
           {isOver ? 'kcal over' : 'kcal remaining'}
         </Text>
       </View>
 
       {/* Progress bar */}
-      <View style={[getStyles().progressTrack, { backgroundColor: getThemeColors().bg.surfaceRaised }]}>
+      <View style={[getStyles().progressTrack, { backgroundColor: c.bg.surfaceRaised }]}>
         <View
           style={[
             getStyles().progressFill,
             {
               width: `${progressRatio * 100}%`,
-              backgroundColor: isOver ? getThemeColors().semantic.overTarget : getThemeColors().accent.primary,
+              backgroundColor: isOver ? c.semantic.overTarget : c.accent.primary,
             },
           ]}
         />
@@ -80,10 +80,11 @@ function MacroChip({ label, value, unit, consumed, target }: {
   consumed: number;
   target: number;
 }) {
-  const chipColor = getOverTargetColor(consumed, target, getThemeColors().text.secondary);
+  const c = useThemeColors();
+  const chipColor = getOverTargetColor(consumed, target, c.text.secondary);
   return (
     <View style={getStyles().macroChip}>
-      <Text style={[getStyles().macroLabel, { color: getThemeColors().text.muted }]}>{label}</Text>
+      <Text style={[getStyles().macroLabel, { color: c.text.muted }]}>{label}</Text>
       <Text style={[getStyles().macroValue, { color: chipColor }]}>
         {Math.round(value)}{unit}
       </Text>
@@ -97,10 +98,10 @@ function getStyles() { return getThemedStyles(getThemeColors()); }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
+    borderColor: c.border.subtle,
     padding: spacing[4],
     marginBottom: spacing[3],
   },
@@ -117,12 +118,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   calorieLabel: {
     fontSize: typography.size.sm,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     lineHeight: typography.lineHeight.sm,
   },
   progressTrack: {
     height: 6,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.full,
     overflow: 'hidden',
     marginBottom: spacing[3],
@@ -141,7 +142,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   macroLabel: {
     fontSize: typography.size.xs,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     lineHeight: typography.lineHeight.xs,
     marginBottom: spacing[0.5],
   },
@@ -152,7 +153,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   noTargetsText: {
     fontSize: typography.size.base,
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     lineHeight: typography.lineHeight.base,
     textAlign: 'center',
     paddingVertical: spacing[2],

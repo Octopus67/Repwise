@@ -40,7 +40,7 @@ export function MealFrequencyStepper({ value, onChange }: Props) {
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: { marginBottom: spacing[3] },
   label: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
@@ -54,21 +54,21 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    borderColor: c.border.default,
+    backgroundColor: c.bg.surfaceRaised,
   },
   btnActive: {
-    borderColor: getThemeColors().accent.primary,
-    backgroundColor: getThemeColors().accent.primaryMuted,
+    borderColor: c.accent.primary,
+    backgroundColor: c.accent.primaryMuted,
   },
   text: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.md,
   },
   textActive: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontWeight: typography.weight.semibold,
   },
 });

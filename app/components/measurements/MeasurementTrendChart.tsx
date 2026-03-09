@@ -39,7 +39,7 @@ export function MeasurementTrendChart({ measurements }: MeasurementTrendChartPro
 
   const filtered = filterByTimeRange(dataPoints, range);
 
-  const chartColor = metric === 'weight' ? getThemeColors().accent.primary : getThemeColors().semantic.warning;
+  const chartColor = metric === 'weight' ? c.accent.primary : c.semantic.warning;
   const suffix = metric === 'weight'
     ? (unitSystem === 'imperial' ? ' lbs' : ' kg')
     : '%';
@@ -47,8 +47,8 @@ export function MeasurementTrendChart({ measurements }: MeasurementTrendChartPro
   return (
     <Card style={styles.card}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: getThemeColors().text.primary }]}>Trends</Text>
-        <View style={[styles.metricToggle, { backgroundColor: getThemeColors().bg.surfaceRaised }]}>
+        <Text style={[styles.title, { color: c.text.primary }]}>Trends</Text>
+        <View style={[styles.metricToggle, { backgroundColor: c.bg.surfaceRaised }]}>
           {(['weight', 'bodyFat'] as const).map((m) => (
             <TouchableOpacity
               key={m}
@@ -86,22 +86,22 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center', marginBottom: spacing[3],
   },
   title: {
-    color: getThemeColors().text.primary, fontSize: typography.size.md,
+    color: c.text.primary, fontSize: typography.size.md,
     fontWeight: typography.weight.semibold, lineHeight: typography.lineHeight.md,
   },
   metricToggle: {
-    flexDirection: 'row', backgroundColor: getThemeColors().bg.surfaceRaised,
+    flexDirection: 'row', backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm, padding: 2,
   },
   toggleBtn: {
     paddingHorizontal: spacing[3], paddingVertical: spacing[1],
     borderRadius: radius.sm - 2,
   },
-  toggleBtnActive: { backgroundColor: getThemeColors().accent.primary },
+  toggleBtnActive: { backgroundColor: c.accent.primary },
   toggleText: {
-    color: getThemeColors().text.secondary, fontSize: typography.size.xs,
+    color: c.text.secondary, fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
   },
-  toggleTextActive: { color: getThemeColors().text.inverse, fontWeight: typography.weight.semibold },
+  toggleTextActive: { color: c.text.inverse, fontWeight: typography.weight.semibold },
   chartWrap: { marginTop: spacing[3] },
 });

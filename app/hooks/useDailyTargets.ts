@@ -61,7 +61,7 @@ export function useDailyTargets(selectedDate: string): UseDailyTargetsResult {
 
   return {
     data,
-    effectiveTargets: data?.effective ?? null,
+    effectiveTargets: data?.baseline ?? null, // Use baseline instead of effective (flat targets)
     dayClassification: data?.day_classification ?? null,
     explanation: data?.explanation ?? null,
     isOverride: data?.override != null,

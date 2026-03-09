@@ -4,10 +4,6 @@ export type StrengthLevel = 'weak' | 'fair' | 'good' | 'strong';
 
 export interface PasswordValidation {
   minLength: boolean;
-  hasUppercase: boolean;
-  hasLowercase: boolean;
-  hasNumber: boolean;
-  hasSpecial: boolean;
 }
 
 export interface PasswordStrengthResult {
@@ -20,13 +16,9 @@ export interface PasswordStrengthResult {
 export function getPasswordStrength(password: string): PasswordStrengthResult {
   const validation: PasswordValidation = {
     minLength: password.length >= 8,
-    hasUppercase: /[A-Z]/.test(password),
-    hasLowercase: /[a-z]/.test(password),
-    hasNumber: /\d/.test(password),
-    hasSpecial: /[^A-Za-z0-9]/.test(password),
   };
 
-  const isValid = Object.values(validation).every(Boolean);
+  const isValid = validation.minLength;
 
   if (!password) {
     return { score: 0, level: 'weak', validation, isValid };

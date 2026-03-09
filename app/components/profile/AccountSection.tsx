@@ -6,9 +6,11 @@ import {
   Alert,
   StyleSheet,
   Linking,
+  Platform,
 } from 'react-native';
 import Animated, { Layout } from 'react-native-reanimated';
 import Constants from 'expo-constants';
+import * as SecureStore from 'expo-secure-store';
 import { spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
@@ -32,6 +34,25 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
   const toggleDangerZone = useCallback(() => {
     setDangerZoneExpanded((prev) => !prev);
   }, []);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      // Get refresh token from storage (use correct key)
+      const refreshToken = await (Platform.OS === 'web' 
+        ? Promise.resolve(localStorage.getItem('rw_refresh_token'))
+        : SecureStore.getItemAsync('rw_refresh_token'));
+      
+      // Call backend logout to blacklist both tokens
+      await api.post('auth/logout', { refresh_token: refreshToken });
+    } catch (error) {
+      // Continue with logout even if API call fails
+      console.warn('Logout API call failed:', error);
+    } finally {
+      // Clear local auth state
+      store.clearAuth();
+      onLogout();
+    }
+  }, [store, onLogout]);
 
   const handleRedoOnboarding = useCallback(() => {
     Alert.alert(
@@ -81,11 +102,11 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
 
   return (
     <Card>
-      <Text style={[styles.sectionTitle, { color: getThemeColors().text.primary }]}>Account</Text>
+      <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Account</Text>
 
       {/* Log Out */}
       <View style={styles.logoutRow}>
-        <Button title="Log Out" variant="secondary" onPress={onLogout} />
+        <Button title="Log Out" variant="secondary" onPress={handleLogout} />
       </View>
 
       {/* Retake Setup Wizard */}
@@ -94,33 +115,33 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
       </View>
 
       {/* Legal Links */}
-      <View style={[styles.legalSection, { borderBottomColor: getThemeColors().border.subtle }]}>
+      <View style={[styles.legalSection, { borderBottomColor: c.border.subtle }]}>
         <TouchableOpacity
           style={styles.legalLink}
           onPress={() => Linking.openURL('https://repwise.app/privacy')}
           accessibilityRole="link"
         >
-          <Text style={[styles.legalText, { color: getThemeColors().accent.primary }]}>Privacy Policy</Text>
+          <Text style={[styles.legalText, { color: c.accent.primary }]}>Privacy Policy</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.legalLink}
           onPress={() => Linking.openURL('https://repwise.app/terms')}
           accessibilityRole="link"
         >
-          <Text style={[styles.legalText, { color: getThemeColors().accent.primary }]}>Terms of Service</Text>
+          <Text style={[styles.legalText, { color: c.accent.primary }]}>Terms of Service</Text>
         </TouchableOpacity>
       </View>
 
       {/* Danger Zone */}
       <TouchableOpacity
-        style={[styles.dangerZoneHeader, { borderTopColor: getThemeColors().border.subtle }]}
+        style={[styles.dangerZoneHeader, { borderTopColor: c.border.subtle }]}
         onPress={toggleDangerZone}
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityState={{ expanded: dangerZoneExpanded }}
         accessibilityLabel="Danger Zone"
       >
-        <Text style={[styles.dangerZoneText, { color: getThemeColors().semantic.negative }]}>
+        <Text style={[styles.dangerZoneText, { color: c.semantic.negative }]}>
           {dangerZoneExpanded ? '▾' : '▸'} Danger Zone
         </Text>
       </TouchableOpacity>
@@ -136,14 +157,14 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
       )}
 
       {/* App Version */}
-      <Text style={[styles.version, { color: getThemeColors().text.muted }]}>App version: {appVersion}</Text>
+      <Text style={[styles.version, { color: c.text.muted }]}>App version: {appVersion}</Text>
     </Card>
   );
 }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   sectionTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.md,
@@ -159,7 +180,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[4],
     paddingBottom: spacing[4],
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.subtle,
+    borderBottomColor: c.border.subtle,
   },
   legalLink: {
     paddingVertical: spacing[2],
@@ -167,7 +188,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
   },
   legalText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
     textAlign: 'center',
@@ -175,12 +196,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   dangerZoneHeader: {
     paddingVertical: spacing[3],
     borderTopWidth: 1,
-    borderTopColor: getThemeColors().border.subtle,
+    borderTopColor: c.border.subtle,
     minHeight: 44,
     justifyContent: 'center',
   },
   dangerZoneText: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.base,
@@ -189,7 +210,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingBottom: spacing[4],
   },
   version: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     lineHeight: typography.lineHeight.xs,
     marginTop: spacing[4],

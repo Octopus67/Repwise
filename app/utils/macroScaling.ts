@@ -1,0 +1,23 @@
+/**
+ * Macro scaling utility for nutrition entries.
+ * Extracted to avoid circular dependency between AddNutritionModal and RecipeTab.
+ */
+
+export interface Macros {
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+}
+
+/**
+ * Scale macros by a multiplier (e.g., for serving size adjustments).
+ */
+export function scaleMacros(base: Macros, multiplier: number): Macros {
+  return {
+    calories: base.calories * multiplier,
+    protein_g: base.protein_g * multiplier,
+    carbs_g: base.carbs_g * multiplier,
+    fat_g: base.fat_g * multiplier,
+  };
+}

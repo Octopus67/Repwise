@@ -42,27 +42,27 @@ export function HUExplainerModal({ visible, exerciseName, currentHU, onClose }: 
     <ModalContainer visible={visible} onClose={onClose} title="Understanding Hard Units">
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         {exerciseName != null && currentHU != null && (
-          <View style={[styles.currentBox, { backgroundColor: getThemeColors().accent.primaryMuted }]}>
-            <Text style={[styles.currentLabel, { color: getThemeColors().text.secondary }]}>{exerciseName}</Text>
-            <Text style={[styles.currentValue, { color: getThemeColors().accent.primary }]}>{currentHU.toFixed(1)} HU</Text>
+          <View style={[styles.currentBox, { backgroundColor: c.accent.primaryMuted }]}>
+            <Text style={[styles.currentLabel, { color: c.text.secondary }]}>{exerciseName}</Text>
+            <Text style={[styles.currentValue, { color: c.accent.primary }]}>{currentHU.toFixed(1)} HU</Text>
           </View>
         )}
 
         {CONCEPTS.map((item) => (
           <View key={item.title} style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: getThemeColors().text.primary }]}>{item.title}</Text>
-            <Text style={[styles.sectionBody, { color: getThemeColors().text.secondary }]}>{item.body}</Text>
+            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>{item.title}</Text>
+            <Text style={[styles.sectionBody, { color: c.text.secondary }]}>{item.body}</Text>
           </View>
         ))}
       </ScrollView>
 
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: getThemeColors().accent.primary }]}
+        style={[styles.button, { backgroundColor: c.accent.primary }]}
         onPress={onClose}
         accessibilityRole="button"
         accessibilityLabel="Got it"
       >
-        <Text style={[styles.buttonText, { color: getThemeColors().text.inverse }]}>Got it</Text>
+        <Text style={[styles.buttonText, { color: c.text.inverse }]}>Got it</Text>
       </TouchableOpacity>
     </ModalContainer>
   );

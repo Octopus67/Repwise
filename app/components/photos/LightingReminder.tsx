@@ -52,27 +52,27 @@ export function LightingReminder({ visible, onDismiss, onDontShowAgain }: Lighti
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleDismiss}>
-      <View style={[styles.backdrop, { backgroundColor: getThemeColors().bg.overlay }]}>
-        <View style={[styles.card, { backgroundColor: getThemeColors().bg.surface }]}>
+      <View style={[styles.backdrop, { backgroundColor: c.bg.overlay }]}>
+        <View style={[styles.card, { backgroundColor: c.bg.surface }]}>
           <Text style={styles.icon}>💡</Text>
-          <Text style={[styles.title, { color: getThemeColors().text.primary }]}>Lighting Tip</Text>
-          <Text style={[styles.body, { color: getThemeColors().text.secondary }]}>
+          <Text style={[styles.title, { color: c.text.primary }]}>Lighting Tip</Text>
+          <Text style={[styles.body, { color: c.text.secondary }]}>
             For the best comparison results, try to use the same room, same time of day, and prefer
             natural light for each photo session.
           </Text>
 
           <View style={styles.toggleRow}>
-            <Text style={[styles.toggleLabel, { color: getThemeColors().text.secondary }]}>Don't show again</Text>
+            <Text style={[styles.toggleLabel, { color: c.text.secondary }]}>Don't show again</Text>
             <Switch
               value={dontShow}
               onValueChange={setDontShow}
-              trackColor={{ false: getThemeColors().bg.surfaceRaised, true: getThemeColors().accent.primary }}
-              thumbColor={getThemeColors().text.primary}
+              trackColor={{ false: c.bg.surfaceRaised, true: c.accent.primary }}
+              thumbColor={c.text.primary}
             />
           </View>
 
-          <TouchableOpacity style={[styles.button, { backgroundColor: getThemeColors().accent.primary }]} onPress={handleDismiss} activeOpacity={0.8}>
-            <Text style={[styles.buttonText, { color: getThemeColors().text.inverse }]}>Got it</Text>
+          <TouchableOpacity style={[styles.button, { backgroundColor: c.accent.primary }]} onPress={handleDismiss} activeOpacity={0.8}>
+            <Text style={[styles.buttonText, { color: c.text.inverse }]}>Got it</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -83,13 +83,13 @@ export function LightingReminder({ visible, onDismiss, onDontShowAgain }: Lighti
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: getThemeColors().bg.overlay,
+    backgroundColor: c.bg.overlay,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing[4],
   },
   card: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.lg,
     padding: spacing[6],
     width: '100%',
@@ -101,13 +101,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[3],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing[2],
   },
   body: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     textAlign: 'center',
     lineHeight: typography.size.base * typography.lineHeight.relaxed,
@@ -122,17 +122,17 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing[2],
   },
   toggleLabel: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
   },
   button: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.sm,
     paddingVertical: spacing[3],
     paddingHorizontal: spacing[8],
   },
   buttonText: {
-    color: getThemeColors().text.inverse,
+    color: c.text.inverse,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
   },

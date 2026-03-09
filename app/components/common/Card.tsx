@@ -77,7 +77,7 @@ export function Card({
   const { isHovered, hoverProps } = useHoverState();
   const entranceStyle = useStaggeredEntrance(animationIndex);
 
-  const hoverBorder = isHovered && onPress ? { borderColor: getThemeColors().border.hover } : undefined;
+  const hoverBorder = isHovered && onPress ? { borderColor: c.border.hover } : undefined;
 
   const content = onPress ? (
     <TouchableOpacity

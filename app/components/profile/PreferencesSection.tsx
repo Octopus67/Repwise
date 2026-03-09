@@ -10,10 +10,12 @@ import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import { EditableField } from '../common/EditableField';
+import { PickerField } from '../common/PickerField';
 import { CoachingModeSelector, type CoachingMode } from '../coaching/CoachingModeSelector';
 import { useStore, type UserProfile } from '../../store';
 import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
 import { useThemeStore } from '../../store/useThemeStore';
+import { TIMEZONE_OPTIONS, REGION_OPTIONS, CURRENCY_OPTIONS } from '../../constants/pickerOptions';
 import api from '../../services/api';
 
 // ─── SegmentedControl (inline) ───────────────────────────────────────────────
@@ -26,6 +28,8 @@ interface SegmentedControlProps {
 }
 
 function SegmentedControl({ options, selected, onChange, disabled }: SegmentedControlProps) {
+  const c = useThemeColors();
+  const segStyles = getSegStyles(c);
   return (
     <View style={segStyles.track}>
       {options.map((opt) => {
@@ -74,13 +78,13 @@ function detectTimezone(): string {
 export function PreferencesSection({ profile, unitSystem, coachingMode }: PreferencesSectionProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const segStyles = getSegStyles(c);
   const store = useStore();
   const showRpeRirTooltip = useWorkoutPreferencesStore((s) => s.showRpeRirTooltip);
   const dismissRpeRirTooltip = useWorkoutPreferencesStore((s) => s.dismissRpeRirTooltip);
   const themeMode = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
   const [savingUnit, setSavingUnit] = useState(false);
-  const [savingTimezone, setSavingTimezone] = useState(false);
   const [savingCoaching, setSavingCoaching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -127,7 +131,6 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
   // ── Timezone change ──
   const handleTimezoneSave = useCallback(
     async (newValue: string) => {
-      setSavingTimezone(true);
       setError(null);
       try {
         const { data } = await api.put('users/profile', { timezone: newValue });
@@ -135,8 +138,6 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
         store.setProfile(mapped);
       } catch {
         throw new Error("Couldn't save timezone.");
-      } finally {
-        setSavingTimezone(false);
       }
     },
     [store],
@@ -202,14 +203,14 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
 
   return (
     <Card>
-      <Text style={[styles.sectionTitle, { color: getThemeColors().text.primary }]}>Preferences</Text>
+      <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Preferences</Text>
 
       {/* 1. Unit System — SegmentedControl */}
-      <View style={[styles.row, { borderBottomColor: getThemeColors().border.subtle }]}>
-        <Text style={[styles.rowLabel, { color: getThemeColors().text.muted }]}>Unit System</Text>
+      <View style={[styles.row, { borderBottomColor: c.border.subtle }]}>
+        <Text style={[styles.rowLabel, { color: c.text.muted }]}>Unit System</Text>
         <View style={styles.rowControl}>
           {savingUnit ? (
-            <ActivityIndicator color={getThemeColors().accent.primary} size="small" />
+            <ActivityIndicator color={c.accent.primary} size="small" />
           ) : (
             <SegmentedControl
               options={[
@@ -224,8 +225,8 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
       </View>
 
       {/* 1.5 Theme */}
-      <View style={[styles.row, { borderBottomColor: getThemeColors().border.subtle }]}>
-        <Text style={[styles.rowLabel, { color: getThemeColors().text.muted }]}>Appearance</Text>
+      <View style={[styles.row, { borderBottomColor: c.border.subtle }]}>
+        <Text style={[styles.rowLabel, { color: c.text.muted }]}>Appearance</Text>
         <View style={styles.rowControl}>
           <SegmentedControl
             options={[
@@ -239,34 +240,34 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
       </View>
 
       {/* 2. Timezone */}
-      <View style={[styles.row, { borderBottomColor: getThemeColors().border.subtle }]}>
-        <EditableField
-          label="Timezone"
-          value={timezoneDisplay}
-          onSave={handleTimezoneSave}
-        />
-        {savingTimezone && <ActivityIndicator color={getThemeColors().accent.primary} size="small" style={{ position: 'absolute', right: 0 }} />}
-      </View>
+      <PickerField
+        label="Timezone"
+        value={timezoneDisplay}
+        options={TIMEZONE_OPTIONS}
+        onSelect={handleTimezoneSave}
+      />
 
       {/* 3. Region */}
-      <EditableField
+      <PickerField
         label="Region"
-        value={profile.region ?? '—'}
-        onSave={handleRegionSave}
+        value={profile.region ?? ''}
+        options={REGION_OPTIONS}
+        onSelect={handleRegionSave}
       />
 
       {/* 4. Currency */}
-      <EditableField
+      <PickerField
         label="Currency"
-        value={profile.preferredCurrency ?? '—'}
-        onSave={handleCurrencySave}
+        value={profile.preferredCurrency ?? ''}
+        options={CURRENCY_OPTIONS}
+        onSelect={handleCurrencySave}
       />
 
       {/* 5. Coaching Mode */}
       <View style={styles.coachingContainer}>
         {savingCoaching && (
-          <View style={[styles.coachingOverlay, { backgroundColor: getThemeColors().bg.overlay }]}>
-            <ActivityIndicator color={getThemeColors().accent.primary} size="small" />
+          <View style={[styles.coachingOverlay, { backgroundColor: c.bg.overlay }]}>
+            <ActivityIndicator color={c.accent.primary} size="small" />
           </View>
         )}
         <CoachingModeSelector
@@ -277,21 +278,21 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
 
       {/* 6. Reset RPE/RIR Guide */}
       {!showRpeRirTooltip && (
-        <View style={[styles.row, { borderBottomColor: getThemeColors().border.subtle }]}>
-          <Text style={[styles.rowLabel, { color: getThemeColors().text.muted }]}>RPE/RIR Guide</Text>
+        <View style={[styles.row, { borderBottomColor: c.border.subtle }]}>
+          <Text style={[styles.rowLabel, { color: c.text.muted }]}>RPE/RIR Guide</Text>
           <TouchableOpacity
             onPress={handleResetRpeTooltip}
-            style={[styles.resetButton, { backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]}
+            style={[styles.resetButton, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
             accessibilityLabel="Reset RPE/RIR guide"
             accessibilityRole="button"
           >
-            <Text style={[styles.resetButtonText, { color: getThemeColors().text.secondary }]}>Reset</Text>
+            <Text style={[styles.resetButtonText, { color: c.text.secondary }]}>Reset</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {/* Inline error */}
-      {error && <Text style={[styles.error, { color: getThemeColors().semantic.negative }]}>{error}</Text>}
+      {error && <Text style={[styles.error, { color: c.semantic.negative }]}>{error}</Text>}
     </Card>
   );
 }
@@ -316,7 +317,7 @@ function mapProfileResponse(data: Record<string, unknown>): UserProfile {
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   sectionTitle: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.md,
@@ -328,10 +329,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing[3],
     borderBottomWidth: 1,
-    borderBottomColor: getThemeColors().border.subtle,
+    borderBottomColor: c.border.subtle,
   },
   rowLabel: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
@@ -345,40 +346,40 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   coachingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: getThemeColors().bg.overlay,
+    backgroundColor: c.bg.overlay,
     borderRadius: radius.md,
     zIndex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   error: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     marginTop: spacing[2],
   },
   resetButton: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     paddingVertical: spacing[1],
     paddingHorizontal: spacing[2],
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
   },
   resetButtonText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
 });
 
-const segStyles = StyleSheet.create({
+const getSegStyles = (c: ThemeColors) => StyleSheet.create({
   track: {
     flexDirection: 'row',
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     overflow: 'hidden',
   },
   segment: {
@@ -388,17 +389,17 @@ const segStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   segmentActive: {
-    backgroundColor: getThemeColors().accent.primaryMuted,
-    borderColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primaryMuted,
+    borderColor: c.accent.primary,
   },
   segmentText: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     lineHeight: typography.lineHeight.sm,
   },
   segmentTextActive: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontWeight: typography.weight.semibold,
   },
 });

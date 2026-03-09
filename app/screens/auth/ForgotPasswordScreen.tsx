@@ -64,21 +64,21 @@ export function ForgotPasswordScreen({ onNavigateBack, onNavigateResetPassword }
   if (submitted) {
     return (
       <KeyboardAvoidingView
-        style={[styles.container, { backgroundColor: getThemeColors().bg.base }]}
+        style={[styles.container, { backgroundColor: c.bg.base }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <Animated.View style={titleAnim}>
-            <Text style={[styles.title, { color: getThemeColors().text.primary }]}>Check Your Email</Text>
+            <Text style={[styles.title, { color: c.text.primary }]}>Check Your Email</Text>
           </Animated.View>
           <Animated.View style={subtitleAnim}>
-            <Text style={[styles.successMessage, { color: getThemeColors().text.secondary }]}>
+            <Text style={[styles.successMessage, { color: c.text.secondary }]}>
               If an account with that email exists, we've sent a reset link.
             </Text>
           </Animated.View>
           <Animated.View style={formAnim}>
             <TouchableOpacity onPress={onNavigateBack} style={styles.backLink}>
-              <Text style={[styles.backLinkText, { color: getThemeColors().accent.primary }]}>← Back to Sign In</Text>
+              <Text style={[styles.backLinkText, { color: c.accent.primary }]}>← Back to Sign In</Text>
             </TouchableOpacity>
           </Animated.View>
         </ScrollView>
@@ -88,15 +88,15 @@ export function ForgotPasswordScreen({ onNavigateBack, onNavigateResetPassword }
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: getThemeColors().bg.base }]}
+      style={[styles.container, { backgroundColor: c.bg.base }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Animated.View style={titleAnim}>
-          <Text style={[styles.title, { color: getThemeColors().text.primary }]}>Reset Password</Text>
+          <Text style={[styles.title, { color: c.text.primary }]}>Reset Password</Text>
         </Animated.View>
         <Animated.View style={subtitleAnim}>
-          <Text style={[styles.subtitle, { color: getThemeColors().text.secondary }]}>Enter your email and we'll send a reset link.</Text>
+          <Text style={[styles.subtitle, { color: c.text.secondary }]}>Enter your email and we'll send a reset link.</Text>
         </Animated.View>
 
         <Animated.View style={formAnim}>
@@ -104,9 +104,9 @@ export function ForgotPasswordScreen({ onNavigateBack, onNavigateResetPassword }
 
         <TextInput
           testID="forgot-email-input"
-          style={[styles.input, { color: getThemeColors().text.primary, backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.subtle }]}
+          style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}
           placeholder="Email"
-          placeholderTextColor={getThemeColors().text.muted}
+          placeholderTextColor={c.text.muted}
           keyboardType="email-address"
           autoCapitalize="none"
           value={email}
@@ -124,7 +124,7 @@ export function ForgotPasswordScreen({ onNavigateBack, onNavigateResetPassword }
         />
 
         <TouchableOpacity onPress={onNavigateBack} style={styles.backLink}>
-          <Text style={[styles.backLinkText, { color: getThemeColors().accent.primary }]}>← Back to Sign In</Text>
+          <Text style={[styles.backLinkText, { color: c.accent.primary }]}>← Back to Sign In</Text>
         </TouchableOpacity>
         </Animated.View>
       </ScrollView>
@@ -133,44 +133,44 @@ export function ForgotPasswordScreen({ onNavigateBack, onNavigateResetPassword }
 }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: getThemeColors().bg.base },
+  container: { flex: 1, backgroundColor: c.bg.base },
   scroll: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: spacing[6],
   },
   title: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.semibold,
     textAlign: 'center',
   },
   subtitle: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     textAlign: 'center',
     marginTop: spacing[2],
     marginBottom: spacing[8],
   },
   error: {
-    color: getThemeColors().semantic.negative,
+    color: c.semantic.negative,
     fontSize: typography.size.sm,
     textAlign: 'center',
     marginBottom: spacing[4],
   },
   input: {
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: getThemeColors().border.subtle,
-    color: getThemeColors().text.primary,
+    borderColor: c.border.subtle,
+    color: c.text.primary,
     fontSize: typography.size.base,
     padding: spacing[4],
     marginBottom: spacing[3],
   },
   btn: { marginTop: spacing[2] },
   successMessage: {
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.base,
     textAlign: 'center',
     marginTop: spacing[4],
@@ -182,7 +182,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginTop: spacing[6],
   },
   backLinkText: {
-    color: getThemeColors().accent.primary,
+    color: c.accent.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },

@@ -42,8 +42,8 @@ export function MuscleGroupGrid({ exercises, onSelectMuscleGroup }: MuscleGroupG
         <View style={[styles.abbrevCircle, { backgroundColor: item.color }]}>
           <MuscleGroupIcon muscleGroup={item.key} size={28} color="#FFFFFF" />
         </View>
-        <Text style={[styles.label, { color: getThemeColors().text.primary }]}>{item.label}</Text>
-        <Text style={[styles.count, { color: getThemeColors().text.muted }]}>{count} exercises</Text>
+        <Text style={[styles.label, { color: c.text.primary }]}>{item.label}</Text>
+        <Text style={[styles.count, { color: c.text.muted }]}>{count} exercises</Text>
       </TouchableOpacity>
     );
   };
@@ -85,13 +85,13 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[1],
   },
   label: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
     fontWeight: typography.weight.semibold,
   },
   count: {
-    color: getThemeColors().text.muted,
+    color: c.text.muted,
     fontSize: typography.size.xs,
     lineHeight: typography.lineHeight.xs,
     marginTop: 2,

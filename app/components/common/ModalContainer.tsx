@@ -157,7 +157,7 @@ function getStyles() { return getThemedStyles(getThemeColors()); }
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: getThemeColors().bg.overlay,
+    backgroundColor: c.bg.overlay,
   },
   webOverlay: {
     flex: 1,
@@ -167,10 +167,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   webDialog: {
     maxWidth: 480,
     width: '90%',
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     padding: spacing[6],
     maxHeight: '85%',
   },
@@ -179,12 +179,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'flex-end',
   },
   mobileSheet: {
-    backgroundColor: getThemeColors().bg.surface,
+    backgroundColor: c.bg.surface,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
     borderWidth: 1,
     borderBottomWidth: 0,
-    borderColor: getThemeColors().border.default,
+    borderColor: c.border.default,
     padding: spacing[6],
     paddingTop: spacing[2],
     maxHeight: '90%',
@@ -197,7 +197,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
   },
   header: {
     flexDirection: 'row',
@@ -208,7 +208,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   title: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
   },
   titleRow: {
     flexDirection: 'row',

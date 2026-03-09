@@ -24,8 +24,8 @@ export function StickyFinishBar({
   const summaryText = `${exerciseCount} exercise${exerciseCount !== 1 ? 's' : ''} · ${setCount} set${setCount !== 1 ? 's' : ''} · ${durationFormatted}`;
 
   return (
-    <View style={[styles.container, { backgroundColor: getThemeColors().bg.surfaceRaised, borderTopColor: getThemeColors().border.default }]}>
-      <Text style={[styles.summary, { color: getThemeColors().text.secondary }]} numberOfLines={1} accessibilityRole="text" accessibilityLabel={summaryText}>{summaryText}</Text>
+    <View style={[styles.container, { backgroundColor: c.bg.surfaceRaised, borderTopColor: c.border.default }]}>
+      <Text style={[styles.summary, { color: c.text.secondary }]} numberOfLines={1} accessibilityRole="text" accessibilityLabel={summaryText}>{summaryText}</Text>
       <TouchableOpacity
         style={[styles.finishBtn, loading && styles.finishBtnDisabled]}
         onPress={onFinish}
@@ -34,7 +34,7 @@ export function StickyFinishBar({
         accessibilityRole="button"
         activeOpacity={0.7}
       >
-        <Text style={[styles.finishText, { color: getThemeColors().text.primary }]}>
+        <Text style={[styles.finishText, { color: c.text.primary }]}>
           {loading ? 'Saving…' : 'Finish Workout'}
         </Text>
       </TouchableOpacity>
@@ -49,9 +49,9 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     left: 0,
     right: 0,
     height: 60,
-    backgroundColor: getThemeColors().bg.surfaceRaised,
+    backgroundColor: c.bg.surfaceRaised,
     borderTopWidth: 1,
-    borderTopColor: getThemeColors().border.default,
+    borderTopColor: c.border.default,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing[4],
@@ -60,12 +60,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   summary: {
     flex: 1,
-    color: getThemeColors().text.secondary,
+    color: c.text.secondary,
     fontSize: typography.size.sm,
     lineHeight: typography.lineHeight.sm,
   },
   finishBtn: {
-    backgroundColor: getThemeColors().accent.primary,
+    backgroundColor: c.accent.primary,
     borderRadius: radius.sm,
     paddingHorizontal: spacing[5],
     paddingVertical: spacing[2],
@@ -74,7 +74,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     opacity: 0.5,
   },
   finishText: {
-    color: getThemeColors().text.primary,
+    color: c.text.primary,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.base,

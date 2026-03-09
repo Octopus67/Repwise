@@ -89,7 +89,6 @@ const baseStyle: ViewStyle = {
 };
 
 const baseTextStyle: TextStyle = {
-  color: getThemeColors().text.primary,
   fontSize: typography.size.base,
   fontWeight: typography.weight.semibold,
   letterSpacing: letterSpacing.wide,
