@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-import random
+import secrets
 import string
 
 import boto3
@@ -15,13 +15,18 @@ logger = logging.getLogger(__name__)
 
 
 def _get_ses_client():
-    """Create a boto3 SES client. Uses default credential chain (env vars, IAM role, etc.)."""
-    return boto3.client("ses", region_name=settings.SES_REGION)
+    """Create a boto3 SES client with explicit credentials from settings."""
+    return boto3.client(
+        "ses",
+        region_name=settings.SES_REGION,
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+    )
 
 
 def generate_otp(length: int = 6) -> str:
-    """Generate a random numeric OTP."""
-    return "".join(random.choices(string.digits, k=length))
+    """Generate a cryptographically secure random numeric OTP."""
+    return "".join(secrets.choice(string.digits) for _ in range(length))
 
 
 class EmailService:
