@@ -1,5 +1,6 @@
 """Application settings loaded from environment variables."""
 
+import os
 from pydantic import field_validator, ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -9,7 +10,7 @@ class Settings(BaseSettings):
 
     # App
     APP_NAME: str = "Repwise"
-    DEBUG: bool = False
+    DEBUG: bool = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
     CORS_ORIGINS: list[str] = ["http://localhost:8081", "http://localhost:19006"]
 
     # Database
@@ -48,6 +49,8 @@ class Settings(BaseSettings):
     APNS_TEAM_ID: str = ""
     APNS_AUTH_KEY_PATH: str = ""
     # AWS SES
+    AWS_ACCESS_KEY_ID: str = ""
+    AWS_SECRET_ACCESS_KEY: str = ""
     SES_REGION: str = "us-east-1"
     SES_SENDER_EMAIL: str = "noreply@repwise.app"
 
