@@ -1,8 +1,9 @@
 """Auth routes — registration, login, OAuth, token refresh, and logout."""
 
 import time
+from typing import Optional
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
@@ -125,13 +126,14 @@ async def refresh(
 @router.post("/logout", status_code=204, response_model=None)
 async def logout(
     request: Request,
+    refresh_token: Optional[str] = Body(None, embed=True),
     user: User = Depends(get_current_user),
     service: AuthService = Depends(_get_auth_service),
 ) -> None:
-    """Logout the current user (invalidate tokens server-side)."""
+    """Logout the current user (invalidate both access and refresh tokens)."""
     from src.middleware.authenticate import _extract_bearer_token
-    token = _extract_bearer_token(request)
-    await service.logout(token)
+    access_token = _extract_bearer_token(request)
+    await service.logout(access_token, refresh_token)
 
 
 @router.get("/me")
@@ -201,3 +203,16 @@ async def resend_verification(
 
     await service.resend_verification_code(user)
     return {"message": "Verification code sent"}
+
+
+@router.post("/resend-verification-email")
+async def resend_verification_by_email(
+    data: ResendVerificationRequest,
+    service: AuthService = Depends(_get_auth_service),
+) -> dict:
+    """Resend verification code by email (unauthenticated). For unverified users locked out of login.
+
+    Always returns 200 to prevent email enumeration.
+    """
+    await service.resend_verification_code_by_email(data.email)
+    return {"message": "If an unverified account exists, a verification code has been sent"}

@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, DateTime, Index, String, Text, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.shared.base_model import Base
@@ -51,6 +52,12 @@ class User(SoftDeleteMixin, Base):
     )
     trial_ends_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+    
+    # Metadata for OAuth linking and extensibility
+    # Use metadata_ to avoid shadowing DeclarativeBase.metadata
+    metadata_: Mapped[Optional[dict]] = mapped_column(
+        "metadata", JSONB, nullable=True, server_default=text("NULL")
     )
 
     __table_args__ = (

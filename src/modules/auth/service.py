@@ -148,10 +148,21 @@ class AuthService:
             existing = await self._get_user_by_email(email)
             if existing is not None:
                 if existing.auth_provider == AuthProvider.EMAIL:
-                    # Link the OAuth provider to the existing email account
-                    existing.auth_provider = provider
-                    existing.auth_provider_id = provider_user_id
+                    # Don't overwrite email auth — instead mark as OAuth-linked
+                    # Keep auth_provider as EMAIL so password login still works
+                    # Store OAuth link in metadata for future multi-provider support
                     existing.email_verified = True
+                    if not existing.metadata_:
+                        existing.metadata_ = {}
+                    if "linked_providers" not in existing.metadata_:
+                        existing.metadata_["linked_providers"] = []
+                    existing.metadata_["linked_providers"].append({
+                        "provider": provider,
+                        "provider_id": provider_user_id
+                    })
+                    # Force SQLAlchemy to detect JSONB mutation
+                    from sqlalchemy.orm.attributes import flag_modified
+                    flag_modified(existing, "metadata_")
                     await self.session.flush()
                     return _generate_tokens(existing.id)
                 else:
@@ -176,11 +187,20 @@ class AuthService:
         """Issue a new token pair from a valid refresh token.
 
         Raises UnauthorizedError if the token is invalid or expired.
+        Blacklists the old refresh token to prevent reuse.
         """
         payload = _decode_token(refresh_token)
         token_type = payload.get("type")
         if token_type != "refresh":
             raise UnauthorizedError("Invalid token type")
+
+        # Check if refresh token is blacklisted
+        jti = payload.get("jti")
+        if jti:
+            stmt = select(TokenBlacklist).where(TokenBlacklist.jti == jti)
+            result = await self.session.execute(stmt)
+            if result.scalar_one_or_none() is not None:
+                raise UnauthorizedError("Token has been revoked")
 
         user_id = uuid.UUID(payload["sub"])
 
@@ -191,27 +211,51 @@ class AuthService:
         if user is None:
             raise UnauthorizedError("User not found")
 
-        return _generate_tokens(user.id)
-
-    async def logout(self, token: str) -> None:
-        """Add the current token to blacklist to invalidate it.
-
-        In production, expired blacklist entries should be cleaned up periodically.
-        """
-        try:
-            payload = _decode_token(token)
-            jti = payload.get("jti")
-            if not jti:
-                return  # Token doesn't have JTI, can't blacklist
-            
+        # Blacklist the old refresh token (rotation security)
+        if jti:
             exp = payload.get("exp")
             if exp:
                 expires_at = datetime.fromtimestamp(exp, timezone.utc)
                 blacklist_entry = TokenBlacklist(jti=jti, expires_at=expires_at)
                 self.session.add(blacklist_entry)
-                await self.session.commit()
+                await self.session.flush()
+
+        return _generate_tokens(user.id)
+
+    async def logout(self, access_token: str, refresh_token: Optional[str] = None) -> None:
+        """Add tokens to blacklist to invalidate them.
+
+        Blacklists both access and refresh tokens for complete logout.
+        """
+        # Blacklist access token
+        try:
+            payload = _decode_token(access_token)
+            jti = payload.get("jti")
+            if jti:
+                exp = payload.get("exp")
+                if exp:
+                    expires_at = datetime.fromtimestamp(exp, timezone.utc)
+                    blacklist_entry = TokenBlacklist(jti=jti, expires_at=expires_at)
+                    self.session.add(blacklist_entry)
         except (JWTError, ValueError):
             pass  # Invalid token, nothing to blacklist
+        
+        # Blacklist refresh token if provided
+        if refresh_token:
+            try:
+                payload = _decode_token(refresh_token)
+                jti = payload.get("jti")
+                if jti:
+                    exp = payload.get("exp")
+                    if exp:
+                        expires_at = datetime.fromtimestamp(exp, timezone.utc)
+                        blacklist_entry = TokenBlacklist(jti=jti, expires_at=expires_at)
+                        self.session.add(blacklist_entry)
+            except (JWTError, ValueError):
+                pass
+        
+        # Use flush instead of commit (let request lifecycle handle commit)
+        await self.session.flush()
 
     # ------------------------------------------------------------------
     # Password reset
@@ -339,6 +383,13 @@ class AuthService:
             )
 
         await self.create_and_send_verification_code(user)
+
+    async def resend_verification_code_by_email(self, email: str) -> None:
+        """Resend verification code by email (unauthenticated). Silent on unknown/verified emails."""
+        user = await self._get_user_by_email(email)
+        if user is None or user.email_verified:
+            return
+        await self.resend_verification_code(user)
 
     # ------------------------------------------------------------------
     # Internal helpers
