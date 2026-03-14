@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TextInput, Alert, TouchableOpacity, Linking, Platform,
+  View, Text, StyleSheet, ScrollView, TextInput, Alert, TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,6 +13,7 @@ import { Icon } from '../../components/common/Icon';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { PremiumBadge } from '../../components/premium/PremiumBadge';
 import api from '../../services/api';
+import { openTelegramLink } from '../../utils/externalLinks';
 
 interface CoachingRequest {
   id: string;
@@ -28,15 +29,6 @@ interface CoachingSession {
   scheduled_at: string | null;
   completed_at: string | null;
 }
-
-const openTelegramLink = () => {
-  const url = 'https://t.me/repwiseCommunity';
-  if (Platform.OS === 'web') {
-    window.open(url, '_blank');
-  } else {
-    Linking.openURL(url);
-  }
-};
 
 export function CoachingScreen() {
   const c = useThemeColors();

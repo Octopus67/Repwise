@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Linking, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { radius, spacing, typography } from '../../theme/tokens';
@@ -7,16 +7,7 @@ import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThem
 import { Card } from '../../components/common/Card';
 import { Icon } from '../../components/common/Icon';
 import { ErrorBoundary } from '../../components/common/ErrorBoundary';
-
-const TELEGRAM_URL = 'https://t.me/repwiseCommunity';
-
-const openTelegramLink = () => {
-  if (Platform.OS === 'web') {
-    window.open(TELEGRAM_URL, '_blank');
-  } else {
-    Linking.openURL(TELEGRAM_URL);
-  }
-};
+import { openTelegramLink } from '../../utils/externalLinks';
 
 function CommunityScreenInner() {
   const c = useThemeColors();
