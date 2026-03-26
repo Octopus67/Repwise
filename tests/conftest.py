@@ -74,11 +74,17 @@ def event_loop():
 @pytest.fixture(autouse=True)
 async def setup_database():
     """Create all tables before each test and drop them after."""
+    from src.modules.feature_flags.service import invalidate_cache
+    from src.middleware.rate_limiter import clear_all as clear_rate_limits
+    invalidate_cache()
+    clear_rate_limits()
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+    invalidate_cache()
+    clear_rate_limits()
 
 
 @pytest.fixture

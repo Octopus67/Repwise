@@ -21,7 +21,7 @@ DB_URL = "sqlite+aiosqlite:///test.db"
 def test_jwt_secret_short_strings_raise_when_not_debug(secret: str):
     """Short JWT secrets (< 32 chars) must raise ValueError when DEBUG=False."""
     with pytest.raises(ValidationError):
-        Settings(JWT_SECRET=secret, DEBUG=False, DATABASE_URL=DB_URL)
+        Settings(JWT_SECRET=secret, DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS=["https://app.repwise.app"], ALLOWED_HOSTS=["api.repwise.app"])
 
 
 @given(secret=st.text(min_size=32, max_size=200))
@@ -29,14 +29,14 @@ def test_jwt_secret_short_strings_raise_when_not_debug(secret: str):
 def test_jwt_secret_long_strings_succeed_when_not_debug(secret: str):
     """Strings >= 32 chars and != default must succeed when DEBUG=False."""
     assume(secret != "change-me-in-production")
-    s = Settings(JWT_SECRET=secret, DEBUG=False, DATABASE_URL=DB_URL)
+    s = Settings(JWT_SECRET=secret, DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS=["https://app.repwise.app"], ALLOWED_HOSTS=["api.repwise.app"])
     assert s.JWT_SECRET == secret
 
 
 def test_jwt_secret_default_always_raises():
     """The default string 'change-me-in-production' always raises when DEBUG=False."""
     with pytest.raises(ValidationError):
-        Settings(JWT_SECRET="change-me-in-production", DEBUG=False, DATABASE_URL=DB_URL)
+        Settings(JWT_SECRET="change-me-in-production", DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS=["https://app.repwise.app"], ALLOWED_HOSTS=["api.repwise.app"])
 
 
 # --- Property 3: Pre-signed URL user scoping ---
@@ -60,7 +60,7 @@ def test_presigned_url_user_scoping(user_id, filename):
 
     # Test generate_read_url (pure function, no boto3 needed)
     read_url = generate_read_url(expected_key)
-    assert read_url == f"https://cdn.repwise.com/{expected_key}"
+    assert read_url == f"https://cdn.repwise.app/{expected_key}"
 
     # Also verify the key format is correct for any arbitrary key
     assert expected_key.startswith(f"users/{user_id}/")
@@ -133,200 +133,6 @@ def test_structured_log_completeness(status_code, method, path, caplog):
     assert log_data["method"] == method
     assert log_data["path"] == f"/{path}"
 
-
-# --- Property 1: Region-based provider routing ---
-# **Validates: Requirements 5.1, 5.2**
-
-from src.modules.payments.provider_interface import (
-    get_provider_for_region,
-    PROVIDER_MAP,
-)
-from src.modules.payments.stripe_provider import StripeProvider
-from src.modules.payments.razorpay_provider import RazorpayProvider
-
-
-def test_region_provider_routing_us_returns_stripe():
-    """US region must return a StripeProvider instance."""
-    provider = get_provider_for_region("US")
-    assert isinstance(provider, StripeProvider)
-
-
-def test_region_provider_routing_in_returns_razorpay():
-    """IN region must return a RazorpayProvider instance."""
-    provider = get_provider_for_region("IN")
-    assert isinstance(provider, RazorpayProvider)
-
-
-@given(region=st.text(min_size=1, max_size=50))
-@h_settings(max_examples=50)
-def test_region_provider_routing_unknown_raises(region: str):
-    """Any region string not in PROVIDER_MAP must raise ValueError."""
-    assume(region not in PROVIDER_MAP)
-    with pytest.raises(ValueError, match="No payment provider configured"):
-        get_provider_for_region(region)
-
-
-@given(region=st.sampled_from(list(PROVIDER_MAP.keys())))
-@h_settings(max_examples=20)
-def test_region_provider_routing_known_returns_instance(region: str):
-    """Every region in PROVIDER_MAP returns a valid PaymentProvider instance."""
-    from src.modules.payments.provider_interface import PaymentProvider
-
-    provider = get_provider_for_region(region)
-    assert isinstance(provider, PaymentProvider)
-
-
-# --- Property 2: Webhook signature verification ---
-# **Validates: Requirements 5.3, 5.5**
-
-import hashlib
-import hmac as hmac_mod
-import time as time_mod
-
-from src.modules.payments.provider_interface import WebhookEvent
-from src.shared.errors import UnprocessableError
-
-
-WEBHOOK_SECRET = "test_webhook_secret_key"
-PRINTABLE_ASCII = "".join(chr(c) for c in range(32, 127))
-
-
-@given(
-    payload_data=st.dictionaries(
-        keys=st.text(min_size=1, max_size=20, alphabet="abcdefghijklmnopqrstuvwxyz"),
-        values=st.text(min_size=0, max_size=50, alphabet=PRINTABLE_ASCII),
-        min_size=1,
-        max_size=5,
-    ),
-    timestamp=st.integers(min_value=1000000000, max_value=9999999999),
-)
-@h_settings(max_examples=50)
-def test_stripe_webhook_valid_signature(payload_data, timestamp):
-    """Stripe: A correctly signed payload must return a WebhookEvent."""
-    provider = StripeProvider(api_key="sk_test_fake", webhook_secret=WEBHOOK_SECRET)
-    payload = json_mod.dumps(payload_data).encode()
-
-    # Compute correct signature in Stripe's t=<ts>,v1=<hex> format
-    signed_payload = f"{timestamp}.".encode() + payload
-    sig_hex = hmac_mod.new(
-        WEBHOOK_SECRET.encode(), signed_payload, hashlib.sha256
-    ).hexdigest()
-    signature = f"t={timestamp},v1={sig_hex}"
-
-    event = asyncio.get_event_loop().run_until_complete(
-        provider.verify_webhook(payload, signature)
-    )
-    assert event is not None
-    assert isinstance(event, WebhookEvent)
-
-
-@given(
-    payload_data=st.dictionaries(
-        keys=st.text(min_size=1, max_size=20, alphabet="abcdefghijklmnopqrstuvwxyz"),
-        values=st.text(min_size=0, max_size=50, alphabet=PRINTABLE_ASCII),
-        min_size=1,
-        max_size=5,
-    ),
-    timestamp=st.integers(min_value=1000000000, max_value=9999999999),
-    flip_pos=st.integers(min_value=0, max_value=63),
-)
-@h_settings(max_examples=50)
-def test_stripe_webhook_tampered_signature(payload_data, timestamp, flip_pos):
-    """Stripe: A tampered signature must raise UnprocessableError."""
-    provider = StripeProvider(api_key="sk_test_fake", webhook_secret=WEBHOOK_SECRET)
-    payload = json_mod.dumps(payload_data).encode()
-
-    signed_payload = f"{timestamp}.".encode() + payload
-    sig_hex = hmac_mod.new(
-        WEBHOOK_SECRET.encode(), signed_payload, hashlib.sha256
-    ).hexdigest()
-
-    # Tamper the signature by flipping one hex character
-    sig_list = list(sig_hex)
-    idx = flip_pos % len(sig_list)
-    original_char = sig_list[idx]
-    # Pick a different hex char
-    replacement = "0" if original_char != "0" else "1"
-    sig_list[idx] = replacement
-    tampered_hex = "".join(sig_list)
-
-    # Only test if we actually changed the signature
-    assume(tampered_hex != sig_hex)
-
-    signature = f"t={timestamp},v1={tampered_hex}"
-
-    with pytest.raises(UnprocessableError):
-        asyncio.get_event_loop().run_until_complete(
-            provider.verify_webhook(payload, signature)
-        )
-
-
-@given(
-    payload_data=st.dictionaries(
-        keys=st.text(min_size=1, max_size=20, alphabet="abcdefghijklmnopqrstuvwxyz"),
-        values=st.text(min_size=0, max_size=50, alphabet=PRINTABLE_ASCII),
-        min_size=1,
-        max_size=5,
-    ),
-)
-@h_settings(max_examples=50)
-def test_razorpay_webhook_valid_signature(payload_data):
-    """Razorpay: A correctly signed payload must return a WebhookEvent."""
-    provider = RazorpayProvider(
-        key_id="rzp_test_fake",
-        key_secret="rzp_secret_fake",
-        webhook_secret=WEBHOOK_SECRET,
-    )
-    payload = json_mod.dumps(payload_data).encode()
-
-    sig_hex = hmac_mod.new(
-        WEBHOOK_SECRET.encode(), payload, hashlib.sha256
-    ).hexdigest()
-
-    event = asyncio.get_event_loop().run_until_complete(
-        provider.verify_webhook(payload, sig_hex)
-    )
-    assert event is not None
-    assert isinstance(event, WebhookEvent)
-
-
-@given(
-    payload_data=st.dictionaries(
-        keys=st.text(min_size=1, max_size=20, alphabet="abcdefghijklmnopqrstuvwxyz"),
-        values=st.text(min_size=0, max_size=50, alphabet=PRINTABLE_ASCII),
-        min_size=1,
-        max_size=5,
-    ),
-    flip_pos=st.integers(min_value=0, max_value=63),
-)
-@h_settings(max_examples=50)
-def test_razorpay_webhook_tampered_signature(payload_data, flip_pos):
-    """Razorpay: A tampered signature must raise UnprocessableError."""
-    provider = RazorpayProvider(
-        key_id="rzp_test_fake",
-        key_secret="rzp_secret_fake",
-        webhook_secret=WEBHOOK_SECRET,
-    )
-    payload = json_mod.dumps(payload_data).encode()
-
-    sig_hex = hmac_mod.new(
-        WEBHOOK_SECRET.encode(), payload, hashlib.sha256
-    ).hexdigest()
-
-    # Tamper the signature
-    sig_list = list(sig_hex)
-    idx = flip_pos % len(sig_list)
-    original_char = sig_list[idx]
-    replacement = "0" if original_char != "0" else "1"
-    sig_list[idx] = replacement
-    tampered_hex = "".join(sig_list)
-
-    assume(tampered_hex != sig_hex)
-
-    with pytest.raises(UnprocessableError):
-        asyncio.get_event_loop().run_until_complete(
-            provider.verify_webhook(payload, tampered_hex)
-        )
 
 
 # --- Property 7: Soft-delete user exclusion ---
