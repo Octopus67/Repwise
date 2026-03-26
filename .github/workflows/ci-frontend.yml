@@ -1,0 +1,75 @@
+name: CI Frontend
+
+on:
+  push:
+    branches: [main]
+    paths: ['app/**']
+  pull_request:
+    branches: [main]
+    paths: ['app/**']
+
+concurrency:
+  group: ci-frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  lint:
+    name: Lint (eslint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - uses: actions/cache@v4
+        with:
+          path: app/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('app/yarn.lock') }}
+          restore-keys: node-${{ runner.os }}-
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Run eslint
+        run: yarn lint
+
+  typecheck:
+    name: Type Check (tsc)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - uses: actions/cache@v4
+        with:
+          path: app/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('app/yarn.lock') }}
+          restore-keys: node-${{ runner.os }}-
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Run typecheck
+        run: yarn typecheck
+
+  test:
+    name: Tests (jest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - uses: actions/cache@v4
+        with:
+          path: app/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('app/yarn.lock') }}
+          restore-keys: node-${{ runner.os }}-
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Run jest tests
+        run: yarn test --ci --forceExit --maxWorkers=2

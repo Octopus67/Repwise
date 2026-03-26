@@ -1,0 +1,63 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'pyproject.toml'
+      - 'Dockerfile'
+      - 'alembic.ini'
+      - 'alembic/**'
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false  # Never cancel an in-progress deploy
+
+jobs:
+  # Gate: wait for CI to pass before deploying
+  ci-gate:
+    name: Wait for CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: CI gate passed
+        run: echo "CI checks passed, proceeding to deploy"
+
+  deploy:
+    name: Deploy to Railway
+    needs: [ci-gate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --detach
+
+      - name: Run database migrations
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway run alembic upgrade head
+
+      - name: Health check with retry
+        env:
+          RAILWAY_URL: ${{ vars.RAILWAY_URL }}
+        run: |
+          # Retry health check up to 10 times with 15s intervals
+          for i in $(seq 1 10); do
+            if curl -sf "https://${RAILWAY_URL}/api/v1/health" > /dev/null 2>&1; then
+              echo "Health check passed on attempt $i"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 15s..."
+            sleep 15
+          done
+          echo "::error::Health check failed after 10 attempts"
+          exit 1

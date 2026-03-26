@@ -1,4 +1,5 @@
 name: Build Mobile
+
 on:
   push:
     branches: [main]
@@ -11,15 +12,75 @@ on:
         default: 'staging'
         type: choice
         options: [staging, production]
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: app
+
 jobs:
-  build:
+  # Run tests before building to catch issues early
+  test:
+    name: Pre-build Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - uses: actions/cache@v4
+        with:
+          path: app/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('app/yarn.lock') }}
+          restore-keys: node-${{ runner.os }}-
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Typecheck
+        run: yarn typecheck
+      - name: Run tests
+        run: yarn test --ci --forceExit --maxWorkers=2
+
+  build:
+    name: EAS Build
+    needs: [test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - uses: actions/cache@v4
+        with:
+          path: app/node_modules
+          key: node-${{ runner.os }}-${{ hashFiles('app/yarn.lock') }}
+          restore-keys: node-${{ runner.os }}-
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Build
+        run: eas build --platform all --profile ${{ github.event.inputs.profile || 'staging' }} --non-interactive
+
+  # Auto-submit production builds to app stores
+  submit:
+    name: Submit to Stores
+    needs: [build]
+    if: github.event.inputs.profile == 'production'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-      - name: Build
+      - name: Submit to TestFlight + Play Store internal track
         working-directory: app
-        run: eas build --platform all --profile ${{ github.event.inputs.profile || 'staging' }} --non-interactive
+        run: eas submit --platform all --profile production --non-interactive --latest

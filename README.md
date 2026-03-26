@@ -306,3 +306,46 @@ When working on this codebase:
 - Don't use `fc.date()` in fast-check without min/max bounds — generates invalid dates
 - The `__DEV__` global must be defined in Jest environments that test React Native code
 - Reanimated on web requires `react-native-reanimated` to be imported before any animated components (handled by `app/index.js`)
+
+---
+
+## CI/CD Pipeline
+
+**Continuous Integration** runs on every push and PR to `main`:
+
+| Workflow | Jobs | Trigger |
+|----------|------|---------|
+| `ci.yml` | lint, type-check, security-scan, unit-tests, property-tests, coverage (>80%), migration-test, pr-size | All pushes/PRs |
+| `ci-frontend.yml` | lint (eslint), typecheck (tsc), test (jest) | `app/**` changes |
+
+**Continuous Deployment** runs on merge to `main`:
+
+| Workflow | What | Trigger |
+|----------|------|---------|
+| `deploy.yml` | Railway deploy + Alembic migrate + health check | `src/**`, `pyproject.toml`, `Dockerfile`, `alembic/**` |
+| `build-mobile.yml` | EAS Build → (production only) Submit to TestFlight + Play Store | `app/**` changes or manual dispatch |
+
+**Required secrets** (set in GitHub repo settings → Secrets):
+- `EXPO_TOKEN` — Expo/EAS authentication
+- `RAILWAY_TOKEN` — Railway deployment
+- `CODECOV_TOKEN` — Coverage reporting (optional)
+
+**Required variables** (set in GitHub repo settings → Variables):
+- `RAILWAY_URL` — Production URL for health checks (e.g. `api.repwise.app`)
+
+### Branch Protection Rules
+
+Configure these in GitHub → Settings → Branches → `main`:
+
+1. **Require pull request before merging** — no direct pushes to main
+2. **Require status checks to pass** — select these required checks:
+   - `Lint (ruff)`
+   - `Type Check (mypy)`
+   - `Unit Tests (pytest)`
+   - `Coverage Check (>80%)`
+   - `Migration Round-Trip (Alembic)`
+   - `Security Scan (pip-audit)`
+   - `Lint (eslint)` (from ci-frontend)
+   - `Tests (jest)` (from ci-frontend)
+3. **Require branches to be up to date** — ensures CI runs against latest main
+4. **Do not allow bypassing the above settings** — applies to admins too
