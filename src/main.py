@@ -14,14 +14,21 @@ from pydantic import ValidationError as PydanticValidationError
 import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+from sqlalchemy.exc import SQLAlchemyError
 
 from src.config.settings import settings
+from src.config.logging_config import configure_logging
 from src.middleware.logging_middleware import StructuredLoggingMiddleware
+from src.middleware.global_rate_limiter import GlobalRateLimitMiddleware
+from src.middleware.body_size_limit import BodySizeLimitMiddleware
+from src.middleware.request_timeout import RequestTimeoutMiddleware
 from src.middleware.validate import (
     pydantic_validation_exception_handler,
     validation_exception_handler,
 )
 from src.shared.errors import ApiError
+from src.shared.security_logger import log_api_error
+from src.shared.ip_utils import get_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +36,9 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     """Create tables on startup when using SQLite (local dev mode)."""
+    configure_logging(debug=settings.DEBUG)
     if "sqlite" in settings.DATABASE_URL:
-        from sqlalchemy import JSON
+        from sqlalchemy import JSON, text
         from sqlalchemy.dialects.postgresql import JSONB
         from src.shared.base_model import Base
         from src.config.database import engine
@@ -60,7 +68,11 @@ async def lifespan(application: FastAPI):
         import src.modules.measurements.models  # noqa: F401
         import src.modules.sharing.models  # noqa: F401
         import src.modules.export.models  # noqa: F401
+        import src.modules.challenges.models  # noqa: F401
+        import src.modules.health_reports.models  # noqa: F401
+        import src.modules.social.models  # noqa: F401
         import src.shared.audit  # noqa: F401
+        import src.middleware.rate_limit_models  # noqa: F401
 
         # Patch JSONB → JSON for SQLite compatibility
         for table in Base.metadata.tables.values():
@@ -74,6 +86,21 @@ async def lifespan(application: FastAPI):
 
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+
+            # Patch existing tables with new columns (create_all doesn't ALTER existing tables)
+            for alter_sql in [
+                "ALTER TABLE content_articles ADD COLUMN unlocked_by_achievement VARCHAR(100)",
+                "ALTER TABLE user_food_frequency ADD COLUMN is_favorite BOOLEAN DEFAULT 0",
+                "ALTER TABLE training_sessions ADD COLUMN personal_records_json TEXT",
+                "ALTER TABLE users ADD COLUMN password_changed_at TIMESTAMP",
+                "ALTER TABLE export_requests ADD COLUMN retry_count INTEGER DEFAULT 0",
+                "CREATE INDEX IF NOT EXISTS ix_share_events_session_id ON share_events (session_id)",
+            ]:
+                try:
+                    await conn.execute(text(alter_sql))
+                except (SQLAlchemyError, OSError):
+                    pass  # Intentional: column already exists
+
         logger.info("SQLite tables created for local dev")
 
         # Seed food database if empty
@@ -128,14 +155,45 @@ async def lifespan(application: FastAPI):
                 await session.commit()
                 logger.info("Seeded %d global food items", len(GLOBAL_FOOD_ITEMS))
 
+        # Seed social bot accounts and starter content
+        from src.modules.social.seed import seed_social_data
+        async with async_session_factory() as session:
+            try:
+                await seed_social_data(session)
+            except (SQLAlchemyError, OSError, ValueError):
+                logger.exception("Failed to seed social data")
+
+    # Cleanup expired rate limit entries on startup (all backends)
+    from src.middleware.db_rate_limiter import cleanup_expired_entries
+    from src.config.database import async_session_factory as _session_factory
+    async with _session_factory() as session:
+        deleted = await cleanup_expired_entries(session)
+        if deleted:
+            logger.info("Cleaned up %d expired rate limit entries", deleted)
+
+    # Scheduler: only one Gunicorn worker becomes the leader via Redis lock
+    from src.config.scheduler import try_acquire_lock, start_scheduler, stop_scheduler
+    _is_scheduler_leader = try_acquire_lock()
+    if _is_scheduler_leader:
+        await start_scheduler()
+
     yield
+
+    # Graceful shutdown: stop scheduler before closing Redis
+    if _is_scheduler_leader:
+        await stop_scheduler()
+
+    # Shutdown: close Redis connection
+    from src.config.redis import close_redis
+    close_redis()
 
 
 app = FastAPI(
     title=settings.APP_NAME,
     version="0.1.0",
-    docs_url="/api/v1/docs",
-    openapi_url="/api/v1/openapi.json",
+    # Only expose interactive docs in development — disable in production
+    docs_url="/api/v1/docs" if settings.DEBUG else None,
+    openapi_url="/api/v1/openapi.json" if settings.DEBUG else None,
     lifespan=lifespan,
 )
 
@@ -148,6 +206,17 @@ if settings.SENTRY_DSN:
         environment="production" if not settings.DEBUG else "development",
     )
 
+# Middleware stack (Starlette executes in reverse add order — last added = outermost)
+app.add_middleware(GlobalRateLimitMiddleware, rpm=settings.RATE_LIMIT_RPM)
+app.add_middleware(BodySizeLimitMiddleware)
+app.add_middleware(StructuredLoggingMiddleware)
+app.add_middleware(RequestTimeoutMiddleware)
+
+# HTTPS enforcement in production
+if not settings.DEBUG:
+    from src.middleware.https_redirect import HTTPSRedirectMiddleware
+    app.add_middleware(HTTPSRedirectMiddleware)
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
@@ -157,20 +226,26 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 
-# HTTPS enforcement in production
-if not settings.DEBUG:
-    from src.middleware.https_redirect import HTTPSRedirectMiddleware
-    app.add_middleware(HTTPSRedirectMiddleware)
+# Security headers on every response
+from src.middleware.security_headers import SecurityHeadersMiddleware
+app.add_middleware(SecurityHeadersMiddleware)
 
-app.add_middleware(StructuredLoggingMiddleware)
+# Trusted host validation in production
+if not settings.DEBUG:
+    from starlette.middleware.trustedhost import TrustedHostMiddleware
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOSTS)
 
 
 # Global exception handler for ApiError
 @app.exception_handler(ApiError)
 async def api_error_handler(_request: Request, exc: ApiError) -> JSONResponse:
+    headers = {}
+    if exc.status == 429 and hasattr(exc, "retry_after"):
+        headers["Retry-After"] = str(exc.retry_after)
     return JSONResponse(
         status_code=exc.status,
         content=exc.to_response().model_dump(),
+        headers=headers or None,
     )
 
 
@@ -183,10 +258,22 @@ app.add_exception_handler(PydanticValidationError, pydantic_validation_exception
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(_request: Request, exc: Exception) -> JSONResponse:
     import logging
-    logging.getLogger(__name__).exception("Unhandled exception: %s", exc)
+    import uuid as _uuid
+    request_id = str(_uuid.uuid4())
+    logging.getLogger(__name__).exception("Unhandled exception [%s]: %s", request_id, exc)
+    log_api_error(
+        path=str(_request.url.path),
+        status=500,
+        error=str(exc),
+        ip=get_client_ip(_request),
+    )
+    user_id = getattr(_request.state, "user_id", None)
+    if user_id:
+        sentry_sdk.set_user({"id": str(user_id)})
+    sentry_sdk.capture_exception(exc)
     return JSONResponse(
         status_code=500,
-        content={"status": 500, "code": "INTERNAL_ERROR", "message": "An unexpected error occurred", "details": None},
+        content={"status": 500, "code": "INTERNAL_ERROR", "message": "An unexpected error occurred", "details": None, "request_id": request_id},
     )
 
 
@@ -200,9 +287,26 @@ async def health_check() -> JSONResponse:
         async with async_session_factory() as session:
             await session.execute(text("SELECT 1"))
         return JSONResponse(status_code=200, content={"status": "ok"})
-    except Exception:
+    except (SQLAlchemyError, OSError):
         logger.exception("Health check DB ping failed")
         return JSONResponse(status_code=503, content={"status": "unhealthy", "reason": "database unreachable"})
+
+
+# Jobs health — returns next-run timestamps for all scheduled jobs
+# Restricted to debug mode: exposes scheduler internals (job names, schedules)
+if settings.DEBUG:
+    @app.get("/api/v1/health/jobs")
+    async def jobs_health() -> JSONResponse:
+        from src.config.scheduler import scheduler
+        jobs = {}
+        for job in scheduler.get_jobs():
+            jobs[job.id] = {
+                "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
+            }
+        return JSONResponse(status_code=200, content={
+            "scheduler_running": scheduler.running,
+            "jobs": jobs,
+        })
 
 # Serve exercise images from local static directory
 _static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
@@ -263,6 +367,12 @@ app.include_router(dashboard_router, prefix="/api/v1", tags=["dashboard"])
 from src.modules.training.analytics_router import router as analytics_router
 app.include_router(analytics_router, prefix="/api/v1/training", tags=["training-analytics"])
 
+from src.modules.training.volume_router import router as volume_router
+app.include_router(volume_router, prefix="/api/v1/training", tags=["training-volume"])
+
+from src.modules.training.templates_router import router as templates_router
+app.include_router(templates_router, prefix="/api/v1/training", tags=["training-templates"])
+
 from src.modules.training.fatigue_router import router as fatigue_router
 app.include_router(fatigue_router, prefix="/api/v1/training", tags=["training-fatigue"])
 
@@ -294,10 +404,25 @@ from src.modules.feature_flags.router import router as feature_flags_router
 app.include_router(feature_flags_router, prefix="/api/v1/feature-flags", tags=["feature-flags"])
 
 from src.modules.measurements.router import router as measurements_router
-app.include_router(measurements_router, prefix="/api/v1/body", tags=["body-measurements"])
+app.include_router(measurements_router, prefix="/api/v1/body-measurements", tags=["body-measurements"])
 
 from src.modules.sharing.router import router as sharing_router
 app.include_router(sharing_router, prefix="/api/v1/share", tags=["sharing"])
 
 from src.modules.export.router import router as export_router
 app.include_router(export_router, prefix="/api/v1/export", tags=["export"])
+
+from src.modules.challenges.router import router as challenges_router
+app.include_router(challenges_router, prefix="/api/v1", tags=["challenges"])
+
+from src.modules.health_reports.router import router as health_reports_router
+app.include_router(health_reports_router, prefix="/api/v1/health-reports", tags=["health-reports"])
+
+from src.modules.social.router import router as social_router
+app.include_router(social_router, prefix="/api/v1/social", tags=["social"])
+
+from src.modules.import_data.router import router as import_router
+app.include_router(import_router, prefix="/api/v1/import", tags=["import"])
+
+from src.modules.legal.router import router as legal_router
+app.include_router(legal_router)  # Root level — /privacy and /terms
