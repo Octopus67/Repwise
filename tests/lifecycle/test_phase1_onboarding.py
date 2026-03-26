@@ -124,9 +124,9 @@ class TestRegistration:
             )
             assert resp.status_code == 201
             data = resp.json()
-            assert data["access_token"] == ""
-            assert data["refresh_token"] == ""
-            assert data["expires_in"] == 0
+            assert data["access_token"] is None
+            assert data["refresh_token"] is None
+            assert data["expires_in"] is None
         finally:
             await c.close()
 

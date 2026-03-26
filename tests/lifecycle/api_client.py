@@ -193,7 +193,7 @@ class LifecycleClient:
     # ── Achievements ──────────────────────────────────────────────────
 
     async def get_achievements(self) -> list[dict]:
-        resp = await self._client.get("/api/v1/achievements/", headers=self.headers)
+        resp = await self._client.get("/api/v1/achievements", headers=self.headers)
         assert resp.status_code == 200
         return resp.json()
 
