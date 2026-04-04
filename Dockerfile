@@ -10,6 +10,7 @@ RUN apt-get update && \
 # Copy project files and install dependencies
 COPY pyproject.toml .
 COPY src/ src/
+COPY data/ data/
 COPY alembic.ini .
 
 RUN pip install --no-cache-dir .
