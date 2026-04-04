@@ -79,10 +79,10 @@ class TestStreakCalculation:
         engine = AchievementEngine(db_session)
         user = _user_id()
         day1 = date(2024, 6, 1)
-        day3 = date(2024, 6, 3)  # gap on day 2
+        day5 = date(2024, 6, 5)  # gap of 3 days (exceeds auto-freeze limit of 2)
 
         await engine._update_streak(user, day1)
-        await engine._update_streak(user, day3)
+        await engine._update_streak(user, day5)
         await db_session.flush()
 
         progress = await engine._get_or_create_progress(user, "streak")

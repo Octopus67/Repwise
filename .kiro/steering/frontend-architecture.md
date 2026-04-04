@@ -8,123 +8,107 @@ inclusion: manual
 `app/App.tsx` — Auth state check, onboarding flow, navigation container.
 
 ## Navigation (4 tabs)
-
 ```
 BottomTabNavigator
-├── Home (DashboardStack)
-│   ├── DashboardHome → DashboardScreen
-│   ├── ExercisePicker → ExercisePickerScreen
-│   ├── ActiveWorkout → ActiveWorkoutScreen
-│   ├── WeeklyReport → WeeklyReportScreen
-│   ├── ArticleDetail → ArticleDetailScreen
-│   └── Learn → LearnScreen
-├── Log (LogsStack)
-│   ├── LogsHome → LogsScreen
-│   ├── ExercisePicker → ExercisePickerScreen
-│   ├── ActiveWorkout → ActiveWorkoutScreen
-│   └── SessionDetail → SessionDetailView
-├── Analytics (AnalyticsStack)
-│   ├── AnalyticsHome → AnalyticsScreen (tabs: training/nutrition)
-│   ├── NutritionReport → NutritionReportScreen
-│   ├── MicronutrientDashboard → MicronutrientDashboardScreen
-│   └── WeeklyReport → WeeklyReportScreen
-└── Profile (ProfileStack)
-    ├── ProfileHome → ProfileScreen
-    ├── Learn, ArticleDetail, Coaching, Community
-    ├── FounderStory, HealthReports, ProgressPhotos
-    └── MealPlan, ShoppingList, PrepSunday
+├── Home (DashboardStack) → Dashboard, ExercisePicker, ActiveWorkout, WeeklyReport, ArticleDetail, Learn
+├── Log (LogsStack) → Logs, ExercisePicker, ActiveWorkout, SessionDetail
+├── Analytics (AnalyticsStack) → Analytics (training/nutrition tabs), NutritionReport, MicronutrientDashboard, WeeklyReport
+└── Profile (ProfileStack) → Profile, FeedScreen, LeaderboardScreen, Learn, Coaching, FounderStory, HealthReports, ProgressPhotos, MealPlan, UpgradeModal
 ```
 
-## State Management (Zustand)
+## State Management: Zustand + TanStack Query v5
+- **Zustand** for UI/client state only (auth, active workout, onboarding, preferences, tooltips).
+- **TanStack Query v5** for ALL server state. NOT raw useEffect+axios.
+- Query key factories in each domain (e.g., `useDashboardQueries.ts` uses `useQueries`).
 
-| Store | Purpose |
-|-------|---------|
-| `store/index.ts` | Auth, profile, subscription, coaching, goals, metrics |
-| `store/activeWorkoutSlice.ts` | Active workout state, set tracking, weekly volume |
+| Zustand Store | Purpose |
+|---------------|---------|
+| `store/index.ts` | Auth, profile, subscription, coaching, goals |
+| `store/activeWorkoutSlice.ts` | Active workout state, set tracking |
 | `store/onboardingSlice.ts` | Onboarding wizard state |
-| `store/workoutPreferencesStore.ts` | Unit system, rest timer preferences |
-| `store/tooltipStore.ts` | Tooltip visibility state |
+| `store/workoutPreferencesStore.ts` | Unit system, rest timer prefs |
+
+## Offline Support: TanStack Query + MMKV
+- Mutations use `useMutation` with `mutationKey` to survive app restarts.
+- MMKV persister for query cache persistence.
+- Offline food cache for food search without network.
+- Network manager via `@react-native-community/netinfo` — detects connectivity changes.
+- Key pattern: **Use `useMutation` with `mutationKey` for ANY write that should survive offline.**
+
+## Payments: RevenueCat Only
+- `app/services/purchases.ts` — RevenueCat SDK integration.
+- `UpgradeModal` is RevenueCat-only. No Stripe/Razorpay anywhere in frontend.
+- Entitlement checks via RevenueCat SDK, synced to Zustand subscription state.
+
+## Social Module
+- `FeedScreen` + `LeaderboardScreen` in Profile stack.
+- Components: `FeedCard`, `ReactionButton`, `LeaderboardRow`.
+- Data fetched via TanStack Query (infinite scroll for feed).
+
+## Apple Watch
+- `app/hooks/useWatch.ts` — bridge hook for Watch communication.
+- Dynamic import of `react-native-watch-connectivity` (not bundled if unavailable).
+- Sends active workout data to Watch; receives heart rate back.
+
+## Feature Gating: PostHog
+- `app/hooks/useGatedFeature.ts` — checks PostHog feature flags.
+- `app/components/premium/FeatureGate.tsx` — conditional render wrapper.
+- All features free at launch (gates ready for future monetization).
+
+## ActiveWorkoutScreen (Decomposed)
+- Screen is a thin UI shell. ALL logic lives in hooks:
+  - `useWorkoutSave` — handles save/finish/discard mutations.
+  - `useWorkoutData` — manages sets, exercises, workout state.
+- **Do NOT add business logic to ActiveWorkoutScreen directly.**
+
+## Dashboard
+- `app/hooks/queries/useDashboardQueries.ts` — parallel fetching via `useQueries`.
+- Query key factories for cache invalidation.
+- Dashboard data: volume summary, daily targets, streak, weekly report preview.
+
+## Onboarding
+- 9 steps (Food DNA step is skipped/deferred). State in `onboardingSlice.ts`.
+- `app/components/OnboardingProgress.tsx` — progress indicator component.
 
 ## Custom Hooks (`app/hooks/`)
 
 | Hook | Purpose |
 |------|---------|
-| `useFeatureFlag.ts` | Check feature flag for current user |
-| `useWNSVolume.ts` | Fetch WNS weekly volume data |
-| `useMicroDashboard.ts` | Fetch micronutrient dashboard data |
-| `useDailyTargets.ts` | Fetch adaptive daily macro targets |
-| `useHealthData.ts` | Fetch health marker data |
+| `useGatedFeature.ts` | PostHog feature flag check |
+| `useWatch.ts` | Apple Watch bridge |
+| `useWNSVolume.ts` | WNS weekly volume (TanStack Query) |
+| `useMicroDashboard.ts` | Micronutrient dashboard data |
+| `useDailyTargets.ts` | Adaptive daily macro targets |
+| `useDashboardQueries.ts` | Parallel dashboard queries (in `hooks/queries/`) |
 | `useHaptics.ts` | Haptic feedback (light/medium/heavy) |
-| `useStaggeredEntrance.ts` | Staggered animation for list items |
-| `useCountingValue.ts` | Animated counting number display |
-| `usePressAnimation.ts` | Press-in scale animation |
-| `useReduceMotion.ts` | Respect system reduce-motion setting |
-| `useHoverState.ts` | Web hover state tracking |
-| `useSkeletonPulse.ts` | Skeleton loading pulse animation |
+| `useReduceMotion.ts` | Respect system reduce-motion |
 
-## Key Utility Modules (`app/utils/`)
-
-| Category | Files | Purpose |
-|----------|-------|---------|
-| WNS | `wnsCalculator.ts` | Client-side HU estimation (mirrors Python wns_engine.py) |
-| Volume | `volumeAggregator.ts`, `volumeCalculation.ts`, `muscleVolumeLogic.ts` | Volume tracking, heat map colors |
-| Nutrition | `microNutrientSerializer.ts`, `rdaValues.ts`, `microDashboardLogic.ts` | Micronutrient handling, RDA values |
-| Training | `intelligenceLayerLogic.ts`, `restTimerLogic.ts`, `plateCalculator.ts` | Training UX logic |
-| Food | `servingOptions.ts`, `quickAddValidation.ts`, `foodSearch*.ts` | Food logging utilities |
-| General | `unitConversion.ts`, `dateScrollerLogic.ts`, `greeting.ts` | Common utilities |
+## Key Utilities (`app/utils/`)
+- **WNS**: `wnsCalculator.ts` — client-side HU estimation (mirrors Python engine)
+- **Volume**: `volumeAggregator.ts`, `muscleVolumeLogic.ts` — tracking, heat map colors
+- **Nutrition**: `microNutrientSerializer.ts`, `rdaValues.ts` — RDA handling
+- **Training**: `restTimerLogic.ts`, `plateCalculator.ts` — training UX
+- **Food**: `servingOptions.ts`, `foodSearch*.ts` — food logging
 
 ## Component Library (`app/components/`)
-
-| Category | Key Components |
-|----------|---------------|
-| `common/` | Card, Button, Icon, ModalContainer, ErrorBoundary, EmptyState |
-| `training/` | VolumeIndicatorPill, VolumePills, FinishConfirmationSheet, PlateCalculatorSheet |
-| `analytics/` | HeatMapCard, BodyHeatMap, DrillDownModal, WeekNavigator |
-| `nutrition/` | WaterTracker, BarcodeScanner |
-| `education/` | HUExplainerSheet |
-| `modals/` | AddNutritionModal, QuickAddModal, AddTrainingModal |
-| `charts/` | TrendLineChart |
+- `common/` — Card, Button, Icon, ModalContainer, ErrorBoundary, EmptyState
+- `training/` — VolumeIndicatorPill, FinishConfirmationSheet, PlateCalculatorSheet
+- `analytics/` — HeatMapCard, BodyHeatMap, DrillDownModal, WeekNavigator
+- `nutrition/` — WaterTracker, BarcodeScanner
+- `social/` — FeedCard, ReactionButton, LeaderboardRow
+- `modals/` — AddNutritionModal, QuickAddModal, AddTrainingModal, UpgradeModal
 
 ## API Client
-`app/services/api.ts` — Axios instance with:
-- Base URL: `http://localhost:8000/api/v1/`
-- JWT token in Authorization header
-- Automatic token refresh on 401
-- Request/response interceptors
+`app/services/api.ts` — Axios instance (base URL, JWT header, auto token refresh on 401). Used by TanStack Query's `queryFn` — never called directly from components.
 
 ## Theme System
-`app/theme/tokens.ts` — Design tokens:
-- `colors` — semantic colors, heatmap palette, accent
-- `typography` — size scale, weight scale
-- `spacing` — 4px base scale
-- `radius` — border radius tokens
-- `motion` — animation duration tokens
+`app/theme/tokens.ts` — colors (semantic + heatmap), typography, spacing (4px base), radius, motion tokens.
 
 ## Key Patterns
-
-### Data Fetching
 ```typescript
-// Hook pattern (preferred for screens)
-const { data, loading, error, refetch } = useWNSVolume(weekStart);
+// Server state: TanStack Query (PREFERRED)
+const { data, isLoading } = useQuery({ queryKey: ['volume', weekStart], queryFn: () => api.get(...) });
 
-// Direct API call (for modals/one-off)
-const { data } = await api.get('endpoint', { params });
-```
-
-### Error Handling
-```typescript
-try {
-  const res = await api.post('endpoint', payload);
-} catch (err: any) {
-  Alert.alert('Error', err?.response?.data?.detail ?? 'Something went wrong');
-}
-```
-
-### Cancellation (useEffect cleanup)
-```typescript
-useEffect(() => {
-  let cancelled = false;
-  fetchData().then(d => { if (!cancelled) setData(d); });
-  return () => { cancelled = true; };
-}, [deps]);
+// Offline-safe mutation
+const { mutate } = useMutation({ mutationKey: ['saveWorkout'], mutationFn: saveWorkout, onSuccess: () => queryClient.invalidateQueries({ queryKey: ['sessions'] }) });
 ```

@@ -4,7 +4,7 @@ inclusion: manual
 
 # API Reference
 
-All endpoints are prefixed with `/api/v1/`. Authentication via `Authorization: Bearer <jwt_token>`.
+All endpoints prefixed with `/api/v1/`. Auth via `Authorization: Bearer <jwt_token>`.
 
 ## Auth (`/auth`)
 | Method | Path | Auth | Description |
@@ -45,14 +45,13 @@ All endpoints are prefixed with `/api/v1/`. Authentication via `Authorization: B
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/exercises` | Yes | List all exercises (1200+) |
-| GET | `/exercises/search` | Yes | Search exercises by name/muscle/equipment |
-| GET | `/exercises/muscle-groups` | Yes | List all muscle groups |
+| GET | `/exercises/search` | Yes | Search by name/muscle/equipment |
 | POST | `/sessions` | Yes | Create training session |
 | GET | `/sessions` | Yes | List sessions |
 | GET | `/sessions/{id}` | Yes | Get session detail |
 | PUT | `/sessions/{id}` | Yes | Update session |
 | DELETE | `/sessions/{id}` | Yes | Delete session |
-| GET | `/analytics/muscle-volume` | Yes | Weekly volume (WNS or legacy based on feature flag) |
+| GET | `/analytics/muscle-volume` | Yes | Weekly volume (WNS or legacy via feature flag) |
 | GET | `/analytics/muscle-volume/{mg}/detail` | Yes | Per-exercise volume breakdown |
 | GET | `/analytics/volume-trend` | Yes | Daily volume trend |
 | GET | `/analytics/volume-landmarks` | Yes | MEV/MAV/MRV landmarks |
@@ -74,7 +73,6 @@ All endpoints are prefixed with `/api/v1/`. Authentication via `Authorization: B
 |--------|------|------|-------------|
 | GET | `/articles` | Yes | List articles (paginated, filterable) |
 | GET | `/articles/{id}` | Yes | Get article detail (premium-gated) |
-| GET | `/modules` | Yes | List content modules |
 
 ## Dietary Analysis (`/dietary`)
 | Method | Path | Auth | Description |
@@ -83,25 +81,35 @@ All endpoints are prefixed with `/api/v1/`. Authentication via `Authorization: B
 | GET | `/gaps` | Premium | Identify nutritional gaps |
 | GET | `/recommendations` | Premium | Food recommendations for gaps |
 
-## Feature Flags (`/feature-flags`)
+## Social (`/social`)
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/check/{flag_name}` | Yes | Check if flag is enabled for user |
+| POST | `/follow/{user_id}` | Yes | Follow a user |
+| DELETE | `/follow/{user_id}` | Yes | Unfollow a user |
+| GET | `/followers` | Yes | Paginated followers list |
+| GET | `/following` | Yes | Paginated following list |
+| GET | `/feed?cursor_time=&cursor_id=&limit=20` | Yes | Activity feed (fan-out-on-read) |
+| POST | `/feed/{event_id}/reactions` | Yes | Add reaction (body: `{emoji}`) |
+| DELETE | `/feed/{event_id}/reactions` | Yes | Remove reaction |
+| GET | `/leaderboard/{board_type}?period_start=` | Yes | board_type: weekly_volume\|streak\|exercise_1rm |
+| POST | `/templates/{template_id}/share` | Yes | Create share link |
+| GET | `/shared/{share_code}` | **No** | Preview shared template (PUBLIC) |
+| POST | `/shared/{share_code}/copy` | Yes | Copy template to user's collection |
 
-## Health (`/api/v1/health`)
+## Payments (`/payments`) — RevenueCat Only
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/` | No | Health check → `{"status": "ok"}` |
+| POST | `/webhook/revenuecat` | Bearer token | RevenueCat webhook (server-to-server) |
+| POST | `/cancel` | Yes | Cancel subscription |
+| GET | `/status` | Yes | Get subscription status |
+
+> Removed: `/subscribe`, `/webhook/{provider}`, `/refund`, `/winback-offer` (RevenueCat handles natively)
+
+## Health: `GET /health/` → `{"status": "ok"}` (no auth)
 
 ## Response Formats
+- **Success:** `{ field1, field2 }` or `{ items: [...], total_count, page, limit }`
+- **Error:** `{ status, code, message, details }`
 
-**Success (single):** `{ field1, field2, ... }`
-**Success (list):** `{ items: [...], total_count, page, limit }`
-**Error:** `{ status: 400, code: "VALIDATION_ERROR", message: "...", details: [...] }`
-
-## Key Query Parameters
-
-- `week_start` — Monday date (auto-corrected if not Monday)
-- `start_date` / `end_date` — Date range filters
-- `page` / `limit` — Pagination (limit max 500)
-- `q` — Search query (food search)
+## Key Query Params
+`week_start` (Monday date) · `start_date`/`end_date` · `page`/`limit` (max 500) · `q` (food search) · `cursor_time`/`cursor_id` (feed pagination)

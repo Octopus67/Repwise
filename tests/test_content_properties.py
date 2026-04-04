@@ -11,7 +11,7 @@ import uuid
 import pytest
 from hypothesis import HealthCheck, given, settings as h_settings, strategies as st
 from httpx import ASGITransport, AsyncClient
-from jose import jwt
+import jwt
 
 from src.config.settings import settings
 from src.modules.auth.models import User

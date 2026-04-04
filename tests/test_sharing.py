@@ -57,6 +57,11 @@ class TestPublicWorkoutLink:
         assert session_resp.status_code == 201
         session_id = session_resp.json()["id"]
 
+        # Share the session so it becomes publicly accessible
+        await client.post("/api/v1/share/track", headers=headers, json={
+            "session_id": session_id, "share_type": "workout",
+        })
+
         # Fetch public share page
         resp = await client.get(f"/api/v1/share/workout/{session_id}")
         assert resp.status_code == 200
@@ -81,6 +86,11 @@ class TestPublicWorkoutLink:
         })
         session_id = session_resp.json()["id"]
 
+        # Share the session so it becomes publicly accessible
+        await client.post("/api/v1/share/track", headers=headers, json={
+            "session_id": session_id, "share_type": "workout",
+        })
+
         # Visit with referral param — should not error
         resp = await client.get(f"/api/v1/share/workout/{session_id}?ref={user_id}")
         assert resp.status_code == 200
@@ -99,6 +109,11 @@ class TestPublicWorkoutLink:
             ],
         })
         session_id = session_resp.json()["id"]
+
+        # Share the session so it becomes publicly accessible
+        await client.post("/api/v1/share/track", headers=headers, json={
+            "session_id": session_id, "share_type": "workout",
+        })
 
         # Invalid ref — should still return 200
         resp = await client.get(f"/api/v1/share/workout/{session_id}?ref=not-a-uuid")
@@ -179,6 +194,11 @@ class TestOGMetaTags:
         sessions = await client.get("/api/v1/training/sessions", headers=headers)
         session_id = sessions.json()["items"][0]["id"]
 
+        # Share the session so it becomes publicly accessible
+        await client.post("/api/v1/share/track", headers=headers, json={
+            "session_id": session_id, "share_type": "workout",
+        })
+
         resp = await client.get(f"/api/v1/share/workout/{session_id}")
         html = resp.text
 
@@ -212,6 +232,11 @@ class TestOGMetaTags:
             ],
         })
         session_id = resp2.json()["id"]
+
+        # Share the session so it becomes publicly accessible
+        await client.post("/api/v1/share/track", headers=headers, json={
+            "session_id": session_id, "share_type": "workout",
+        })
 
         resp = await client.get(f"/api/v1/share/workout/{session_id}")
         # PR count may or may not appear depending on PR detection — just verify page loads

@@ -584,25 +584,25 @@ class TestGetProductByBarcode:
 
 @pytest.mark.asyncio
 async def test_barcode_endpoint_invalid_format_returns_422(client, override_get_db):
-    """GET /food/barcode/abc → 422 (not numeric)."""
+    """GET /food/barcode/abc → 400 (not numeric, custom validation handler returns 400)."""
     # Register and get auth headers
     resp = await client.post("/api/v1/auth/register", json={"email": "bc_test@example.com", "password": "Securepass123"})
     token = resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
     resp = await client.get("/api/v1/food/barcode/abc", headers=headers)
-    assert resp.status_code == 422
+    assert resp.status_code == 400
 
 
 @pytest.mark.asyncio
 async def test_barcode_endpoint_too_short_returns_422(client, override_get_db):
-    """GET /food/barcode/123 → 422 (too short, min 8 digits)."""
+    """GET /food/barcode/123 → 400 (too short, min 8 digits)."""
     resp = await client.post("/api/v1/auth/register", json={"email": "bc_short@example.com", "password": "Securepass123"})
     token = resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
     resp = await client.get("/api/v1/food/barcode/123", headers=headers)
-    assert resp.status_code == 422
+    assert resp.status_code == 400
 
 
 @pytest.mark.asyncio
@@ -699,8 +699,8 @@ class TestProperty5BarcodeFormatValidationBackend:
             f"/api/v1/food/barcode/{barcode}",
             headers=headers,
         )
-        assert resp.status_code == 422, (
-            f"Expected 422 for invalid barcode {barcode!r}, got {resp.status_code}"
+        assert resp.status_code == 400, (
+            f"Expected 400 for invalid barcode {barcode!r}, got {resp.status_code}"
         )
 
     @pytest.mark.asyncio
@@ -747,6 +747,6 @@ class TestProperty5BarcodeFormatValidationBackend:
                 f"/api/v1/food/barcode/{barcode}",
                 headers=headers,
             )
-            assert resp.status_code != 422, (
-                f"Got 422 for valid barcode {barcode!r} — should pass validation"
+            assert resp.status_code != 400, (
+                f"Got 400 for valid barcode {barcode!r} — should pass validation"
             )

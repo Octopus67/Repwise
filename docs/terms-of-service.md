@@ -1,8 +1,8 @@
 # Terms of Service
 
 **Repwise**
-**Last Updated:** [DATE]
-**Effective Date:** [DATE]
+**Last Updated:** March 20, 2026
+**Effective Date:** March 20, 2026
 
 ## 1. Acceptance of Terms
 
@@ -23,22 +23,20 @@ Repwise is a fitness application that provides adaptive nutrition tracking, trai
 
 ### 4.1 Plans and Pricing
 
-| Plan | Price | Billing Cycle |
-|------|-------|---------------|
-| HOS Premium Monthly | $9.99/month (or ₹499/month in India) | Monthly auto-renewal |
-| HOS Premium Annual | $79.99/year (or ₹3,999/year in India) | Annual auto-renewal |
+Repwise offers a free tier and premium subscription plans. Subscription pricing is set in Apple App Store Connect and Google Play Console and may vary by region and currency. Current pricing is displayed within the App before purchase.
 
 ### 4.2 Auto-Renewal
 
 - Subscriptions automatically renew at the end of each billing cycle unless cancelled before the renewal date
-- You will be charged the applicable subscription fee at the beginning of each renewal period
+- You will be charged through your Apple ID or Google Play account at the beginning of each renewal period
 - Pricing may change with reasonable notice; existing subscribers will be notified before any price increase takes effect on their next renewal
 
 ### 4.3 Payment Processing
 
-- Payments are processed through Stripe (for USD and global currencies) or Razorpay (for INR / India)
-- We do not store your credit card or payment details on our servers — all payment data is handled directly by the payment processor
-- You agree to provide valid payment information and authorize recurring charges for your subscription plan
+- All payments are processed as in-app purchases through the Apple App Store (iOS) or Google Play Store (Android)
+- Repwise uses RevenueCat to manage subscription entitlements and status
+- Repwise never directly handles, stores, or processes payment card data — all payment information is managed by Apple or Google
+- By subscribing, you agree to the applicable terms of the Apple App Store or Google Play Store
 
 ### 4.4 Free Tier
 
@@ -47,18 +45,18 @@ Repwise is a fitness application that provides adaptive nutrition tracking, trai
 
 ## 5. Cancellation Policy
 
-- You may cancel your subscription at any time through the App or by contacting support
+- You may cancel your subscription at any time through your device's subscription management settings (Apple App Store or Google Play Store)
 - Cancellation takes effect at the end of the current billing period — you retain access to premium features until then
-- No partial refunds are issued for unused time remaining in the current billing period (except as described in Section 6)
+- No partial refunds are issued for unused time remaining in the current billing period
 - After cancellation, your account reverts to the free tier; your data is retained and accessible
 
 ## 6. Refund Policy
 
-- Refund requests made within 14 days of the initial subscription purchase or a renewal charge are eligible for a pro-rated refund
-- Pro-rated refunds are calculated based on the unused portion of the billing period
-- To request a refund, contact support@repwise.com with your account email and reason for the request
-- Refunds are processed through the original payment method (Stripe or Razorpay) and may take 5-10 business days to appear
-- Refund requests made after 14 days from the charge date are not eligible
+- All subscription payments are processed by Apple or Google. Refunds are handled by the respective platform, not by Repwise directly
+- To request a refund on iOS, visit [reportaproblem.apple.com](https://reportaproblem.apple.com)
+- To request a refund on Android, visit [Google Play Help](https://support.google.com/googleplay/answer/2479637)
+- Refund eligibility and processing are governed by Apple's and Google's respective refund policies
+- If you have questions about your subscription, contact support@repwise.app
 
 ## 7. Data Retention
 
@@ -66,7 +64,7 @@ Repwise is a fitness application that provides adaptive nutrition tracking, trai
 - When you request account deletion, a 30-day grace period begins during which you can reactivate your account
 - After 30 days, all personal data is permanently removed from our systems
 - If you have an active subscription at the time of deletion, it will be cancelled automatically
-- For full details on data handling, see our [Privacy Policy](https://repwise.com/privacy)
+- For full details on data handling, see our [Privacy Policy](https://repwise.app/privacy)
 
 ## 8. Acceptable Use
 
@@ -98,6 +96,14 @@ We reserve the right to suspend or terminate accounts that violate these terms.
 - Your use of the App does not grant you any ownership rights to the App or its content
 - You retain ownership of the data you input into the App (nutrition logs, training logs, photos, etc.)
 
+## 10A. User-Generated Content
+
+- You retain ownership of all content you create and share within the App, including social feed posts, shared workouts, and progress updates
+- By sharing content within the App (e.g., posting to the social feed or sharing workouts), you grant Repwise a non-exclusive, royalty-free, worldwide license to display, distribute, and reproduce that content within the App for the purpose of operating the social features
+- This license ends when you delete the shared content or your account
+- You are solely responsible for the content you share and must not post content that violates these Terms or applicable laws
+- We reserve the right to remove user-generated content that violates our Acceptable Use policy
+
 ## 11. Limitation of Liability
 
 To the maximum extent permitted by applicable law:
@@ -127,10 +133,10 @@ You agree to indemnify and hold harmless Repwise, its officers, directors, emplo
 
 ## 15. Governing Law
 
-These Terms shall be governed by and construed in accordance with the laws of [JURISDICTION], without regard to conflict of law principles.
+These Terms shall be governed by and construed in accordance with the laws of India, without regard to conflict of law principles.
 
 ## 16. Contact
 
 For questions about these Terms, contact us at:
 
-**Email:** support@repwise.com
+**Email:** support@repwise.app

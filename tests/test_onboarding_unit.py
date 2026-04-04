@@ -562,9 +562,9 @@ async def test_onboarding_missing_goal_type_returns_400(client, override_get_db)
 
 @pytest.mark.asyncio
 async def test_onboarding_invalid_sex_returns_400(client, override_get_db):
-    """POST with sex='other' (not in Literal['male','female']) → 400."""
+    """POST with sex='unknown' (not in Sex enum) → 400."""
     headers = await _register_unique_user(client, "bad_sex@example.com")
-    payload = {**VALID_ONBOARDING_PAYLOAD, "sex": "other"}
+    payload = {**VALID_ONBOARDING_PAYLOAD, "sex": "unknown"}
     resp = await client.post("/api/v1/onboarding/complete", json=payload, headers=headers)
     assert resp.status_code in (400, 422)
 

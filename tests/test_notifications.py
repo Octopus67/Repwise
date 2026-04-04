@@ -316,7 +316,7 @@ async def test_deactivate_token_sets_inactive(db_session):
 
 def _auth_headers(user_id: uuid.UUID) -> dict:
     """Generate a valid JWT for testing."""
-    from jose import jwt
+    import jwt
     from src.config.settings import settings
     token = jwt.encode(
         {"sub": str(user_id), "type": "access", "jti": str(uuid.uuid4())},

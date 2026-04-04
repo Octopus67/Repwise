@@ -2,7 +2,7 @@
 
 ## Prerequisites
 - Google Cloud Console access
-- Repwise app Bundle ID: `com.repwise.app` (or your actual Bundle ID)
+- Repwise app Bundle ID: `com.octopuslabs.repwise` (or your actual Bundle ID)
 
 ---
 
@@ -62,7 +62,7 @@
 1. Click "Create Credentials" → "OAuth client ID"
 2. Application type: **iOS**
 3. Name: "Repwise iOS"
-4. Bundle ID: `com.repwise.app` (or your actual Bundle ID from app.json)
+4. Bundle ID: `com.octopuslabs.repwise` (or your actual Bundle ID from app.json)
 5. Click "Create"
 6. **COPY THE CLIENT ID** - looks like: `123456789-xyz789.apps.googleusercontent.com`
 7. Save this as `GOOGLE_IOS_CLIENT_ID`
@@ -73,7 +73,7 @@
 1. Click "Create Credentials" → "OAuth client ID"
 2. Application type: **Android**
 3. Name: "Repwise Android"
-4. Package name: `com.repwise.app` (from app.json)
+4. Package name: `com.octopuslabs.repwise` (from app.json)
 5. **SHA-1 certificate fingerprint:** You need to get this first
 
 **Get SHA-1 fingerprint:**

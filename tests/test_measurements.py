@@ -41,7 +41,7 @@ class TestNavyCalculator:
 
     def test_invalid_sex_raises(self):
         with pytest.raises(ValueError, match="Invalid sex"):
-            navy_body_fat("other", waist_cm=85, neck_cm=37, height_cm=178)
+            navy_body_fat("unknown", waist_cm=85, neck_cm=37, height_cm=178)
 
     def test_result_never_negative(self):
         # Very low body fat scenario
@@ -408,7 +408,7 @@ class TestMeasurementEndpoints:
     async def test_create_measurement(self, override_get_db, client):
         headers = await _register_and_get_headers(client)
         resp = await client.post(
-            "/api/v1/body/measurements",
+            "/api/v1/body-measurements",
             json={
                 "measured_at": datetime.now(timezone.utc).isoformat(),
                 "weight_kg": 80.0,
@@ -427,11 +427,11 @@ class TestMeasurementEndpoints:
         headers = await _register_and_get_headers(client)
         # Create one
         await client.post(
-            "/api/v1/body/measurements",
+            "/api/v1/body-measurements",
             json={"measured_at": datetime.now(timezone.utc).isoformat(), "weight_kg": 80.0},
             headers=headers,
         )
-        resp = await client.get("/api/v1/body/measurements", headers=headers)
+        resp = await client.get("/api/v1/body-measurements", headers=headers)
         assert resp.status_code == 200
         assert resp.json()["total_count"] >= 1
 
@@ -439,11 +439,11 @@ class TestMeasurementEndpoints:
     async def test_get_latest(self, override_get_db, client):
         headers = await _register_and_get_headers(client)
         await client.post(
-            "/api/v1/body/measurements",
+            "/api/v1/body-measurements",
             json={"measured_at": datetime.now(timezone.utc).isoformat(), "weight_kg": 81.0},
             headers=headers,
         )
-        resp = await client.get("/api/v1/body/measurements/latest", headers=headers)
+        resp = await client.get("/api/v1/body-measurements/latest", headers=headers)
         assert resp.status_code == 200
         assert resp.json()["weight_kg"] == 81.0
 
@@ -451,12 +451,12 @@ class TestMeasurementEndpoints:
     async def test_get_by_id(self, override_get_db, client):
         headers = await _register_and_get_headers(client)
         create_resp = await client.post(
-            "/api/v1/body/measurements",
+            "/api/v1/body-measurements",
             json={"measured_at": datetime.now(timezone.utc).isoformat(), "weight_kg": 82.0},
             headers=headers,
         )
         mid = create_resp.json()["id"]
-        resp = await client.get(f"/api/v1/body/measurements/{mid}", headers=headers)
+        resp = await client.get(f"/api/v1/body-measurements/{mid}", headers=headers)
         assert resp.status_code == 200
         assert resp.json()["id"] == mid
 
@@ -464,14 +464,14 @@ class TestMeasurementEndpoints:
     async def test_update_measurement(self, override_get_db, client):
         headers = await _register_and_get_headers(client)
         create_resp = await client.post(
-            "/api/v1/body/measurements",
+            "/api/v1/body-measurements",
             json={"measured_at": datetime.now(timezone.utc).isoformat(), "weight_kg": 80.0},
             headers=headers,
         )
         assert create_resp.status_code == 201
         mid = create_resp.json()["id"]
         resp = await client.put(
-            f"/api/v1/body/measurements/{mid}",
+            f"/api/v1/body-measurements/{mid}",
             json={"weight_kg": 83.0},
             headers=headers,
         )
@@ -482,40 +482,40 @@ class TestMeasurementEndpoints:
     async def test_delete_measurement(self, override_get_db, client):
         headers = await _register_and_get_headers(client)
         create_resp = await client.post(
-            "/api/v1/body/measurements",
+            "/api/v1/body-measurements",
             json={"measured_at": datetime.now(timezone.utc).isoformat(), "weight_kg": 80.0},
             headers=headers,
         )
         mid = create_resp.json()["id"]
-        resp = await client.delete(f"/api/v1/body/measurements/{mid}", headers=headers)
+        resp = await client.delete(f"/api/v1/body-measurements/{mid}", headers=headers)
         assert resp.status_code == 204
 
         # Verify gone
-        resp = await client.get(f"/api/v1/body/measurements/{mid}", headers=headers)
+        resp = await client.get(f"/api/v1/body-measurements/{mid}", headers=headers)
         assert resp.status_code == 404
 
     @pytest.mark.asyncio
     async def test_get_trend(self, override_get_db, client):
         headers = await _register_and_get_headers(client)
         await client.post(
-            "/api/v1/body/measurements",
+            "/api/v1/body-measurements",
             json={"measured_at": datetime.now(timezone.utc).isoformat(), "weight_kg": 80.0},
             headers=headers,
         )
-        resp = await client.get("/api/v1/body/measurements/trend", headers=headers)
+        resp = await client.get("/api/v1/body-measurements/trend", headers=headers)
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
 
     @pytest.mark.asyncio
     async def test_unauthenticated_returns_401(self, override_get_db, client):
-        resp = await client.get("/api/v1/body/measurements")
+        resp = await client.get("/api/v1/body-measurements")
         assert resp.status_code == 401
 
     @pytest.mark.asyncio
     async def test_validation_weight_negative(self, override_get_db, client):
         headers = await _register_and_get_headers(client)
         resp = await client.post(
-            "/api/v1/body/measurements",
+            "/api/v1/body-measurements",
             json={"measured_at": datetime.now(timezone.utc).isoformat(), "weight_kg": -5},
             headers=headers,
         )
@@ -525,7 +525,7 @@ class TestMeasurementEndpoints:
     async def test_validation_body_fat_over_100(self, override_get_db, client):
         headers = await _register_and_get_headers(client)
         resp = await client.post(
-            "/api/v1/body/measurements",
+            "/api/v1/body-measurements",
             json={"measured_at": datetime.now(timezone.utc).isoformat(), "body_fat_pct": 101},
             headers=headers,
         )

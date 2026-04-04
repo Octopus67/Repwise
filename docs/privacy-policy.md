@@ -1,8 +1,8 @@
 # Privacy Policy
 
 **Repwise**
-**Last Updated:** [DATE]
-**Effective Date:** [DATE]
+**Last Updated:** March 20, 2026
+**Effective Date:** March 20, 2026
 
 ## 1. Introduction
 
@@ -17,7 +17,10 @@ By using Repwise, you agree to the collection and use of information as describe
 | Data Type | Purpose | Storage |
 |-----------|---------|---------|
 | Email address | Account creation, login, communication | Encrypted at rest in our database |
-| Password | Authentication | Stored as a bcrypt hash — we never store plaintext passwords |
+| Password | Authentication (email/password accounts) | Stored as a bcrypt hash — we never store plaintext passwords |
+| Name | Display name, personalization | Encrypted at rest (received from Google OAuth or Apple Sign-In) |
+| Profile photo URL | Profile display | Encrypted at rest (received from Google OAuth) |
+| OAuth provider ID | Account linking for Google OAuth and Apple Sign-In | Encrypted at rest |
 
 ### 2.2 Body & Health Data
 
@@ -40,7 +43,16 @@ By using Repwise, you agree to the collection and use of information as describe
 |-----------|---------|---------|
 | Progress photos | Visual progress tracking, before/after comparisons | Encrypted at rest in cloud object storage (Cloudflare R2) |
 
-### 2.5 Device & Technical Data
+### 2.5 Social Features Data
+
+| Data Type | Purpose | Storage |
+|-----------|---------|---------|
+| Feed posts | Social sharing of workouts and progress | Encrypted at rest |
+| Reactions | Social engagement on feed posts | Encrypted at rest |
+| Follows | Social connections between users | Encrypted at rest |
+| Leaderboard entries | Competitive rankings and motivation | Encrypted at rest |
+
+### 2.6 Device & Technical Data
 
 | Data Type | Purpose | Storage |
 |-----------|---------|---------|
@@ -69,13 +81,16 @@ We share limited data with the following third-party services to operate the App
 
 | Service | Purpose | Data Shared | Privacy Policy |
 |---------|---------|-------------|----------------|
-| **Stripe** | Payment processing (USD and global currencies) | Email, subscription plan, payment method (handled by Stripe) | [stripe.com/privacy](https://stripe.com/privacy) |
-| **Razorpay** | Payment processing (INR / India) | Email, subscription plan, payment method (handled by Razorpay) | [razorpay.com/privacy](https://razorpay.com/privacy) |
+| **Apple App Store** | Subscription payment processing (iOS) | Apple ID, subscription plan — all payment data handled by Apple | [apple.com/legal/privacy](https://www.apple.com/legal/privacy/) |
+| **Google Play Store** | Subscription payment processing (Android) | Google account, subscription plan — all payment data handled by Google | [policies.google.com/privacy](https://policies.google.com/privacy) |
+| **RevenueCat** | Subscription management and entitlement tracking | Anonymous app user ID, subscription status, purchase receipts | [revenuecat.com/privacy](https://www.revenuecat.com/privacy) |
 | **Sentry** | Crash reporting and error tracking | Device model, OS version, app version, stack traces | [sentry.io/privacy](https://sentry.io/privacy) |
 | **PostHog** | Product analytics | Anonymous usage events, device type, app version | [posthog.com/privacy](https://posthog.com/privacy) |
 | **Firebase (FCM)** | Push notifications | Device push tokens | [firebase.google.com/support/privacy](https://firebase.google.com/support/privacy) |
+| **Cloudflare R2** | CDN and object storage for progress photos | Progress photos, uploaded media | [cloudflare.com/privacypolicy](https://www.cloudflare.com/privacypolicy/) |
+| **AWS SES** | Transactional emails (account verification, password reset) | Email address | [aws.amazon.com/privacy](https://aws.amazon.com/privacy/) |
 
-Payment providers (Stripe and Razorpay) handle all payment card data directly. We never store credit card numbers, CVVs, or full payment details on our servers.
+Repwise never handles payment card data directly. All subscription payments are processed through Apple App Store (iOS) or Google Play Store (Android) via in-app purchases. We use RevenueCat to manage subscription entitlements and status.
 
 ## 5. Data Storage and Security
 
@@ -135,6 +150,6 @@ We may update this Privacy Policy from time to time. We will notify you of any m
 
 If you have questions about this Privacy Policy or wish to exercise your data rights, contact us at:
 
-**Email:** support@repwise.com
+**Email:** support@repwise.app
 
-**Privacy Policy URL:** https://repwise.com/privacy
+**Privacy Policy URL:** https://repwise.app/privacy

@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from hypothesis import HealthCheck, given, settings as h_settings, strategies as st
-from jose import jwt
+import jwt
 
 from src.config.settings import settings
 from src.middleware.rate_limiter import clear_all as clear_rate_limits
@@ -101,7 +101,7 @@ class TestProperty4InputValidation:
         """
         response = await client.post(
             "/api/v1/auth/register",
-            json={"email": email, "password": "validpassword123"},
+            json={"email": email, "password": "ValidPassword123"},
         )
         assert response.status_code in (400, 422), (
             f"Expected 400 or 422 for email '{email}', got {response.status_code}"
@@ -115,7 +115,7 @@ class TestProperty4InputValidation:
         """
         response = await client.post(
             "/api/v1/auth/register",
-            json={"password": "validpassword123"},
+            json={"password": "ValidPassword123"},
         )
         assert response.status_code in (400, 422)
 

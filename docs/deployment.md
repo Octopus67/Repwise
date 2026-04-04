@@ -233,7 +233,7 @@ Set default Cache-Control headers:
 ### 4.5 Android Setup
 
 1. In Firebase console → Project Settings → General → Android app
-2. Register app with package name: `com.repwise.app`
+2. Register app with package name: `com.octopuslabs.repwise`
 3. Download `google-services.json` and place in the app's Android directory
 
 ## 5. Sentry (Crash Reporting & Error Tracking)

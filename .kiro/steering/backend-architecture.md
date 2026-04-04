@@ -7,100 +7,98 @@ inclusion: manual
 ## Entry Point
 `src/main.py` — Registers all routers, configures CORS, Sentry, exception handlers.
 
+## Server
+Gunicorn with Uvicorn workers (NOT bare Uvicorn). SQLAlchemy pool_size=5, max_overflow=10.
+
 ## API Modules (25 total)
+All mounted at `/api/v1/<prefix>`. Key modules:
 
-All mounted at `/api/v1/<prefix>`:
+| Module | Prefix | Purpose |
+|--------|--------|---------|
+| auth | `/auth` | JWT auth, OAuth, password reset |
+| user | `/users` | Profile, metrics, bodyweight, goals |
+| nutrition | `/nutrition` | Food logging, entries, micronutrient dashboard |
+| training | `/training` | Sessions, exercises, volume, fatigue, analytics |
+| adaptive | `/adaptive` | Daily targets, adaptive macros |
+| food | `/food` | Food search (FTS5), barcode (OFF→USDA fallback) |
+| payments | `/payments` | RevenueCat subscriptions (webhook, status) |
+| social | `/social` | Feed, reactions, leaderboard, follows |
+| coaching | `/coaching` | Coach profiles, sessions, suggestions |
+| reports | `/reports` | Weekly intelligence reports |
+| onboarding | `/onboarding` | Onboarding wizard (status, steps) |
+| achievements | `/achievements` | Gamification, badges, progress |
+| notifications | `/notifications` | Push notifications, device tokens |
+| account | `/account` | Account deletion, data export |
 
-| Module | Prefix | Purpose | Key Files |
-|--------|--------|---------|-----------|
-| auth | `/auth` | JWT auth, OAuth, password reset | register, login, refresh, forgot-password |
-| user | `/users` | Profile, metrics, bodyweight, goals | profile CRUD, bodyweight history |
-| nutrition | `/nutrition` | Food logging, entries CRUD | entries, batch, copy, micronutrient-dashboard |
-| training | `/training` | Sessions, exercises, volume, analytics | sessions CRUD, exercises, templates, volume, fatigue |
-| adaptive | `/adaptive` | Daily targets, adaptive macros | daily-targets, sync engine |
-| food | `/food` | Food search, barcode lookup | search (FTS5), barcode (OFF→USDA fallback) |
-| meals | `/meals` | Custom meals, favorites | CRUD, favorites |
-| payments | `/payments` | Stripe + Razorpay subscriptions | checkout, webhook, subscription status |
-| content | `/content` | Research articles, modules | articles CRUD, favorites, versioning |
-| coaching | `/coaching` | Coach profiles, sessions | requests, suggestions |
-| health | `/health` | Health marker reports | reports, reference ranges |
-| dietary | `/dietary` | Dietary trend analysis, gaps | trends, gaps, recommendations |
-| onboarding | `/onboarding` | User onboarding wizard | status, steps, completion |
-| achievements | `/achievements` | Gamification, badges | progress, unlock evaluation |
-| feature_flags | `/feature-flags` | Runtime feature toggles | check, CRUD (admin) |
-| progress_photos | `/progress-photos` | Body progress photos | upload, gallery, comparison |
-| periodization | `/periodization` | Training block planning | blocks, phases |
-| readiness | `/readiness` | Daily readiness scoring | scores, checkins |
-| reports | `/reports` | Weekly intelligence reports | generation, history |
-| founder | `/founder` | Founder story content | content |
-| community | `/community` | Community features | (placeholder) |
-| account | `/account` | Account management | deletion, export |
-| recomp | `/recomp` | Body recomposition tracking | measurements |
-| meal_plans | `/meal-plans` | Meal planning | plans, items |
-| notifications | `/notifications` | Push notifications | device tokens, preferences |
+Other: content, health, dietary, progress_photos, periodization, readiness, founder, community, recomp, meals, meal_plans, feature_flags (DEPRECATED — use PostHog).
 
-## Shared Infrastructure (`src/shared/`)
+## Payment: RevenueCat Only
+- Removed Stripe + Razorpay entirely. RevenueCat is the sole payment provider.
+- Webhook: `/webhook/revenuecat` — handles subscription lifecycle events.
+- Provider: `src/modules/payments/revenuecat_provider.py`.
+- `require_premium` dependency checks RevenueCat entitlement status.
 
-| File | Purpose |
-|------|---------|
-| `base_model.py` | SQLAlchemy Base with UUID primary key, created_at, updated_at |
-| `soft_delete.py` | SoftDeleteMixin — adds deleted_at, not_deleted() filter |
-| `audit.py` | AuditLogMixin — writes to audit_logs table on changes |
-| `errors.py` | ApiError, NotFoundError, UnprocessableError, ForbiddenError |
-| `pagination.py` | PaginatedResult, PaginationParams (limit max 500) |
-| `types.py` | Enums: UserRole, AuthProvider, AuditAction |
+## Rate Limiting: Redis-Backed
+- `src/middleware/rate_limiter.py` — sorted set sliding window algorithm.
+- Required in production (Redis URL must be configured). Fail-open if Redis is down.
+- Applied to auth endpoints and sensitive routes.
+
+## Feature Flags: PostHog
+- `src/services/feature_flags.py` — PostHog integration for runtime feature toggles.
+- `require_feature()` FastAPI dependency for gating endpoints.
+- DEPRECATED: DB-based `feature_flags` module. Migrate all flags to PostHog.
+
+## Social Module
+- `src/modules/social/` — 5 tables: follows, feed_events, reactions, leaderboard_entries, shared_templates.
+- Fan-out-on-read architecture (no fan-out-on-write).
+- Leaderboard: cron job refreshes `leaderboard_cache` periodically.
 
 ## Middleware (`src/middleware/`)
 
 | File | Purpose |
 |------|---------|
-| `authenticate.py` | `get_current_user` dependency — JWT validation |
-| `freemium_gate.py` | `require_premium` dependency — checks subscription |
-| `rate_limiter.py` | Rate limiting on auth endpoints |
-| `structured_logging.py` | Request/response logging middleware |
+| `authenticate.py` | `get_current_user` — JWT validation |
+| `freemium_gate.py` | `require_premium` — checks RevenueCat entitlement |
+| `rate_limiter.py` | Redis-backed sorted set rate limiting |
+| `request_timeout.py` | 30s default / 120s for long operations |
+| `logging_middleware.py` | Request/response logging |
+
+File upload validation lives in `src/shared/storage.py` (size + type checks).
+
+## Cron Jobs (7)
+1. `permanent_deletion.py` — daily, GDPR account deletion
+2. `cleanup_blacklist.py` — daily, expired token cleanup
+3. `trial_expiration.py` — hourly, trial downgrades
+4. `export_worker.py` — periodic, process pending exports
+5. `cleanup_exports.py` — daily, delete expired export files
+6. `refresh_leaderboards.py` — every 15 min, recalculate leaderboards
+7. `workout_reminders.py` — every 2 hours, push notifications
+
+## Shared Infrastructure (`src/shared/`)
+- `base_model.py` — SQLAlchemy Base: UUID pk, created_at, updated_at
+- `soft_delete.py` — SoftDeleteMixin: deleted_at, `Model.not_deleted(stmt)` filter
+- `audit.py` — AuditLogMixin: writes to audit_logs on changes
+- `errors.py` — ApiError, NotFoundError, UnprocessableError, ForbiddenError
+- `pagination.py` — PaginatedResult, PaginationParams (limit max 500)
 
 ## Database
+- Dev: SQLite (JSONB→JSON patching). Prod: PostgreSQL + asyncpg.
+- Models use JSONB for extensible fields. All inherit Base with SoftDeleteMixin.
+- Queries MUST use `Model.not_deleted(stmt)` to filter deleted records.
 
-- Models use JSONB for extensible fields (exercises, micro_nutrients, tags)
-- All models inherit from `Base` (UUID pk, timestamps)
-- Most models use `SoftDeleteMixin` (soft delete via deleted_at)
-- Queries MUST use `Model.not_deleted(stmt)` to filter deleted records
-- Dev: SQLite with JSONB→JSON patching in tests
-- Prod: PostgreSQL with asyncpg
+## N+1 Query Fixes
+- Dashboard: `asyncio.gather()` for parallel data fetching.
+- PR detector: batch query instead of per-item lookups.
+- Coaching: sequential awaits (acceptable — low cardinality).
 
-## Key Services
+## Key Engines
+- **WNS Volume**: `wns_engine.py` (pure functions), `wns_volume_service.py` (DB-backed). K=0.96, MAX_STIM_REPS=5.
+- **Fatigue**: `fatigue_engine.py` — e1RM regression, composite score (regression 35%, volume 30%, frequency 20%, nutrition 15%).
+- **Micronutrient Dashboard**: 27 nutrients, age/sex-specific RDA, score 0-100.
+- **Adaptive Engine**: Daily macro targets adjusted by training volume + body comp goals.
+- **Weekly Report**: Integrates WNS HU, nutrient score, compliance, weight-goal alignment.
 
-### WNS Volume Engine (`src/modules/training/`)
-- `wns_engine.py` — Pure functions: stimulating_reps, diminishing_returns (K=0.96), atrophy
-- `wns_volume_service.py` — DB-backed WNS calculation per muscle group
-- `exercise_coefficients.py` — Direct (1.0) / fractional (0.5) muscle attribution
-- `volume_service.py` — Legacy volume calculation (RPE-tier based)
-- Feature flag `wns_engine` controls which engine is used (currently ON by default)
-- Constants: MAX_STIM_REPS=5, DEFAULT_RIR=2.0 (RPE 8), DIMINISHING_K=0.96
-
-### Fatigue Engine (`src/modules/training/`)
-- `fatigue_engine.py` — Pure functions: e1RM regression, composite fatigue score
-- `fatigue_service.py` — DB-backed fatigue analysis
-- Components: regression (35%), volume (30%), frequency (20%), nutrition (15%)
-
-### Micronutrient Dashboard (`src/modules/nutrition/`)
-- `micro_dashboard_service.py` — Weekly aggregation, nutrient score (0-100), deficiency alerts
-- 27 tracked nutrients with age/sex-specific RDA values
-- Score=0 when no data logged; sodium/cholesterol inverted in scoring
-- Endpoint: `GET /nutrition/micronutrient-dashboard`
-
-### Weekly Intelligence Report (`src/modules/reports/`)
-- Integrates WNS HU, nutrient score, compliance, weight-goal alignment
-- Up to 5 actionable recommendations; compliance threshold ±10%
-
-### Adaptive Engine (`src/modules/adaptive/`)
-- Daily macro targets adjusted by training volume and body composition goals
-
-### User/Profile (`src/modules/user/`)
-- Bodyweight: upsert by date (no duplicates)
-- display_name: min_length=1 enforced
-
-### Nutrition (`src/modules/nutrition/`)
-- `food_name` field on entries (optional, nullable)
-- Pagination limit max 500; macro-calorie mismatch logged as warning
-- Copy entries preserves source_meal_id and food_name
+## Key Rules
+- Bodyweight: upsert by date (no duplicates). display_name: min_length=1.
+- Nutrition: food_name nullable, pagination max 500, copy preserves source_meal_id.
+- Feature flag `wns_engine` controls volume engine selection (ON by default).

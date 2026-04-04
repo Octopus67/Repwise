@@ -37,7 +37,7 @@ async def _create_user(db: AsyncSession, email: str = "export@test.com") -> User
 
 
 def _auth_headers(user_id: uuid.UUID) -> dict:
-    from jose import jwt
+    import jwt
     from src.config.settings import settings
     token = jwt.encode(
         {"sub": str(user_id), "type": "access", "exp": datetime.now(timezone.utc) + timedelta(hours=1)},

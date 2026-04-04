@@ -42,7 +42,7 @@ async def _create_user(session, *, has_used_trial: bool = False) -> User:
 async def _create_active_subscription(session, user_id: uuid.UUID) -> Subscription:
     sub = Subscription(
         user_id=user_id,
-        provider_name="stripe",
+        provider_name="revenuecat",
         status=SubscriptionStatus.ACTIVE,
         currency="USD",
         region="US",
@@ -103,7 +103,7 @@ class TestStartTrial:
 
         assert sub.is_trial is True
         assert sub.status == SubscriptionStatus.ACTIVE
-        assert sub.plan_id == "trial_7day"
+        assert sub.plan_id == "trial_14day"
         assert sub.provider_name == "trial"
         assert sub.current_period_end is not None
 
@@ -174,7 +174,7 @@ class TestTrialStatus:
 
         result = await svc.get_trial_status(user.id)
         assert result["active"] is True
-        assert result["days_remaining"] >= 6  # just started
+        assert result["days_remaining"] >= 13  # just started
 
     @pytest.mark.asyncio
     async def test_status_expired_trial(self, db_session):
@@ -367,7 +367,7 @@ class TestTrialExpirationJob:
         user = await _create_user(db_session)
         sub = Subscription(
             user_id=user.id,
-            provider_name="stripe",
+            provider_name="revenuecat",
             status=SubscriptionStatus.ACTIVE,
             is_trial=False,
             current_period_end=datetime.now(timezone.utc) - timedelta(hours=1),

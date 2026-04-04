@@ -6,16 +6,16 @@ from src.shared.pagination import PaginationParams
 from src.modules.nutrition.schemas import NutritionEntryCreate, NutritionEntryUpdate
 
 
-def test_pagination_limit_500_accepted():
-    """Test that PaginationParams accepts limit=500."""
-    params = PaginationParams(page=1, limit=500)
-    assert params.limit == 500
+def test_pagination_limit_100_accepted():
+    """Test that PaginationParams accepts limit=100."""
+    params = PaginationParams(page=1, limit=100)
+    assert params.limit == 100
 
 
-def test_pagination_limit_501_rejected():
-    """Test that PaginationParams rejects limit=501."""
+def test_pagination_limit_101_rejected():
+    """Test that PaginationParams rejects limit=101."""
     with pytest.raises(ValueError):
-        PaginationParams(page=1, limit=501)
+        PaginationParams(page=1, limit=101)
 
 
 def test_create_entry_macro_mismatch_logs_warning(caplog):

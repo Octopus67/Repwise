@@ -177,14 +177,14 @@ async def test_apple_oauth_happy_path(client, override_get_db, monkeypatch, mock
     import jwt as pyjwt
     from unittest.mock import MagicMock
 
-    monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.repwise.app")
+    monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.octopuslabs.repwise")
 
     fake_key = MagicMock()
     decoded_payload = {
         "sub": "apple-user-001",
         "email": "user@example.com",
         "iss": "https://appleid.apple.com",
-        "aud": "com.repwise.app",
+        "aud": "com.octopuslabs.repwise",
     }
 
     def mock_get_signing_key(token):
@@ -216,7 +216,7 @@ async def test_apple_oauth_invalid_token(client, override_get_db, monkeypatch, m
     import jwt as pyjwt
     from unittest.mock import MagicMock
 
-    monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.repwise.app")
+    monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.octopuslabs.repwise")
 
     def mock_get_signing_key(token):
         raise pyjwt.InvalidTokenError("bad key")
@@ -250,13 +250,13 @@ async def test_apple_oauth_privacy_relay_email(client, override_get_db, monkeypa
     """Apple user with no email gets a privaterelay fallback."""
     from unittest.mock import MagicMock
 
-    monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.repwise.app")
+    monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.octopuslabs.repwise")
 
     fake_key = MagicMock()
     decoded_payload = {
         "sub": "apple-user-no-email",
         "iss": "https://appleid.apple.com",
-        "aud": "com.repwise.app",
+        "aud": "com.octopuslabs.repwise",
     }
 
     monkeypatch.setattr(
@@ -282,14 +282,14 @@ async def test_apple_oauth_existing_user(client, override_get_db, monkeypatch, m
     """Second Apple login with same sub returns tokens without creating duplicate."""
     from unittest.mock import MagicMock
 
-    monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.repwise.app")
+    monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.octopuslabs.repwise")
 
     fake_key = MagicMock()
     decoded_payload = {
         "sub": "apple-returning-user",
         "email": "returning@example.com",
         "iss": "https://appleid.apple.com",
-        "aud": "com.repwise.app",
+        "aud": "com.octopuslabs.repwise",
     }
 
     monkeypatch.setattr(
@@ -323,34 +323,36 @@ async def test_apple_oauth_existing_user(client, override_get_db, monkeypatch, m
 
 @pytest.mark.asyncio
 async def test_rate_limiting_after_threshold(client, override_get_db, mock_ses):
-    """Make LOGIN_RATE_LIMIT_THRESHOLD failed attempts, then verify 429."""
+    """Make failed attempts until rate-limited, then verify 429."""
     email = "ratelimit@example.com"
     bad_creds = {"email": email, "password": "wrongpassword"}
 
-    # Exhaust the threshold with failed login attempts
-    for _ in range(settings.LOGIN_RATE_LIMIT_THRESHOLD):
+    # The lockout threshold (3 per 24h) is lower than the login threshold (5 per 15min),
+    # so we expect 429 after 3 failed attempts (lockout kicks in first).
+    for i in range(3):
         resp = await client.post("/api/v1/auth/login", json=bad_creds)
-        assert resp.status_code == 401
+        assert resp.status_code == 401, f"Attempt {i+1} expected 401, got {resp.status_code}"
 
-    # Next attempt should be rate-limited
+    # Next attempt should be rate-limited by lockout
     resp = await client.post("/api/v1/auth/login", json=bad_creds)
     assert resp.status_code == 429
 
 
 # ------------------------------------------------------------------
-# 10. Login with unverified email returns 403
+# 10. Login with unverified email succeeds with email_verified=false (C2 deferrable)
 # ------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_login_unverified_email_returns_403(client, override_get_db, mock_ses):
-    """POST /login with correct creds but unverified email → 403 EMAIL_NOT_VERIFIED."""
+async def test_login_unverified_email_succeeds_with_flag(client, override_get_db, mock_ses):
+    """POST /login with correct creds but unverified email → 200 with email_verified=false."""
     creds = {"email": "unverified@example.com", "password": "SecurePass123"}
     await client.post("/api/v1/auth/register", json=creds)
 
     resp = await client.post("/api/v1/auth/login", json=creds)
-    assert resp.status_code == 403
+    assert resp.status_code == 200
     body = resp.json()
-    assert body["code"] == "EMAIL_NOT_VERIFIED"
+    assert body["email_verified"] is False
+    assert "access_token" in body
 
 
 # ------------------------------------------------------------------
@@ -367,22 +369,33 @@ async def test_verify_email_rate_limited(client, override_get_db, db_session, mo
     token = resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    # 5 attempts should succeed (returning 400 for bad code, not 429)
-    for _ in range(5):
+    # Mock the rate limiter to actually enforce limits without Redis
+    call_count = 0
+
+    def _mock_check(user_id, endpoint, max_attempts, window_seconds):
+        nonlocal call_count
+        call_count += 1
+        if call_count > max_attempts:
+            from src.shared.errors import RateLimitedError
+            raise RateLimitedError(message="Too many requests", retry_after=window_seconds)
+
+    with patch("src.modules.auth.router.check_user_endpoint_rate_limit", side_effect=_mock_check):
+        # 5 attempts should succeed (returning 400 for bad code, not 429)
+        for _ in range(5):
+            r = await client.post(
+                "/api/v1/auth/verify-email",
+                json={"code": "000000"},
+                headers=headers,
+            )
+            assert r.status_code == 400
+
+        # 6th attempt should be rate-limited
         r = await client.post(
             "/api/v1/auth/verify-email",
             json={"code": "000000"},
             headers=headers,
         )
-        assert r.status_code == 400
-
-    # 6th attempt should be rate-limited
-    r = await client.post(
-        "/api/v1/auth/verify-email",
-        json={"code": "000000"},
-        headers=headers,
-    )
-    assert r.status_code == 429
+        assert r.status_code == 429
 
 
 # ------------------------------------------------------------------
@@ -395,14 +408,14 @@ async def test_apple_oauth_identity_token_field(client, override_get_db, monkeyp
     import jwt as pyjwt
     from unittest.mock import MagicMock
 
-    monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.repwise.app")
+    monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.octopuslabs.repwise")
 
     fake_key = MagicMock()
     decoded_payload = {
         "sub": "apple-identity-token-user",
         "email": "identity@example.com",
         "iss": "https://appleid.apple.com",
-        "aud": "com.repwise.app",
+        "aud": "com.octopuslabs.repwise",
     }
 
     monkeypatch.setattr(

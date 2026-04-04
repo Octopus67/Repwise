@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
-from passlib.context import CryptContext
+import bcrypt as _bcrypt
 from sqlalchemy import select
 
 from src.modules.auth.models import EmailVerificationCode, PasswordResetCode, User
@@ -15,7 +15,10 @@ from src.modules.auth.service import AuthService
 from src.middleware.rate_limiter import clear_all as clear_rate_limits
 from src.services.email_service import EmailService, generate_otp
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def _hash_code(code: str) -> str:
+    """Hash a code using bcrypt directly (matching auth service implementation)."""
+    return _bcrypt.hashpw(code.encode("utf-8"), _bcrypt.gensalt()).decode("utf-8")
 
 
 from src.modules.auth.router import clear_verify_attempts
@@ -132,7 +135,7 @@ class TestVerifyEmailEndpoint:
 
         # Get the stored verification code hash and brute-force isn't needed —
         # we'll directly create a known code
-        from jose import jwt as jose_jwt
+        import jwt as jose_jwt
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
@@ -142,7 +145,7 @@ class TestVerifyEmailEndpoint:
 
         # Create a known verification code
         known_code = "123456"
-        code_hash = pwd_context.hash(known_code)
+        code_hash = _hash_code(known_code)
         vc = EmailVerificationCode(
             user_id=user_id,
             code_hash=code_hash,
@@ -170,7 +173,7 @@ class TestVerifyEmailEndpoint:
         token, _ = await _register_user(client)
         await db_session.commit()
 
-        from jose import jwt as jose_jwt
+        import jwt as jose_jwt
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
@@ -182,7 +185,7 @@ class TestVerifyEmailEndpoint:
         known_code = "123456"
         vc = EmailVerificationCode(
             user_id=user_id,
-            code_hash=pwd_context.hash(known_code),
+            code_hash=_hash_code(known_code),
             expires_at=datetime.now(timezone.utc) - timedelta(minutes=1),
         )
         db_session.add(vc)
@@ -202,7 +205,7 @@ class TestVerifyEmailEndpoint:
         token, _ = await _register_user(client)
         await db_session.commit()
 
-        from jose import jwt as jose_jwt
+        import jwt as jose_jwt
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
@@ -253,7 +256,7 @@ class TestVerifyEmailEndpoint:
         token, _ = await _register_user(client)
         await db_session.commit()
 
-        from jose import jwt as jose_jwt
+        import jwt as jose_jwt
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
@@ -264,7 +267,7 @@ class TestVerifyEmailEndpoint:
         known_code = "123456"
         vc = EmailVerificationCode(
             user_id=user_id,
-            code_hash=pwd_context.hash(known_code),
+            code_hash=_hash_code(known_code),
             expires_at=datetime.now(timezone.utc) + timedelta(minutes=10),
             used=True,
         )
@@ -318,7 +321,7 @@ class TestResendVerificationEndpoint:
         token, _ = await _register_user(client)
         await db_session.commit()
 
-        from jose import jwt as jose_jwt
+        import jwt as jose_jwt
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
@@ -344,7 +347,7 @@ class TestResendVerificationEndpoint:
         token, _ = await _register_user(client)
         await db_session.commit()
 
-        from jose import jwt as jose_jwt
+        import jwt as jose_jwt
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
@@ -356,7 +359,7 @@ class TestResendVerificationEndpoint:
         for _ in range(2):
             vc = EmailVerificationCode(
                 user_id=user_id,
-                code_hash=pwd_context.hash("000000"),
+                code_hash=_hash_code("000000"),
                 expires_at=datetime.now(timezone.utc) + timedelta(minutes=10),
             )
             db_session.add(vc)
@@ -383,7 +386,7 @@ class TestRegistrationSendsVerification:
         assert resp.status_code == 201
         await db_session.commit()
 
-        from jose import jwt as jose_jwt
+        import jwt as jose_jwt
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
@@ -427,7 +430,7 @@ class TestOTPSecurity:
         token, _ = await _register_user(client, "security@example.com")
         await db_session.commit()
 
-        from jose import jwt as jose_jwt
+        import jwt as jose_jwt
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
@@ -552,7 +555,7 @@ class TestResetPasswordWithOTP:
         known_code = "654321"
         rc = PasswordResetCode(
             user_id=user.id,
-            code_hash=pwd_context.hash(known_code),
+            code_hash=_hash_code(known_code),
             expires_at=datetime.now(timezone.utc) + timedelta(minutes=10),
         )
         db_session.add(rc)
@@ -612,7 +615,7 @@ class TestResetPasswordWithOTP:
         known_code = "654321"
         rc = PasswordResetCode(
             user_id=user.id,
-            code_hash=pwd_context.hash(known_code),
+            code_hash=_hash_code(known_code),
             expires_at=datetime.now(timezone.utc) - timedelta(minutes=1),
         )
         db_session.add(rc)
@@ -642,7 +645,7 @@ class TestResetPasswordWithOTP:
         known_code = "654321"
         rc = PasswordResetCode(
             user_id=user.id,
-            code_hash=pwd_context.hash(known_code),
+            code_hash=_hash_code(known_code),
             expires_at=datetime.now(timezone.utc) + timedelta(minutes=10),
             used=True,
         )
@@ -674,7 +677,7 @@ class TestResetPasswordWithOTP:
         known_code = "654321"
         rc = PasswordResetCode(
             user_id=user.id,
-            code_hash=pwd_context.hash(known_code),
+            code_hash=_hash_code(known_code),
             expires_at=datetime.now(timezone.utc) + timedelta(minutes=10),
         )
         db_session.add(rc)
@@ -704,7 +707,7 @@ class TestResetPasswordWithOTP:
         known_code = "654321"
         rc = PasswordResetCode(
             user_id=user.id,
-            code_hash=pwd_context.hash(known_code),
+            code_hash=_hash_code(known_code),
             expires_at=datetime.now(timezone.utc) + timedelta(minutes=10),
         )
         db_session.add(rc)

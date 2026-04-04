@@ -18,7 +18,7 @@
    - **Platform:** iOS
    - **Name:** Repwise
    - **Primary Language:** English (U.S.)
-   - **Bundle ID:** `com.repwise.app` (must match `app.json`)
+   - **Bundle ID:** `com.octopuslabs.repwise` (must match `app.json`)
    - **SKU:** `repwise-ios`
 
 ### 1.3 App Metadata

@@ -1,15 +1,15 @@
 # Free Trial Business Logic Specification
 
 ## Overview
-7-day free trial of premium features to drive trial-to-paid conversion.
+14-day free trial of premium features to drive trial-to-paid conversion.
 
 ## Rules
-- **Duration**: 7 calendar days from activation
+- **Duration**: 14 calendar days from activation
 - **Eligibility**: One trial per user, ever (`has_used_trial` flag on users table)
 - **No charge**: Trial creates a subscription with `is_trial=True`, no payment provider call
 - **Auto-downgrade**: Hourly job expires trials past `trial_ends_at`
 - **Premium access**: Trial subscriptions grant full premium access (status=active)
-- **Insights**: On day 7, show user what they accomplished during trial
+- **Insights**: On day 14, show user what they accomplished during trial
 
 ## Database Changes
 ### users table
@@ -22,9 +22,9 @@
 
 ## Trial Lifecycle
 1. User requests trial → check `has_used_trial == False`
-2. Set `has_used_trial=True`, `trial_started_at=now`, `trial_ends_at=now+7d`
+2. Set `has_used_trial=True`, `trial_started_at=now`, `trial_ends_at=now+14d`
 3. Create subscription: `status=active, is_trial=True`
-4. User enjoys premium for 7 days
+4. User enjoys premium for 14 days
 5. Hourly job finds expired trials → set subscription `status=cancelled`, then `status=free`
 6. User prompted to upgrade with insights summary
 
@@ -44,11 +44,11 @@
 ## Frontend Components
 - **TrialBadge**: Header badge showing "X days left"
 - **TrialCountdown**: Detailed countdown with progress bar
-- **TrialExpirationModal**: Day 7 modal with insights + upgrade CTA
-- **UpgradeModal**: Modified to show "Start 7-Day Free Trial" for eligible users
+- **TrialExpirationModal**: Day 14 modal with insights + upgrade CTA
+- **UpgradeModal**: Modified to show "Start 14-Day Free Trial" for eligible users
 - **Onboarding**: Trial prompt after onboarding completion
 
 ## Notifications
-- Day 3: "You're halfway through your trial!"
-- Day 6: "Last day of your trial tomorrow"
-- Day 7: "Your trial ends today — upgrade to keep premium"
+- Day 7: "You're halfway through your trial!"
+- Day 13: "Last day of your trial tomorrow"
+- Day 14: "Your trial ends today — upgrade to keep premium"

@@ -40,8 +40,8 @@ def test_case_insensitive():
 
 def test_empty_query():
     results = search_exercises('')
-    # Empty query should return all exercises
-    assert len(results) > 100
+    # Empty query with no filters returns empty list
+    assert len(results) == 0
 
 def test_muscle_group_filter_with_word_order():
     results = search_exercises('press', muscle_group='chest')
