@@ -1,8 +1,21 @@
 """Application settings loaded from environment variables."""
 
+import json
 import os
 from pydantic import field_validator, ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _parse_list(v: object) -> list[str]:
+    """Parse a list field from env var — accepts JSON array or comma-separated string."""
+    if isinstance(v, list):
+        return v
+    if isinstance(v, str):
+        v = v.strip()
+        if v.startswith("["):
+            return json.loads(v)
+        return [s.strip() for s in v.split(",") if s.strip()]
+    return []
 
 
 class Settings(BaseSettings):
@@ -11,10 +24,20 @@ class Settings(BaseSettings):
     # App
     APP_NAME: str = "Repwise"
     DEBUG: bool = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
-    CORS_ORIGINS: list[str] = ["http://localhost:8081", "http://localhost:19006"]
+    CORS_ORIGINS: str = '["http://localhost:8081","http://localhost:19006"]'
 
     # Trusted hosts
-    ALLOWED_HOSTS: list[str] = ["localhost", "127.0.0.1"]
+    ALLOWED_HOSTS: str = '["localhost","127.0.0.1"]'
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Parse CORS_ORIGINS from JSON array or comma-separated string."""
+        return _parse_list(self.CORS_ORIGINS)
+
+    @property
+    def allowed_hosts_list(self) -> list[str]:
+        """Parse ALLOWED_HOSTS from JSON array or comma-separated string."""
+        return _parse_list(self.ALLOWED_HOSTS)
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://localhost:5432/hypertrophy_os"
@@ -83,9 +106,10 @@ class Settings(BaseSettings):
 
     @field_validator("CORS_ORIGINS")
     @classmethod
-    def validate_cors_origins(cls, v: list[str], info: ValidationInfo) -> list[str]:
+    def validate_cors_origins(cls, v: str, info: ValidationInfo) -> str:
         debug = info.data.get("DEBUG", False)
-        if not debug and all("localhost" in origin or "127.0.0.1" in origin for origin in v):
+        origins = _parse_list(v)
+        if not debug and all("localhost" in o or "127.0.0.1" in o for o in origins):
             raise ValueError(
                 "CORS_ORIGINS must include production origins (not just localhost) when DEBUG=false"
             )
@@ -93,9 +117,10 @@ class Settings(BaseSettings):
 
     @field_validator("ALLOWED_HOSTS")
     @classmethod
-    def validate_allowed_hosts(cls, v: list[str], info: ValidationInfo) -> list[str]:
+    def validate_allowed_hosts(cls, v: str, info: ValidationInfo) -> str:
         debug = info.data.get("DEBUG", False)
-        if not debug and all(h in ("localhost", "127.0.0.1") for h in v):
+        hosts = _parse_list(v)
+        if not debug and all(h in ("localhost", "127.0.0.1") for h in hosts):
             raise ValueError(
                 "ALLOWED_HOSTS must include production hostnames when DEBUG=false"
             )

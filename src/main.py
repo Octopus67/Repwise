@@ -220,7 +220,7 @@ if not settings.DEBUG:
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
@@ -233,7 +233,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 # Trusted host validation in production
 if not settings.DEBUG:
     from starlette.middleware.trustedhost import TrustedHostMiddleware
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOSTS)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts_list)
 
 
 # Global exception handler for ApiError
