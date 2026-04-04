@@ -1,13 +1,14 @@
 """Payment and subscription routes.
 
-POST /subscribe       — Initiate a subscription (JWT required)
-POST /webhook/{provider} — Receive provider webhooks (public, no JWT)
-POST /cancel          — Cancel a subscription (JWT required)
-POST /refund          — Request a refund (JWT required)
-GET  /status          — Get subscription status (JWT required)
+POST /webhook/revenuecat — Receive RevenueCat webhooks (public, Bearer token auth)
+POST /cancel             — Cancel a subscription (JWT required)
+GET  /status             — Get subscription status (JWT required)
 """
 
 from __future__ import annotations
+import logging
+
+import sentry_sdk
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Request
@@ -15,16 +16,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
 from src.middleware.authenticate import get_current_user
+from src.middleware.rate_limiter import check_user_endpoint_rate_limit
 from src.modules.auth.models import User
 from src.modules.payments.schemas import (
     CancelRequest,
-    RefundRequest,
-    SubscribeRequest,
     SubscriptionResponse,
-    PaymentTransactionResponse,
     WebhookResponse,
 )
 from src.modules.payments.service import PaymentService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -33,41 +34,26 @@ def _get_service(db: AsyncSession = Depends(get_db)) -> PaymentService:
     return PaymentService(db)
 
 
-@router.post("/subscribe", response_model=SubscriptionResponse, status_code=201)
-async def subscribe(
-    data: SubscribeRequest,
-    user: User = Depends(get_current_user),
-    service: PaymentService = Depends(_get_service),
-) -> SubscriptionResponse:
-    """Initiate a subscription for the authenticated user."""
-    try:
-        subscription = await service.initiate_subscription(user_id=user.id, data=data)
-    except ValueError as e:
-        from src.shared.errors import UnprocessableError
-        raise UnprocessableError(str(e))
-    return SubscriptionResponse.model_validate(subscription)
-
-
-@router.post("/webhook/{provider}", response_model=WebhookResponse)
-async def webhook(
-    provider: str,
+@router.post("/webhook/revenuecat", response_model=WebhookResponse)
+async def webhook_revenuecat(
     request: Request,
     service: PaymentService = Depends(_get_service),
 ) -> WebhookResponse:
-    """Receive and process a webhook from a payment provider.
+    """Receive and process a webhook from RevenueCat.
 
     This endpoint is public (no JWT required) but verifies the
-    cryptographic signature from the provider.
+    Bearer token from the Authorization header.
 
-    Requirement 10.3: Verify webhook signature before processing.
+    Requirement 10.3: Verify webhook auth before processing.
     """
+    sentry_sdk.set_tag('component', 'webhook')
     payload = await request.body()
-    signature = request.headers.get("X-Webhook-Signature", "")
+    # RevenueCat uses Authorization: Bearer <key> instead of signature header
+    authorization = request.headers.get("Authorization", "")
 
     event = await service.handle_webhook(
-        provider_name=provider,
         payload=payload,
-        signature=signature,
+        signature=authorization,
     )
     return WebhookResponse(status="ok", event_type=event.event_type)
 
@@ -79,19 +65,9 @@ async def cancel(
     service: PaymentService = Depends(_get_service),
 ) -> SubscriptionResponse:
     """Cancel the user's subscription."""
+    check_user_endpoint_rate_limit(str(user.id), "payments:cancel", 10, 60)
     subscription = await service.cancel_subscription(user_id=user.id, data=data)
     return SubscriptionResponse.model_validate(subscription)
-
-
-@router.post("/refund", response_model=PaymentTransactionResponse, status_code=201)
-async def refund(
-    data: RefundRequest,
-    user: User = Depends(get_current_user),
-    service: PaymentService = Depends(_get_service),
-) -> PaymentTransactionResponse:
-    """Request a refund for a subscription."""
-    transaction = await service.request_refund(user_id=user.id, data=data)
-    return PaymentTransactionResponse.model_validate(transaction)
 
 
 @router.get("/status", response_model=Optional[SubscriptionResponse])

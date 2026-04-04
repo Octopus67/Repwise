@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import uuid
 from datetime import date as date_type
 from typing import Optional
 
@@ -18,6 +17,7 @@ from src.modules.dashboard.service import DashboardService
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
+@router.get("", response_model=DashboardSummaryResponse)
 @router.get("/summary", response_model=DashboardSummaryResponse)
 async def get_dashboard_summary(
     date: Optional[str] = None,

@@ -8,10 +8,10 @@ from datetime import date, timedelta
 from typing import List, Optional
 
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.readiness.readiness_engine import (
-    Baselines,
     HealthMetrics,
     UserCheckin,
     compute_baselines,
@@ -69,7 +69,7 @@ class ReadinessService:
             return CheckinResponse.model_validate(existing)
         except ApiError:
             raise
-        except Exception:
+        except SQLAlchemyError:
             logger.exception("Failed to submit checkin for user=%s", user_id)
             raise ApiError(
                 status=500, code="INTERNAL_ERROR",
@@ -193,7 +193,7 @@ class ReadinessService:
             )
         except ApiError:
             raise
-        except Exception:
+        except (SQLAlchemyError, ValueError, TypeError):
             logger.exception("Failed to compute readiness score for user=%s", user_id)
             raise ApiError(
                 status=500, code="INTERNAL_ERROR",
@@ -250,7 +250,7 @@ class ReadinessService:
             )
         except ApiError:
             raise
-        except Exception:
+        except SQLAlchemyError:
             logger.exception("Failed to fetch readiness history for user=%s", user_id)
             raise ApiError(
                 status=500, code="INTERNAL_ERROR",

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
 from src.middleware.authenticate import get_current_user
+from src.middleware.rate_limiter import check_user_endpoint_rate_limit
 from src.modules.auth.models import User
 from src.modules.meal_plans.schemas import (
     DuplicatePlanRequest,
@@ -43,10 +44,12 @@ async def generate_plan(
     service: MealPlanService = Depends(_get_service),
 ) -> GeneratedPlanResponse:
     """Generate a new meal plan from adaptive targets."""
+    check_user_endpoint_rate_limit(str(user.id), "meal_plans:generate", 10, 60)
     try:
         plan = await service.generate_plan(user.id, body.slot_splits, body.num_days)
-    except ValueError as e:
-        raise ValidationError(str(e))
+    except ValueError:
+        logger.exception("[generate_plan] plan generation failed")
+        raise ValidationError("Unable to generate meal plan")
 
     return GeneratedPlanResponse(
         days=[
@@ -170,8 +173,9 @@ async def scale_recipe(
         scaled = await service.scale_recipe_endpoint(
             body.recipe_id, body.target_value, body.target_macro
         )
-    except ValueError as e:
-        raise ValidationError(str(e))
+    except ValueError:
+        logger.exception("[scale_recipe] recipe scaling failed")
+        raise ValidationError("Unable to scale recipe")
 
     return ScaledRecipeResponse(
         original_recipe_id=scaled.original_recipe_id,

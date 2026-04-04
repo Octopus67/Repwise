@@ -8,10 +8,9 @@ from datetime import date, datetime
 
 from sqlalchemy import Date, Float, ForeignKey, Index, String, func
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from src.shared.base_model import Base
-from src.shared.types import ActivityLevel, GoalType
 from typing import Optional
 
 

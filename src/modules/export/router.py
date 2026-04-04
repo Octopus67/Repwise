@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
 from src.middleware.authenticate import get_current_user
+from src.middleware.rate_limiter import check_user_endpoint_rate_limit
 from src.modules.auth.models import User
 from src.modules.export.schemas import ExportRequestCreate, ExportRequestResponse
 from src.modules.export.service import ExportService, EXPORTS_DIR
@@ -30,6 +31,7 @@ async def request_export(
     service: ExportService = Depends(_get_service),
 ) -> ExportRequestResponse:
     """Request a data export (JSON, CSV, or PDF). Rate limited to 1 per 24h."""
+    check_user_endpoint_rate_limit(str(user.id), "export:request", 5, 60)
     export = await service.request_export(user.id, body.format)
 
     # Schedule background generation
@@ -81,6 +83,7 @@ async def download_export(
     service: ExportService = Depends(_get_service),
 ):
     """Download a completed export file."""
+    check_user_endpoint_rate_limit(str(user.id), "export:download", 5, 60)
     export = await service.mark_downloaded(export_id, user.id)
 
     path = Path(export.download_url).resolve()

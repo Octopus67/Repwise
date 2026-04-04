@@ -69,6 +69,7 @@ class RecompService:
                 RecompMeasurement.recorded_date <= end_date,
             )
             .order_by(RecompMeasurement.recorded_date.asc())
+            .limit(200)
         )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())

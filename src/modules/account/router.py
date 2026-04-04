@@ -1,14 +1,14 @@
 """Account management routes — deletion, reactivation, cleanup."""
 
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
 from src.middleware.authenticate import get_current_user
+from src.middleware.rate_limiter import check_user_endpoint_rate_limit
 from src.modules.account.schemas import AccountDeletionResponse, AccountReactivationResponse
 from src.modules.account.service import AccountService
 from src.modules.auth.models import User
-from typing import Optional
 
 router = APIRouter()
 
@@ -26,6 +26,7 @@ async def delete_account(
 
     Requirement 22.1, 22.4, 22.5.
     """
+    check_user_endpoint_rate_limit(str(user.id), "account:delete", 3, 60)
     result = await service.request_deletion(user.id)
     return AccountDeletionResponse(**result)
 

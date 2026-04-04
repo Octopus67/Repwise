@@ -4,9 +4,9 @@ from __future__ import annotations
 from typing import Optional
 
 import uuid
-from datetime import date, datetime
+from datetime import date
 
-from sqlalchemy import Boolean, Date, Float, Index, String, Text, text
+from sqlalchemy import Boolean, Date, Float, Index, String, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 

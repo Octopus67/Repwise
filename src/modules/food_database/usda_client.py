@@ -8,7 +8,12 @@ The client maps USDA nutrient IDs to our internal schema format.
 """
 
 import httpx
+import logging
 from typing import Any, Optional
+
+from src.utils.retry import async_retry
+
+logger = logging.getLogger(__name__)
 
 USDA_BASE_URL = "https://api.nal.usda.gov/fdc/v1"
 API_TIMEOUT_SECONDS = 10.0
@@ -96,6 +101,19 @@ def _parse_usda_food(food: dict) -> dict[str, Any]:
     }
 
 
+@async_retry(
+    max_retries=2,
+    base_delay=1.0,
+    retryable_exceptions=(httpx.ConnectError, httpx.TimeoutException),
+)
+async def _usda_search_request(params: dict) -> dict:
+    """Retryable HTTP call to USDA search endpoint."""
+    async with httpx.AsyncClient(timeout=API_TIMEOUT_SECONDS) as client:
+        response = await client.get(f"{USDA_BASE_URL}/foods/search", params=params)
+        response.raise_for_status()
+        return response.json()
+
+
 async def search_usda_foods(
     query: str,
     page_size: int = 15,
@@ -108,6 +126,8 @@ async def search_usda_foods(
     Falls back to DEMO_KEY if no API key is configured.
     """
     key = api_key or "DEMO_KEY"
+    if key == "DEMO_KEY":
+        logger.warning("USDA_API_KEY not configured; using rate-limited DEMO_KEY")
 
     params = {
         "api_key": key,
@@ -116,16 +136,28 @@ async def search_usda_foods(
         "dataType": data_types,
     }
 
-    async with httpx.AsyncClient(timeout=API_TIMEOUT_SECONDS) as client:
-        try:
-            response = await client.get(f"{USDA_BASE_URL}/foods/search", params=params)
-            response.raise_for_status()
-            data = response.json()
+    try:
+        data = await _usda_search_request(params)
+        foods = data.get("foods", [])
+        return [_parse_usda_food(f) for f in foods]
+    except (httpx.HTTPError, httpx.TimeoutException, KeyError, ValueError):
+        return []
 
-            foods = data.get("foods", [])
-            return [_parse_usda_food(f) for f in foods]
-        except (httpx.HTTPError, httpx.TimeoutException, KeyError, ValueError):
-            return []
+
+@async_retry(
+    max_retries=2,
+    base_delay=1.0,
+    retryable_exceptions=(httpx.ConnectError, httpx.TimeoutException),
+)
+async def _usda_detail_request(fdc_id: int, api_key: str) -> dict:
+    """Retryable HTTP call to USDA food detail endpoint."""
+    async with httpx.AsyncClient(timeout=API_TIMEOUT_SECONDS) as client:
+        response = await client.get(
+            f"{USDA_BASE_URL}/food/{fdc_id}",
+            params={"api_key": api_key},
+        )
+        response.raise_for_status()
+        return response.json()
 
 
 async def get_usda_food_details(
@@ -134,15 +166,12 @@ async def get_usda_food_details(
 ) -> Optional[dict[str, Any]]:
     """Get detailed nutrient data for a specific USDA food by FDC ID."""
     key = api_key or "DEMO_KEY"
+    if key == "DEMO_KEY":
+        logger.warning("USDA_API_KEY not configured; using rate-limited DEMO_KEY")
 
-    async with httpx.AsyncClient(timeout=API_TIMEOUT_SECONDS) as client:
-        try:
-            response = await client.get(
-                f"{USDA_BASE_URL}/food/{fdc_id}",
-                params={"api_key": key},
-            )
-            response.raise_for_status()
-            food = response.json()
-            return _parse_usda_food(food)
-        except (httpx.HTTPError, httpx.TimeoutException, KeyError, ValueError):
-            return None
+    try:
+        food = await _usda_detail_request(fdc_id, key)
+        return _parse_usda_food(food)
+    except (httpx.HTTPError, httpx.TimeoutException, KeyError, ValueError) as exc:
+        logger.warning("USDA lookup failed for fdc_id=%s: %s", fdc_id, exc)
+        return None

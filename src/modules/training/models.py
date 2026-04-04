@@ -4,7 +4,7 @@ import uuid
 from datetime import date, datetime
 from typing import Any, Optional
 
-from sqlalchemy import Date, ForeignKey, Index, String, Text, text
+from sqlalchemy import Date, DateTime, Float, ForeignKey, Index, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -133,3 +133,33 @@ class CustomExercise(SoftDeleteMixin, Base):
     )
 
 
+
+
+class PersonalRecord(Base):
+    """Persisted personal records for PR history (Requirement F2).
+
+    Each row captures a single PR event: the exercise, rep count,
+    new value, and optional link back to the training session.
+    """
+
+    __tablename__ = "personal_records"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    exercise_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    pr_type: Mapped[str] = mapped_column(String(20), nullable=False, default="weight")
+    reps: Mapped[int] = mapped_column(Integer, nullable=False)
+    value_kg: Mapped[float] = mapped_column(Float, nullable=False)
+    previous_value_kg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    session_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("training_sessions.id", ondelete="SET NULL"), nullable=True
+    )
+    achieved_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=text("CURRENT_TIMESTAMP"),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        Index("ix_personal_records_user_id", "user_id"),
+        Index("ix_personal_records_user_exercise", "user_id", "exercise_name"),
+    )

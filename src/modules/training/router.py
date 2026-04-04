@@ -1,12 +1,12 @@
-"""Training routes — CRUD for training sessions."""
+"""Training routes — CRUD for sessions, exercises, and custom exercises."""
 
 from __future__ import annotations
-from typing import List, Optional, Union
+from typing import List, Optional
 
 import uuid
 from datetime import date
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query, Path, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
@@ -21,8 +21,6 @@ from src.modules.training.day_classification import classify_day
 from src.modules.training.schemas import (
     BatchOverloadRequest,
     BatchOverloadResponse,
-    BatchPreviousPerformanceRequest,
-    BatchPreviousPerformanceResponse,
     CustomExerciseCreate,
     CustomExerciseResponse,
     CustomExerciseUpdate,
@@ -31,36 +29,9 @@ from src.modules.training.schemas import (
     TrainingSessionCreate,
     TrainingSessionResponse,
     TrainingSessionUpdate,
-    UserWorkoutTemplateResponse,
-    WorkoutTemplateCreate,
-    WorkoutTemplateResponse,
-    WorkoutTemplateUpdate,
 )
 from src.modules.training.custom_exercise_service import CustomExerciseService
-from src.modules.training.previous_performance import BatchPreviousPerformanceResolver, PreviousPerformanceResolver
-from src.modules.training.template_service import TemplateService
-from src.modules.training.analytics_service import TrainingAnalyticsService
-from src.modules.training.analytics_schemas import (
-    E1RMHistoryPoint,
-    MuscleGroupFrequency,
-    StrengthProgressionPoint,
-    StrengthStandardsResponse,
-    VolumeTrendPoint,
-)
-from src.modules.training.volume_schemas import (
-    ExerciseVolumeDetail,
-    LandmarkConfigResponse,
-    LandmarkUpdateRequest,
-    MuscleGroupDetail,
-    VolumeLandmark,
-    WeeklyVolumeResponse,
-    WNSWeeklyResponse,
-)
-from src.modules.training.volume_service import VolumeCalculatorService, validate_week_start
-from src.modules.training.landmark_store import LandmarkStore
 from src.modules.training.service import TrainingService
-from src.modules.training.templates import get_template_by_id, get_templates
-from src.shared.errors import NotFoundError
 from src.shared.pagination import PaginatedResult, PaginationParams
 
 router = APIRouter()
@@ -68,10 +39,6 @@ router = APIRouter()
 
 def _get_training_service(db: AsyncSession = Depends(get_db)) -> TrainingService:
     return TrainingService(db)
-
-
-def _get_template_service(db: AsyncSession = Depends(get_db)) -> TemplateService:
-    return TemplateService(db)
 
 
 def _get_custom_exercise_service(db: AsyncSession = Depends(get_db)) -> CustomExerciseService:
@@ -89,10 +56,10 @@ async def list_muscle_groups() -> List[str]:
 
 @router.get("/exercises/search")
 async def search_exercises_endpoint(
-    q: str = Query(default="", min_length=1),
-    muscle_group: Optional[str] = Query(default=None),
-    equipment: Optional[str] = Query(default=None),
-    category: Optional[str] = Query(default=None),
+    q: str = Query(default="", max_length=200),
+    muscle_group: Optional[str] = Query(default=None, max_length=100),
+    equipment: Optional[str] = Query(default=None, max_length=100),
+    category: Optional[str] = Query(default=None, max_length=100),
 ) -> List[dict]:
     """Search exercises by name with optional muscle group, equipment, and category filters."""
     return search_exercises(query=q, muscle_group=muscle_group, equipment=equipment, category=category)
@@ -104,7 +71,7 @@ async def search_exercises_endpoint(
     responses={204: {"description": "Insufficient data for suggestion"}},
 )
 async def get_overload_suggestion(
-    exercise_name: str,
+    exercise_name: str = Path(..., max_length=200),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> OverloadSuggestion:
@@ -137,7 +104,7 @@ async def get_batch_overload_suggestions(
 
 @router.get("/exercises")
 async def list_exercises(
-    muscle_group: Optional[str] = Query(default=None),
+    muscle_group: Optional[str] = Query(default=None, max_length=100),
     user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db),
 ) -> List[dict]:
@@ -148,7 +115,6 @@ async def list_exercises(
     """
     exercises = list(get_all_exercises())
 
-    # Merge custom exercises for authenticated users
     if user is not None:
         custom_svc = CustomExerciseService(db)
         custom_dicts = await custom_svc.list_user_custom_exercises_as_dicts(user.id)
@@ -237,81 +203,7 @@ async def delete_custom_exercise(
     await service.delete_custom_exercise(user_id=user.id, exercise_id=exercise_id)
 
 
-# ─── Templates ────────────────────────────────────────────────────────────────
-
-
-@router.get("/templates", response_model=List[WorkoutTemplateResponse])
-async def list_templates() -> List[dict]:
-    """Return all pre-built workout templates."""
-    return get_templates()
-
-
-@router.get("/templates/{template_id}", response_model=WorkoutTemplateResponse)
-async def get_template(template_id: str) -> dict:
-    """Return a single workout template by id."""
-    template = get_template_by_id(template_id)
-    if template is None:
-        raise NotFoundError("Template not found")
-    return template
-
-
-# ─── User Templates (CRUD) ───────────────────────────────────────────────────
-
-
-@router.post(
-    "/user-templates",
-    response_model=UserWorkoutTemplateResponse,
-    status_code=201,
-)
-async def create_user_template(
-    data: WorkoutTemplateCreate,
-    user: User = Depends(get_current_user),
-    service: TemplateService = Depends(_get_template_service),
-) -> UserWorkoutTemplateResponse:
-    """Create a new user workout template."""
-    return await service.create_template(user_id=user.id, data=data)
-
-
-@router.get(
-    "/user-templates",
-    response_model=List[UserWorkoutTemplateResponse],
-)
-async def list_user_templates(
-    user: User = Depends(get_current_user),
-    service: TemplateService = Depends(_get_template_service),
-) -> list[UserWorkoutTemplateResponse]:
-    """Return all user-created workout templates."""
-    return await service.list_user_templates(user_id=user.id)
-
-
-@router.put(
-    "/user-templates/{template_id}",
-    response_model=UserWorkoutTemplateResponse,
-)
-async def update_user_template(
-    template_id: uuid.UUID,
-    data: WorkoutTemplateUpdate,
-    user: User = Depends(get_current_user),
-    service: TemplateService = Depends(_get_template_service),
-) -> UserWorkoutTemplateResponse:
-    """Update a user workout template."""
-    return await service.update_template(
-        user_id=user.id, template_id=template_id, data=data
-    )
-
-
-@router.delete(
-    "/user-templates/{template_id}",
-    status_code=204,
-    response_model=None,
-)
-async def delete_user_template(
-    template_id: uuid.UUID,
-    user: User = Depends(get_current_user),
-    service: TemplateService = Depends(_get_template_service),
-) -> None:
-    """Soft-delete a user workout template."""
-    await service.soft_delete_template(user_id=user.id, template_id=template_id)
+# ─── Day Classification ──────────────────────────────────────────────────────
 
 
 @router.get("/day-classification", response_model=DayClassificationResponse)
@@ -322,6 +214,9 @@ async def get_day_classification(
 ) -> DayClassificationResponse:
     """Classify a date as training day or rest day with muscle groups."""
     return await classify_day(db=db, user_id=user.id, target_date=target_date)
+
+
+# ─── Training Sessions (CRUD) ────────────────────────────────────────────────
 
 
 @router.get("/sessions/{session_id}", response_model=TrainingSessionResponse)
@@ -344,7 +239,7 @@ async def create_session(
     return await service.create_session(user_id=user.id, data=data)
 
 
-@router.get("/sessions", response_model=PaginatedResult[TrainingSessionResponse])
+@router.get("/sessions")
 async def get_sessions(
     user: User = Depends(get_current_user),
     service: TrainingService = Depends(_get_training_service),
@@ -352,14 +247,20 @@ async def get_sessions(
     limit: int = Query(default=20, ge=1, le=100),
     start_date: Optional[date] = Query(default=None),
     end_date: Optional[date] = Query(default=None),
-) -> PaginatedResult[TrainingSessionResponse]:
-    """Get training sessions with optional date range filter and pagination."""
+    lightweight: bool = Query(default=False, description="Return summary without full exercises JSONB"),
+):
+    """Get training sessions with optional date range filter and pagination.
+
+    Pass lightweight=true to omit full exercises JSONB (returns exercise_count, total_sets, muscle_groups instead).
+    Use GET /sessions/{session_id} for full exercise data.
+    """
     pagination = PaginationParams(page=page, limit=limit)
     return await service.get_sessions(
         user_id=user.id,
         pagination=pagination,
         start_date=start_date,
         end_date=end_date,
+        lightweight=lightweight,
     )
 
 
@@ -384,269 +285,3 @@ async def delete_session(
 ) -> None:
     """Soft-delete a training session."""
     await service.soft_delete_session(user_id=user.id, session_id=session_id)
-
-
-# ─── Analytics ────────────────────────────────────────────────────────────────
-
-
-@router.get("/analytics/volume-trend", response_model=List[VolumeTrendPoint])
-async def get_volume_trend(
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-    start_date: date = Query(...),
-    end_date: date = Query(...),
-    muscle_group: Optional[str] = Query(default=None),
-) -> list[VolumeTrendPoint]:
-    """Get daily training volume trend."""
-    svc = TrainingAnalyticsService(db)
-    return await svc.get_volume_trend(user.id, start_date, end_date, muscle_group)
-
-
-@router.get("/analytics/strength-progression", response_model=List[StrengthProgressionPoint])
-async def get_strength_progression(
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-    exercise_name: str = Query(...),
-    start_date: date = Query(...),
-    end_date: date = Query(...),
-) -> list[StrengthProgressionPoint]:
-    """Get strength progression for a specific exercise."""
-    svc = TrainingAnalyticsService(db)
-    return await svc.get_strength_progression(user.id, exercise_name, start_date, end_date)
-
-
-@router.get("/analytics/muscle-frequency", response_model=List[MuscleGroupFrequency])
-async def get_muscle_group_frequency(
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-    start_date: date = Query(...),
-    end_date: date = Query(...),
-) -> list[MuscleGroupFrequency]:
-    """Get muscle group training frequency per week."""
-    svc = TrainingAnalyticsService(db)
-    return await svc.get_muscle_group_frequency(user.id, start_date, end_date)
-
-
-@router.get("/analytics/e1rm-history", response_model=List[E1RMHistoryPoint])
-async def get_e1rm_history(
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-    exercise_name: str = Query(...),
-    start_date: date = Query(...),
-    end_date: date = Query(...),
-) -> list[E1RMHistoryPoint]:
-    """Get e1RM trend for a specific exercise over a date range."""
-    from fastapi import HTTPException
-
-    if start_date > end_date:
-        raise HTTPException(status_code=400, detail="start_date must be <= end_date")
-    svc = TrainingAnalyticsService(db)
-    return await svc.get_e1rm_history(user.id, exercise_name, start_date, end_date)
-
-
-@router.get("/analytics/strength-standards", response_model=StrengthStandardsResponse)
-async def get_strength_standards(
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-) -> StrengthStandardsResponse:
-    """Get strength classification and milestones for all supported lifts."""
-    svc = TrainingAnalyticsService(db)
-    return await svc.get_strength_standards(user.id)
-
-
-# ─── Previous Performance ────────────────────────────────────────────────────
-
-
-@router.get("/previous-performance")
-async def get_previous_performance(
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-    exercise_name: str = Query(...),
-) -> Optional[dict]:
-    """Get previous performance for a specific exercise."""
-    resolver = PreviousPerformanceResolver(db)
-    result = await resolver.get_previous_performance(user.id, exercise_name)
-    if result is None:
-        return None
-    return {
-        "exercise_name": result.exercise_name,
-        "session_date": str(result.session_date),
-        "last_set_weight_kg": result.last_set_weight_kg,
-        "last_set_reps": result.last_set_reps,
-    }
-
-
-@router.post(
-    "/previous-performance/batch",
-    response_model=BatchPreviousPerformanceResponse,
-)
-async def get_batch_previous_performance(
-    data: BatchPreviousPerformanceRequest,
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-) -> BatchPreviousPerformanceResponse:
-    """Get previous performance for multiple exercises in a single request."""
-    resolver = BatchPreviousPerformanceResolver(db)
-    results = await resolver.get_batch_previous_performance(user.id, data.exercise_names)
-    return BatchPreviousPerformanceResponse(results=results)
-
-
-# ─── Muscle Volume Heat Map ──────────────────────────────────────────────────
-
-
-def _default_week_start() -> date:
-    """Return the Monday of the current ISO week."""
-    today = date.today()
-    return today - __import__("datetime").timedelta(days=today.weekday())
-
-
-@router.get("/analytics/muscle-volume")
-async def get_muscle_volume(
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-    week_start: Optional[date] = Query(default=None),
-) -> Union[WeeklyVolumeResponse, WNSWeeklyResponse]:
-    """Get weekly muscle group volume with landmark comparisons."""
-    from datetime import timedelta
-
-    if week_start is None:
-        week_start = _default_week_start()
-    else:
-        # Auto-correct to Monday
-        if week_start.weekday() != 0:
-            week_start = week_start - timedelta(days=week_start.weekday())
-
-    week_end = week_start + timedelta(days=6)
-
-    # Check WNS feature flag
-    from src.modules.feature_flags.service import FeatureFlagService
-    ff_svc = FeatureFlagService(db)
-    use_wns = await ff_svc.is_feature_enabled("wns_engine", user)
-
-    if use_wns:
-        from src.modules.training.wns_volume_service import WNSVolumeService
-        from src.modules.user.models import UserGoal
-        from sqlalchemy import select
-        
-        # Fetch user's goal to adjust volume landmarks
-        goal_result = await db.execute(select(UserGoal).where(UserGoal.user_id == user.id))
-        user_goal = goal_result.scalar_one_or_none()
-        
-        goal_type = user_goal.goal_type if user_goal else None
-        goal_rate = user_goal.goal_rate_per_week if user_goal else None
-        
-        wns_svc = WNSVolumeService(db)
-        muscle_groups = await wns_svc.get_weekly_muscle_volume(user.id, week_start, goal_type, goal_rate)
-        return WNSWeeklyResponse(
-            week_start=week_start,
-            week_end=week_end,
-            muscle_groups=muscle_groups,
-        )
-
-    svc = VolumeCalculatorService(db)
-    muscle_groups = await svc.get_weekly_muscle_volume(user.id, week_start)
-    return WeeklyVolumeResponse(
-        week_start=week_start,
-        week_end=week_end,
-        muscle_groups=muscle_groups,
-    )
-
-
-@router.get(
-    "/analytics/muscle-volume/{muscle_group}/detail",
-    response_model=MuscleGroupDetail,
-)
-async def get_muscle_volume_detail(
-    muscle_group: str,
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-    week_start: Optional[date] = Query(default=None),
-) -> MuscleGroupDetail:
-    """Get per-exercise volume breakdown for a muscle group."""
-    if week_start is None:
-        week_start = _default_week_start()
-    else:
-        # Auto-correct to Monday
-        from datetime import timedelta as _td
-        if week_start.weekday() != 0:
-            week_start = week_start - _td(days=week_start.weekday())
-
-    # Check WNS feature flag
-    from src.modules.feature_flags.service import FeatureFlagService
-    ff_svc = FeatureFlagService(db)
-    use_wns = await ff_svc.is_feature_enabled("wns_engine", user)
-
-    if use_wns:
-        from src.modules.training.wns_volume_service import WNSVolumeService
-        from src.modules.user.models import UserGoal
-        from sqlalchemy import select
-
-        goal_result = await db.execute(select(UserGoal).where(UserGoal.user_id == user.id))
-        user_goal = goal_result.scalar_one_or_none()
-        goal_type = user_goal.goal_type if user_goal else None
-        goal_rate = user_goal.goal_rate_per_week if user_goal else None
-
-        wns_svc = WNSVolumeService(db)
-        all_muscles = await wns_svc.get_weekly_muscle_volume(user.id, week_start, goal_type, goal_rate)
-        target = next((m for m in all_muscles if m.muscle_group == muscle_group), None)
-        if target is None:
-            raise NotFoundError(f"Muscle group '{muscle_group}' not found")
-
-        return MuscleGroupDetail(
-            muscle_group=muscle_group,
-            effective_sets=target.net_stimulus,
-            frequency=target.frequency,
-            volume_status=target.status,
-            mev=int(target.landmarks.mev),
-            mav=int(target.landmarks.mav_high),
-            mrv=int(target.landmarks.mrv),
-            exercises=[
-                ExerciseVolumeDetail(
-                    exercise_name=ec.exercise_name,
-                    working_sets=ec.sets_count,
-                    effective_sets=ec.contribution_hu,
-                    sets=[],
-                )
-                for ec in target.exercises
-            ],
-        )
-
-    svc = VolumeCalculatorService(db)
-    return await svc.get_muscle_group_detail(user.id, muscle_group, week_start)
-
-
-@router.get("/analytics/volume-landmarks", response_model=LandmarkConfigResponse)
-async def get_volume_landmarks(
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-) -> LandmarkConfigResponse:
-    """Get merged volume landmarks (defaults + user customizations)."""
-    store = LandmarkStore(db)
-    landmarks = await store.get_landmarks(user.id)
-    return LandmarkConfigResponse(landmarks=list(landmarks.values()))
-
-
-@router.put("/analytics/volume-landmarks", response_model=VolumeLandmark)
-async def set_volume_landmark(
-    data: LandmarkUpdateRequest,
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-) -> VolumeLandmark:
-    """Set custom volume landmarks for a muscle group."""
-    store = LandmarkStore(db)
-    return await store.set_landmark(user.id, data.muscle_group, data.mev, data.mav, data.mrv)
-
-
-@router.delete(
-    "/analytics/volume-landmarks/{muscle_group}",
-    status_code=204,
-    response_model=None,
-)
-async def delete_volume_landmark(
-    muscle_group: str,
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-) -> None:
-    """Delete custom landmarks for a muscle group, reverting to defaults."""
-    store = LandmarkStore(db)
-    await store.delete_landmark(user.id, muscle_group)

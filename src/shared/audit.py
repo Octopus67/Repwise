@@ -7,10 +7,9 @@ whenever an entity is created, updated, or deleted.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 from typing import Any, Optional
 
-from sqlalchemy import func, text
+from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column

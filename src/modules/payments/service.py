@@ -1,43 +1,32 @@
 """Business logic for payment and subscription management.
 
-Implements the subscription state machine, provider routing, webhook
+Implements the subscription state machine, RevenueCat webhook
 handling, and freemium gating support.
 """
 
 from __future__ import annotations
+import logging
 from typing import Optional
 
 import uuid
-from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.payments.models import PaymentTransaction, Subscription
-from src.modules.payments.provider_interface import (
-    CreateSubscriptionParams,
-    WebhookEvent,
-    get_provider_for_region,
-)
-from src.modules.payments.schemas import (
-    CancelRequest,
-    RefundRequest,
-    SubscribeRequest,
-)
+from src.modules.payments.models import Subscription
+from src.modules.payments.provider_interface import WebhookEvent
+from src.modules.payments.schemas import CancelRequest
 from src.shared.errors import NotFoundError, UnprocessableError
-from src.shared.types import (
-    PaymentTransactionStatus,
-    PaymentTransactionType,
-    SubscriptionStatus,
-)
+from src.shared.types import SubscriptionStatus
 
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Subscription state machine — valid transitions
 # ---------------------------------------------------------------------------
 
 VALID_TRANSITIONS: dict[str, set[str]] = {
-    SubscriptionStatus.FREE: {SubscriptionStatus.PENDING_PAYMENT},
+    SubscriptionStatus.FREE: {SubscriptionStatus.PENDING_PAYMENT, SubscriptionStatus.ACTIVE},
     SubscriptionStatus.PENDING_PAYMENT: {
         SubscriptionStatus.ACTIVE,
         SubscriptionStatus.FREE,
@@ -69,103 +58,33 @@ def validate_transition(current: str, target: str) -> None:
 class PaymentService:
     """Service layer for subscription and payment operations.
 
-    Coordinates between the abstract PaymentProvider interface and the
-    platform's Subscription / PaymentTransaction models.
+    Handles RevenueCat webhooks and subscription status queries.
+    Purchases are initiated client-side via the RevenueCat SDK.
     """
 
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
     # ------------------------------------------------------------------
-    # Subscription lifecycle
+    # Webhook handling (RevenueCat only)
     # ------------------------------------------------------------------
-
-    async def initiate_subscription(
-        self,
-        user_id: uuid.UUID,
-        data: SubscribeRequest,
-    ) -> Subscription:
-        """Start a subscription flow for the user.
-
-        Creates or updates the user's subscription record and transitions
-        status from free → pending_payment.
-
-        Requirement 10.1: Delegate to the appropriate provider based on region.
-        Requirement 10.2: Create a Subscription record decoupled from provider.
-        """
-        # Get or create subscription record
-        subscription = await self._get_or_create_subscription(user_id)
-
-        # Prevent double-subscribe
-        if subscription.status == SubscriptionStatus.ACTIVE:
-            from src.shared.errors import ConflictError
-            raise ConflictError("User already has an active subscription")
-
-        validate_transition(subscription.status, SubscriptionStatus.PENDING_PAYMENT)
-
-        subscription.status = SubscriptionStatus.PENDING_PAYMENT
-        subscription.plan_id = data.plan_id
-        subscription.region = data.region
-        subscription.currency = data.currency
-
-        # Determine provider from region
-        provider = get_provider_for_region(data.region)
-        subscription.provider_name = type(provider).__name__
-
-        # Call provider to create checkout session
-        try:
-            from src.modules.auth.models import User as AuthUser
-            user_stmt = select(AuthUser).where(AuthUser.id == user_id)
-            user_result = await self.session.execute(user_stmt)
-            user = user_result.scalar_one()
-
-            provider_result = await provider.create_subscription(
-                CreateSubscriptionParams(
-                    customer_email=user.email,
-                    plan_id=data.plan_id,
-                    currency=data.currency,
-                    region=data.region,
-                )
-            )
-            subscription.provider_subscription_id = provider_result.provider_subscription_id
-            subscription.provider_customer_id = provider_result.provider_customer_id
-        except Exception:
-            # Provider call failed — revert to free
-            subscription.status = SubscriptionStatus.FREE
-            await self.session.flush()
-            raise
-
-        await self.session.flush()
-        await self.session.refresh(subscription)
-        return subscription
 
     async def handle_webhook(
         self,
-        provider_name: str,
         payload: bytes,
         signature: str,
     ) -> WebhookEvent:
-        """Process an incoming webhook from a payment provider.
+        """Process an incoming webhook from RevenueCat.
 
-        Verifies the signature, parses the event, and updates the
+        Verifies the Bearer token, parses the event, and updates the
         subscription status accordingly.
 
         Requirement 10.3: Verify webhook signature before processing.
         Requirement 10.8: Reject if signature verification fails.
         """
-        # Instantiate the correct provider
-        from src.modules.payments.stripe_provider import StripeProvider
-        from src.modules.payments.razorpay_provider import RazorpayProvider
+        from src.modules.payments.revenuecat_provider import RevenueCatProvider
 
-        provider_map = {
-            "stripe": StripeProvider,
-            "razorpay": RazorpayProvider,
-        }
-        provider_cls = provider_map.get(provider_name.lower())
-        if provider_cls is None:
-            raise UnprocessableError(f"Unknown payment provider: {provider_name}")
-
-        provider = provider_cls()
+        provider = RevenueCatProvider()
 
         # verify_webhook raises UnprocessableError on invalid signature
         event = await provider.verify_webhook(payload, signature)
@@ -182,7 +101,7 @@ class PaymentService:
 
             # Record this event
             log_entry = WebhookEventLog(
-                provider_name=provider_name,
+                provider_name="revenuecat",
                 event_id=event.event_id,
                 event_type=event.event_type,
             )
@@ -193,6 +112,10 @@ class PaymentService:
             await self._process_webhook_event(event)
 
         return event
+
+    # ------------------------------------------------------------------
+    # Subscription lifecycle
+    # ------------------------------------------------------------------
 
     async def cancel_subscription(
         self,
@@ -215,33 +138,6 @@ class PaymentService:
         await self.session.flush()
         return subscription
 
-    async def request_refund(
-        self,
-        user_id: uuid.UUID,
-        data: RefundRequest,
-    ) -> PaymentTransaction:
-        """Record a refund request for a subscription.
-
-        Requirement 10.5: Record the transaction in PaymentTransactions.
-        """
-        subscription = await self._get_subscription_or_raise(
-            user_id, data.subscription_id
-        )
-
-        transaction = PaymentTransaction(
-            subscription_id=subscription.id,
-            user_id=user_id,
-            provider_name=subscription.provider_name,
-            provider_transaction_id=None,
-            amount=data.amount or 0.0,
-            currency=subscription.currency,
-            type=PaymentTransactionType.REFUND,
-            status=PaymentTransactionStatus.PENDING,
-        )
-        self.session.add(transaction)
-        await self.session.flush()
-        return transaction
-
     async def get_subscription_status(
         self,
         user_id: uuid.UUID,
@@ -258,6 +154,16 @@ class PaymentService:
         return result.scalar_one_or_none()
 
     # ------------------------------------------------------------------
+    # RevenueCat entitlement check
+    # ------------------------------------------------------------------
+
+    async def check_revenuecat_entitlement(self, user_id: str) -> bool:
+        """Check if a user has an active RevenueCat entitlement."""
+        from src.modules.payments.revenuecat_provider import RevenueCatProvider
+        provider = RevenueCatProvider()
+        return await provider.verify_entitlement(user_id)
+
+    # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 
@@ -271,11 +177,40 @@ class PaymentService:
 
         subscription = Subscription(
             user_id=user_id,
-            provider_name="none",
+            provider_name="revenuecat",
             status=SubscriptionStatus.FREE,
             currency="USD",
             region="US",
             is_trial=is_trial,
+        )
+        self.session.add(subscription)
+        await self.session.flush()
+        return subscription
+
+    async def _get_or_create_subscription_from_webhook(
+        self, user_id: str, event: WebhookEvent,
+    ) -> Optional[Subscription]:
+        """Find or create a subscription for a first-time purchase webhook."""
+        try:
+            uid = uuid.UUID(user_id)
+        except ValueError:
+            logger.warning("Invalid user_id in webhook: %s", user_id)
+            return None
+
+        # Check if user already has a subscription
+        existing = await self.get_subscription_status(uid)
+        if existing is not None:
+            existing.provider_subscription_id = event.provider_subscription_id
+            await self.session.flush()
+            return existing
+
+        subscription = Subscription(
+            user_id=uid,
+            provider_name="revenuecat",
+            provider_subscription_id=event.provider_subscription_id,
+            status=SubscriptionStatus.FREE,
+            currency=event.currency or "USD",
+            region="US",
         )
         self.session.add(subscription)
         await self.session.flush()
@@ -301,24 +236,30 @@ class PaymentService:
 
     async def _process_webhook_event(self, event: WebhookEvent) -> None:
         """Update subscription status based on webhook event type."""
+        # Try to find existing subscription by provider_subscription_id
         stmt = select(Subscription).where(
             Subscription.provider_subscription_id == event.provider_subscription_id
         )
         result = await self.session.execute(stmt)
         subscription = result.scalar_one_or_none()
+
+        # If not found, try by user_id (for first-time purchases)
+        if not subscription and event.user_id:
+            subscription = await self._get_or_create_subscription_from_webhook(event.user_id, event)
+
         if subscription is None:
             return  # Unknown subscription — ignore
 
         event_type = event.event_type.lower()
 
-        # Map common webhook events to status transitions
+        # Map RevenueCat webhook events to status transitions
         transition_map: dict[str, str] = {
-            "payment_intent.succeeded": SubscriptionStatus.ACTIVE,
-            "invoice.paid": SubscriptionStatus.ACTIVE,
             "subscription.activated": SubscriptionStatus.ACTIVE,
+            "invoice.paid": SubscriptionStatus.ACTIVE,
             "invoice.payment_failed": SubscriptionStatus.PAST_DUE,
             "subscription.cancelled": SubscriptionStatus.CANCELLED,
-            "payment.failed": SubscriptionStatus.FREE,
+            "subscription.expired": SubscriptionStatus.CANCELLED,
+            "payment.refunded": SubscriptionStatus.CANCELLED,
         }
 
         new_status = transition_map.get(event_type)
@@ -327,11 +268,22 @@ class PaymentService:
 
         try:
             validate_transition(subscription.status, new_status)
+            old_status = subscription.status
             subscription.status = new_status
+            if event.period_end:
+                subscription.current_period_end = event.period_end
             await self.session.flush()
-        except UnprocessableError as e:
-            import logging
-            logger = logging.getLogger(__name__)
+            logger.info(
+                "Subscription status changed",
+                extra={
+                    "user_id": event.user_id,
+                    "subscription_id": str(subscription.id),
+                    "old_status": old_status,
+                    "new_status": new_status,
+                    "event_type": event.event_type,
+                },
+            )
+        except UnprocessableError:
             logger.warning(
                 "Invalid webhook transition ignored: %s -> %s for subscription %s, event: %s",
                 subscription.status, new_status, subscription.id, event.event_type

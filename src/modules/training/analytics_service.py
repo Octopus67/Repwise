@@ -19,7 +19,7 @@ from src.modules.training.analytics_schemas import (
     MilestoneResponse,
     VolumeTrendPoint,
 )
-from src.modules.training.e1rm_calculator import best_e1rm_for_exercise, compute_e1rm
+from src.modules.training.e1rm_calculator import best_e1rm_for_exercise
 from src.modules.training.exercise_mapping import get_muscle_group
 from src.modules.training.milestone_generator import generate_milestones
 from src.modules.training.models import TrainingSession

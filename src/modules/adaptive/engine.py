@@ -72,7 +72,7 @@ class AdaptiveInput:
     weight_kg: float
     height_cm: float
     age_years: int
-    sex: Literal["male", "female"]
+    sex: Literal["male", "female", "other"]
     activity_level: ActivityLevel
     goal_type: GoalType
     goal_rate_per_week: float  # kg/week, e.g. -0.5 for cutting
@@ -118,7 +118,10 @@ def _compute_bmr(input: AdaptiveInput) -> float:
     base = 10.0 * input.weight_kg + 6.25 * input.height_cm - 5.0 * input.age_years
     if input.sex == "male":
         return base + 5.0
-    return base - 161.0
+    if input.sex == "female":
+        return base - 161.0
+    # "other": average of male and female
+    return (base + 5.0 + base - 161.0) / 2
 
 
 # ---------------------------------------------------------------------------
@@ -186,7 +189,6 @@ def _compute_ema_n_days_ago(
         return None
 
     latest_date = sorted_history[-1][0]
-    cutoff = latest_date  # we want entries up to n_days before latest
     # Build sub-history ending n_days before the latest entry
     sub = [(d, w) for d, w in sorted_history if (latest_date - d).days >= n_days]
     if not sub:

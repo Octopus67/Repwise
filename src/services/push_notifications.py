@@ -12,10 +12,11 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 import httpx
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.notifications.models import DeviceToken, NotificationLog
+from src.utils.retry import async_retry
 
 logger = logging.getLogger("hypertrophy_os.push")
 
@@ -101,9 +102,7 @@ class PushNotificationService:
         client = await self._get_client()
         owns_client = self._http_client is None
         try:
-            response = await client.post(EXPO_PUSH_URL, json=messages, headers=headers)
-            response.raise_for_status()
-            result = response.json()
+            result = await self._post_expo(client, messages, headers)
         except httpx.HTTPError as exc:
             logger.error("Expo push API error: %s", exc)
             return 0
@@ -131,6 +130,18 @@ class PushNotificationService:
 
         await self.db.flush()
         return sent
+
+    @staticmethod
+    @async_retry(
+        max_retries=2,
+        base_delay=0.5,
+        retryable_exceptions=(httpx.ConnectError, httpx.TimeoutException),
+    )
+    async def _post_expo(client: httpx.AsyncClient, messages: list[dict], headers: dict) -> dict:
+        """Retryable POST to Expo Push API."""
+        response = await client.post(EXPO_PUSH_URL, json=messages, headers=headers)
+        response.raise_for_status()
+        return response.json()
 
     async def _log_notification(
         self,

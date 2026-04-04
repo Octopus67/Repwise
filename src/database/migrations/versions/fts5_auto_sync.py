@@ -10,7 +10,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = 'fts5_auto_sync'
-down_revision = None  # Update this to the latest migration
+down_revision = 'b16a1_password_changed_at'
 branch_labels = None
 depends_on = None
 
@@ -18,6 +18,10 @@ depends_on = None
 def upgrade() -> None:
     # SQLite-only: Create FTS5 triggers for auto-sync
     # These triggers keep food_items_fts in sync with food_items table
+    # FTS5 is a SQLite extension — skip on PostgreSQL (food search uses LIKE/ILIKE fallback)
+    conn = op.get_bind()
+    if conn.dialect.name != 'sqlite':
+        return
     
     op.execute("""
         -- Trigger: Insert into FTS when new food item is added
@@ -49,6 +53,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    conn = op.get_bind()
+    if conn.dialect.name != 'sqlite':
+        return
     op.execute("DROP TRIGGER IF EXISTS food_items_ai")
     op.execute("DROP TRIGGER IF EXISTS food_items_au")
     op.execute("DROP TRIGGER IF EXISTS food_items_ad")

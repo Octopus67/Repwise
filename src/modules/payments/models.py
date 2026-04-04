@@ -85,5 +85,5 @@ class WebhookEventLog(Base):
     event_id: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     event_type: Mapped[str] = mapped_column(String(100))
     processed_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()")
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
     )

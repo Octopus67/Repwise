@@ -2,11 +2,36 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from src.shared.validators import validate_json_size
+
+logger = logging.getLogger(__name__)
+
+VALID_MICRO_KEYS = {
+    "fiber_g", "sugar_g", "sodium_mg", "potassium_mg", "calcium_mg", "iron_mg",
+    "vitamin_a_iu", "vitamin_c_mg", "vitamin_d_iu", "vitamin_b12_mcg",
+    "zinc_mg", "magnesium_mg", "cholesterol_mg", "saturated_fat_g",
+    "trans_fat_g", "omega3_g", "omega6_g",
+}
+
+
+def _validate_micro_nutrient_values(v):
+    """Validate micro_nutrients dict: reject negatives, warn on unknown keys."""
+    if v is None:
+        return v
+    v = validate_json_size(v)
+    for key, val in v.items():
+        if val < 0:
+            raise ValueError(f"Micronutrient '{key}' cannot be negative, got {val}")
+        if key not in VALID_MICRO_KEYS:
+            logger.warning("Unknown micronutrient key '%s' — allowing for import compatibility", key)
+    return v
 
 
 # Valid units for recipe ingredients
@@ -34,8 +59,13 @@ class FoodItemCreate(BaseModel):
     is_recipe: bool = False
     source: Literal["usda", "verified", "community", "custom", "off"] = "custom"
     barcode: Optional[str] = None
-    description: Optional[str] = None
+    description: Optional[str] = Field(default=None, max_length=2000)
     total_servings: Optional[float] = None
+
+    @field_validator('micro_nutrients')
+    @classmethod
+    def validate_micro_nutrients_size(cls, v):
+        return _validate_micro_nutrient_values(v)
 
 
 class FoodItemUpdate(BaseModel):
@@ -51,6 +81,11 @@ class FoodItemUpdate(BaseModel):
     carbs_g: Optional[float] = Field(default=None, ge=0)
     fat_g: Optional[float] = Field(default=None, ge=0)
     micro_nutrients: Optional[dict[str, float]] = None
+
+    @field_validator('micro_nutrients')
+    @classmethod
+    def validate_micro_nutrients_size(cls, v):
+        return _validate_micro_nutrient_values(v)
 
 
 class FoodItemResponse(BaseModel):
@@ -136,7 +171,7 @@ class RecipeCreateRequest(BaseModel):
     """Payload for creating a new recipe."""
 
     name: str = Field(min_length=1, max_length=255)
-    description: Optional[str] = None
+    description: Optional[str] = Field(default=None, max_length=2000)
     total_servings: float = Field(ge=0.25, le=1000)
     ingredients: list[RecipeIngredientInput] = Field(min_length=1)
 
@@ -145,7 +180,7 @@ class RecipeUpdateRequest(BaseModel):
     """Payload for updating an existing recipe. All fields optional."""
 
     name: Optional[str] = Field(default=None, min_length=1, max_length=255)
-    description: Optional[str] = None
+    description: Optional[str] = Field(default=None, max_length=2000)
     total_servings: Optional[float] = Field(default=None, ge=0.25, le=1000)
     ingredients: Optional[list[RecipeIngredientInput]] = None
 

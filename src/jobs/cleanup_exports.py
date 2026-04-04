@@ -9,10 +9,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+import sentry_sdk
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import async_session_factory
@@ -23,6 +26,10 @@ logger = logging.getLogger(__name__)
 
 async def run_cleanup_exports(session: AsyncSession | None = None) -> int:
     """Delete expired export requests and their files. Returns count cleaned."""
+    start = time.monotonic()
+    logger.info("Export cleanup job started")
+    sentry_sdk.set_tag('component', 'job')
+    sentry_sdk.set_tag('job_name', 'cleanup_exports')
     owns_session = session is None
     if owns_session:
         session = async_session_factory()
@@ -38,23 +45,28 @@ async def run_cleanup_exports(session: AsyncSession | None = None) -> int:
 
         cleaned = 0
         for export in expired:
-            # Remove file
-            if export.download_url:
-                path = Path(export.download_url)
-                if path.exists():
-                    path.unlink(missing_ok=True)
-                    logger.debug("Deleted export file: %s", path)
-            await session.delete(export)
-            cleaned += 1
+            try:
+                # Remove file first
+                if export.download_url:
+                    path = Path(export.download_url)
+                    if path.exists():
+                        path.unlink(missing_ok=True)
+                await session.delete(export)
+                await session.flush()
+                cleaned += 1
+            except (SQLAlchemyError, OSError):
+                logger.exception("Failed to clean export %s", export.id)
 
         if owns_session:
             await session.commit()
 
-        logger.info("Cleanup: removed %d expired exports", cleaned)
+        elapsed = time.monotonic() - start
+        logger.info("Export cleanup complete: %d/%d cleaned in %.1fs", cleaned, len(expired), elapsed)
         return cleaned
-    except Exception:
+    except (SQLAlchemyError, OSError):
         if owns_session:
             await session.rollback()
+        sentry_sdk.capture_exception()
         raise
     finally:
         if owns_session:

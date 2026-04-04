@@ -8,7 +8,7 @@ All functions are deterministic with zero side effects.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Optional
 
 

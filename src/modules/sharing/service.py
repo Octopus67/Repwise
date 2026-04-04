@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.modules.sharing.models import Referral, ShareEvent
 from src.modules.training.models import TrainingSession
 from src.modules.auth.models import User
+from src.shared.errors import NotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,17 @@ class SharingService:
         share_type: str = "workout",
         platform: Optional[str] = None,
     ) -> ShareEvent:
+        if session_id:
+            sess_check = await self._db.execute(
+                select(TrainingSession.id).where(
+                    TrainingSession.id == session_id,
+                    TrainingSession.user_id == user_id,
+                    TrainingSession.deleted_at.is_(None),
+                )
+            )
+            if sess_check.scalar_one_or_none() is None:
+                raise NotFoundError("Training session not found")
+
         event = ShareEvent(
             user_id=user_id,
             session_id=session_id,
@@ -54,8 +66,17 @@ class SharingService:
 
     async def get_shared_workout(self, session_id: UUID) -> dict | None:
         """Fetch a training session for public sharing (no auth required)."""
+        # Verify a ShareEvent exists for this session — only explicitly shared sessions are accessible
+        share_check = await self._db.execute(
+            select(ShareEvent.id).where(ShareEvent.session_id == session_id).limit(1)
+        )
+        if share_check.scalar_one_or_none() is None:
+            return None
+
         result = await self._db.execute(
-            select(TrainingSession).where(TrainingSession.id == session_id)
+            TrainingSession.not_deleted(
+                select(TrainingSession).where(TrainingSession.id == session_id)
+            )
         )
         session = result.scalar_one_or_none()
         if session is None:

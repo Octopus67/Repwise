@@ -16,11 +16,11 @@ from src.modules.auth.models import User
 from src.modules.measurements.models import BodyMeasurement
 from src.modules.nutrition.models import NutritionEntry
 from src.modules.payments.models import Subscription
-from src.modules.training.models import TrainingSession
-from src.shared.errors import ConflictError, NotFoundError, UnprocessableError
+from src.modules.training.models import PersonalRecord, TrainingSession
+from src.shared.errors import ConflictError, NotFoundError
 from src.shared.types import SubscriptionStatus
 
-TRIAL_DURATION_DAYS = 7
+TRIAL_DURATION_DAYS = 14
 
 
 class TrialService:
@@ -50,7 +50,7 @@ class TrialService:
         return {"eligible": eligible, "has_used_trial": user.has_used_trial}
 
     async def start_trial(self, user_id: uuid.UUID) -> Subscription:
-        """Activate a 7-day free trial for the user."""
+        """Activate a 14-day free trial for the user."""
         user = await self._get_user(user_id)
 
         if user.has_used_trial:
@@ -83,7 +83,7 @@ class TrialService:
             user_id=user_id,
             provider_name="trial",
             status=SubscriptionStatus.ACTIVE,
-            plan_id="trial_7day",
+            plan_id="trial_14day",
             currency="USD",
             region="US",
             current_period_end=ends_at,
@@ -103,6 +103,8 @@ class TrialService:
 
         now = datetime.now(timezone.utc)
         ends_at = user.trial_ends_at
+        if ends_at is not None and ends_at.tzinfo is None:
+            ends_at = ends_at.replace(tzinfo=timezone.utc)
         active = ends_at is not None and now < ends_at
 
         days_remaining = 0
@@ -139,6 +141,7 @@ class TrialService:
                     TrainingSession.user_id == user_id,
                     TrainingSession.session_date >= start_date,
                     TrainingSession.session_date <= end_date,
+                    TrainingSession.deleted_at.is_(None),
                 )
             )
         ).scalar_one()
@@ -150,10 +153,10 @@ class TrialService:
                 TrainingSession.user_id == user_id,
                 TrainingSession.session_date >= start_date,
                 TrainingSession.session_date <= end_date,
+                TrainingSession.deleted_at.is_(None),
             )
         )
         total_volume = 0.0
-        pr_count = 0
         for (exercises,) in sessions_result.all():
             if not exercises:
                 continue
@@ -162,6 +165,19 @@ class TrialService:
                     weight = s.get("weight_kg", 0) or 0
                     reps = s.get("reps", 0) or 0
                     total_volume += weight * reps
+
+        # PRs hit during trial
+        pr_count = (
+            await self.session.execute(
+                select(func.count())
+                .select_from(PersonalRecord)
+                .where(
+                    PersonalRecord.user_id == user_id,
+                    PersonalRecord.achieved_at >= start,
+                    PersonalRecord.achieved_at <= end,
+                )
+            )
+        ).scalar_one()
 
         # Meals logged
         meals_count = (
@@ -172,6 +188,7 @@ class TrialService:
                     NutritionEntry.user_id == user_id,
                     NutritionEntry.entry_date >= start_date,
                     NutritionEntry.entry_date <= end_date,
+                    NutritionEntry.deleted_at.is_(None),
                 )
             )
         ).scalar_one()
@@ -221,7 +238,7 @@ class TrialService:
 
     async def _get_user(self, user_id: uuid.UUID) -> User:
         """Fetch user or raise NotFoundError."""
-        stmt = select(User).where(User.id == user_id)
+        stmt = select(User).where(User.id == user_id, User.deleted_at.is_(None))
         result = await self.session.execute(stmt)
         user = result.scalar_one_or_none()
         if user is None:

@@ -58,3 +58,36 @@ class NewlyUnlockedResponse(BaseModel):
     description: str
     icon: str
     category: str
+
+
+class StreakFreezeRecord(BaseModel):
+    """A single streak freeze record."""
+
+    id: str
+    freeze_date: str
+    month: str
+    used_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class StreakFreezeStatusResponse(BaseModel):
+    """Current freeze availability and history."""
+
+    available: int
+    used_this_month: int
+    history: list[StreakFreezeRecord]
+
+
+class ManualFreezeRequest(BaseModel):
+    """Request body for manually freezing a date."""
+
+    date: str = Field(description="YYYY-MM-DD date to freeze")
+
+
+class ManualFreezeResponse(BaseModel):
+    """Response after manually applying a freeze."""
+
+    success: bool
+    freeze: Optional[StreakFreezeRecord] = None
+    message: str

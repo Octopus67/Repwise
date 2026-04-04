@@ -5,9 +5,10 @@ from typing import Optional
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.nutrition.models import NutritionEntry
@@ -82,8 +83,9 @@ class NutritionService:
                 )
                 await self.session.execute(stmt)
                 await self.session.flush()
-            except Exception as e:
-                logger.warning(f"Food frequency tracking failed: {e}")
+            except (ImportError, SQLAlchemyError) as e:
+                # Non-critical — food frequency is a convenience feature
+                logger.warning("[NutritionService] Food frequency tracking failed: %s", e)
 
         # --- Achievement evaluation (never breaks entry creation) ---
         newly_unlocked: list = []
@@ -95,8 +97,9 @@ class NutritionService:
                 user_id=user_id,
                 entry_date=data.entry_date,
             )
-        except Exception as e:
-            logger.warning(f'Achievement eval failed: {e}')
+        except (ImportError, RuntimeError, ValueError) as e:
+            # Non-critical — achievement failure must not break entry creation
+            logger.warning('[NutritionService] Achievement eval failed: %s', e)
 
         # Attach unlocks to the entry object for the router to pick up
         entry._newly_unlocked = newly_unlocked  # type: ignore[attr-defined]
@@ -235,8 +238,9 @@ class NutritionService:
                 user_id=user_id,
                 entry_date=data.entry_date,
             )
-        except Exception as e:
-            logger.warning(f'Achievement eval failed: {e}')
+        except (ImportError, RuntimeError, ValueError) as e:
+            # Non-critical — achievement failure must not break entry creation
+            logger.warning('[NutritionService] Achievement eval failed: %s', e)
 
         # Attach to first entry for router to pick up
         if created and newly_unlocked:
@@ -254,12 +258,23 @@ class NutritionService:
         source_date: "date",
         target_date: "date",
     ) -> list[NutritionEntry]:
-        """Duplicate all non-deleted entries from source_date to target_date."""
-        from datetime import date as date_type
+        """Duplicate all non-deleted entries from source_date to target_date.
+
+        Idempotent: skips copy if target_date already has entries.
+        """
+        # Check if target date already has entries (idempotency guard)
+        existing = await self.get_entries(
+            user_id=user_id,
+            filters=DateRangeFilter(start_date=target_date, end_date=target_date),
+            pagination=PaginationParams(page=1, limit=1),
+        )
+        if existing.total_count > 0:
+            return []
+
         source_entries = await self.get_entries(
             user_id=user_id,
             filters=DateRangeFilter(start_date=source_date, end_date=source_date),
-            pagination=PaginationParams(page=1, limit=500),
+            pagination=PaginationParams(page=1, limit=100),
         )
 
         copied: list[NutritionEntry] = []

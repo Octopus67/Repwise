@@ -13,7 +13,8 @@ import logging
 import uuid
 from datetime import date, datetime, timedelta, timezone
 
-from sqlalchemy import func, select
+from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
@@ -33,7 +34,6 @@ from src.modules.adaptive.schemas import (
     MacroTargets,
     WeeklyCheckinResponse,
 )
-from src.modules.nutrition.models import NutritionEntry
 from src.modules.user.models import BodyweightLog, UserGoal, UserMetric, UserProfile
 from src.shared.errors import NotFoundError
 from src.shared.types import ActivityLevel, GoalType
@@ -50,20 +50,25 @@ class CoachingService:
 
     async def generate_weekly_checkin(self, user_id: uuid.UUID) -> WeeklyCheckinResponse:
         """Generate a weekly check-in based on the user's coaching mode."""
-
-        # 1. Load user profile
+        # 1. Sequential fetch: profile + today's snapshot
         profile = await self._get_profile(user_id)
+        existing = await self._get_today_snapshot(user_id)
         coaching_mode = profile.coaching_mode if profile else "coached"
 
         # Idempotency: if snapshot already created today, return it
-        existing = await self._get_today_snapshot(user_id)
         if existing is not None:
             return await self._build_response_from_snapshot(
                 existing, user_id, coaching_mode,
             )
 
-        # 2. Load last 14 days bodyweight
+        # 2. Sequential fetch: bodyweight + goal + metrics + training load + body fat + weight trend + prev snapshot
         bw_entries = await self._get_recent_bodyweight(user_id, days=14)
+        goal = await self._get_goal(user_id)
+        metrics = await self._get_latest_metrics(user_id)
+        training_load = await self._calculate_training_load(user_id)
+        measured_body_fat = await self._get_recent_body_fat(user_id)
+        measurement_trend = await self._get_measurement_weight_trend(user_id)
+        prev_snapshot = await self._get_latest_snapshot(user_id)
 
         # 3. Insufficient data check
         if len(bw_entries) < MIN_BODYWEIGHT_ENTRIES:
@@ -75,15 +80,13 @@ class CoachingService:
             )
 
         # 4. Build AdaptiveInput and compute snapshot
-        goal = await self._get_goal(user_id)
-        metrics = await self._get_latest_metrics(user_id)
 
         weight_kg = bw_entries[-1][1]  # latest weight
         height_cm = metrics.height_cm if metrics and metrics.height_cm else 170.0  # fallback to 170cm
         age_years = metrics.age_years if metrics and hasattr(metrics, "age_years") else 30  # fallback to 30yo
         prefs = profile.preferences if profile and profile.preferences else {}
         sex = prefs.get("sex", "male")
-        if sex not in ("male", "female"):
+        if sex not in ("male", "female", "other"):
             sex = "male"
         
         if not metrics or not metrics.height_cm:
@@ -91,12 +94,6 @@ class CoachingService:
         activity_level = ActivityLevel(metrics.activity_level) if metrics and metrics.activity_level else ActivityLevel.MODERATE
         goal_type = GoalType(goal.goal_type) if goal else GoalType.MAINTAINING
         goal_rate = goal.goal_rate_per_week if goal and goal.goal_rate_per_week else 0.0
-
-        # Calculate training load from recent data or use fallback
-        training_load = await self._calculate_training_load(user_id)
-
-        # Query recent body fat from measurements (< 30 days)
-        measured_body_fat = await self._get_recent_body_fat(user_id)
 
         engine_input = AdaptiveInput(
             weight_kg=weight_kg,
@@ -114,7 +111,6 @@ class CoachingService:
         output = compute_snapshot(engine_input)
 
         # Adjust TDEE based on measurement weight trend vs target rate
-        measurement_trend = await self._get_measurement_weight_trend(user_id)
         tdee_adjustment = 0.0
         if measurement_trend is not None and goal_rate != 0:
             deviation = abs(measurement_trend - goal_rate) / abs(goal_rate)
@@ -138,7 +134,6 @@ class CoachingService:
             )
 
         # 5. Compare with previous snapshot
-        prev_snapshot = await self._get_latest_snapshot(user_id)
         prev_targets = None
         if prev_snapshot:
             prev_targets = MacroTargets(
@@ -202,6 +197,23 @@ class CoachingService:
             weekly_weight_change=round(weekly_change, 2) if weekly_change is not None else None,
             explanation=explanation,
             suggestion_id=suggestion_id,
+            coaching_mode=coaching_mode,
+        )
+
+    async def get_latest_checkin(self, user_id: uuid.UUID) -> WeeklyCheckinResponse:
+        """Read-only: return the latest check-in snapshot or insufficient-data status."""
+        profile = await self._get_profile(user_id)
+        coaching_mode = profile.coaching_mode if profile else "coached"
+        snapshot = await self._get_latest_snapshot(user_id)
+        if snapshot:
+            return await self._build_response_from_snapshot(snapshot, user_id, coaching_mode)
+        # No snapshot yet — check how many BW entries exist
+        bw_entries = await self._get_recent_bodyweight(user_id, days=14)
+        remaining = max(MIN_BODYWEIGHT_ENTRIES - len(bw_entries), 0)
+        return WeeklyCheckinResponse(
+            has_sufficient_data=False,
+            days_remaining=remaining if remaining > 0 else None,
+            explanation="No check-in data yet" if remaining == 0 else f"Log {remaining} more days for personalized recommendations",
             coaching_mode=coaching_mode,
         )
 
@@ -582,6 +594,7 @@ class CoachingService:
             
             return min(frequency_score + volume_score, 100.0)
             
-        except Exception:
+        except (SQLAlchemyError, TypeError, ZeroDivisionError):
             logger.exception("Failed to calculate training load for user %s", user_id)
-            return 50.0  # fallback on error
+            # Fallback: 50.0 is a neutral mid-range score that won't skew coaching advice
+            return 50.0

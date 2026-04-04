@@ -21,8 +21,8 @@ def _get_service(db: AsyncSession = Depends(get_db)) -> FounderService:
 @router.get("/", response_model=List[FounderContentResponse])
 async def get_founder_content(
     service: FounderService = Depends(_get_service),
-    section_key: Optional[str] = Query(default=None),
-    locale: str = Query(default="en"),
+    section_key: Optional[str] = Query(default=None, max_length=100),
+    locale: str = Query(default="en", max_length=10),
 ) -> list[FounderContentResponse]:
     """Return founder story content (public).
 

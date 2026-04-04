@@ -180,8 +180,9 @@ class CoachingService:
         user_id: uuid.UUID,
     ) -> CoachingRequestResponse:
         """Cancel a coaching request."""
-        request = await self._get_request_or_404(request_id)
+        request = await self._get_request_or_404(request_id, user_id=user_id)
         validate_request_transition(request.status, CoachingRequestStatus.CANCELLED)
+        old_status = request.status
         request.status = CoachingRequestStatus.CANCELLED
 
         await CoachingRequest.write_audit(
@@ -189,7 +190,7 @@ class CoachingService:
             user_id=user_id,
             action=AuditAction.UPDATE,
             entity_id=request.id,
-            changes={"status": {"old": request.status, "new": "cancelled"}},
+            changes={"status": {"old": old_status, "new": "cancelled"}},
         )
         await self.session.flush()
         await self.session.refresh(request)
@@ -232,7 +233,7 @@ class CoachingService:
         data: SessionCompleteRequest,
     ) -> CoachingSessionResponse:
         """Complete a coaching session (Requirement 12.3)."""
-        session = await self._get_session_or_404(session_id)
+        session = await self._get_session_or_404(session_id, user_id=user_id)
 
         # Must transition through in_progress first if currently scheduled
         if session.status == CoachingSessionStatus.SCHEDULED:
@@ -292,7 +293,7 @@ class CoachingService:
         data: DocumentUploadRequest,
     ) -> CoachingSessionResponse:
         """Attach a document URL to a coaching session (Requirement 12.5)."""
-        session = await self._get_session_or_404(session_id)
+        session = await self._get_session_or_404(session_id, user_id=user_id)
 
         docs = list(session.document_urls or [])
         docs.append(data.document_url)
@@ -313,16 +314,25 @@ class CoachingService:
     # Internal helpers
     # ------------------------------------------------------------------
 
-    async def _get_request_or_404(self, request_id: uuid.UUID) -> CoachingRequest:
+    async def _get_request_or_404(
+        self, request_id: uuid.UUID, user_id: uuid.UUID | None = None
+    ) -> CoachingRequest:
         stmt = select(CoachingRequest).where(CoachingRequest.id == request_id)
+        if user_id is not None:
+            stmt = stmt.where(CoachingRequest.user_id == user_id)
         result = await self.session.execute(stmt)
         request = result.scalar_one_or_none()
         if request is None:
             raise NotFoundError("Coaching request not found")
         return request
 
-    async def _get_session_or_404(self, session_id: uuid.UUID) -> CoachingSession:
+    async def _get_session_or_404(
+        self, session_id: uuid.UUID, user_id: uuid.UUID | None = None
+    ) -> CoachingSession:
         stmt = select(CoachingSession).where(CoachingSession.id == session_id)
+        if user_id is not None:
+            stmt = stmt.join(CoachingRequest, CoachingSession.request_id == CoachingRequest.id)
+            stmt = stmt.where(CoachingRequest.user_id == user_id)
         result = await self.session.execute(stmt)
         session = result.scalar_one_or_none()
         if session is None:

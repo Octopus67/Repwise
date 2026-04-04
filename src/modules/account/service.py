@@ -9,10 +9,12 @@ Requirement 22.5: Log deletion request in audit log.
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.auth.models import User
@@ -22,6 +24,8 @@ from src.shared.errors import NotFoundError, UnprocessableError
 from src.shared.types import AuditAction, SubscriptionStatus
 
 GRACE_PERIOD_DAYS = 30
+
+logger = logging.getLogger(__name__)
 
 
 class AccountService:
@@ -58,6 +62,8 @@ class AccountService:
         )
         self.session.add(audit)
         await self.session.flush()
+
+        logger.info("Account deletion requested", extra={"user_id": str(user_id), "action": "deletion_requested"})
 
         permanent_date = now + timedelta(days=GRACE_PERIOD_DAYS)
         return {
@@ -104,6 +110,8 @@ class AccountService:
         self.session.add(audit)
         await self.session.flush()
 
+        logger.info("Account reactivated", extra={"user_id": str(user_id), "action": "reactivated"})
+
         return {
             "message": "Account reactivated successfully.",
             "reactivated_at": now,
@@ -114,6 +122,7 @@ class AccountService:
 
         Requirement 22.2: Delete all user data after 30-day grace period.
         Returns the number of accounts permanently deleted.
+        Per-item isolation: one failed delete does not block others.
         """
         cutoff = datetime.now(timezone.utc) - timedelta(days=GRACE_PERIOD_DAYS)
 
@@ -126,12 +135,13 @@ class AccountService:
 
         count = 0
         for user in expired_users:
-            # Hard delete the user — cascading deletes handle related data
-            await self.session.delete(user)
-            count += 1
-
-        if count > 0:
-            await self.session.flush()
+            try:
+                async with self.session.begin_nested():
+                    await self.session.delete(user)
+                logger.info("Account permanently deleted", extra={"user_id": str(user.id), "action": "permanent_deletion"})
+                count += 1
+            except SQLAlchemyError:
+                logger.exception("Failed to delete user %s, skipping", user.id)
 
         return count
 

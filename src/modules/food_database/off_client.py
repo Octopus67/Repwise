@@ -16,6 +16,8 @@ import re
 
 import httpx
 
+from src.utils.retry import async_retry
+
 logger = logging.getLogger(__name__)
 
 OFF_BASE_URL = "https://world.openfoodfacts.org/api/v2"
@@ -47,6 +49,21 @@ def _parse_serving_size(raw: Optional[str]) -> tuple[float, str]:
     return 100.0, "g"
 
 
+@async_retry(
+    max_retries=2,
+    base_delay=0.5,
+    retryable_exceptions=(httpx.ConnectError, httpx.TimeoutException),
+)
+async def _off_barcode_request(barcode: str) -> httpx.Response:
+    """Retryable HTTP call to Open Food Facts barcode endpoint."""
+    async with httpx.AsyncClient(timeout=API_TIMEOUT_SECONDS) as client:
+        response = await client.get(
+            f"{OFF_BASE_URL}/product/{barcode}.json",
+            headers={"User-Agent": "Repwise/1.0"},
+        )
+        return response
+
+
 async def get_product_by_barcode(barcode: str) -> Optional[dict]:
     """Look up a product by barcode on Open Food Facts.
 
@@ -67,22 +84,18 @@ async def get_product_by_barcode(barcode: str) -> Optional[dict]:
     (name, calories) are missing from the response.
     """
     async with _rate_limiter:
-        async with httpx.AsyncClient(timeout=API_TIMEOUT_SECONDS) as client:
-            try:
-                response = await client.get(
-                    f"{OFF_BASE_URL}/product/{barcode}.json",
-                    headers={"User-Agent": "Repwise/1.0"},
-                )
+        try:
+            response = await _off_barcode_request(barcode)
 
-                if response.status_code == 404:
-                    return None
-
-                response.raise_for_status()
-                data = response.json()
-
-            except (httpx.HTTPError, httpx.TimeoutException, ValueError):
-                logger.warning("OFF API error for barcode=%s", barcode, exc_info=True)
+            if response.status_code == 404:
                 return None
+
+            response.raise_for_status()
+            data = response.json()
+
+        except (httpx.HTTPError, httpx.TimeoutException, ValueError):
+            logger.warning("OFF API error for barcode=%s", barcode, exc_info=True)
+            return None
 
     # OFF returns status=0 when product is not found
     if data.get("status") != 1:
@@ -114,7 +127,8 @@ async def get_product_by_barcode(barcode: str) -> Optional[dict]:
         protein_g = float(protein_g) if protein_g is not None else 0.0
         carbs_g = float(carbs_g) if carbs_g is not None else 0.0
         fat_g = float(fat_g) if fat_g is not None else 0.0
-    except (TypeError, ValueError):
+    except (TypeError, ValueError) as exc:
+        logger.warning("OFF nutrient parse failed for product %s: %s", product.get("code", "?"), exc)
         return None
 
     # Parse serving size

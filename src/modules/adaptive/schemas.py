@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
-from typing import Any, Literal, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
-from src.shared.types import ActivityLevel, GoalType
+from src.shared.types import ActivityLevel, GoalType, Sex
 
 
 class BodyweightEntry(BaseModel):
@@ -24,7 +24,7 @@ class SnapshotRequest(BaseModel):
     weight_kg: float = Field(gt=0, le=500, description="Current weight in kg")
     height_cm: float = Field(gt=0, le=300, description="Height in cm")
     age_years: int = Field(ge=1, le=120, description="Age in years")
-    sex: Literal["male", "female"]
+    sex: Sex
     activity_level: ActivityLevel
     goal_type: GoalType
     goal_rate_per_week: float = Field(

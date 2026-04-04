@@ -10,11 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.config.database import get_db
 from src.middleware.authenticate import get_current_user
 from src.middleware.freemium_gate import require_premium
+from src.middleware.rate_limiter import check_user_endpoint_rate_limit
 from src.modules.auth.models import User
 from src.modules.dietary_analysis.service import (
     DietaryAnalysisService,
-    FoodRecommendation,
-    NutritionGap,
 )
 
 router = APIRouter()
@@ -34,6 +33,7 @@ async def analyze_trends(
 
     Basic trend data is available to all users.
     """
+    check_user_endpoint_rate_limit(str(user.id), "dietary_analysis", 10, 60)
     report = await service.analyze_trends(user_id=user.id, window_days=window_days)
     return {
         "window_days": report.window_days,
@@ -49,6 +49,7 @@ async def identify_gaps(
     window_days: int = Query(default=7, ge=1, le=90),
 ) -> list[dict]:
     """Identify nutritional gaps (premium-gated). Req 9.3, 9.5."""
+    check_user_endpoint_rate_limit(str(user.id), "dietary_analysis", 10, 60)
     gaps = await service.identify_gaps(user_id=user.id, window_days=window_days)
     return [asdict(g) for g in gaps]
 
@@ -60,6 +61,7 @@ async def get_recommendations(
     window_days: int = Query(default=7, ge=1, le=90),
 ) -> list[dict]:
     """Get food recommendations for nutritional gaps (premium-gated). Req 9.5."""
+    check_user_endpoint_rate_limit(str(user.id), "dietary_analysis", 10, 60)
     gaps = await service.identify_gaps(user_id=user.id, window_days=window_days)
     recs = await service.get_recommendations(user_id=user.id, gaps=gaps)
     return [asdict(r) for r in recs]

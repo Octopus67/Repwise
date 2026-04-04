@@ -1,13 +1,14 @@
-"""Abstract PaymentProvider interface and region-based routing.
+"""Abstract PaymentProvider interface.
 
-Defines the contract that all payment providers (Stripe, Razorpay, PayPal)
-must implement, plus the PROVIDER_MAP for region-based provider selection.
+Defines the contract that payment providers must implement.
+Currently only RevenueCatProvider uses this interface.
 """
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any, Optional
 
 
@@ -42,6 +43,8 @@ class WebhookEvent:
     provider_transaction_id: Optional[str] = None
     amount: Optional[float] = None
     currency: Optional[str] = None
+    user_id: str = ''
+    period_end: Optional[datetime] = None  # datetime when subscription period ends
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -58,10 +61,6 @@ class RefundResult:
 class PaymentProvider(ABC):
     """Abstract interface for payment providers.
 
-    All payment providers (Stripe, Razorpay, PayPal) must implement these
-    four methods. This abstraction allows the platform to swap or add
-    providers without changing the core payment service logic.
-
     Requirement 10.6: PaymentProvider interface with createSubscription,
     verifyWebhook, cancelSubscription, and refund methods.
     """
@@ -70,31 +69,21 @@ class PaymentProvider(ABC):
     async def create_subscription(
         self, params: CreateSubscriptionParams
     ) -> ProviderSubscription:
-        """Create a subscription with the payment provider.
-
-        Requirement 10.1: Delegate to the appropriate provider based on region.
-        """
+        """Create a subscription with the payment provider."""
         ...
 
     @abstractmethod
     async def verify_webhook(
         self, payload: bytes, signature: str
     ) -> WebhookEvent:
-        """Verify webhook signature and parse the event.
-
-        Requirement 10.3: Verify the webhook signature before processing.
-        Requirement 10.8: Reject and log if signature verification fails.
-        """
+        """Verify webhook signature and parse the event."""
         ...
 
     @abstractmethod
     async def cancel_subscription(
         self, provider_subscription_id: str
     ) -> None:
-        """Cancel a subscription via the provider's API.
-
-        Requirement 10.4: Invoke the provider's cancellation API.
-        """
+        """Cancel a subscription via the provider's API."""
         ...
 
     @abstractmethod
@@ -103,73 +92,5 @@ class PaymentProvider(ABC):
         provider_transaction_id: str,
         amount: Optional[float] = None,
     ) -> RefundResult:
-        """Request a refund via the provider's API.
-
-        Requirement 10.5: Invoke the provider's refund API.
-        """
+        """Request a refund via the provider's API."""
         ...
-
-
-# ---------------------------------------------------------------------------
-# Region-based provider routing
-# ---------------------------------------------------------------------------
-
-
-def _build_provider_map() -> dict[str, type[PaymentProvider]]:
-    """Lazy import to avoid circular dependency with provider modules."""
-    from src.modules.payments.stripe_provider import StripeProvider
-    from src.modules.payments.razorpay_provider import RazorpayProvider
-
-    return {
-        "US": StripeProvider,
-        "IN": RazorpayProvider,
-    }
-
-
-# Lazy-initialized module-level reference for backward compatibility.
-# Populated on first access via get_provider_for_region or direct import.
-class _LazyProviderMap(dict):  # type: ignore[type-arg]
-    """Dict subclass that populates itself on first access."""
-
-    _loaded: bool = False
-
-    def _ensure_loaded(self) -> None:
-        if not self._loaded:
-            self.update(_build_provider_map())
-            self._loaded = True
-
-    def __getitem__(self, key):  # type: ignore[override]
-        self._ensure_loaded()
-        return super().__getitem__(key)
-
-    def get(self, key, default=None):  # type: ignore[override]
-        self._ensure_loaded()
-        return super().get(key, default)
-
-    def keys(self):  # type: ignore[override]
-        self._ensure_loaded()
-        return super().keys()
-
-    def __contains__(self, key):  # type: ignore[override]
-        self._ensure_loaded()
-        return super().__contains__(key)
-
-    def __iter__(self):  # type: ignore[override]
-        self._ensure_loaded()
-        return super().__iter__()
-
-
-PROVIDER_MAP: dict[str, type[PaymentProvider]] = _LazyProviderMap()
-
-
-def get_provider_for_region(region: str) -> PaymentProvider:
-    """Return an instantiated PaymentProvider for the given region.
-
-    Requirement 10.1: Route to the correct provider based on region.
-
-    Raises ValueError if the region is not supported.
-    """
-    provider_cls = PROVIDER_MAP.get(region)
-    if provider_cls is None:
-        raise ValueError(f"No payment provider configured for region: {region}")
-    return provider_cls()

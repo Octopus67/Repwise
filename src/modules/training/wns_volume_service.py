@@ -8,6 +8,7 @@ from collections import defaultdict
 from datetime import date, timedelta
 from typing import Optional
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.training.exercise_coefficients import get_muscle_coefficients
@@ -19,8 +20,6 @@ from src.modules.training.volume_schemas import (
     WNSWeeklyTrendPoint,
 )
 from src.modules.training.wns_engine import (
-    DEFAULT_MAINTENANCE_SETS,
-    DEFAULT_STIMULUS_DURATION_DAYS,
     atrophy_between_sessions,
     diminishing_returns,
     rir_from_rpe,
@@ -169,7 +168,7 @@ class WNSVolumeService:
 
         try:
             rows = await svc._fetch_sessions(user_id, week_start, week_end)
-        except Exception as e:
+        except SQLAlchemyError as e:
             logger.exception("Failed to fetch training sessions for user %s", user_id)
             from fastapi import HTTPException
             raise HTTPException(
@@ -216,7 +215,6 @@ class WNSVolumeService:
                         rir_val = rir_from_rpe(rpe)
 
                     reps = s.get("reps", 0)
-                    weight_kg = s.get("weight_kg", 0.0)
                     # Estimate intensity_pct — we don't have e1rm readily, use None
                     intensity_pct = None
 
@@ -250,13 +248,9 @@ class WNSVolumeService:
             exercise_contrib: dict[str, dict] = defaultdict(lambda: {
                 "coefficient": 0.0, "sets_count": 0, "stim_reps_total": 0.0, "hu": 0.0,
             })
-            per_session_cap_exceeded = False
-
             for session_date, sets_list in sessions:
                 weighted_stim_reps = [sr * coeff for sr, coeff, _ in sets_list]
-                session_stim, exceeds_cap = diminishing_returns(weighted_stim_reps), len(weighted_stim_reps) > 10
-                if exceeds_cap:
-                    per_session_cap_exceeded = True
+                session_stim = diminishing_returns(weighted_stim_reps)
                 session_stimuli.append((session_date, session_stim))
 
                 # Track exercise contributions (approximate — attribute proportionally)
@@ -352,7 +346,8 @@ class WNSVolumeService:
                         notification_type="volume_warning",
                         data={"screen": "Analytics", "muscle": muscle},
                     )
-            except Exception:
+            except (ImportError, RuntimeError, ValueError):
+                # Non-critical — volume warning notification failure must not break results
                 logger.exception("Volume warning notification failed")
 
         return results

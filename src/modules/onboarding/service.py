@@ -12,12 +12,10 @@ from src.modules.adaptive.engine import AdaptiveInput, compute_snapshot
 from src.modules.adaptive.models import AdaptiveSnapshot
 from src.modules.adaptive.schemas import SnapshotResponse
 from src.modules.onboarding.schemas import OnboardingCompleteRequest, OnboardingCompleteResponse
-from src.modules.user.models import UserGoal, UserMetric, UserProfile
+from src.modules.user.models import UserGoal
 from src.modules.user.schemas import (
-    UserGoalResponse,
     UserGoalSet,
     UserMetricCreate,
-    UserProfileResponse,
     UserProfileUpdate,
 )
 from src.modules.user.service import UserService

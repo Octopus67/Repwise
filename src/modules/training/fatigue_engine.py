@@ -7,7 +7,7 @@ No database or I/O dependencies.
 from __future__ import annotations
 from typing import Optional
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date
 
 

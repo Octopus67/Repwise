@@ -29,7 +29,7 @@ EXERCISE_ALIASES: dict[str, str] = {
     "conventional deadlift": "deadlift",
     "barbell deadlift": "deadlift",
     "bb deadlift": "deadlift",
-    # TODO: expand with data-driven aliases post-launch
+    # Deferred: data-driven aliases planned for v2
 }
 
 

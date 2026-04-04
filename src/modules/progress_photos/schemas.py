@@ -6,7 +6,7 @@ from typing import Optional
 import uuid
 from datetime import date, datetime, timedelta, timezone
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, computed_field, field_validator
 
 
 # Constraints
@@ -46,6 +46,7 @@ class PhotoCreate(BaseModel):
     )
     notes: Optional[str] = Field(default=None, max_length=MAX_NOTES_LENGTH)
     alignment_data: Optional[AlignmentData] = None
+    r2_key: Optional[str] = Field(default=None, max_length=500, pattern=r'^users/[a-f0-9\-]+/[a-zA-Z0-9._-]+$')
 
     @field_validator("capture_date")
     @classmethod
@@ -81,15 +82,24 @@ class PhotoResponse(BaseModel):
     pose_type: str
     notes: Optional[str] = None
     alignment_data: Optional[AlignmentData] = None
+    r2_key: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+
+    @computed_field
+    @property
+    def image_url(self) -> Optional[str]:
+        if self.r2_key:
+            from src.config.settings import settings
+            return f"{settings.CDN_BASE_URL}/{self.r2_key}"
+        return None
 
     model_config = {"from_attributes": True}
 
 class UploadUrlRequest(BaseModel):
     """Schema for requesting a pre-signed upload URL."""
 
-    filename: str = Field(min_length=1, max_length=255)
+    filename: str = Field(min_length=1, max_length=255, pattern=r'^[a-zA-Z0-9._-]+$')
     content_type: str = Field(
         default="image/jpeg",
         pattern=r"^image/(jpeg|png|webp)$",

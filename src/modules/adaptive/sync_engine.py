@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from src.modules.training.exercise_mapping import get_muscle_group, is_compound
 from src.shared.types import TrainingPhase
 
 # ---------------------------------------------------------------------------

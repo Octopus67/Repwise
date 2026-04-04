@@ -7,7 +7,7 @@ import logging
 import uuid
 
 from fastapi import APIRouter, Depends, Query, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
@@ -28,7 +28,7 @@ def _get_service(db: AsyncSession = Depends(get_db)) -> SharingService:
 @router.get("/workout/{session_id}", response_class=HTMLResponse)
 async def get_shared_workout(
     session_id: uuid.UUID,
-    ref: str | None = Query(default=None, description="Referrer user ID"),
+    ref: str | None = Query(default=None, max_length=200, description="Referrer user ID"),
     request: Request = None,  # type: ignore[assignment]
     service: SharingService = Depends(_get_service),
 ) -> HTMLResponse:
@@ -48,8 +48,8 @@ async def get_shared_workout(
             visitor_ip = request.client.host if request and request.client else None
             user_agent = request.headers.get("user-agent") if request else None
             await service.track_referral(referrer_id, visitor_ip, user_agent)
-        except (ValueError, Exception):
-            pass  # Invalid ref — ignore silently
+        except ValueError:
+            logger.warning("Invalid referral UUID: %s", ref)
 
     safe_display_name = html_mod.escape(workout['user_display_name'])
     title = f"{safe_display_name}'s Workout — Repwise"
@@ -61,7 +61,7 @@ async def get_shared_workout(
     if workout["pr_count"] > 0:
         description += f" · 🏆 {workout['pr_count']} PR{'s' if workout['pr_count'] > 1 else ''}"
 
-    og_url = str(request.url) if request else ""
+    og_url = html_mod.escape(str(request.url)) if request else ""
     og_image = "https://repwise.app/og-workout.png"
 
     exercises_html = "".join(
@@ -98,7 +98,7 @@ async def get_shared_workout(
     </style>
 </head>
 <body>
-    <h1>🏋️ {workout['user_display_name']}'s Workout</h1>
+    <h1>🏋️ {safe_display_name}'s Workout</h1>
     <p style="color:#94A3B8">{workout['session_date']}</p>
     <div class="stats">
         <div class="stat"><div class="stat-value">{workout['exercise_count']}</div><div class="stat-label">Exercises</div></div>

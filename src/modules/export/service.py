@@ -9,18 +9,18 @@ import csv
 import io
 import json
 import logging
-import os
 import uuid
 import zipfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import select, func
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.auth.models import User
 from src.modules.export.models import ExportRequest
+from src.config.settings import settings
 from src.shared.errors import NotFoundError, RateLimitedError, UnprocessableError
 
 logger = logging.getLogger(__name__)
@@ -72,6 +72,7 @@ class ExportService:
             select(ExportRequest)
             .where(ExportRequest.user_id == user_id)
             .order_by(ExportRequest.requested_at.desc())
+            .limit(100)
         )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
@@ -135,7 +136,7 @@ class ExportService:
             export.expires_at = now + timedelta(days=EXPORT_EXPIRY_DAYS)
             await self.session.flush()
 
-        except Exception as exc:
+        except (SQLAlchemyError, ValueError, OSError, IOError) as exc:
             logger.exception("Export generation failed for %s", export_id)
             export.status = "failed"
             export.error_message = str(exc)[:500]
@@ -166,26 +167,20 @@ class ExportService:
             zf.writestr("README.txt", readme)
 
             for category, rows in data.items():
-                if not rows or not isinstance(rows, list):
+                if not rows:
                     continue
                 buf = io.StringIO()
-                if isinstance(rows[0], dict):
+                if isinstance(rows, dict):
+                    writer = csv.DictWriter(buf, fieldnames=rows.keys())
+                    writer.writeheader()
+                    writer.writerow(rows)
+                elif isinstance(rows, list) and isinstance(rows[0], dict):
                     writer = csv.DictWriter(buf, fieldnames=rows[0].keys())
                     writer.writeheader()
                     writer.writerows(rows)
                 else:
-                    # Single-value category (e.g. profile dict)
-                    writer = csv.DictWriter(buf, fieldnames=rows.keys() if isinstance(rows, dict) else [])
                     continue
                 zf.writestr(f"{category}.csv", buf.getvalue())
-
-            # Handle profile as a special case (dict, not list)
-            if "profile" in data and isinstance(data["profile"], dict):
-                buf = io.StringIO()
-                writer = csv.DictWriter(buf, fieldnames=data["profile"].keys())
-                writer.writeheader()
-                writer.writerow(data["profile"])
-                zf.writestr("profile.csv", buf.getvalue())
 
         return zip_path
 
@@ -344,7 +339,7 @@ class ExportService:
         )
         result = await self.session.execute(stmt)
         data["progress_photos"] = [
-            {"capture_date": str(r.capture_date), "pose_type": r.pose_type, "photo_url": r.photo_url}
+            {"capture_date": str(r.capture_date), "pose_type": r.pose_type, "url": f"{settings.CDN_BASE_URL}/{r.r2_key}"}
             for r in result.scalars().all()
         ]
 

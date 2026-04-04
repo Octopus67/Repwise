@@ -15,8 +15,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.nutrition.models import NutritionEntry
-from src.modules.nutrition.schemas import DateRangeFilter
-from src.shared.pagination import PaginationParams
 
 
 # ---------------------------------------------------------------------------
@@ -155,6 +153,8 @@ def compute_daily_averages(
         total_fat += entry.fat_g
         if entry.micro_nutrients:
             for k, v in entry.micro_nutrients.items():
+                if not isinstance(v, (int, float)):
+                    continue
                 micro_totals[k] = micro_totals.get(k, 0.0) + v
 
     return DailyAverages(
@@ -262,6 +262,8 @@ class DietaryAnalysisService:
             summary.fat_g += entry.fat_g
             micros = entry.micro_nutrients or {}
             for k, v in micros.items():
+                if not isinstance(v, (int, float)):
+                    continue
                 summary.micro_nutrients[k] = summary.micro_nutrients.get(k, 0.0) + v
 
         daily_summaries = sorted(daily_map.values(), key=lambda s: s.date)

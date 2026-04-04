@@ -156,12 +156,21 @@ def generate_plan(
         assignments: list[MealAssignment] = []
         unfilled: list[str] = []
 
+        # Rotate candidates each day to avoid identical plans
+        rotation = day_idx % len(sorted_candidates) if sorted_candidates else 0
+        rotated = sorted_candidates[rotation:] + sorted_candidates[:rotation]
+
+        used_ids: set[uuid.UUID] = set()
+
         for target in slot_targets:
             best: Optional[MealAssignment] = None
             best_dist = float("inf")
+            best_id: Optional[uuid.UUID] = None
 
-            for cand in sorted_candidates:
+            for cand in rotated:
                 if cand.calories <= 0:
+                    continue
+                if cand.food_item_id in used_ids and len(rotated) > len(slot_targets):
                     continue
                 # Compute scale factor to hit target calories
                 factor = target.calories / cand.calories if cand.calories > 0 else 0
@@ -173,6 +182,7 @@ def generate_plan(
 
                 if dist < best_dist:
                     best_dist = dist
+                    best_id = cand.food_item_id
                     best = MealAssignment(
                         slot=target.slot,
                         food_item_id=cand.food_item_id,
@@ -187,6 +197,8 @@ def generate_plan(
 
             if best is not None:
                 assignments.append(best)
+                if best_id is not None:
+                    used_ids.add(best_id)
             else:
                 unfilled.append(target.slot)
 

@@ -28,7 +28,7 @@ class NutritionMetrics(BaseModel):
     target_calories: float = Field(default=0.0, ge=0, le=50_000)
     compliance_pct: float = Field(default=0.0, ge=0, le=100)
     tdee_delta: Optional[float] = None
-    days_logged: int = Field(default=0, ge=0, le=7)
+    days_logged: int = Field(default=0, ge=0, le=31)
 
 
 class BodyMetrics(BaseModel):

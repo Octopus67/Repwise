@@ -13,7 +13,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
 
 from sqlalchemy import select, func
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.achievements.definitions import (
@@ -23,6 +23,7 @@ from src.modules.achievements.definitions import (
 from src.modules.achievements.exercise_aliases import resolve_exercise_group
 from src.modules.achievements.models import AchievementProgress, UserAchievement
 from src.modules.achievements.schemas import NewlyUnlockedResponse
+from src.modules.achievements.streak_freeze_service import try_auto_freeze
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ class AchievementEngine:
             if session_date is not None:
                 unlocked.extend(await self._update_streak(user_id, session_date))
             return unlocked
-        except Exception:
+        except (SQLAlchemyError, TypeError, ValueError):
             logger.exception("Achievement engine failed for training session (user=%s)", user_id)
             return []
 
@@ -73,9 +74,55 @@ class AchievementEngine:
             unlocked.extend(await self._update_streak(user_id, entry_date))
             unlocked.extend(await self._check_nutrition_compliance(user_id, entry_date))
             return unlocked
-        except Exception:
+        except (SQLAlchemyError, TypeError, ValueError):
             logger.exception("Achievement engine failed for nutrition entry (user=%s)", user_id)
             return []
+
+    async def recalculate_streak(self, user_id: uuid.UUID) -> None:
+        """Recalculate streak from activity dates + freeze dates."""
+        from src.modules.achievements.models import StreakFreeze
+        from src.modules.training.models import TrainingSession
+
+        progress = await self._get_or_create_progress(user_id, "streak")
+        # Get all activity dates
+        sessions = await self.session.execute(
+            select(TrainingSession.session_date)
+            .where(
+                TrainingSession.user_id == user_id,
+                TrainingSession.deleted_at.is_(None),
+            )
+            .order_by(TrainingSession.session_date.desc())
+        )
+        activity_dates = {row[0] for row in sessions.all()}
+        # Get all freeze dates
+        freezes = await self.session.execute(
+            select(StreakFreeze.freeze_date).where(StreakFreeze.user_id == user_id)
+        )
+        frozen_dates = {row[0] for row in freezes.all()}
+        # Walk backwards from latest activity date
+        today = date.today()
+        if not activity_dates:
+            return
+        # Start from the most recent activity date (not necessarily today)
+        latest = max(d for d in activity_dates if d <= today)
+        count = 1
+        current = latest
+        while True:
+            prev = current - timedelta(days=1)
+            if prev in activity_dates:
+                count += 1
+                current = prev
+            elif prev in frozen_dates:
+                current = prev  # Bridge but don't count
+            else:
+                break
+        progress.current_value = count
+        longest = (progress.metadata_ or {}).get("longest_streak", 0)
+        progress.metadata_ = {
+            "last_active_date": latest.isoformat(),
+            "longest_streak": max(longest, count),
+        }
+        await self.session.flush()
 
     # ------------------------------------------------------------------
     # PR Badge Detection
@@ -213,10 +260,23 @@ class AchievementEngine:
 
         if last_active_str is not None:
             last_active = date.fromisoformat(last_active_str)
+            if activity_date < last_active:
+                return []  # Backdated entry — don't modify streak
             if activity_date == last_active + timedelta(days=1):
                 progress.current_value += 1
             else:
-                progress.current_value = 1
+                # Gap detected — try auto-freeze (gap <= 2 days, 1 free/month)
+                gap_days = (activity_date - last_active).days - 1
+                frozen = False
+                if 1 <= gap_days <= 2:
+                    frozen = await try_auto_freeze(
+                        self.session, user_id, last_active, activity_date,
+                    )
+                if frozen:
+                    # Freeze bridged the gap — continue streak (+gap days +1 for today)
+                    progress.current_value += gap_days + 1
+                else:
+                    progress.current_value = 1
         else:
             progress.current_value = 1
 

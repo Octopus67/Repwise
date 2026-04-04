@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 
 class MeasurementCreate(BaseModel):
@@ -97,7 +97,7 @@ class PhotoResponse(BaseModel):
 class NavyBFRequest(BaseModel):
     """Request body for Navy body fat calculation."""
 
-    sex: str = Field(..., pattern=r"^(male|female)$")
+    sex: str = Field(..., pattern=r"^(male|female|other)$")
     waist_cm: float = Field(..., gt=0)
     neck_cm: float = Field(..., gt=0)
     height_cm: float = Field(..., gt=0)

@@ -1,12 +1,18 @@
-"""Freemium gating middleware — require_premium dependency.
+"""Freemium gating middleware — require_premium & require_feature dependencies.
 
 FastAPI dependency that checks whether the authenticated user has an
 active premium subscription. Used to gate premium-only endpoints.
+
+``require_feature`` provides PostHog-based feature-level gating.
+It fails open if PostHog is unreachable (all features free at launch).
 
 Requirement 10.9: Enforce freemium gating on premium features.
 """
 
 from __future__ import annotations
+
+import logging
+from typing import Callable
 
 from fastapi import Depends
 from sqlalchemy import select
@@ -16,8 +22,11 @@ from src.config.database import get_db
 from src.middleware.authenticate import get_current_user
 from src.modules.auth.models import User
 from src.modules.payments.models import Subscription
+from src.services.feature_flags import is_feature_enabled
 from src.shared.errors import PremiumRequiredError
 from src.shared.types import SubscriptionStatus
+
+logger = logging.getLogger(__name__)
 
 
 async def require_premium(
@@ -63,3 +72,23 @@ async def require_premium(
             raise PremiumRequiredError("Subscription has expired")
 
     return user
+
+
+def require_feature(flag_name: str) -> Callable:
+    """FastAPI dependency factory for PostHog feature-level gating.
+
+    Usage::
+
+        @router.get("/coaching", dependencies=[Depends(require_feature("coaching"))])
+        async def coaching_endpoint(...): ...
+
+    Fails open if PostHog is unreachable — features are free at launch.
+    """
+
+    async def _check(user: User = Depends(get_current_user)) -> User:
+        enabled = is_feature_enabled(flag_name, str(user.id))
+        if not enabled:
+            raise PremiumRequiredError(f"Feature '{flag_name}' is not available")
+        return user
+
+    return Depends(_check)

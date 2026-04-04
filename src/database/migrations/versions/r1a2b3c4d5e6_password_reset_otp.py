@@ -17,7 +17,12 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.drop_table('password_reset_tokens')
+    # Table may not exist on fresh PostgreSQL databases (was SQLite-only)
+    conn = op.get_bind()
+    if conn.dialect.name == 'postgresql':
+        op.execute(sa.text('DROP TABLE IF EXISTS password_reset_tokens'))
+    else:
+        op.drop_table('password_reset_tokens')
 
     op.create_table(
         'password_reset_codes',

@@ -42,12 +42,20 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id'),
     )
     op.create_index('ix_body_measurements_user_id', 'body_measurements', ['user_id'])
-    op.create_index(
-        'uq_body_measurements_user_date',
-        'body_measurements',
-        ['user_id', sa.text("DATE(measured_at)")],
-        unique=True,
-    )
+    # PostgreSQL: timezone-aware datetime cast to date requires explicit timezone
+    conn = op.get_bind()
+    if conn.dialect.name == 'postgresql':
+        op.execute(sa.text(
+            "CREATE UNIQUE INDEX uq_body_measurements_user_date "
+            "ON body_measurements (user_id, CAST(measured_at AT TIME ZONE 'UTC' AS date))"
+        ))
+    else:
+        op.create_index(
+            'uq_body_measurements_user_date',
+            'body_measurements',
+            ['user_id', sa.text("DATE(measured_at)")],
+            unique=True,
+        )
 
 
 def downgrade() -> None:

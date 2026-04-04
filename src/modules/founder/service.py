@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Optional
+from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.founder.models import FounderContent
 from src.modules.founder.schemas import FounderContentUpdate
-from src.shared.errors import NotFoundError
 from src.shared.types import AuditAction
 
 

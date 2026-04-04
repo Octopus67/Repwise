@@ -1,9 +1,9 @@
 """Auth module SQLAlchemy models."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Index, String, Text, text
+from sqlalchemy import Boolean, DateTime, Index, String, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -54,6 +54,11 @@ class User(SoftDeleteMixin, Base):
         DateTime(timezone=True), nullable=True
     )
     
+    # Session invalidation on password change
+    password_changed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+
     # Metadata for OAuth linking and extensibility
     # Use metadata_ to avoid shadowing DeclarativeBase.metadata
     metadata_: Mapped[Optional[dict]] = mapped_column(

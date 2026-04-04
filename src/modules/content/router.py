@@ -48,8 +48,8 @@ async def get_articles(
     user: User = Depends(get_current_user),
     service: ContentService = Depends(_get_service),
     module_id: Optional[uuid.UUID] = Query(default=None),
-    category: Optional[str] = Query(default=None),
-    tag: Optional[str] = Query(default=None),
+    category: Optional[str] = Query(default=None, max_length=100),
+    tag: Optional[str] = Query(default=None, max_length=100),
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
 ) -> PaginatedResult[ArticleResponse]:
@@ -82,6 +82,7 @@ async def get_article(
         article_id=article_id,
         user_role=user.role,
         has_premium=has_premium,
+        user_id=user.id,
     )
     return _article_to_response(article)
 

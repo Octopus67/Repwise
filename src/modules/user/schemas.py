@@ -6,8 +6,9 @@ import uuid
 from datetime import date, datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
+from src.shared.validators import validate_json_size
 from src.shared.types import ActivityLevel, GoalType
 
 
@@ -25,6 +26,11 @@ class UserProfileUpdate(BaseModel):
     region: Optional[str] = Field(None, max_length=10)
     preferences: Optional[dict[str, Any]] = None
     coaching_mode: Optional[str] = Field(None, pattern=r"^(coached|collaborative|manual)$")
+
+    @field_validator("preferences")
+    @classmethod
+    def validate_preferences_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
+        return validate_json_size(v)
 
 
 class UserProfileResponse(BaseModel):
@@ -57,6 +63,11 @@ class UserMetricCreate(BaseModel):
     body_fat_pct: Optional[float] = Field(None, ge=0, le=100)
     activity_level: Optional[ActivityLevel] = None
     additional_metrics: Optional[dict[str, Any]] = None
+
+    @field_validator("additional_metrics")
+    @classmethod
+    def validate_additional_metrics_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
+        return validate_json_size(v)
 
 
 class UserMetricResponse(BaseModel):
@@ -112,6 +123,11 @@ class UserGoalSet(BaseModel):
     target_body_fat_pct: Optional[float] = Field(None, ge=0, le=100)
     goal_rate_per_week: Optional[float] = None
     additional_goals: Optional[dict[str, Any]] = None
+
+    @field_validator("additional_goals")
+    @classmethod
+    def validate_additional_goals_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
+        return validate_json_size(v)
 
 
 class UserGoalResponse(BaseModel):

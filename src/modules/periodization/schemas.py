@@ -17,10 +17,10 @@ class TrainingBlockCreate(BaseModel):
     """Payload for creating a new training block."""
 
     name: str = Field(min_length=1, max_length=100)
-    phase_type: str
+    phase_type: str = Field(max_length=50)
     start_date: date
     end_date: date
-    nutrition_phase: Optional[str] = None
+    nutrition_phase: Optional[str] = Field(default=None, max_length=50)
 
     @field_validator("phase_type")
     @classmethod
@@ -54,10 +54,10 @@ class TrainingBlockUpdate(BaseModel):
     """Payload for updating a training block. All fields optional."""
 
     name: Optional[str] = Field(default=None, min_length=1, max_length=100)
-    phase_type: Optional[str] = None
+    phase_type: Optional[str] = Field(default=None, max_length=50)
     start_date: Optional[date] = None
     end_date: Optional[date] = None
-    nutrition_phase: Optional[str] = None
+    nutrition_phase: Optional[str] = Field(default=None, max_length=50)
 
     @field_validator("phase_type")
     @classmethod
@@ -128,7 +128,7 @@ class BlockTemplateResponse(BaseModel):
 class ApplyTemplateRequest(BaseModel):
     """Payload for applying a block template."""
 
-    template_id: str
+    template_id: str = Field(max_length=100)
     start_date: date
 
 

@@ -18,6 +18,7 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
         start = time.monotonic()
 
         response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
 
         duration_ms = round((time.monotonic() - start) * 1000)
 

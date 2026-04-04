@@ -15,11 +15,13 @@ from typing import Optional
 
 import logging
 import os
+import uuid
+
+import httpx
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from src.modules.food_database.models import BarcodeCache, FoodItem
 from src.modules.food_database.off_client import get_product_by_barcode
@@ -35,7 +37,7 @@ class BarcodeService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
-    async def lookup_barcode(self, barcode: str) -> BarcodeResponse:
+    async def lookup_barcode(self, barcode: str, user_id: str | uuid.UUID | None = None) -> BarcodeResponse:
         """Look up a barcode through the cache → OFF → USDA chain."""
 
         # 1. Check cache
@@ -50,7 +52,7 @@ class BarcodeService:
         # 2. Try Open Food Facts
         off_result = await get_product_by_barcode(barcode)
         if off_result is not None:
-            food_item = await self._create_food_item(off_result, source="off")
+            food_item = await self._create_food_item(off_result, source="off", created_by=user_id)
             await self._cache_result(barcode, food_item, "off", off_result)
             return BarcodeResponse(
                 found=True,
@@ -61,7 +63,7 @@ class BarcodeService:
         # 3. Fallback to USDA (search by barcode/UPC)
         usda_result = await self._search_usda(barcode)
         if usda_result is not None:
-            food_item = await self._create_food_item(usda_result, source="usda")
+            food_item = await self._create_food_item(usda_result, source="usda", created_by=user_id)
             await self._cache_result(barcode, food_item, "usda", usda_result)
             return BarcodeResponse(
                 found=True,
@@ -84,16 +86,16 @@ class BarcodeService:
             return None
 
         # Load the associated FoodItem
-        food_stmt = select(FoodItem).where(FoodItem.id == cache_entry.food_item_id)
+        food_stmt = select(FoodItem).where(FoodItem.id == cache_entry.food_item_id, FoodItem.deleted_at.is_(None))
         food_result = await self.db.execute(food_stmt)
         return food_result.scalar_one_or_none()
 
-    async def _create_food_item(self, data: dict, source: str) -> FoodItem:
+    async def _create_food_item(self, data: dict, source: str, created_by: str | None = None) -> FoodItem:
         """Create a FoodItem from normalised API response data."""
         # Check if a food item with this barcode already exists
         barcode = data.get("barcode")
         if barcode:
-            existing_stmt = select(FoodItem).where(FoodItem.barcode == barcode)
+            existing_stmt = select(FoodItem).where(FoodItem.barcode == barcode, FoodItem.deleted_at.is_(None))
             existing_result = await self.db.execute(existing_stmt)
             existing_item = existing_result.scalar_one_or_none()
             if existing_item:
@@ -112,6 +114,7 @@ class BarcodeService:
             micro_nutrients=data.get("micro_nutrients"),
             source=source,
             barcode=barcode,
+            created_by=created_by,
         )
         self.db.add(food_item)
         await self.db.flush()
@@ -153,6 +156,6 @@ class BarcodeService:
                 result = results[0]
                 result["barcode"] = barcode
                 return result
-        except Exception:
+        except (httpx.HTTPError, KeyError, ValueError):
             logger.warning("USDA barcode search failed for %s", barcode, exc_info=True)
         return None

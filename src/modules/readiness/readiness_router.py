@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import logging
 from datetime import date
+from typing import List
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
@@ -47,6 +49,21 @@ async def compute_score(
     return await service.compute_score(user.id, data)
 
 
+@router.get("/scores", response_model=List[ReadinessScoreResponse])
+async def get_scores(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> List[ReadinessScoreResponse]:
+    """Return recent readiness scores. Empty list for new users."""
+    from datetime import timedelta
+
+    service = ReadinessService(db)
+    end = date.today()
+    start = end - timedelta(days=30)
+    history = await service.get_history(user.id, start, end)
+    return history.items
+
+
 @router.get("/history", response_model=ReadinessHistoryResponse)
 async def get_history(
     start_date: date = Query(...),
@@ -85,7 +102,7 @@ async def get_combined_recovery(
             user.id, HealthMetricsRequest()
         )
         readiness_score = readiness_resp.score
-    except Exception:
+    except (SQLAlchemyError, ValueError):
         readiness_score = None
 
     # Get fatigue scores
@@ -93,7 +110,7 @@ async def get_combined_recovery(
     try:
         fatigue_resp = await fatigue_service.analyze_fatigue(user.id)
         fatigue_scores = fatigue_resp.scores
-    except Exception:
+    except (SQLAlchemyError, ValueError):
         fatigue_scores = []
 
     result = compute_combined_recovery(

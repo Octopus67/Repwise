@@ -10,12 +10,13 @@ from datetime import date, datetime, timezone
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.training.models import TrainingSession
+from src.modules.training.models import PersonalRecord, TrainingSession
 from src.modules.training.pr_detector import PRDetector
 from src.modules.training.schemas import (
     NewlyUnlockedAchievement,
     PersonalRecordResponse,
     TrainingSessionCreate,
+    TrainingSessionListItem,
     TrainingSessionResponse,
     TrainingSessionUpdate,
 )
@@ -51,6 +52,24 @@ class TrainingService:
         self.session.add(training)
         await self.session.flush()
 
+        # Persist PRs to personal_records table for history
+        # PR detector currently only detects weight-based PRs.
+        # Deferred: reps/volume/e1RM PRs planned for v2
+        for pr in prs:
+            self.session.add(
+                PersonalRecord(
+                    user_id=user_id,
+                    exercise_name=pr.exercise_name,
+                    pr_type="weight",  # Only weight PRs detected currently
+                    reps=pr.reps,
+                    value_kg=pr.new_weight_kg,
+                    previous_value_kg=pr.previous_weight_kg,
+                    session_id=training.id,
+                )
+            )
+        if prs:
+            await self.session.flush()
+
         pr_responses = [
             PersonalRecordResponse(
                 exercise_name=pr.exercise_name,
@@ -74,8 +93,9 @@ class TrainingService:
                     notification_type="pr_celebration",
                     data={"screen": "SessionDetail", "sessionId": str(training.id)},
                 )
-            except Exception:
-                logger.exception("PR celebration notification failed")
+            except (ImportError, RuntimeError, ValueError) as e:
+                # Non-critical — PR notification failure must not break session creation
+                logger.exception("PR celebration notification failed: %s", type(e).__name__)
 
         # --- Achievement evaluation (never breaks session creation) ---
         achievement_unlocks: list[NewlyUnlockedAchievement] = []
@@ -98,8 +118,39 @@ class TrainingService:
                 )
                 for u in raw_unlocks
             ]
-        except Exception:
-            logger.exception("Achievement evaluation failed for training session")
+        except (ImportError, RuntimeError, ValueError) as e:
+            # Non-critical — achievement failure must not break session creation
+            logger.exception("Achievement evaluation failed for training session: %s", type(e).__name__)
+
+        # Update weekly challenge progress
+        try:
+            from src.modules.challenges.service import update_challenge_progress_from_session
+            exercises_raw = [ex.model_dump() if hasattr(ex, 'model_dump') else ex for ex in data.exercises] if data.exercises else []
+            await update_challenge_progress_from_session(self.session, user_id, exercises_raw)
+        except (ImportError, RuntimeError, ValueError) as e:
+            # Non-critical — challenge tracking failure must not break session creation
+            logger.exception("Failed to update challenge progress for user %s: %s", user_id, type(e).__name__)
+
+        # Generate social feed event (non-critical)
+        try:
+            from src.modules.social.service import SocialService
+
+            social_svc = SocialService(self.session)
+            duration_min = None
+            if data.start_time and data.end_time:
+                duration_min = int((data.end_time - data.start_time).total_seconds() / 60)
+            await social_svc.create_feed_event(
+                user_id=user_id,
+                event_type="workout",
+                ref_id=training.id,
+                metadata={
+                    "exercise_count": len(data.exercises) if data.exercises else 0,
+                    "duration_min": duration_min,
+                },
+            )
+        except (ImportError, RuntimeError, ValueError) as e:
+            # Non-critical — feed event failure must not break session creation
+            logger.exception("Feed event creation failed for session %s: %s", training.id, type(e).__name__)
 
         return TrainingSessionResponse.from_orm_model(
             training, personal_records=pr_responses, newly_unlocked=achievement_unlocks
@@ -111,8 +162,14 @@ class TrainingService:
         pagination: PaginationParams,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-    ) -> PaginatedResult[TrainingSessionResponse]:
-        """Return paginated training sessions filtered by date range (Requirement 6.2)."""
+        *,
+        lightweight: bool = False,
+    ) -> PaginatedResult:
+        """Return paginated training sessions filtered by date range (Requirement 6.2).
+
+        When lightweight=True, returns TrainingSessionListItem (no full exercises JSONB).
+        Default returns full TrainingSessionResponse for backward compatibility.
+        """
         base = select(TrainingSession).where(TrainingSession.user_id == user_id)
         base = TrainingSession.not_deleted(base)
 
@@ -134,8 +191,10 @@ class TrainingService:
         result = await self.session.execute(items_stmt)
         rows = result.scalars().all()
 
-        return PaginatedResult[TrainingSessionResponse](
-            items=[TrainingSessionResponse.from_orm_model(r) for r in rows],
+        mapper = TrainingSessionListItem.from_orm_model if lightweight else TrainingSessionResponse.from_orm_model
+
+        return PaginatedResult(
+            items=[mapper(r) for r in rows],
             total_count=total_count,
             page=pagination.page,
             limit=pagination.limit,
@@ -151,6 +210,7 @@ class TrainingService:
         training = await self._get_or_404(user_id, session_id)
 
         changes: dict[str, dict] = {}
+        pr_responses: list[PersonalRecordResponse] = []
         if data.session_date is not None and data.session_date != training.session_date:
             changes["session_date"] = {
                 "old": str(training.session_date),
@@ -162,6 +222,31 @@ class TrainingService:
             changes["exercises"] = {"old": training.exercises}
             training.exercises = [ex.model_dump() for ex in data.exercises]
             changes["exercises"]["new"] = training.exercises
+
+            # Re-run PR detection on updated exercises
+            pr_detector = PRDetector(self.session)
+            prs = await pr_detector.detect_prs(user_id, data.exercises)
+            for pr in prs:
+                self.session.add(
+                    PersonalRecord(
+                        user_id=user_id,
+                        exercise_name=pr.exercise_name,
+                        pr_type="weight",
+                        reps=pr.reps,
+                        value_kg=pr.new_weight_kg,
+                        previous_value_kg=pr.previous_weight_kg,
+                        session_id=session_id,
+                    )
+                )
+            pr_responses = [
+                PersonalRecordResponse(
+                    exercise_name=pr.exercise_name,
+                    reps=pr.reps,
+                    new_weight_kg=pr.new_weight_kg,
+                    previous_weight_kg=pr.previous_weight_kg,
+                )
+                for pr in prs
+            ]
 
         if data.metadata is not None:
             changes["metadata"] = {"old": training.metadata_}
@@ -192,7 +277,7 @@ class TrainingService:
             )
 
         await self.session.flush()
-        return TrainingSessionResponse.from_orm_model(training)
+        return TrainingSessionResponse.from_orm_model(training, personal_records=pr_responses)
 
     async def soft_delete_session(
         self, user_id: uuid.UUID, session_id: uuid.UUID
@@ -233,5 +318,47 @@ class TrainingService:
         """Return a single training session by ID (Requirement 8.1)."""
         training = await self._get_or_404(user_id, session_id)
         return TrainingSessionResponse.from_orm_model(training)
+
+    async def get_sessions_for_date(
+        self, user_id: uuid.UUID, target_date: str
+    ) -> list[TrainingSessionResponse]:
+        """Return all training sessions for a specific date."""
+        from datetime import date as date_type
+
+        parsed = date_type.fromisoformat(target_date) if isinstance(target_date, str) else target_date
+        stmt = select(TrainingSession).where(
+            TrainingSession.user_id == user_id,
+            TrainingSession.session_date == parsed,
+        )
+        stmt = TrainingSession.not_deleted(stmt)
+        stmt = stmt.order_by(TrainingSession.created_at.desc())
+        result = await self.session.execute(stmt)
+        rows = result.scalars().all()
+        return [TrainingSessionResponse.from_orm_model(r) for r in rows]
+
+    async def get_streak_count(self, user_id: uuid.UUID) -> int:
+        """Return the current consecutive-day training streak."""
+        from datetime import timedelta
+
+        stmt = (
+            select(TrainingSession.session_date)
+            .where(TrainingSession.user_id == user_id)
+            .distinct()
+        )
+        stmt = TrainingSession.not_deleted(stmt)
+        stmt = stmt.order_by(TrainingSession.session_date.desc())
+        result = await self.session.execute(stmt)
+        dates = [row[0] for row in result.all()]
+
+        if not dates:
+            return 0
+
+        streak = 1
+        for i in range(1, len(dates)):
+            if dates[i - 1] - dates[i] == timedelta(days=1):
+                streak += 1
+            else:
+                break
+        return streak
 
 

@@ -107,9 +107,26 @@ class AdaptiveService:
                 notification_type="weekly_checkin",
                 data={"screen": "WeeklyCheckin"},
             )
-        except Exception:
+        except (ImportError, RuntimeError, ValueError):
+            # Non-critical — notification failure must not break snapshot creation
             logger.exception("Weekly check-in notification failed")
 
+        return SnapshotResponse.model_validate(snapshot)
+
+    async def get_latest_snapshot(
+        self, user_id: uuid.UUID
+    ) -> SnapshotResponse | None:
+        """Return the most recent adaptive snapshot for a user, or None."""
+        stmt = (
+            select(AdaptiveSnapshot)
+            .where(AdaptiveSnapshot.user_id == user_id)
+            .order_by(AdaptiveSnapshot.created_at.desc())
+            .limit(1)
+        )
+        result = await self.session.execute(stmt)
+        snapshot = result.scalar_one_or_none()
+        if snapshot is None:
+            return None
         return SnapshotResponse.model_validate(snapshot)
 
     async def get_snapshots(

@@ -7,7 +7,8 @@ import logging
 import uuid
 from datetime import date, timedelta
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.adaptive.models import AdaptiveSnapshot, DailyTargetOverride
@@ -23,7 +24,6 @@ from src.modules.adaptive.sync_engine import (
     compute_daily_targets,
 )
 from src.modules.training.exercise_mapping import get_muscle_group, is_compound
-from src.shared.errors import ApiError
 from src.shared.types import TrainingPhase
 
 logger = logging.getLogger(__name__)
@@ -233,7 +233,7 @@ class SyncEngineService:
             if session:
                 exercises = session.exercises if isinstance(session.exercises, list) else []
                 return True, exercises, "Session logged"
-        except Exception:
+        except (ImportError, SQLAlchemyError):
             logger.exception("Failed to classify training day for user %s on %s", user_id, target_date)
 
         return False, [], "No session"
@@ -270,8 +270,9 @@ class SyncEngineService:
                 count += 1
 
             return total_vol / count if count > 0 else 0.0
-        except Exception:
+        except (ImportError, SQLAlchemyError):
             logger.exception("Failed to compute rolling avg volume for user %s", user_id)
+            # Fallback: 0.0 means no volume adjustment applied
             return 0.0
 
     async def _get_override(
@@ -308,7 +309,7 @@ class SyncEngineService:
     async def _get_default_targets(self, user_id: uuid.UUID) -> MacroTargets:
         """Calculate default targets from user profile or return safe defaults."""
         try:
-            from src.modules.user.models import UserMetric, UserGoal
+            from src.modules.user.models import UserMetric
             
             # Try to get user metrics for TDEE calculation
             metrics_stmt = (
@@ -335,7 +336,7 @@ class SyncEngineService:
                     carbs_g=(tdee * 0.45) / 4.0,  # 45% of calories
                     fat_g=(tdee * 0.25) / 9.0,  # 25% of calories
                 )
-        except Exception:
+        except (ImportError, SQLAlchemyError, AttributeError):
             logger.exception("Failed to calculate default targets for user %s", user_id)
         
         # Safe fallback defaults

@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Optional
 
 import uuid
-from datetime import date, timedelta, timezone, datetime
+from datetime import date, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -260,6 +260,8 @@ class HealthReportService:
         for entry in entries:
             micros = entry.micro_nutrients or {}
             for nutrient, value in micros.items():
+                if not isinstance(value, (int, float)):
+                    continue
                 nutrient_totals[nutrient] = nutrient_totals.get(nutrient, 0.0) + value
 
         nutrient_averages = {k: v / day_count for k, v in nutrient_totals.items()}

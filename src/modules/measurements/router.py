@@ -1,13 +1,13 @@
 """Body measurements router.
 
-POST   /measurements                     — Create measurement
-GET    /measurements                     — List measurements (paginated)
-GET    /measurements/latest              — Get latest measurement
-GET    /measurements/trend               — Get measurement trend
-GET    /measurements/{id}                — Get measurement by ID
-PUT    /measurements/{id}                — Update measurement
-DELETE /measurements/{id}                — Delete measurement
-POST   /measurements/{id}/photos         — Upload progress photo
+POST   /                                 — Create measurement
+GET    /                                 — List measurements (paginated)
+GET    /latest                           — Get latest measurement
+GET    /trend                            — Get measurement trend
+GET    /{id}                             — Get measurement by ID
+PUT    /{id}                             — Update measurement
+DELETE /{id}                             — Delete measurement
+POST   /{id}/photos                      — Upload progress photo
 DELETE /photos/{id}                       — Delete progress photo
 """
 
@@ -26,15 +26,12 @@ from src.modules.measurements.schemas import (
     MeasurementCreate,
     MeasurementResponse,
     MeasurementUpdate,
-    NavyBFRequest,
-    NavyBFResponse,
     PhotoResponse,
     PhotoUpload,
     TrendPoint,
 )
 from src.modules.measurements.service import MeasurementService
 from src.modules.measurements.photo_service import PhotoService
-from src.modules.measurements.navy_calculator import navy_body_fat
 from src.shared.pagination import PaginatedResult, PaginationParams
 
 router = APIRouter()
@@ -48,7 +45,7 @@ def _get_photo_service(db: AsyncSession = Depends(get_db)) -> PhotoService:
     return PhotoService(db)
 
 
-@router.post("/measurements", response_model=MeasurementResponse, status_code=201)
+@router.post("", response_model=MeasurementResponse, status_code=201)
 async def create_measurement(
     data: MeasurementCreate,
     user: User = Depends(get_current_user),
@@ -58,7 +55,7 @@ async def create_measurement(
     return MeasurementResponse.model_validate(measurement)
 
 
-@router.get("/measurements", response_model=PaginatedResult[MeasurementResponse])
+@router.get("", response_model=PaginatedResult[MeasurementResponse])
 async def list_measurements(
     user: User = Depends(get_current_user),
     service: MeasurementService = Depends(_get_measurement_service),
@@ -69,7 +66,7 @@ async def list_measurements(
     return await service.list(user_id=user.id, pagination=pagination)
 
 
-@router.get("/measurements/latest", response_model=MeasurementResponse)
+@router.get("/latest", response_model=MeasurementResponse)
 async def get_latest_measurement(
     user: User = Depends(get_current_user),
     service: MeasurementService = Depends(_get_measurement_service),
@@ -78,7 +75,7 @@ async def get_latest_measurement(
     return MeasurementResponse.model_validate(measurement)
 
 
-@router.get("/measurements/trend", response_model=list[TrendPoint])
+@router.get("/trend", response_model=list[TrendPoint])
 async def get_measurement_trend(
     user: User = Depends(get_current_user),
     service: MeasurementService = Depends(_get_measurement_service),
@@ -87,7 +84,7 @@ async def get_measurement_trend(
     return await service.get_trend(user_id=user.id, days=days)
 
 
-@router.get("/measurements/{measurement_id}", response_model=MeasurementResponse)
+@router.get("/{measurement_id}", response_model=MeasurementResponse)
 async def get_measurement(
     measurement_id: uuid.UUID,
     user: User = Depends(get_current_user),
@@ -97,7 +94,7 @@ async def get_measurement(
     return MeasurementResponse.model_validate(measurement)
 
 
-@router.put("/measurements/{measurement_id}", response_model=MeasurementResponse)
+@router.put("/{measurement_id}", response_model=MeasurementResponse)
 async def update_measurement(
     measurement_id: uuid.UUID,
     data: MeasurementUpdate,
@@ -108,7 +105,7 @@ async def update_measurement(
     return MeasurementResponse.model_validate(measurement)
 
 
-@router.delete("/measurements/{measurement_id}", status_code=204)
+@router.delete("/{measurement_id}", status_code=204)
 async def delete_measurement(
     measurement_id: uuid.UUID,
     user: User = Depends(get_current_user),
@@ -118,7 +115,7 @@ async def delete_measurement(
     return Response(status_code=204)
 
 
-@router.post("/measurements/{measurement_id}/photos", response_model=PhotoResponse, status_code=201)
+@router.post("/{measurement_id}/photos", response_model=PhotoResponse, status_code=201)
 async def upload_photo(
     measurement_id: uuid.UUID,
     file: UploadFile = File(...),
@@ -143,6 +140,7 @@ async def upload_photo(
         measurement_id=measurement_id,
         file_bytes=file_bytes,
         metadata=metadata,
+        content_type=file.content_type or "image/jpeg",
     )
     return PhotoResponse.model_validate(photo)
 

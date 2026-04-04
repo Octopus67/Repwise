@@ -114,6 +114,26 @@ class MealService:
         self, user_id: uuid.UUID, data: MealFavoriteCreate
     ) -> MealFavorite:
         """Add a meal (custom or food-database item) to the user's favorites."""
+        # Prevent duplicate favorites for the same item
+        if data.meal_id is not None:
+            existing_stmt = select(MealFavorite).where(
+                MealFavorite.user_id == user_id,
+                MealFavorite.meal_id == data.meal_id,
+            )
+        elif data.food_item_id is not None:
+            existing_stmt = select(MealFavorite).where(
+                MealFavorite.user_id == user_id,
+                MealFavorite.food_item_id == data.food_item_id,
+            )
+        else:
+            existing_stmt = None
+
+        if existing_stmt is not None:
+            result = await self.db.execute(existing_stmt)
+            existing = result.scalar_one_or_none()
+            if existing is not None:
+                return existing
+
         favorite = MealFavorite(
             user_id=user_id,
             meal_id=data.meal_id,

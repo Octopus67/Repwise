@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 
     # OAuth
     GOOGLE_CLIENT_ID: str = ""
-    APPLE_CLIENT_ID: str = ""  # Bundle ID, e.g. com.repwise.app
+    APPLE_CLIENT_ID: str = ""  # Bundle ID, e.g. com.octopuslabs.repwise
 
     # Payment providers
     STRIPE_WEBHOOK_SECRET: str = "whsec_test_secret"

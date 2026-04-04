@@ -1,7 +1,7 @@
 """Meal library Pydantic request/response schemas."""
 
 import uuid
-from datetime import date, datetime
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -15,10 +15,10 @@ class CustomMealCreate(BaseModel):
     """Payload for creating a custom meal."""
 
     name: str = Field(min_length=1, max_length=255)
-    calories: float = Field(ge=0)
-    protein_g: float = Field(ge=0)
-    carbs_g: float = Field(ge=0)
-    fat_g: float = Field(ge=0)
+    calories: float = Field(ge=0, le=50000)
+    protein_g: float = Field(ge=0, le=5000)
+    carbs_g: float = Field(ge=0, le=5000)
+    fat_g: float = Field(ge=0, le=5000)
     micro_nutrients: Optional[dict[str, float]] = None
 
 
@@ -26,10 +26,10 @@ class CustomMealUpdate(BaseModel):
     """Payload for updating a custom meal. All fields optional."""
 
     name: Optional[str] = Field(default=None, min_length=1, max_length=255)
-    calories: Optional[float] = Field(default=None, ge=0)
-    protein_g: Optional[float] = Field(default=None, ge=0)
-    carbs_g: Optional[float] = Field(default=None, ge=0)
-    fat_g: Optional[float] = Field(default=None, ge=0)
+    calories: Optional[float] = Field(default=None, ge=0, le=50000)
+    protein_g: Optional[float] = Field(default=None, ge=0, le=5000)
+    carbs_g: Optional[float] = Field(default=None, ge=0, le=5000)
+    fat_g: Optional[float] = Field(default=None, ge=0, le=5000)
     micro_nutrients: Optional[dict[str, float]] = None
 
 
@@ -66,10 +66,10 @@ class MealFavoriteCreate(BaseModel):
     meal_id: Optional[uuid.UUID] = None
     food_item_id: Optional[uuid.UUID] = None
     name: str = Field(min_length=1, max_length=255)
-    calories: float = Field(ge=0)
-    protein_g: float = Field(ge=0)
-    carbs_g: float = Field(ge=0)
-    fat_g: float = Field(ge=0)
+    calories: float = Field(ge=0, le=50000)
+    protein_g: float = Field(ge=0, le=50000)
+    carbs_g: float = Field(ge=0, le=50000)
+    fat_g: float = Field(ge=0, le=50000)
     micro_nutrients: Optional[dict[str, float]] = None
 
 

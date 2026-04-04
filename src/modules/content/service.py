@@ -89,15 +89,29 @@ class ContentService:
         article_id: uuid.UUID,
         user_role: Optional[str] = None,
         has_premium: bool = False,
+        user_id: Optional[uuid.UUID] = None,
     ) -> ContentArticle:
         """Return a single article by ID.
 
         Requirement 11.2: full article content.
         Requirement 11.4/11.5: premium content gating.
+        R5: milestone achievement can unlock premium content.
         """
         article = await self._get_article_or_raise(article_id)
 
         if article.is_premium and not has_premium and user_role != "admin":
+            if article.unlocked_by_achievement and user_id:
+                from src.modules.achievements.models import UserAchievement
+
+                unlock = await self.session.execute(
+                    select(UserAchievement).where(
+                        UserAchievement.user_id == user_id,
+                        UserAchievement.achievement_id == article.unlocked_by_achievement,
+                        UserAchievement.deleted_at.is_(None),
+                    )
+                )
+                if unlock.scalar_one_or_none():
+                    return article
             raise PremiumRequiredError(
                 "This article requires an active premium subscription"
             )

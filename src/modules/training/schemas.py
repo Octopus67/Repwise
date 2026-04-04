@@ -8,12 +8,14 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
+from src.shared.validators import validate_json_size
+
 
 class SetEntry(BaseModel):
     """A single set within an exercise."""
 
-    reps: int = Field(ge=0, description="Number of repetitions")
-    weight_kg: float = Field(ge=0, description="Weight in kilograms")
+    reps: int = Field(ge=0, le=1000, description="Number of repetitions")
+    weight_kg: float = Field(ge=0, le=1000, description="Weight in kilograms")
     rpe: Optional[float] = Field(
         default=None, ge=0, le=10, description="Rate of perceived exertion (0-10)"
     )
@@ -22,6 +24,7 @@ class SetEntry(BaseModel):
     )
     set_type: str = Field(
         default="normal",
+        max_length=50,
         description="Set type: normal, warm-up, drop-set, amrap",
     )
 
@@ -37,8 +40,8 @@ class SetEntry(BaseModel):
 class ExerciseEntry(BaseModel):
     """A single exercise with its sets."""
 
-    exercise_name: str = Field(min_length=1, description="Name of the exercise")
-    sets: list[SetEntry] = Field(min_length=1, description="At least one set required")
+    exercise_name: str = Field(min_length=1, max_length=200, description="Name of the exercise")
+    sets: list[SetEntry] = Field(min_length=1, max_length=20, description="At least one set required")
 
 
 class TrainingSessionCreate(BaseModel):
@@ -46,7 +49,7 @@ class TrainingSessionCreate(BaseModel):
 
     session_date: date
     exercises: list[ExerciseEntry] = Field(
-        min_length=1, description="At least one exercise required"
+        min_length=1, max_length=50, description="At least one exercise required"
     )
     metadata: Optional[dict[str, Any]] = Field(
         default=None, description="Extensible session metadata"
@@ -61,15 +64,25 @@ class TrainingSessionCreate(BaseModel):
             raise ValueError("session_date cannot be in the future")
         return v
 
+    @field_validator("metadata")
+    @classmethod
+    def validate_metadata_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
+        return validate_json_size(v)
+
 
 class TrainingSessionUpdate(BaseModel):
     """Payload for updating an existing training session. All fields optional."""
 
     session_date: Optional[date] = None
-    exercises: Optional[list[ExerciseEntry]] = None
+    exercises: Optional[list[ExerciseEntry]] = Field(default=None, max_length=50)
     metadata: Optional[dict[str, Any]] = None
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
+
+    @field_validator("metadata")
+    @classmethod
+    def validate_metadata_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
+        return validate_json_size(v)
 
 
 class WorkoutTemplateResponse(BaseModel):
@@ -98,6 +111,49 @@ class NewlyUnlockedAchievement(BaseModel):
     description: str
     icon: str
     category: str
+
+
+class TrainingSessionListItem(BaseModel):
+    """Lightweight training session for list endpoints (excludes full exercises JSONB)."""
+
+    id: uuid.UUID
+    user_id: uuid.UUID
+    session_date: date
+    exercise_count: int = 0
+    total_sets: int = 0
+    muscle_groups: list[str] = Field(default_factory=list)
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+    @classmethod
+    def from_orm_model(cls, obj: Any) -> TrainingSessionListItem:
+        """Build a lightweight list item from a SQLAlchemy model instance."""
+        exercises = obj.exercises or []
+        muscle_groups: list[str] = []
+        total_sets = 0
+        seen = set()
+        for ex in exercises:
+            total_sets += len(ex.get("sets", []))
+            mg = ex.get("muscle_group") or ex.get("exercise_name", "")
+            if mg and mg not in seen:
+                seen.add(mg)
+                muscle_groups.append(mg)
+        return cls(
+            id=obj.id,
+            user_id=obj.user_id,
+            session_date=obj.session_date,
+            exercise_count=len(exercises),
+            total_sets=total_sets,
+            muscle_groups=muscle_groups,
+            start_time=obj.start_time,
+            end_time=obj.end_time,
+            created_at=obj.created_at,
+            updated_at=obj.updated_at,
+        )
 
 
 class TrainingSessionResponse(BaseModel):
@@ -183,18 +239,28 @@ class WorkoutTemplateCreate(BaseModel):
     """Payload for creating a user workout template."""
 
     name: str = Field(min_length=1, max_length=200)
-    description: Optional[str] = None
-    exercises: list[ExerciseEntry] = Field(min_length=1)
+    description: Optional[str] = Field(default=None, max_length=1000)
+    exercises: list[ExerciseEntry] = Field(min_length=1, max_length=50)
     metadata: Optional[dict[str, Any]] = None
+
+    @field_validator("metadata")
+    @classmethod
+    def validate_metadata_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
+        return validate_json_size(v)
 
 
 class WorkoutTemplateUpdate(BaseModel):
     """Payload for updating a user workout template. All fields optional."""
 
     name: Optional[str] = Field(default=None, min_length=1, max_length=200)
-    description: Optional[str] = None
-    exercises: Optional[list[ExerciseEntry]] = None
+    description: Optional[str] = Field(default=None, max_length=1000)
+    exercises: Optional[list[ExerciseEntry]] = Field(default=None, max_length=50)
     metadata: Optional[dict[str, Any]] = None
+
+    @field_validator("metadata")
+    @classmethod
+    def validate_metadata_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
+        return validate_json_size(v)
 
 
 class UserWorkoutTemplateResponse(BaseModel):
@@ -261,6 +327,21 @@ class BatchOverloadResponse(BaseModel):
     suggestions: dict[str, Optional[OverloadSuggestion]]
 
 
+class PRHistoryResponse(BaseModel):
+    """A persisted personal record returned by the PR history endpoint."""
+
+    id: uuid.UUID
+    exercise_name: str
+    pr_type: str
+    reps: int
+    value_kg: float
+    previous_value_kg: Optional[float] = None
+    session_id: Optional[uuid.UUID] = None
+    achieved_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 
 
 
@@ -271,22 +352,22 @@ class CustomExerciseCreate(BaseModel):
     """Payload for creating a user custom exercise."""
 
     name: str = Field(min_length=1, max_length=200)
-    muscle_group: str
-    equipment: str
-    category: str = "compound"
+    muscle_group: str = Field(max_length=100)
+    equipment: str = Field(max_length=100)
+    category: str = Field(default="compound", max_length=100)
     secondary_muscles: list[str] = Field(default_factory=list)
-    notes: Optional[str] = None
+    notes: Optional[str] = Field(default=None, max_length=1000)
 
 
 class CustomExerciseUpdate(BaseModel):
     """Payload for updating a user custom exercise. All fields optional."""
 
     name: Optional[str] = Field(default=None, min_length=1, max_length=200)
-    muscle_group: Optional[str] = None
-    equipment: Optional[str] = None
-    category: Optional[str] = None
+    muscle_group: Optional[str] = Field(default=None, max_length=100)
+    equipment: Optional[str] = Field(default=None, max_length=100)
+    category: Optional[str] = Field(default=None, max_length=100)
     secondary_muscles: Optional[list[str]] = None
-    notes: Optional[str] = None
+    notes: Optional[str] = Field(default=None, max_length=1000)
 
 
 class CustomExerciseResponse(BaseModel):

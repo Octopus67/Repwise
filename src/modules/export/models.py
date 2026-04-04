@@ -37,3 +37,4 @@ class ExportRequest(Base):
     downloaded_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

@@ -14,7 +14,12 @@ COPY alembic.ini .
 
 RUN pip install --no-cache-dir .
 
+RUN adduser --disabled-password --gecos '' appuser
+USER appuser
+
 EXPOSE 8000
 
 # Use Railway's PORT env var if set, otherwise default to 8000
-CMD uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# NOTE: --forwarded-allow-ips='*' is required for Railway's reverse proxy.
+# For other deployments, restrict to the actual proxy IP range.
+CMD gunicorn src.main:app -w ${WEB_CONCURRENCY:-4} -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000} --proxy-headers --forwarded-allow-ips='*' --timeout 120 --graceful-timeout 30 --keep-alive 5

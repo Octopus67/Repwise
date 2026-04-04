@@ -7,7 +7,7 @@ in ``FeatureFlagService`` (per project rule: routing only in router).
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
@@ -20,7 +20,7 @@ router = APIRouter()
 
 @router.get("/check/{flag_name}")
 async def check_feature_flag(
-    flag_name: str,
+    flag_name: str = Path(..., pattern=r'^[a-z0-9_-]{1,100}$'),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:

@@ -2,8 +2,9 @@
 
 import uuid
 
+import jwt
+from jwt.exceptions import PyJWTError
 from fastapi import Depends, Request
-from jose import JWTError, jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -40,7 +41,7 @@ async def get_current_user(
             settings.JWT_SECRET,
             algorithms=[settings.JWT_ALGORITHM],
         )
-    except JWTError:
+    except PyJWTError:
         raise UnauthorizedError("Invalid or expired token")
 
     # Check token type
@@ -75,6 +76,12 @@ async def get_current_user(
     if user is None:
         raise UnauthorizedError("User not found or deactivated")
 
+    # Invalidate tokens issued before password change
+    if user.password_changed_at:
+        token_iat = payload.get("iat", 0)
+        if token_iat < user.password_changed_at.timestamp():
+            raise UnauthorizedError("Password changed. Please login again.")
+
     return user
 
 async def get_current_user_optional(
@@ -98,8 +105,22 @@ async def get_current_user_optional(
             settings.JWT_SECRET,
             algorithms=[settings.JWT_ALGORITHM],
         )
-    except JWTError:
+    except PyJWTError:
         return None
+
+    # Check token type
+    if payload.get("type") != "access":
+        return None
+
+    # Check if token is blacklisted
+    jti = payload.get("jti")
+    if jti:
+        from src.modules.auth.models import TokenBlacklist
+        blacklist_result = await db.execute(
+            select(TokenBlacklist).where(TokenBlacklist.jti == jti)
+        )
+        if blacklist_result.scalar_one_or_none() is not None:
+            return None
 
     user_id_str: Optional[str] = payload.get("sub")
     if user_id_str is None:
@@ -113,5 +134,15 @@ async def get_current_user_optional(
     result = await db.execute(
         select(User).where(User.id == user_id, User.deleted_at.is_(None))
     )
-    return result.scalar_one_or_none()
+    user = result.scalar_one_or_none()
+    if user is None:
+        return None
+
+    # Invalidate tokens issued before password change
+    if user.password_changed_at:
+        token_iat = payload.get("iat", 0)
+        if token_iat < user.password_changed_at.timestamp():
+            return None
+
+    return user
 

@@ -8,6 +8,7 @@ from collections import defaultdict
 from datetime import date, timedelta
 
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.adaptive.models import AdaptiveSnapshot
@@ -50,8 +51,12 @@ class WeeklyReportService:
             dashboard = await micro_svc.get_dashboard(user_id, week_start, week_end)
             if dashboard.days_with_data > 0:
                 nutrient_score = dashboard.nutrient_score
-        except Exception as e:
+        except (ImportError, AttributeError) as e:
+            # Partial report OK — micronutrient module may not be deployed yet
             logger.debug("Micronutrient data unavailable for report: %s", type(e).__name__)
+        except SQLAlchemyError as e:
+            # Partial report OK — DB issue fetching micronutrient data
+            logger.warning("Micronutrient DB query failed for report user=%s: %s", user_id, e)
 
         # --- Recommendations ---
         ctx = ReportContext(
@@ -91,8 +96,9 @@ class WeeklyReportService:
         analytics = TrainingAnalyticsService(self.session)
         try:
             sessions = await analytics._fetch_sessions(user_id, week_start, week_end)
-        except Exception as e:
+        except SQLAlchemyError as e:
             logger.exception("Failed to fetch training sessions for user=%s: %s", user_id, type(e).__name__)
+            # Partial report OK — return empty training metrics
             return TrainingMetrics()
 
         total_volume = 0.0
@@ -129,8 +135,12 @@ class WeeklyReportService:
                 for r in wns_results:
                     if r.hypertrophy_units > 0:
                         wns_data[r.muscle_group] = r.hypertrophy_units
-        except Exception as e:
+        except (ImportError, AttributeError) as e:
+            # Partial report OK — WNS engine may not be deployed; fall back to legacy volume
             logger.debug("WNS data unavailable for report, using legacy volume: %s", type(e).__name__)
+        except SQLAlchemyError as e:
+            # Partial report OK — DB issue fetching WNS data
+            logger.warning("WNS DB query failed for report user=%s: %s", user_id, e)
 
         return TrainingMetrics(
             total_volume=round(total_volume, 2),
@@ -157,8 +167,9 @@ class WeeklyReportService:
             stmt = NutritionEntry.not_deleted(stmt)
             result = await self.session.execute(stmt)
             entries = list(result.scalars().all())
-        except Exception as e:
+        except SQLAlchemyError as e:
             logger.exception("Failed to fetch nutrition entries for user=%s: %s", user_id, type(e).__name__)
+            # Partial report OK — return empty nutrition metrics
             return NutritionMetrics(), 0.0, 0
 
         daily_cals: dict[date, float] = defaultdict(float)
@@ -195,7 +206,8 @@ class WeeklyReportService:
                 target_cal = snapshots[0].target_calories
             if len(snapshots) >= 2 and snapshots[1].target_calories is not None:
                 tdee_delta = round(target_cal - snapshots[1].target_calories, 2)
-        except Exception as e:
+        except SQLAlchemyError as e:
+            # Partial report OK — target calories unavailable, compliance will be 0
             logger.exception("Failed to fetch adaptive snapshots for user=%s: %s", user_id, type(e).__name__)
 
         # Compliance
@@ -234,8 +246,9 @@ class WeeklyReportService:
             )
             bw_result = await self.session.execute(bw_stmt)
             bw_logs = list(bw_result.scalars().all())
-        except Exception as e:
+        except SQLAlchemyError as e:
             logger.exception("Failed to fetch bodyweight logs for user=%s: %s", user_id, type(e).__name__)
+            # Partial report OK — return empty body metrics
             return BodyMetrics()
 
         if len(bw_logs) >= 2:
@@ -259,8 +272,9 @@ class WeeklyReportService:
             goal_result = await self.session.execute(goal_stmt)
             goal = goal_result.scalar_one_or_none()
             return (goal.goal_type if goal else "maintaining", goal.goal_rate_per_week if goal else None)
-        except Exception as e:
+        except SQLAlchemyError as e:
             logger.exception("Failed to fetch user goal for user=%s: %s", user_id, type(e).__name__)
+            # Partial report OK — default to "maintaining" with no rate
             return "maintaining", None
 
 

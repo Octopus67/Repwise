@@ -72,7 +72,7 @@ class PeriodizationService:
         if end_date is not None:
             stmt = stmt.where(TrainingBlock.start_date <= end_date)
 
-        stmt = stmt.order_by(TrainingBlock.start_date.asc())
+        stmt = stmt.order_by(TrainingBlock.start_date.asc()).limit(200)
         result = await self.session.execute(stmt)
         rows = result.scalars().all()
         return [TrainingBlockResponse.from_orm_model(r) for r in rows]

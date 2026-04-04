@@ -74,7 +74,7 @@ async def get_snapshots(
 async def recalculation_status(
     current_ema: Optional[float] = Query(default=None, description="Current EMA bodyweight"),
     current_training_load: Optional[float] = Query(default=None, ge=0, le=100),
-    current_goal_type: Optional[str] = Query(default=None),
+    current_goal_type: Optional[str] = Query(default=None, max_length=50),
     current_goal_rate: Optional[float] = Query(default=None),
     user: User = Depends(get_current_user),
     service: AdaptiveService = Depends(_get_service),
@@ -151,6 +151,15 @@ async def weekly_checkin(
 ) -> WeeklyCheckinResponse:
     """Trigger a weekly check-in for the current user (Requirement 3.2.1)."""
     return await service.generate_weekly_checkin(user_id=user.id)
+
+
+@router.get("/weekly-checkin", response_model=WeeklyCheckinResponse)
+async def get_weekly_checkin(
+    user: User = Depends(get_current_user),
+    service: CoachingService = Depends(_get_coaching_service),
+) -> WeeklyCheckinResponse:
+    """Read-only: return latest weekly check-in status (Issue #8)."""
+    return await service.get_latest_checkin(user_id=user.id)
 
 
 @router.get("/suggestions", response_model=List[CoachingSuggestionResponse])

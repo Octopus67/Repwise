@@ -7,9 +7,10 @@ import secrets
 import string
 
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, EndpointConnectionError, ConnectTimeoutError
 
 from src.config.settings import settings
+from src.utils.retry import sync_retry
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +67,11 @@ class EmailService:
         )
         return self._send(to_email, subject, body)
 
+    @sync_retry(
+        max_retries=3,
+        base_delay=1.0,
+        retryable_exceptions=(EndpointConnectionError, ConnectTimeoutError),
+    )
     def _send(self, to_email: str, subject: str, body: str) -> bool:
         """Send an email via SES. Returns True on success."""
         try:
@@ -79,5 +85,5 @@ class EmailService:
             )
             return True
         except ClientError:
-            logger.exception("Failed to send email to %s", to_email)
+            logger.exception("Failed to send email to %s", to_email[:3] + "***@" + to_email.split("@")[1])
             return False

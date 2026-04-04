@@ -56,6 +56,7 @@ class ProgressPhotoService:
             pose_type=data.pose_type,
             notes=data.notes,
             alignment_data=data.alignment_data.model_dump() if data.alignment_data else None,
+            r2_key=data.r2_key if (data.r2_key is None or data.r2_key.startswith(f"users/{user_id}/")) else None,
         )
         self.session.add(photo)
         await self.session.flush()

@@ -3,11 +3,13 @@
 from __future__ import annotations
 from typing import Optional
 
+import logging
 import uuid
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy import select, func
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.training.exercise_mapping import get_muscle_group
@@ -28,6 +30,8 @@ from src.modules.training.fatigue_schemas import (
     FatigueScoreResponse,
 )
 from src.modules.training.models import TrainingSession
+
+logger = logging.getLogger(__name__)
 
 
 class FatigueService:
@@ -128,7 +132,9 @@ class FatigueService:
             if total_cal and target_cal:
                 daily_avg = total_cal / max(lookback_days, 1)
                 nutrition_compliance = compute_nutrition_compliance(daily_avg, target_cal)
-        except Exception:
+        except (SQLAlchemyError, TypeError, ZeroDivisionError):
+            # Fallback: skip nutrition compliance factor in fatigue calculation
+            logger.exception("Failed to compute nutrition compliance for fatigue score, user=%s", user_id)
             nutrition_compliance = None
 
         # 7. Compute fatigue scores per muscle group
@@ -175,5 +181,5 @@ class FatigueService:
                 for sg in suggestions
             ],
             lookback_days=lookback_days,
-            analyzed_at=datetime.utcnow(),
+            analyzed_at=datetime.now(timezone.utc),
         )

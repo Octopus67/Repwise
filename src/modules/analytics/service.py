@@ -52,7 +52,8 @@ def track_event(
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             },
         )
-    except Exception:
+    except (OSError, ValueError, TypeError):
+        # Non-critical — analytics event loss is acceptable; never break user flow
         logger.debug("Failed to send analytics event %s", event, exc_info=True)
 
 

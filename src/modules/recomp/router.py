@@ -7,6 +7,7 @@ import logging
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
@@ -56,8 +57,10 @@ async def log_measurement(
         entry = await service.log_measurement(user.id, data)
         await db.commit()
         return RecompMeasurementResponse.model_validate(entry)
-    except Exception:
-        logger.exception("Error logging recomp measurement for user %s", user.id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except SQLAlchemyError:
+        logger.exception("DB error logging recomp measurement for user %s", user.id)
         raise HTTPException(status_code=500, detail="Failed to log measurement")
 
 
@@ -84,8 +87,11 @@ async def get_metrics(
     await _check_recomp_guards(user, db)
     try:
         output = await service.get_recomp_metrics(user.id, lookback_days)
-    except Exception:
-        logger.exception("Error computing recomp metrics for user %s", user.id)
+    except SQLAlchemyError:
+        logger.exception("DB error computing recomp metrics for user %s", user.id)
+        raise HTTPException(status_code=500, detail="Failed to compute metrics")
+    except (ValueError, TypeError, ZeroDivisionError):
+        logger.exception("Computation error in recomp metrics for user %s", user.id)
         raise HTTPException(status_code=500, detail="Failed to compute metrics")
     return RecompMetricsResponse(
         waist_trend=_trend_to_dict(output.waist_trend),
@@ -108,8 +114,11 @@ async def get_checkin(
     await _check_recomp_guards(user, db)
     try:
         output = await service.get_weekly_checkin(user.id)
-    except Exception:
-        logger.exception("Error computing recomp checkin for user %s", user.id)
+    except SQLAlchemyError:
+        logger.exception("DB error computing recomp checkin for user %s", user.id)
+        raise HTTPException(status_code=500, detail="Failed to compute check-in")
+    except (ValueError, TypeError, ZeroDivisionError):
+        logger.exception("Computation error in recomp checkin for user %s", user.id)
         raise HTTPException(status_code=500, detail="Failed to compute check-in")
     return RecompCheckinResponse(
         recommendation=output.recommendation,

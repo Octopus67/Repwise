@@ -6,7 +6,9 @@ from typing import Optional
 import uuid
 from datetime import date, datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from src.shared.validators import validate_json_size
 
 
 class MarkerRange(BaseModel):
@@ -32,6 +34,11 @@ class HealthReportCreate(BaseModel):
     report_date: date
     markers: dict[str, float] = Field(default_factory=dict)
     source_file_url: Optional[str] = None
+
+    @field_validator("markers")
+    @classmethod
+    def validate_markers_size(cls, v: dict[str, float]) -> dict[str, float]:
+        return validate_json_size(v)
 
 
 class HealthReportResponse(BaseModel):

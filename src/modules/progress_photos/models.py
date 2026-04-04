@@ -35,6 +35,7 @@ class ProgressPhoto(SoftDeleteMixin, Base):
     )
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     alignment_data: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    r2_key: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
     __table_args__ = (
         Index("ix_progress_photos_user_date", "user_id", "capture_date"),

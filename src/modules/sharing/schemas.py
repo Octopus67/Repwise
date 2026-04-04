@@ -6,13 +6,13 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ShareEventCreate(BaseModel):
     session_id: Optional[UUID] = None
-    share_type: str = "workout"
-    platform: Optional[str] = None
+    share_type: str = Field(default="workout", max_length=50)
+    platform: Optional[str] = Field(default=None, max_length=50)
 
 
 class ShareEventResponse(BaseModel):

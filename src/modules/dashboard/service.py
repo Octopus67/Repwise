@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.dashboard.schemas import DashboardSummaryResponse
 from src.modules.nutrition.service import NutritionService
+from src.modules.nutrition.schemas import DateRangeFilter
 from src.modules.adaptive.service import AdaptiveService
 from src.modules.training.service import TrainingService
 from src.modules.user.service import UserService
+from src.shared.pagination import PaginationParams
 
 
 class DashboardService:
@@ -39,10 +40,10 @@ class DashboardService:
             bodyweight_history,
             streak_count,
         ) = await gather(
-            nutrition_svc.get_entries_for_date(user_id, target_date),
+            nutrition_svc.get_entries(user_id, DateRangeFilter(start_date=target_date, end_date=target_date)),
             adaptive_svc.get_latest_snapshot(user_id),
             training_svc.get_sessions_for_date(user_id, target_date),
-            user_svc.get_bodyweight_history(user_id, limit=30),
+            user_svc.get_bodyweight_history(user_id, PaginationParams(limit=30)),
             training_svc.get_streak_count(user_id),
             return_exceptions=True,
         )
@@ -50,12 +51,16 @@ class DashboardService:
         # Handle exceptions from gather
         if isinstance(nutrition_entries, Exception):
             nutrition_entries = []
+        elif hasattr(nutrition_entries, 'items'):
+            nutrition_entries = nutrition_entries.items
         if isinstance(adaptive_snapshot, Exception):
             adaptive_snapshot = None
         if isinstance(training_sessions, Exception):
             training_sessions = []
         if isinstance(bodyweight_history, Exception):
             bodyweight_history = []
+        elif hasattr(bodyweight_history, 'items'):
+            bodyweight_history = bodyweight_history.items
         if isinstance(streak_count, Exception):
             streak_count = 0
         

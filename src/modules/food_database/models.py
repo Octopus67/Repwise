@@ -125,6 +125,7 @@ class UserFoodFrequency(Base):
     )
     log_count: Mapped[int] = mapped_column(default=0, server_default=text("0"))
     last_logged_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    is_favorite: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
 
     __table_args__ = (
         Index("ix_user_food_frequency_user_food", "user_id", "food_item_id", unique=True),

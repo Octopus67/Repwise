@@ -64,7 +64,7 @@ async def get_entries(
     start_date: Optional[date] = Query(default=None),
     end_date: Optional[date] = Query(default=None),
     page: int = Query(default=1, ge=1),
-    limit: int = Query(default=20, ge=1, le=500),
+    limit: int = Query(default=20, ge=1, le=100),
 ) -> PaginatedResult[NutritionEntryResponse]:
     """Get nutrition entries with optional date range filter and pagination."""
     filters = None
@@ -166,7 +166,7 @@ async def get_micronutrient_dashboard(
     profile = await user_service.get_profile(user.id)
     prefs = profile.preferences if profile and profile.preferences else {}
     sex = prefs.get("sex", "male")
-    if sex not in ("male", "female"):
+    if sex not in ("male", "female", "other"):
         sex = "male"
         start_date = end_date - timedelta(days=6)
 

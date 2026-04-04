@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.config.database import get_db
 from src.middleware.authorize import require_role
 from src.modules.auth.models import User
-from src.modules.founder.models import FounderContent
 from src.modules.founder.service import FounderService
 from src.modules.founder.schemas import FounderContentUpdate
 from src.shared.types import UserRole
@@ -21,7 +20,7 @@ router = APIRouter()
 # Default community links — used when no admin-configured values exist
 _DEFAULT_LINKS = {
     "telegram": "https://t.me/repwise",
-    "email": "community@repwise.com",
+    "email": "community@repwise.app",
 }
 
 COMMUNITY_SECTION_KEY = "community_links"

@@ -81,6 +81,7 @@ class MealSourceType(StrEnum):
 class Sex(StrEnum):
     MALE = "male"
     FEMALE = "female"
+    OTHER = "other"
 
 
 class AuthProvider(StrEnum):

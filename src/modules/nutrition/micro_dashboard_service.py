@@ -12,9 +12,8 @@ from __future__ import annotations
 
 import uuid
 from collections import defaultdict
-from dataclasses import dataclass, field
-from datetime import date, timedelta
-from typing import Optional
+from dataclasses import dataclass
+from datetime import date
 
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession

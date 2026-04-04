@@ -14,8 +14,14 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.drop_constraint("uq_users_email", "users", type_="unique")
-    op.drop_index("ix_users_email", table_name="users")
+    conn = op.get_bind()
+    # Constraint/index may not exist on fresh PostgreSQL databases
+    if conn.dialect.name == 'postgresql':
+        op.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS uq_users_email")
+        op.execute("DROP INDEX IF EXISTS ix_users_email")
+    else:
+        op.drop_constraint("uq_users_email", "users", type_="unique")
+        op.drop_index("ix_users_email", table_name="users")
     op.create_index(
         "ix_users_email_active",
         "users",

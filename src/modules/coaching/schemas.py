@@ -6,7 +6,9 @@ import uuid
 from datetime import datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from src.shared.validators import validate_json_size
 
 
 class CoachingRequestCreate(BaseModel):
@@ -14,6 +16,11 @@ class CoachingRequestCreate(BaseModel):
 
     goals: str = Field(..., min_length=1, max_length=2000)
     progress_data: Optional[dict[str, Any]] = None
+
+    @field_validator("progress_data")
+    @classmethod
+    def validate_progress_data_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
+        return validate_json_size(v)
 
 
 class CoachingRequestResponse(BaseModel):
@@ -64,14 +71,23 @@ class SessionCompleteRequest(BaseModel):
 class DocumentUploadRequest(BaseModel):
     """Payload for uploading a document URL to a session."""
 
-    document_url: str = Field(..., min_length=1, max_length=2048)
+    document_url: str = Field(..., min_length=1, max_length=2048, pattern=r'^https?://[^\s/$.?#][^\s]*$')
 
 
 class CoachProfileCreate(BaseModel):
     """Payload for creating a coach profile."""
 
     bio: Optional[str] = Field(default=None, max_length=2000)
-    specializations: Optional[list[str]] = None
+    specializations: Optional[list[str]] = Field(default=None, max_length=20)
+
+    @field_validator("specializations")
+    @classmethod
+    def validate_specialization_lengths(cls, v: list[str] | None) -> list[str] | None:
+        if v:
+            for s in v:
+                if len(s) > 100:
+                    raise ValueError("Each specialization must be 100 characters or less")
+        return v
 
 
 class CoachProfileResponse(BaseModel):
@@ -80,7 +96,7 @@ class CoachProfileResponse(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID
     bio: Optional[str] = None
-    specializations: Optional[dict[str, Any]] = None
+    specializations: Optional[list[str]] = None
     is_active: bool
     created_at: datetime
     updated_at: datetime

@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
 from src.modules.adaptive.schemas import SnapshotResponse
 from src.modules.user.schemas import UserGoalResponse, UserProfileResponse
-from src.shared.types import ActivityLevel, GoalType
+from src.shared.types import ActivityLevel, GoalType, Sex
 
 
 class OnboardingCompleteRequest(BaseModel):
@@ -19,7 +19,7 @@ class OnboardingCompleteRequest(BaseModel):
     weight_kg: float = Field(ge=30, le=300)
     body_fat_pct: Optional[float] = Field(default=None, ge=3, le=60)
     age_years: int = Field(ge=13, le=120)
-    sex: Literal["male", "female"]
+    sex: Sex
     activity_level: ActivityLevel
     goal_rate_per_week: float = Field(ge=-2.0, le=2.0)
     display_name: Optional[str] = Field(default=None, max_length=100)

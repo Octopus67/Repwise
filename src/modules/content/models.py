@@ -72,6 +72,9 @@ class ContentArticle(Base, SoftDeleteMixin, AuditLogMixin):
     published_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    unlocked_by_achievement: Mapped[Optional[str]] = mapped_column(
+        String(100), nullable=True
+    )
 
     module: Mapped[ContentModule] = relationship(
         "ContentModule", back_populates="articles", lazy="selectin"

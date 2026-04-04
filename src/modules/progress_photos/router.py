@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
 from src.middleware.authenticate import get_current_user
+from src.middleware.rate_limiter import check_user_endpoint_rate_limit
 from src.modules.auth.models import User
 from src.modules.progress_photos.schemas import (
     PhotoCreate,
@@ -38,6 +39,7 @@ async def get_upload_url(
     user: User = Depends(get_current_user),
 ) -> UploadUrlResponse:
     """Generate a pre-signed R2 upload URL for a progress photo."""
+    check_user_endpoint_rate_limit(str(user.id), "photos:upload_url", 20, 60)
     result = generate_upload_url(str(user.id), data.filename, data.content_type)
     return UploadUrlResponse(upload_url=result["upload_url"], key=result["key"])
 

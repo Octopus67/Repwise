@@ -6,7 +6,8 @@ import logging
 import uuid
 from typing import Any, Optional
 
-from sqlalchemy import case, func, or_, select
+from sqlalchemy import case, func, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -14,12 +15,10 @@ from src.modules.food_database.models import FoodItem, RecipeIngredient
 from src.modules.food_database.schemas import (
     FoodItemCreate,
     FoodItemUpdate,
-    RecipeCreateRequest,
     RecipeDetailResponse,
     RecipeIngredientInput,
     RecipeIngredientResponse,
     RecipeNutrition,
-    RecipeUpdateRequest,
     FoodItemResponse,
 )
 from src.shared.errors import ForbiddenError, NotFoundError, ValidationError
@@ -30,6 +29,8 @@ logger = logging.getLogger(__name__)
 
 class FoodDatabaseService:
     """Manages food items, recipes, and nutritional data."""
+
+    _fts_cache: tuple[bool, float] | None = None
 
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
@@ -122,8 +123,9 @@ class FoodDatabaseService:
                 page=result.page,
                 limit=result.limit,
             )
-        except Exception as e:
-            logger.warning(f"Frequency ranking failed, using default order: {e}")
+        except (SQLAlchemyError, TypeError, ValueError) as e:
+            # Fallback: return unranked results if frequency scoring fails
+            logger.warning("[FoodDBService] Frequency ranking failed, using default order: %s", e)
             return result
 
     async def _get_popular_items(
@@ -161,22 +163,31 @@ class FoodDatabaseService:
         )
 
     async def _has_fts_table(self) -> bool:
-        """Check if the FTS5 virtual table exists (cached with 60s TTL)."""
+        """Check if the FTS5 virtual table exists (cached with 60s TTL).
+
+        FTS5 is SQLite-only — skip the check entirely on PostgreSQL.
+        """
         import time
         from sqlalchemy.exc import SQLAlchemyError
 
         now = time.monotonic()
-        cache = getattr(FoodDatabaseService, "_fts_cache", None)
+        cache = FoodDatabaseService._fts_cache
         if cache is not None and (now - cache[1]) < 60:
             return cache[0]
 
         try:
+            # FTS5 only exists on SQLite — skip on PostgreSQL
+            dialect = self.db.bind.dialect.name if self.db.bind else "unknown"
+            if dialect != "sqlite":
+                FoodDatabaseService._fts_cache = (False, now)
+                return False
+
             from sqlalchemy import text
             result = await self.db.execute(
                 text("SELECT 1 FROM sqlite_master WHERE type='table' AND name='food_items_fts' LIMIT 1")
             )
             available = result.scalar_one_or_none() is not None
-        except SQLAlchemyError:
+        except (SQLAlchemyError, AttributeError):
             available = False
         FoodDatabaseService._fts_cache = (available, now)
         return available
@@ -250,7 +261,6 @@ class FoodDatabaseService:
             return PaginatedResult(items=[], total_count=-1, page=pagination.page, limit=limit)
 
         # Step 3: Fetch full rows by rowid using parameterized query
-        from sqlalchemy import bindparam
         ph = ",".join(f":rowid_{i}" for i in range(len(rowids)))
         fetch_sql = text(f"""
             SELECT id, name, category, region, serving_size, serving_unit,
@@ -278,11 +288,15 @@ class FoodDatabaseService:
         for row in rows:
             row_map[row[0]] = row  # id is first column
 
-        # Also get rowid→id mapping for ordering
-        param_names = [f"r{i}" for i in range(len(rowids))]
-        ph = ",".join(f":{n}" for n in param_names)
-        id_map_sql = text(f"SELECT rowid, id FROM food_items WHERE rowid IN ({ph})")
-        id_result = await self.db.execute(id_map_sql, dict(zip(param_names, rowids)))
+        # Also get rowid→id mapping for ordering — reuse params from fetch query
+        id_map_sql = text(
+            "SELECT rowid, id FROM food_items WHERE rowid IN ("
+            + ",".join(f":rowid_{i}" for i in range(len(rowids)))
+            + ")"
+        )
+        id_result = await self.db.execute(
+            id_map_sql, {f"rowid_{i}": rid for i, rid in enumerate(rowids)}
+        )
         for r in id_result.fetchall():
             rowid_to_id[r[0]] = r[1]
 
@@ -486,16 +500,55 @@ class FoodDatabaseService:
         return [item for _, item in scored]
 
     # ------------------------------------------------------------------
+    # Favorites
+    # ------------------------------------------------------------------
+
+    async def toggle_favorite(self, user_id: uuid.UUID, food_item_id: uuid.UUID) -> bool:
+        """Toggle is_favorite on a UserFoodFrequency row. Creates row if missing. Returns new state."""
+        from src.modules.food_database.models import UserFoodFrequency
+
+        stmt = select(UserFoodFrequency).where(
+            UserFoodFrequency.user_id == user_id,
+            UserFoodFrequency.food_item_id == food_item_id,
+        ).with_for_update()
+        result = await self.db.execute(stmt)
+        freq = result.scalar_one_or_none()
+        if freq is None:
+            freq = UserFoodFrequency(user_id=user_id, food_item_id=food_item_id, is_favorite=True)
+            self.db.add(freq)
+        else:
+            freq.is_favorite = not freq.is_favorite
+        await self.db.flush()
+        return freq.is_favorite
+
+    async def get_favorites(self, user_id: uuid.UUID, limit: int = 10) -> list[Any]:
+        """Return favorite food items ordered by log_count desc."""
+        from src.modules.food_database.models import UserFoodFrequency
+
+        stmt = (
+            select(FoodItem)
+            .join(UserFoodFrequency, UserFoodFrequency.food_item_id == FoodItem.id)
+            .where(UserFoodFrequency.user_id == user_id, UserFoodFrequency.is_favorite.is_(True))
+            .order_by(UserFoodFrequency.log_count.desc())
+            .limit(limit)
+        )
+        stmt = FoodItem.not_deleted(stmt)
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
+
+    # ------------------------------------------------------------------
     # Get by ID
     # ------------------------------------------------------------------
 
-    async def get_by_id(self, food_item_id: uuid.UUID) -> FoodItem:
+    async def get_by_id(self, food_item_id: uuid.UUID, user_id: Optional[uuid.UUID] = None, *, allow_any_owner: bool = False) -> FoodItem:
         """Retrieve a single food item by ID."""
         stmt = select(FoodItem).where(FoodItem.id == food_item_id)
         stmt = FoodItem.not_deleted(stmt)
         result = await self.db.execute(stmt)
         item = result.scalar_one_or_none()
         if item is None:
+            raise NotFoundError("Food item not found")
+        if not allow_any_owner and item.created_by is not None and (user_id is None or item.created_by != user_id):
             raise NotFoundError("Food item not found")
         return item
 
@@ -779,7 +832,7 @@ class FoodDatabaseService:
     # Recipe with nutritional aggregation
     # ------------------------------------------------------------------
 
-    async def get_recipe(self, recipe_id: uuid.UUID) -> RecipeDetailResponse:
+    async def get_recipe(self, recipe_id: uuid.UUID, user_id: uuid.UUID | None = None) -> RecipeDetailResponse:
         """Retrieve a recipe with its ingredients and aggregated nutrition.
 
         Nutritional aggregation: for each ingredient, scale its per-serving
@@ -796,6 +849,12 @@ class FoodDatabaseService:
         result = await self.db.execute(stmt)
         recipe = result.scalar_one_or_none()
         if recipe is None:
+            raise NotFoundError("Recipe not found")
+
+        # INVARIANT: System/seeded recipes have created_by=None and are accessible to all users.
+        # User-created recipes have created_by set and are only visible to their creator.
+        # If seeding logic ever sets created_by, those recipes become invisible to other users.
+        if recipe.created_by is not None and user_id is not None and recipe.created_by != user_id:
             raise NotFoundError("Recipe not found")
 
         # Aggregate nutrition from ingredients
@@ -851,13 +910,56 @@ class FoodDatabaseService:
         self, food_item_id: uuid.UUID, data: FoodItemUpdate
     ) -> FoodItem:
         """Update an existing food item (admin only)."""
-        item = await self.get_by_id(food_item_id)
+        item = await self.get_by_id(food_item_id, allow_any_owner=True)
         update_data = data.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(item, field, value)
         await self.db.flush()
         await self.db.refresh(item)
         return item
+
+
+# ---------------------------------------------------------------------------
+# Unit conversion helpers
+# ---------------------------------------------------------------------------
+
+_GRAM_CONVERSIONS: dict[str, float] = {
+    "g": 1.0,
+    "kg": 1000.0,
+    "oz": 28.3495,
+    "lb": 453.592,
+}
+
+_ML_CONVERSIONS: dict[str, float] = {
+    "ml": 1.0,
+    "l": 1000.0,
+    "cup": 240.0,
+    "tbsp": 15.0,
+    "tsp": 5.0,
+    "fl_oz": 29.5735,
+}
+
+
+_DIMENSIONLESS_UNITS: set[str] = {"piece", "serving", "whole", "unit", "each"}
+
+
+def _convert_unit(quantity: float, from_unit: str, to_unit: str) -> float:
+    """Convert quantity between compatible units. Returns quantity unchanged if units match or are incompatible."""
+    fu = from_unit.lower().strip()
+    tu = to_unit.lower().strip()
+    if fu == tu:
+        return quantity
+    # Dimensionless units — treat as 1:1 with each other
+    if fu in _DIMENSIONLESS_UNITS and tu in _DIMENSIONLESS_UNITS:
+        return quantity
+    # Mass conversions
+    if fu in _GRAM_CONVERSIONS and tu in _GRAM_CONVERSIONS:
+        return quantity * _GRAM_CONVERSIONS[fu] / _GRAM_CONVERSIONS[tu]
+    # Volume conversions
+    if fu in _ML_CONVERSIONS and tu in _ML_CONVERSIONS:
+        return quantity * _ML_CONVERSIONS[fu] / _ML_CONVERSIONS[tu]
+    # Incompatible units — return as-is (best effort)
+    return quantity
 
 
 # ---------------------------------------------------------------------------
@@ -871,7 +973,7 @@ def aggregate_recipe_nutrition(
     """Compute total nutritional values for a recipe from its ingredients.
 
     For each ingredient, scale its per-serving nutritional values by
-    (quantity / serving_size), then sum across all ingredients.
+    (quantity_in_serving_unit / serving_size), then sum across all ingredients.
 
     This is a pure function with no side effects.
     """
@@ -886,7 +988,8 @@ def aggregate_recipe_nutrition(
         if food is None:
             continue
 
-        scale = ing.quantity / food.serving_size if food.serving_size > 0 else 0.0
+        quantity = _convert_unit(ing.quantity, ing.unit, food.serving_unit)
+        scale = quantity / food.serving_size if food.serving_size > 0 else 0.0
 
         total_calories += food.calories * scale
         total_protein += food.protein_g * scale
@@ -896,7 +999,8 @@ def aggregate_recipe_nutrition(
         # Aggregate micro-nutrients
         if food.micro_nutrients:
             for key, value in food.micro_nutrients.items():
-                total_micros[key] = total_micros.get(key, 0.0) + value * scale
+                if isinstance(value, (int, float)):
+                    total_micros[key] = total_micros.get(key, 0.0) + value * scale
 
     return RecipeNutrition(
         total_calories=total_calories,

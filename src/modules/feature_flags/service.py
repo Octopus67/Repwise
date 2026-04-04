@@ -14,7 +14,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.feature_flags.models import FeatureFlag

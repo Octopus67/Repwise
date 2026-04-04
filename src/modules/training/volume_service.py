@@ -8,6 +8,7 @@ import uuid
 from collections import defaultdict
 from datetime import date, timedelta
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.training.exercise_mapping import get_muscle_group
@@ -129,7 +130,7 @@ class VolumeCalculatorService:
 
         try:
             rows = await svc._fetch_sessions(user_id, week_start, week_end)
-        except Exception:
+        except SQLAlchemyError:
             logger.exception("Failed to fetch training sessions for user %s", user_id)
             raise
 
@@ -151,7 +152,7 @@ class VolumeCalculatorService:
         try:
             store = LandmarkStore(self.session)
             landmarks = await store.get_landmarks(user_id)
-        except Exception:
+        except SQLAlchemyError:
             logger.exception("Failed to fetch landmarks for user %s", user_id)
             raise
 
@@ -187,7 +188,7 @@ class VolumeCalculatorService:
 
         try:
             rows = await svc._fetch_sessions(user_id, week_start, week_end)
-        except Exception:
+        except SQLAlchemyError:
             logger.exception(
                 "Failed to fetch sessions for user %s, muscle group %s", user_id, muscle_group
             )
@@ -238,7 +239,7 @@ class VolumeCalculatorService:
         try:
             store = LandmarkStore(self.session)
             landmarks = await store.get_landmarks(user_id)
-        except Exception:
+        except SQLAlchemyError:
             logger.exception("Failed to fetch landmarks for user %s", user_id)
             raise
 

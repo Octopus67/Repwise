@@ -9,17 +9,32 @@ from pydantic import BaseModel, EmailStr, Field, field_validator, model_validato
 from src.shared.types import UserRole
 
 
+def _normalize_email(v: str) -> str:
+    return v.lower().strip()
+
+
 class RegisterRequest(BaseModel):
     """Email/password registration payload."""
 
     email: EmailStr
-    password: str = Field(min_length=8, description="Minimum 8 characters")
+    password: str = Field(min_length=8, max_length=128, description="Minimum 8 characters")
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, v: str) -> str:
+        return _normalize_email(v)
 
     @field_validator("password")
     @classmethod
     def validate_password_complexity(cls, v: str) -> str:
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters")
+        if not re.search(r'[A-Z]', v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not re.search(r'[a-z]', v):
+            raise ValueError("Password must contain at least one lowercase letter")
+        if not re.search(r'[0-9]', v):
+            raise ValueError("Password must contain at least one digit")
         return v
 
 
@@ -27,7 +42,12 @@ class LoginRequest(BaseModel):
     """Email/password login payload."""
 
     email: EmailStr
-    password: str
+    password: str = Field(min_length=1, max_length=128)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, v: str) -> str:
+        return _normalize_email(v)
 
 
 class OAuthCallbackRequest(BaseModel):
@@ -36,6 +56,8 @@ class OAuthCallbackRequest(BaseModel):
     provider: str = Field(default="", description="OAuth provider name (google, apple)")
     token: Optional[str] = Field(default=None, description="OAuth access/id token from provider")
     identity_token: Optional[str] = Field(default=None, description="Apple identity token (alias for token)")
+    nonce: Optional[str] = Field(default=None, description="Nonce for Apple Sign-In replay protection")
+    full_name: Optional[str] = Field(default=None, description="Display name from Apple first sign-in")
 
     @model_validator(mode="after")
     def resolve_token(self) -> "OAuthCallbackRequest":
@@ -54,6 +76,12 @@ class AuthTokensResponse(BaseModel):
     refresh_token: str
     expires_in: int = Field(description="Access token TTL in seconds")
     token_type: str = "bearer"
+
+
+class LoginResponse(AuthTokensResponse):
+    """Login response — includes email verification status."""
+
+    email_verified: bool
 
 
 class RegisterResponse(BaseModel):
@@ -84,7 +112,12 @@ class UserResponse(BaseModel):
 class ForgotPasswordRequest(BaseModel):
     """Forgot password request payload."""
 
-    email: str
+    email: EmailStr
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, v: str) -> str:
+        return _normalize_email(v)
 
 
 class ResetPasswordRequest(BaseModel):
@@ -92,13 +125,24 @@ class ResetPasswordRequest(BaseModel):
 
     email: EmailStr
     code: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
-    new_password: str = Field(min_length=8, description="Minimum 8 characters")
+    new_password: str = Field(min_length=8, max_length=128, description="Minimum 8 characters")
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, v: str) -> str:
+        return _normalize_email(v)
 
     @field_validator("new_password")
     @classmethod
     def validate_password_complexity(cls, v: str) -> str:
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters")
+        if not re.search(r'[A-Z]', v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not re.search(r'[a-z]', v):
+            raise ValueError("Password must contain at least one lowercase letter")
+        if not re.search(r'[0-9]', v):
+            raise ValueError("Password must contain at least one digit")
         return v
 
 
@@ -113,3 +157,19 @@ class ResendVerificationRequest(BaseModel):
     """Resend verification code payload."""
 
     email: EmailStr
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, v: str) -> str:
+        return _normalize_email(v)
+
+
+class CurrentUserResponse(BaseModel):
+    """Authenticated user profile returned by /me."""
+
+    model_config = {"from_attributes": True}
+
+    id: str
+    email: str
+    role: str
+    email_verified: bool

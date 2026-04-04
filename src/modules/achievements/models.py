@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, Optional
 
-from sqlalchemy import Float, Index, String, UniqueConstraint, text
+from sqlalchemy import Date, Float, ForeignKey, Index, String, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -59,4 +59,21 @@ class AchievementProgress(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "progress_type", name="uq_user_progress_type"),
         Index("ix_achievement_progress_user_id", "user_id"),
+    )
+
+
+class StreakFreeze(Base):
+    """Records a streak freeze usage for a user on a specific date."""
+
+    __tablename__ = "streak_freezes"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    freeze_date: Mapped[date] = mapped_column(Date, nullable=False)
+    used_at: Mapped[datetime] = mapped_column(nullable=False, server_default=text("CURRENT_TIMESTAMP"))
+    month: Mapped[str] = mapped_column(String(7), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "freeze_date", name="uq_streak_freeze_user_date"),
+        Index("ix_streak_freezes_user_id", "user_id"),
+        Index("ix_streak_freezes_user_month", "user_id", "month"),
     )

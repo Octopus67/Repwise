@@ -2,13 +2,13 @@
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import RedirectResponse
+from starlette.responses import RedirectResponse, Response
 
 
 class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
     """Redirect HTTP requests to HTTPS in production."""
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next) -> Response:
         # Check if request is HTTP (not HTTPS)
         if request.url.scheme == "http":
             # Allow localhost (development)

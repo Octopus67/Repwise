@@ -10,9 +10,10 @@ from typing import Optional
 import logging
 import time
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.adaptive.engine import AdaptiveInput, compute_snapshot
@@ -31,17 +32,45 @@ from src.modules.user.schemas import (
     UserProfileResponse,
     UserProfileUpdate,
 )
-from src.shared.errors import NotFoundError, ValidationError, RateLimitedError
+from src.config.redis import get_redis
+from src.shared.errors import ValidationError, RateLimitedError
 from src.shared.pagination import PaginatedResult, PaginationParams
 from src.shared.types import ActivityLevel, GoalType
 
 logger = logging.getLogger(__name__)
 
-# Rate limiting for recalculate: 1 per minute per user
-# TODO: Move to Redis for multi-worker deployments
-# Current limitation: rate limit is per-worker, not global
+# In-memory fallback for single-worker dev/test (Redis preferred in prod)
 _recalculate_attempts: dict[str, float] = {}
 RECALCULATE_COOLDOWN_SECONDS = 60
+
+
+def _check_recalculate_cooldown(user_id: str) -> int | None:
+    """Return remaining cooldown seconds, or None if not rate-limited.
+
+    Uses Redis when available (multi-worker safe), falls back to in-memory.
+    """
+    redis = get_redis()
+    if redis:
+        try:
+            key = f"recalculate_cooldown:{user_id}"
+            result = redis.set(key, "1", nx=True, ex=RECALCULATE_COOLDOWN_SECONDS)
+            if result is None:
+                return redis.ttl(key) or RECALCULATE_COOLDOWN_SECONDS
+            return None
+        except Exception:
+            logger.warning("[UserService] Redis cooldown check failed, using in-memory fallback")
+
+    # In-memory fallback (single-worker only)
+    now = time.time()
+    last = _recalculate_attempts.get(user_id, 0)
+    elapsed = now - last
+    if elapsed < RECALCULATE_COOLDOWN_SECONDS:
+        return int(RECALCULATE_COOLDOWN_SECONDS - elapsed)
+    _recalculate_attempts[user_id] = now
+    # Prevent memory leak
+    if len(_recalculate_attempts) > 10000:
+        _recalculate_attempts.clear()
+    return None
 
 
 class UserService:
@@ -260,24 +289,12 @@ class UserService:
         self, user_id: uuid.UUID, data: RecalculateRequest
     ) -> RecalculateResponse:
         """Recalculate adaptive targets after updating metrics and/or goals."""
-        global _recalculate_attempts
-
-        # Rate limiting: max 1 recalculate per minute per user
-        user_key = str(user_id)
-        now = time.time()
-        last_attempt = _recalculate_attempts.get(user_key, 0)
-        if now - last_attempt < RECALCULATE_COOLDOWN_SECONDS:
-            remaining = int(RECALCULATE_COOLDOWN_SECONDS - (now - last_attempt))
+        remaining = _check_recalculate_cooldown(str(user_id))
+        if remaining is not None:
             raise RateLimitedError(
                 message="Recalculate rate limit exceeded. Please wait before trying again.",
-                retry_after=remaining
+                retry_after=remaining,
             )
-        _recalculate_attempts[user_key] = now
-
-        # Prevent memory leak: clear old entries
-        if len(_recalculate_attempts) > 10000:
-            cutoff = time.time() - RECALCULATE_COOLDOWN_SECONDS * 2
-            _recalculate_attempts = {k: v for k, v in _recalculate_attempts.items() if v > cutoff}
 
         # Step 1: Log metrics if provided
         new_metrics: Optional[UserMetricResponse] = None
@@ -341,16 +358,21 @@ class UserService:
         age_years = prefs.get("age_years")
         sex = prefs.get("sex")
 
-        if age_years is None or sex is None:
-            # Fallback for users who onboarded before age/sex persistence was added.
-            # Use reasonable defaults so recalculation isn't blocked.
-            age_years = age_years or 30
-            if age_years == 30:
-                logger.warning(f"User {user_id} missing age in preferences, using default 30")
+        # Fallback: try additional_metrics from user_metrics before using defaults
+        additional = (latest_metrics.additional_metrics or {}) if latest_metrics.additional_metrics else {}
+        if age_years is None:
+            birth_year = additional.get("birth_year")
+            if birth_year:
+                age_years = date.today().year - int(birth_year)
+        if age_years is None:
+            logger.warning("User %s missing age, using default 30", user_id)
+            age_years = 30
 
-            sex = sex or "male"
-            if sex == "male" and not prefs.get("sex"):
-                logger.warning(f"User {user_id} missing sex in preferences, using default male")
+        if sex is None:
+            sex = additional.get("sex")
+        if sex is None:
+            logger.warning("User %s missing sex, using default male", user_id)
+            sex = "male"
 
         # Step 7: Build AdaptiveInput
         diet_style = prefs.get("diet_style")
@@ -511,6 +533,6 @@ class UserService:
             self.db.add(snap_model)
             await self.db.flush()
             
-        except Exception:
+        except (SQLAlchemyError, ValueError, TypeError):
             # Non-critical — don't fail the bodyweight log
-            pass
+            logger.warning("Adaptive snapshot creation failed", exc_info=True)

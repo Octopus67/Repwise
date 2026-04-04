@@ -11,7 +11,7 @@ class PaginationParams(BaseModel):
     """Query parameters for paginated list endpoints."""
 
     page: int = Field(default=1, ge=1, description="Page number (1-indexed)")
-    limit: int = Field(default=20, ge=1, le=500, description="Items per page")
+    limit: int = Field(default=20, ge=1, le=100, description="Items per page")
 
     @property
     def offset(self) -> int:

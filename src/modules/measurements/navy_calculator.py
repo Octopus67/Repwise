@@ -33,7 +33,21 @@ def navy_body_fat(
         if diff <= 0:
             raise ValueError("waist + hips must be greater than neck for female calculation")
         bf = 495 / (1.29579 - 0.35004 * math.log10(diff) + 0.22100 * math.log10(height_cm)) - 450
+    elif sex == "other":
+        # Average male and female estimates; requires hips_cm
+        diff_m = waist_cm - neck_cm
+        if diff_m <= 0:
+            raise ValueError("waist must be greater than neck for calculation")
+        bf_m = 495 / (1.0324 - 0.19077 * math.log10(diff_m) + 0.15456 * math.log10(height_cm)) - 450
+        if hips_cm is None:
+            bf = bf_m  # fallback to male-only if hips not provided
+        else:
+            diff_f = waist_cm + hips_cm - neck_cm
+            if diff_f <= 0:
+                raise ValueError("waist + hips must be greater than neck for calculation")
+            bf_f = 495 / (1.29579 - 0.35004 * math.log10(diff_f) + 0.22100 * math.log10(height_cm)) - 450
+            bf = (bf_m + bf_f) / 2
     else:
-        raise ValueError(f"Invalid sex: {sex}. Must be 'male' or 'female'.")
+        raise ValueError(f"Invalid sex: {sex}. Must be 'male', 'female', or 'other'.")
 
     return round(max(bf, 0.0), 2)
