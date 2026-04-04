@@ -32,7 +32,7 @@ async def cleanup_expired_blacklist_entries() -> int:
         async with async_session_factory() as session:
             result = await session.execute(
                 delete(TokenBlacklist).where(
-                    TokenBlacklist.expires_at < datetime.now(timezone.utc)
+                    TokenBlacklist.expires_at < datetime.utcnow()
                 )
             )
             await session.commit()

@@ -55,7 +55,7 @@ async def run_trial_expiration(session: AsyncSession | None = None) -> int:
 
 async def _expire_trials(session: AsyncSession) -> int:
     """Find and downgrade expired trial subscriptions with per-item isolation."""
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
 
     stmt = (
         select(Subscription)
