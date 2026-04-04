@@ -50,6 +50,7 @@ export type IconName =
   | 'alert-triangle'
   | 'alert-circle'
   | 'alert'
+  | 'info'
   // Calendar & Social
   | 'calendar'
   | 'share'
@@ -574,6 +575,15 @@ function renderIcon(name: IconName, color: string, sw: number) {
           <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth={sw} />
           <Line x1="12" y1="8" x2="12" y2="12" stroke={color} strokeWidth={sw} strokeLinecap="round" />
           <Circle cx="12" cy="16" r="0.5" stroke={color} strokeWidth={sw} />
+        </>
+      );
+
+    case 'info':
+      return (
+        <>
+          <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth={sw} />
+          <Line x1="12" y1="16" x2="12" y2="12" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+          <Circle cx="12" cy="8" r="0.5" stroke={color} strokeWidth={sw} />
         </>
       );
 

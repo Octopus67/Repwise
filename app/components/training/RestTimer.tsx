@@ -72,9 +72,9 @@ export function RestTimer({
             const { Audio } = require('expo-av');
             Audio.Sound.createAsync(
               require('../../assets/timer-done.mp3'),
-            ).catch(() => {});
+            ).catch(() => {}); // Intentional: audio playback failure is non-critical
           } catch {
-            // expo-av not available — silent fallback
+            // Intentional: expo-av not available — audio is non-critical
           }
           // Defer onComplete to avoid setState during render
           setTimeout(() => {

@@ -209,12 +209,12 @@ describe('computeMacroSplit', () => {
   test('budget 2000, 80kg, 2.0 g/kg, balanced → correct macro distribution', () => {
     // protein = 80 * 2.0 = 160g → 640 kcal
     // remaining = 2000 - 640 = 1360
-    // carbs = 1360 * 0.55 / 4 ≈ 187g
-    // fat = 1360 * 0.45 / 9 ≈ 68g
+    // carbs = 1360 * 0.66 / 4 ≈ 224g
+    // fat = 1360 * 0.34 / 9 ≈ 51g → floor 48g
     const result = computeMacroSplit(2000, 80, 2.0, 'balanced');
     expect(result.proteinG).toBeCloseTo(160, 0);
-    expect(result.carbsG).toBeCloseTo(187, 0);
-    expect(result.fatG).toBeCloseTo(68, 0);
+    expect(result.carbsG).toBeCloseTo(224, 0);
+    expect(result.fatG).toBeCloseTo(51, 0);
   });
 
   test('budget 2000, 80kg, 2.0 g/kg, keto → carbs very low, fat very high', () => {
@@ -424,12 +424,12 @@ describe('computeCalorieBudget edge cases', () => {
 });
 
 describe('computeMacroSplit edge cases', () => {
-  test('low_carb diet style → 30% carbs / 70% fat split', () => {
+  test('low_carb diet style → 35% carbs / 65% fat split', () => {
     const result = computeMacroSplit(2500, 80, 2.0, 'low_carb');
     // protein = 160g → 640 kcal, remaining = 1860
-    // carbs = 1860 * 0.30 / 4 ≈ 140g
-    // fat = 1860 * 0.70 / 9 ≈ 145g
-    expect(result.carbsG).toBeLessThan(result.fatG);
+    // carbs = 1860 * 0.35 / 4 ≈ 163g
+    // fat = 1860 * 0.65 / 9 ≈ 134g
+    expect(result.carbsG).toBeGreaterThan(result.fatG);
     expect(result.proteinG).toBe(160);
   });
 

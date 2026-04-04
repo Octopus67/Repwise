@@ -46,7 +46,7 @@ export function BodyCompositionStep({ onNext }: Props) {
 
   // Auto-estimate for skip scenario
   const autoEstimate = useMemo(() => {
-    if (weightKg > 0 && heightCm > 0) {
+    if (weightKg > 0 && heightCm > 0 && sex) {
       return estimateBodyFat(weightKg, heightCm, sex);
     }
     return null;

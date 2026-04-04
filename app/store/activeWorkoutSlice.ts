@@ -7,6 +7,9 @@
  * This store does NOT import from the main useStore to avoid circular
  * dependencies. The screen component passes unitSystem as a parameter
  * where needed.
+ *
+ * Deferred: offline queue planned for v2 — queue finished workouts in
+ * AsyncStorage when offline and retry on reconnect.
  */
 
 import { create } from 'zustand';
@@ -154,6 +157,9 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
           },
         };
 
+        // Reset state after building payload
+        set({ ...defaultState });
+
         return payload;
       },
 
@@ -185,6 +191,12 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
       reorderExercises: (fromIndex: number, toIndex: number) => {
         set((state) => {
           const exercises = [...state.exercises];
+          if (
+            fromIndex < 0 || fromIndex >= exercises.length ||
+            toIndex < 0 || toIndex >= exercises.length
+          ) {
+            return state;
+          }
           const [moved] = exercises.splice(fromIndex, 1);
           if (moved) exercises.splice(toIndex, 0, moved);
           return { exercises };
@@ -233,7 +245,15 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
         field: 'weight' | 'reps' | 'rpe' | 'rir',
         value: string,
       ) => {
-        // Validate RPE and RIR values
+        // Validate field bounds
+        if (field === 'weight' && value !== '') {
+          const w = parseFloat(value);
+          if (!isNaN(w) && w > 9999) return;
+        }
+        if (field === 'reps' && value !== '') {
+          const r = parseFloat(value);
+          if (!isNaN(r) && r > 999) return;
+        }
         if (field === 'rpe' && value !== '') {
           const rpe = parseFloat(value);
           if (!isNaN(rpe) && (rpe < 1 || rpe > 10)) return;
@@ -248,9 +268,20 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
             if (ex.localId !== exerciseLocalId) return ex;
             return {
               ...ex,
-              sets: ex.sets.map((s) =>
-                s.localId === setLocalId ? { ...s, [field]: value } : s,
-              ),
+              sets: ex.sets.map((s) => {
+                if (s.localId !== setLocalId) return s;
+                const updated = { ...s, [field]: value };
+                // Sync RPE ↔ RIR
+                if (field === 'rpe' && value !== '') {
+                  const rpe = parseFloat(value);
+                  if (!isNaN(rpe)) updated.rir = String(Math.max(0, 10 - rpe));
+                }
+                if (field === 'rir' && value !== '') {
+                  const rir = parseFloat(value);
+                  if (!isNaN(rir)) updated.rpe = String(10 - rir);
+                }
+                return updated;
+              }),
             };
           }),
         }));
@@ -487,11 +518,11 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
       name: 'active-workout-v1',
       storage: createJSONStorage(() => AsyncStorage),
       version: 1,
-      migrate: (persistedState: any, version: number) => {
+      migrate: (persistedState: unknown, version: number) => {
         if (version === 0) {
-          return { ...persistedState, _version: 1 };
+          return { ...(persistedState as Record<string, unknown>), _version: 1 };
         }
-        return persistedState;
+        return persistedState as Record<string, unknown>;
       },
     },
   ),

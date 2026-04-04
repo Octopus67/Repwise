@@ -199,7 +199,7 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
           {hasInstructions ? (
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Instructions</Text>
-              {exercise.instructions!.map((step, i) => (
+              {exercise.instructions?.map((step, i) => (
                 <View key={i} style={styles.instructionRow}>
                   <Text style={[styles.instructionNum, { color: c.accent.primary }]}>{i + 1}.</Text>
                   <Text style={[styles.instructionText, { color: c.text.secondary }]}>{step}</Text>
@@ -217,7 +217,7 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
           {hasTips && (
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Tips</Text>
-              {exercise.tips!.map((tip, i) => (
+              {exercise.tips?.map((tip, i) => (
                 <View key={i} style={styles.tipRow}>
                   <Text style={[styles.tipBullet, { color: c.accent.primary }]}>•</Text>
                   <Text style={[styles.tipText, { color: c.text.secondary }]}>{tip}</Text>

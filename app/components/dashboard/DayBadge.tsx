@@ -11,7 +11,7 @@ interface DayBadgeProps {
   isLoading: boolean;
 }
 
-export function DayBadge({ isTrainingDay, muscleGroups, isLoading }: DayBadgeProps) {
+export const DayBadge = React.memo(function DayBadge({ isTrainingDay, muscleGroups, isLoading }: DayBadgeProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   if (isLoading) {
@@ -42,7 +42,7 @@ export function DayBadge({ isTrainingDay, muscleGroups, isLoading }: DayBadgePro
       <Text style={[styles.restText, { color: c.text.muted }]}>Rest Day</Text>
     </View>
   );
-}
+});
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {

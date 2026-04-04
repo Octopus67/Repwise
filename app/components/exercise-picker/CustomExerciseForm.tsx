@@ -42,7 +42,7 @@ export function CustomExerciseForm({ initialName = '', onCreated, onCancel }: Cu
     secondaryMuscles: [],
     notes: '',
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [submitting, setSubmitting] = useState(false);
 
   const updateField = useCallback(<K extends keyof CustomExerciseFormData>(key: K, value: CustomExerciseFormData[K]) => {

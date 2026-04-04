@@ -12,16 +12,15 @@ describe('getPasswordStrength', () => {
     expect(getPasswordStrength('longenough').validation.minLength).toBe(true);
   });
 
-  it('isValid is true when length >= 8', () => {
-    expect(getPasswordStrength('12345678').isValid).toBe(true);
-    expect(getPasswordStrength('abcdefgh').isValid).toBe(true);
+  it('isValid requires length >= 8, uppercase, lowercase, digit, and score >= 2', () => {
+    expect(getPasswordStrength('Abcdefg1').isValid).toBe(true);
     expect(getPasswordStrength('1234567').isValid).toBe(false);
   });
 
-  it('does not require uppercase, lowercase, number, or special char', () => {
+  it('isValid is false when missing uppercase, lowercase, or digit', () => {
     const result = getPasswordStrength('alllowercase');
-    expect(result.isValid).toBe(true);
-    expect(result.validation).toEqual({ minLength: true });
+    expect(result.isValid).toBe(false);
+    expect(result.validation).toEqual({ minLength: true, hasUppercase: false, hasLowercase: true, hasDigit: false });
   });
 
   it('returns strong for complex passwords', () => {

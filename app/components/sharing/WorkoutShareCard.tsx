@@ -16,7 +16,7 @@ import type { UnitSystem } from '../../utils/unitConversion';
 import { convertWeight } from '../../utils/unitConversion';
 import { formatDuration } from '../../utils/durationFormat';
 import {
-  calculateWorkingVolume,
+  calculateSessionVolume,
   calculateDurationSeconds,
   shouldShowDuration,
 } from '../../utils/sessionDetailLogic';
@@ -53,7 +53,7 @@ export const WorkoutShareCard = forwardRef<ViewShot, WorkoutShareCardProps>(
 
     const durationSec = calculateDurationSeconds(session.start_time, session.end_time);
     const showDuration = shouldShowDuration(session.start_time, session.end_time);
-    const volume = calculateWorkingVolume(session.exercises, unitSystem);
+    const volume = calculateSessionVolume(session.exercises, unitSystem);
     const prCount = session.personal_records?.length ?? 0;
 
     const dateStr = new Date(session.session_date).toLocaleDateString(undefined, {

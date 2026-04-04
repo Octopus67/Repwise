@@ -365,7 +365,7 @@ describe('Full wizard flow simulation', () => {
 
     // Compute TDEE
     const tdee = computeTDEEBreakdown(
-      s.weightKg, s.heightCm, age, s.sex,
+      s.weightKg, s.heightCm, age, s.sex!,
       s.activityLevel, s.exerciseSessionsPerWeek,
       s.exerciseTypes, s.bodyFatPct ?? undefined,
     );
@@ -374,7 +374,7 @@ describe('Full wizard flow simulation', () => {
     expect(tdee.bmr).toBeGreaterThan(1400);
 
     // Compute budget
-    const budget = computeCalorieBudget(tdee.total, s.goalType!, s.rateKgPerWeek, s.sex);
+    const budget = computeCalorieBudget(tdee.total, s.goalType!, s.rateKgPerWeek, s.sex!);
     expect(budget.budget).toBeLessThan(tdee.total); // lose_fat → deficit
     expect(budget.budget).toBeGreaterThan(1200);
 
@@ -433,7 +433,7 @@ describe('Full wizard flow simulation', () => {
     // TDEE should still be computable (Mifflin-St Jeor, no body fat)
     const age = computeAge(s.birthYear, s.birthMonth);
     const tdee = computeTDEEBreakdown(
-      s.weightKg, s.heightCm, age, s.sex,
+      s.weightKg, s.heightCm, age, s.sex!,
       s.activityLevel, s.exerciseSessionsPerWeek,
       s.exerciseTypes, undefined, // bodyFat skipped
     );
@@ -442,7 +442,7 @@ describe('Full wizard flow simulation', () => {
     expect(tdee.bmr).toBeGreaterThan(0);
 
     // Budget for maintain = TDEE
-    const budget = computeCalorieBudget(tdee.total, s.goalType!, s.rateKgPerWeek, s.sex);
+    const budget = computeCalorieBudget(tdee.total, s.goalType!, s.rateKgPerWeek, s.sex!);
     expect(budget.budget).toBe(tdee.total);
   });
 });

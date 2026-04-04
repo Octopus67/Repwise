@@ -1,3 +1,4 @@
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { getRpeBadgeColor, RpeBadgeColor } from '../../utils/rpeBadgeColor';
 import { radius, typography } from '../../theme/tokens';
@@ -15,7 +16,7 @@ const getColorMap = (c: ThemeColors): Record<Exclude<RpeBadgeColor, 'none'>, { t
   red: { text: c.semantic.negative, bg: c.semantic.negativeSubtle },
 });
 
-export function RPEBadge({ rpeValue, mode }: RPEBadgeProps) {
+export const RPEBadge = React.memo(function RPEBadge({ rpeValue, mode }: RPEBadgeProps) {
   const c = useThemeColors();
   const colorMap = getColorMap(c);
   if (!rpeValue || isNaN(rpeValue)) return null;
@@ -31,7 +32,7 @@ export function RPEBadge({ rpeValue, mode }: RPEBadgeProps) {
       <Text style={[styles.label, { color: text }]}>{display}</Text>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   pill: {

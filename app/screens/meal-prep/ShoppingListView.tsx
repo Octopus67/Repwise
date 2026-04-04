@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  ScrollView,
+  SectionList,
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
 import { typography, spacing } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import api from '../../services/api';
+import { extractApiError } from '../../utils/extractApiError';
+import type { ProfileScreenProps } from '../../types/navigation';
 
 interface ShoppingItem {
   name: string;
@@ -19,7 +22,7 @@ interface ShoppingItem {
 
 const CATEGORY_ORDER = ['produce', 'protein', 'dairy', 'grains', 'pantry', 'other'];
 
-export function ShoppingListView({ route }: any) {
+export function ShoppingListView({ route }: ProfileScreenProps<'ShoppingList'>) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const planId = route?.params?.planId;
@@ -34,13 +37,9 @@ export function ShoppingListView({ route }: any) {
       setError('No plan selected');
       return;
     }
-    fetch(`/api/v1/meal-plans/${planId}/shopping-list`)
-      .then((r) => {
-        if (!r.ok) throw new Error('Failed to load shopping list');
-        return r.json();
-      })
-      .then((data) => setItems(data.items ?? []))
-      .catch((e: any) => setError(e.message ?? 'Failed to load shopping list'))
+    api.get(`meal-plans/${planId}/shopping-list`)
+      .then(({ data }) => setItems(data.items ?? []))
+      .catch((e: unknown) => setError(extractApiError(e, 'Failed to load shopping list')))
       .finally(() => setLoading(false));
   }, [planId]);
 
@@ -53,11 +52,12 @@ export function ShoppingListView({ route }: any) {
     });
   };
 
-  const grouped = CATEGORY_ORDER.reduce<Record<string, ShoppingItem[]>>((acc, cat) => {
-    const catItems = items.filter((i) => i.category === cat);
-    if (catItems.length > 0) acc[cat] = catItems;
-    return acc;
-  }, {});
+  const sections = CATEGORY_ORDER
+    .filter((cat) => items.some((i) => i.category === cat))
+    .map((cat) => ({
+      title: cat.charAt(0).toUpperCase() + cat.slice(1),
+      data: items.filter((i) => i.category === cat),
+    }));
 
   if (loading) {
     return (
@@ -76,13 +76,9 @@ export function ShoppingListView({ route }: any) {
           onPress={() => {
             setError(null);
             setLoading(true);
-            fetch(`/api/v1/meal-plans/${planId}/shopping-list`)
-              .then((r) => {
-                if (!r.ok) throw new Error('Failed to load shopping list');
-                return r.json();
-              })
-              .then((data) => setItems(data.items ?? []))
-              .catch((e: any) => setError(e.message ?? 'Failed to load shopping list'))
+            api.get(`meal-plans/${planId}/shopping-list`)
+              .then(({ data }) => setItems(data.items ?? []))
+              .catch((e: unknown) => setError(extractApiError(e, 'Failed to load shopping list')))
               .finally(() => setLoading(false));
           }}
         >
@@ -93,29 +89,31 @@ export function ShoppingListView({ route }: any) {
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]}>
-      <Text style={[styles.title, { color: c.text.primary }]}>Shopping List</Text>
-      {Object.entries(grouped).map(([category, catItems]) => (
-        <View key={category} style={styles.section}>
-          <Text style={[styles.categoryLabel, { color: c.accent.primary }]}>{category.charAt(0).toUpperCase() + category.slice(1)}</Text>
-          {catItems.map((item) => (
-            <TouchableOpacity
-              key={item.name}
-              style={styles.itemRow}
-              onPress={() => toggleCheck(item.name)}
-            >
-              <View style={[styles.checkbox, checked.has(item.name) && styles.checkboxChecked]} />
-              <Text style={[styles.itemName, checked.has(item.name) && styles.strikethrough]}>
-                {item.name}
-              </Text>
-              <Text style={[styles.itemQty, { color: c.text.secondary }]}>
-                {item.quantity} {item.unit}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      ))}
-    </ScrollView>
+    <SectionList
+      style={[styles.container, { backgroundColor: c.bg.base }]}
+      sections={sections}
+      keyExtractor={(item) => item.name}
+      ListHeaderComponent={<Text style={[styles.title, { color: c.text.primary }]}>Shopping List</Text>}
+      renderSectionHeader={({ section }) => (
+        <Text style={[styles.categoryLabel, { color: c.accent.primary }]}>{section.title}</Text>
+      )}
+      renderItem={({ item }) => (
+        <TouchableOpacity
+          style={styles.itemRow}
+          onPress={() => toggleCheck(item.name)}
+        >
+          <View style={[styles.checkbox, checked.has(item.name) && styles.checkboxChecked]} />
+          <Text style={[styles.itemName, checked.has(item.name) && styles.strikethrough]}>
+            {item.name}
+          </Text>
+          <Text style={[styles.itemQty, { color: c.text.secondary }]}>
+            {item.quantity} {item.unit}
+          </Text>
+        </TouchableOpacity>
+      )}
+      stickySectionHeadersEnabled={false}
+      SectionSeparatorComponent={() => <View style={styles.sectionSpacer} />}
+    />
   );
 }
 
@@ -127,6 +125,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   retryText: { color: c.text.primary, fontWeight: typography.weight.semibold },
   title: { fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, color: c.text.primary, marginBottom: spacing[4] },
   section: { marginBottom: spacing[4] },
+  sectionSpacer: { height: spacing[4] },
   categoryLabel: { fontSize: typography.size.lg, fontWeight: typography.weight.semibold, color: c.accent.primary, marginBottom: spacing[2] },
   itemRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing[2] },
   checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: c.text.muted, marginRight: spacing[3] },

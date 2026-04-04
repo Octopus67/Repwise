@@ -11,14 +11,12 @@ import Svg, { G, Line as SvgLine, Circle, Text as SvgText, Polyline } from 'reac
 import { spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import type { WNSLandmarks } from '../../types/volume';
+import type { VolumeTrendPoint } from '../../types/analytics';
 
-export interface TrendPoint {
-  week: string;
-  volume: number;
-}
+export type { VolumeTrendPoint };
 
 export interface VolumeTrendChartProps {
-  trend: TrendPoint[];
+  trend: VolumeTrendPoint[];
   landmarks: WNSLandmarks;
 }
 

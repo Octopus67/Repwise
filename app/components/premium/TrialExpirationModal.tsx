@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal,
   View,
@@ -10,13 +10,30 @@ import { colors, radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../common/Icon';
 import { Button } from '../common/Button';
+import api from '../../services/api';
 import type { TrialInsights } from '../../utils/trialLogic';
+
+interface WinbackOffer {
+  eligible: boolean;
+  discount_pct: number;
+  original_price: number;
+  discounted_price: number;
+  deadline: string;
+  remaining_seconds: number;
+}
 
 interface TrialExpirationModalProps {
   visible: boolean;
   onClose: () => void;
-  onUpgrade: () => void;
+  onUpgrade: (planId?: string) => void;
   insights: TrialInsights | null;
+}
+
+function formatCountdown(totalSeconds: number): string {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 export function TrialExpirationModal({
@@ -26,6 +43,43 @@ export function TrialExpirationModal({
   insights,
 }: TrialExpirationModalProps) {
   const c = useThemeColors();
+  const [offer, setOffer] = useState<WinbackOffer | null>(null);
+  const [remaining, setRemaining] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!visible) {
+      setOffer(null);
+      setRemaining(0);
+      return;
+    }
+    let cancelled = false;
+    api.get('payments/winback-offer').then(({ data }) => {
+      if (!cancelled && data?.eligible && data.remaining_seconds > 0) {
+        setOffer(data);
+        setRemaining(data.remaining_seconds);
+      }
+    }).catch(() => {}); // Intentional: analytics/winback offer is fire-and-forget
+    return () => { cancelled = true; };
+  }, [visible]);
+
+  const isCountingDown = remaining > 0;
+
+  useEffect(() => {
+    if (remaining <= 0) return;
+    timerRef.current = setInterval(() => {
+      setRemaining(prev => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [isCountingDown]);
+
+  const hasOffer = offer && remaining > 0;
 
   const stats = insights
     ? [
@@ -48,7 +102,7 @@ export function TrialExpirationModal({
               Your Trial Has Ended
             </Text>
             <Text style={[styles.subtitle, { color: c.text.secondary }]}>
-              Here's what you accomplished in 7 days
+              Here's what you accomplished in 14 days
             </Text>
 
             {stats.length > 0 && (
@@ -70,7 +124,28 @@ export function TrialExpirationModal({
               </View>
             )}
 
-            <Button title="Upgrade to Premium" onPress={onUpgrade} style={styles.cta} />
+            {hasOffer ? (
+              <View style={styles.offerSection}>
+                <Text style={[styles.offerHeading, { color: c.accent.primary }]}>
+                  Special offer: {offer.discount_pct}% off Premium
+                </Text>
+                <Text style={[styles.countdown, { color: c.text.primary }]}>
+                  {formatCountdown(remaining)}
+                </Text>
+                <View style={styles.priceRow}>
+                  <Text style={[styles.originalPrice, { color: c.text.muted }]}>
+                    ${offer.original_price.toFixed(2)}/yr
+                  </Text>
+                  <Text style={[styles.discountedPrice, { color: c.semantic.positive }]}>
+                    ${offer.discounted_price.toFixed(2)}/yr
+                  </Text>
+                </View>
+                <Button title={`Claim ${offer.discount_pct}% Off`} onPress={() => onUpgrade('yearly_winback_discount')} style={styles.cta} />
+              </View>
+            ) : (
+              <Button title="Upgrade to Premium" onPress={() => onUpgrade()} style={styles.cta} />
+            )}
+
             <Button
               title="Maybe later"
               onPress={onClose}
@@ -137,6 +212,40 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: typography.size.xs,
     lineHeight: typography.lineHeight.xs,
+  },
+  offerSection: {
+    alignItems: 'center',
+    marginBottom: spacing[4],
+  },
+  offerHeading: {
+    fontSize: typography.size.lg,
+    lineHeight: typography.lineHeight.lg,
+    fontWeight: typography.weight.semibold,
+    textAlign: 'center',
+    marginBottom: spacing[2],
+  },
+  countdown: {
+    fontSize: typography.size.xl,
+    lineHeight: typography.lineHeight.xl,
+    fontWeight: typography.weight.semibold,
+    fontVariant: ['tabular-nums'],
+    marginBottom: spacing[2],
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
+    marginBottom: spacing[4],
+  },
+  originalPrice: {
+    fontSize: typography.size.base,
+    lineHeight: typography.lineHeight.base,
+    textDecorationLine: 'line-through',
+  },
+  discountedPrice: {
+    fontSize: typography.size.lg,
+    lineHeight: typography.lineHeight.lg,
+    fontWeight: typography.weight.semibold,
   },
   cta: {
     marginBottom: spacing[3],

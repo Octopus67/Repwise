@@ -4,20 +4,11 @@
  * Pure functions — no React Native imports.
  */
 
+import type { NutritionEntry as BaseNutritionEntry } from '../types/nutrition';
+
 export type MealSlotName = 'Breakfast' | 'Lunch' | 'Snack' | 'Dinner';
 
-export interface NutritionEntry {
-  id: string;
-  meal_name: string;
-  food_name?: string | null;
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-  entry_date: string;
-  created_at?: string | null;
-  micro_nutrients?: Record<string, number> | null;
-}
+export type NutritionEntry = BaseNutritionEntry & { id: string; meal_name: string };
 
 export interface SlotTotals {
   calories: number;
@@ -79,10 +70,10 @@ export function computeSlotTotals(entries: NutritionEntry[]): SlotTotals {
   let fat_g = 0;
 
   for (const e of entries) {
-    calories += e.calories;
-    protein_g += e.protein_g;
-    carbs_g += e.carbs_g;
-    fat_g += e.fat_g;
+    calories += e.calories || 0;
+    protein_g += e.protein_g || 0;
+    carbs_g += e.carbs_g || 0;
+    fat_g += e.fat_g || 0;
   }
 
   return { calories, protein_g, carbs_g, fat_g };

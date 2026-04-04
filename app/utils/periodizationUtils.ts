@@ -7,6 +7,7 @@
 
 ;
 import { getThemeColors, type ThemeColors } from '../hooks/useThemeColors';
+import { formatDateISO } from './formatting';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -58,13 +59,6 @@ function getMonday(d: Date): Date {
   return monday;
 }
 
-function formatDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
 function parseDate(s: string): Date {
   const [y, m, d] = s.split('-').map(Number);
   return new Date(y, m - 1, d);
@@ -105,7 +99,8 @@ export function needsDeloadSuggestion(blocks: TrainingBlock[]): boolean {
     } else {
       consecutiveEnd = parseDate(block.end_date);
     }
-    const totalDays = (consecutiveEnd!.getTime() - consecutiveStart.getTime()) / 86400000 + 1;
+    const endTime = consecutiveEnd?.getTime() ?? consecutiveStart.getTime();
+    const totalDays = (endTime - consecutiveStart.getTime()) / 86400000 + 1;
     if (isNaN(totalDays)) return false;
     if (totalDays / 7 > 4) return true;
   }
@@ -122,7 +117,7 @@ export function buildWeekRows(
 
   const todayDate = parseDate(today);
   if (isNaN(todayDate.getTime())) return [];
-  const todayMonday = formatDate(getMonday(todayDate));
+  const todayMonday = formatDateISO(getMonday(todayDate));
   const sessionSet = new Set(sessionDates);
   const rows: WeekRow[] = [];
 
@@ -141,13 +136,13 @@ export function buildWeekRows(
 
     while (weekStart <= blockEnd) {
       const weekEnd = addDays(weekStart, 6);
-      const weekStartStr = formatDate(weekStart);
-      const weekEndStr = formatDate(weekEnd);
+      const weekStartStr = formatDateISO(weekStart);
+      const weekEndStr = formatDateISO(weekEnd);
 
       // Collect session dates in this week
       const weekSessions: string[] = [];
       for (let d = new Date(weekStart); d <= weekEnd; d = addDays(d, 1)) {
-        const ds = formatDate(d);
+        const ds = formatDateISO(d);
         if (sessionSet.has(ds)) weekSessions.push(ds);
       }
 

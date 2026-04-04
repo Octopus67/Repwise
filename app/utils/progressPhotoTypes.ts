@@ -30,6 +30,7 @@ export interface PhotoMeta {
   pose_type: string;
   notes: string | null;
   alignment_data: AlignmentData | null;
+  image_url?: string | null;
 }
 
 export interface PhotoPathMap {

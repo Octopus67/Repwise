@@ -110,9 +110,9 @@ export function ModalContainer({
                 ) : (
                   <View style={getStyles().titleRow}>{title}</View>
                 )}
-                <TouchableOpacity onPress={onClose} hitSlop={8} style={{ padding: 8 }} testID={closeButtonTestID}>
+                <Pressable onPress={onClose} hitSlop={8} style={{ padding: 8, cursor: 'pointer' } as any} testID={closeButtonTestID} accessibilityRole="button" accessibilityLabel="Close">
                   <Icon name="close" size={18} color={themeColors.text.secondary} />
-                </TouchableOpacity>
+                </Pressable>
               </View>
               {children}
             </Pressable>
@@ -139,9 +139,9 @@ export function ModalContainer({
               ) : (
                 <View style={getStyles().titleRow}>{title}</View>
               )}
-              <TouchableOpacity onPress={onClose} hitSlop={8} style={{ padding: 8, zIndex: 30 }} testID={closeButtonTestID}>
+              <Pressable onPress={onClose} hitSlop={8} style={{ padding: 8, zIndex: 30 }} testID={closeButtonTestID} accessibilityRole="button" accessibilityLabel="Close">
                 <Icon name="close" size={18} color={themeColors.text.secondary} />
-              </TouchableOpacity>
+              </Pressable>
             </View>
             {children}
           </Animated.View>

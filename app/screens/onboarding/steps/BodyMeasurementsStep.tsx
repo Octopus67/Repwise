@@ -374,7 +374,7 @@ export function BodyMeasurementsStep({ onNext }: Props) {
   // Live BMR calculation
   const age = computeAge(birthYear, birthMonth);
   const liveBMR = useMemo(() => {
-    if (heightCm <= 0 || weightKg <= 0) return 0;
+    if (heightCm <= 0 || weightKg <= 0 || !sex) return 0;
     return computeBMR(weightKg, heightCm, age, sex, bodyFatPct ?? undefined);
   }, [weightKg, heightCm, age, sex, bodyFatPct]);
 

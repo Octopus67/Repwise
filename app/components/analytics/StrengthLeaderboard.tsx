@@ -3,16 +3,8 @@ import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import { Icon } from '../common/Icon';
-
-interface Classification {
-  exercise_name: string;
-  e1rm_kg: number;
-  bodyweight_kg: number;
-  bodyweight_ratio: number;
-  level: string;
-  next_level: string | null;
-  next_level_threshold_kg: number | null;
-}
+import type { Classification } from '../../types/analytics';
+import { formatExerciseName } from '../../utils/formatting';
 
 // All 5 supported lifts
 const SUPPORTED_LIFTS = [
@@ -25,10 +17,6 @@ const SUPPORTED_LIFTS = [
 
 interface StrengthLeaderboardProps {
   classifications: Classification[];
-}
-
-function formatExerciseName(name: string): string {
-  return name.split(' ').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
 }
 
 export function StrengthLeaderboard({ classifications }: StrengthLeaderboardProps) {

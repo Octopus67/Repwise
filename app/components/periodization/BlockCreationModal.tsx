@@ -5,7 +5,7 @@ import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThem
 import { ModalContainer } from '../common/ModalContainer';
 import { Button } from '../common/Button';
 import api from '../../services/api';
-
+import { getApiErrorMessage } from '../../utils/errors';
 const PHASE_OPTIONS = ['accumulation', 'intensification', 'deload', 'peak'] as const;
 const NUTRITION_OPTIONS = [null, 'bulk', 'cut', 'maintenance'] as const;
 
@@ -74,8 +74,8 @@ export function BlockCreationModal({ visible, onClose, onSaved, block }: BlockCr
       }
       onSaved();
       onClose();
-    } catch (e: any) {
-      const msg = e?.response?.data?.message ?? 'Failed to save block';
+    } catch (e: unknown) {
+      const msg = getApiErrorMessage(e, 'Failed to save block');
       setError(msg);
     } finally {
       setSaving(false);

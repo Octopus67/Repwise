@@ -5,7 +5,7 @@ import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThem
 import { ModalContainer } from '../common/ModalContainer';
 import { Button } from '../common/Button';
 import api from '../../services/api';
-
+import { getApiErrorMessage } from '../../utils/errors';
 interface TemplatePhase {
   phase_type: string;
   duration_weeks: number;
@@ -56,8 +56,8 @@ export function BlockTemplateModal({ visible, onClose, onApplied }: BlockTemplat
       await api.post('periodization/templates/apply', { template_id: selectedId, start_date: startDate });
       onApplied();
       onClose();
-    } catch (e: any) {
-      setError(e?.response?.data?.message ?? 'Failed to apply template');
+    } catch (e: unknown) {
+      setError(getApiErrorMessage(e, 'Failed to apply template'));
     } finally {
       setApplying(false);
     }

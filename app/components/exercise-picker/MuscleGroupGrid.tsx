@@ -4,18 +4,12 @@ import { MUSCLE_GROUP_CONFIG, type MuscleGroupConfig } from '../../config/muscle
 import { Exercise } from '../../types/exercise';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { hexToRgba } from '../../utils/formatting';
 import { MuscleGroupIcon } from './MuscleGroupIcon';
 
 interface MuscleGroupGridProps {
   exercises: Exercise[];
   onSelectMuscleGroup: (key: string) => void;
-}
-
-function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
 }
 
 export function MuscleGroupGrid({ exercises, onSelectMuscleGroup }: MuscleGroupGridProps) {

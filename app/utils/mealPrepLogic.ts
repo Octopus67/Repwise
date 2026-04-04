@@ -82,7 +82,7 @@ export function computeDaySummary(assignments: MealAssignment[]): MacroSummary {
  * Sum macros across all day summaries for the week.
  * Guards against NaN/Infinity in individual day values.
  */
-export function computeWeeklySummary(daySummaries: MacroSummary[]): MacroSummary {
+export function computeWeeklyMacroTotal(daySummaries: MacroSummary[]): MacroSummary {
   return {
     calories: round2(daySummaries.reduce((s, d) => s + (Number.isFinite(d.calories) ? d.calories : 0), 0)),
     protein_g: round2(daySummaries.reduce((s, d) => s + (Number.isFinite(d.protein_g) ? d.protein_g : 0), 0)),
@@ -95,3 +95,6 @@ function round2(n: number): number {
   if (!Number.isFinite(n)) return 0;
   return Math.round(n * 100) / 100;
 }
+
+/** @deprecated Use computeWeeklyMacroTotal instead. */
+export const computeWeeklySummary = computeWeeklyMacroTotal;

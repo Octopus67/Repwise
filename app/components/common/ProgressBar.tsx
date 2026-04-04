@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, type DimensionValue } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -40,7 +40,7 @@ export function ProgressBar({
   }, [fill.percentage]);
 
   const animatedFillStyle = useAnimatedStyle(() => ({
-    width: `${widthProgress.value}%` as any,
+    width: `${widthProgress.value}%` as DimensionValue,
   }));
 
   return (

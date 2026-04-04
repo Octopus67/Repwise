@@ -12,6 +12,7 @@ export interface ExerciseContextMenuProps {
   onUnskip: () => void;
   onAddNote: () => void;
   onGenerateWarmUp: () => void;
+  onViewHistory?: () => void;
   onDismiss: () => void;
 }
 
@@ -25,6 +26,7 @@ export function ExerciseContextMenu({
   onUnskip,
   onAddNote,
   onGenerateWarmUp,
+  onViewHistory,
   onDismiss,
 }: ExerciseContextMenuProps) {
   const c = useThemeColors();
@@ -39,6 +41,10 @@ export function ExerciseContextMenu({
 
   if (hasPreviousPerformance) {
     items.push({ label: 'Generate Warm-Up', onPress: onGenerateWarmUp });
+  }
+
+  if (onViewHistory) {
+    items.push({ label: 'View History', onPress: onViewHistory });
   }
 
   const handleItemPress = (action: () => void) => {

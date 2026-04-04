@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import type { StackNavigationProp } from '@react-navigation/stack';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { ModalContainer } from '../common/ModalContainer';
@@ -84,7 +84,7 @@ function useDebouncedValue<T>(value: T, delay: number): T {
 export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
-  const navigation = useNavigation<StackNavigationProp<any>>();
+  const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const profile = useStore((s) => s.profile);
   const selectedDate = useStore((s) => s.selectedDate);
   const [exercises, setExercises] = useState<ExerciseState[]>([emptyExercise()]);
@@ -113,9 +113,9 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
       .get('training/exercises/search', { params: { q: debouncedSearch } })
       .then((res) => {
         const data = res.data ?? [];
-        setExerciseSearchResults(data.map((ex: any) => ({ id: ex.id, name: ex.name })));
+        setExerciseSearchResults(data.map((ex: { id: string; name: string }) => ({ id: ex.id, name: ex.name })));
       })
-      .catch(() => setExerciseSearchResults([]));
+      .catch((err: unknown) => { console.warn('[AddTraining] exercise search failed:', String(err)); setExerciseSearchResults([]); });
   }, [debouncedSearch]);
 
   // Restore form state when modal re-opens after exercise picker navigation
@@ -140,7 +140,7 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
     api
       .get('training/templates')
       .then((res) => setTemplates(res.data ?? []))
-      .catch(() => setTemplates([]))
+      .catch((err: unknown) => { console.warn('[AddTraining] templates fetch failed:', String(err)); setTemplates([]); })
       .finally(() => setTemplatesLoading(false));
   }, [visible]);
 

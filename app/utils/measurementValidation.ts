@@ -4,11 +4,7 @@
  */
 
 import type { MeasurementFormData } from '../types/measurements';
-
-interface ValidationResult {
-  valid: boolean;
-  errors: Partial<Record<keyof MeasurementFormData, string>>;
-}
+import type { ValidationResult } from '../types/common';
 
 const RANGES = {
   weight: { min: 20, max: 350, label: 'Weight' },

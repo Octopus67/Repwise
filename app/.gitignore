@@ -7,3 +7,13 @@ dist/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+google-play-service-account.json
+
+# Credential files
+*.pem
+*.key
+*.p12
+
+# Auto-generated API types
+types/api/openapi.json
+types/api/generated.ts

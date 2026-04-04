@@ -11,44 +11,24 @@ import {
 } from 'react-native';
 import { Icon } from '../../components/common/Icon';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
-import * as SecureStore from 'expo-secure-store';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Button } from '../../components/common/Button';
 import api, { setTokenProvider } from '../../services/api';
+import { getApiErrorMessage } from '../../utils/errors';
 import { isValidEmail, trimEmail } from '../../utils/validation';
 import Animated from 'react-native-reanimated';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { SocialLoginButtons } from '../../components/auth/SocialLoginButtons';
+import { secureSet, secureGet, secureDelete, TOKEN_KEYS } from '../../utils/secureStorage';
+import { createRateLimiter } from '../../utils/rateLimiter';
+import { parseJwtSub } from '../../utils/jwtUtils';
 
-const TOKEN_KEYS = { access: 'rw_access_token', refresh: 'rw_refresh_token' };
-
-async function secureSet(key: string, value: string) {
-  if (Platform.OS === 'web') { localStorage.setItem(key, value); }
-  else { await SecureStore.setItemAsync(key, value); }
-}
-async function secureGet(key: string): Promise<string | null> {
-  if (Platform.OS === 'web') { return localStorage.getItem(key); }
-  return SecureStore.getItemAsync(key);
-}
-async function secureDelete(key: string) {
-  if (Platform.OS === 'web') { localStorage.removeItem(key); }
-  else { await SecureStore.deleteItemAsync(key); }
-}
+const loginLimiter = createRateLimiter(5, 60000);
 
 async function saveTokens(access: string, refresh: string) {
   await secureSet(TOKEN_KEYS.access, access);
   await secureSet(TOKEN_KEYS.refresh, refresh);
-}
-
-/** Decode the user ID from a JWT access token (no verification — just parsing). */
-function parseJwtSub(token: string): string {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.sub ?? '';
-  } catch {
-    return '';
-  }
 }
 
 export function initTokenProvider(clearAuth: () => void) {
@@ -56,9 +36,9 @@ export function initTokenProvider(clearAuth: () => void) {
     getAccess: () => secureGet(TOKEN_KEYS.access),
     getRefresh: () => secureGet(TOKEN_KEYS.refresh),
     onRefreshed: saveTokens,
-    onRefreshFailed: () => {
-      secureDelete(TOKEN_KEYS.access);
-      secureDelete(TOKEN_KEYS.refresh);
+    onRefreshFailed: async () => {
+      await secureDelete(TOKEN_KEYS.access);
+      await secureDelete(TOKEN_KEYS.refresh);
       clearAuth();
     },
   });
@@ -66,12 +46,11 @@ export function initTokenProvider(clearAuth: () => void) {
 
 interface LoginScreenProps {
   onNavigateRegister: () => void;
-  onLoginSuccess: (user: { id: string; email: string }, tokens: { accessToken: string; refreshToken: string; expiresIn: number }) => void;
+  onLoginSuccess: (user: { id: string; email: string; emailVerified?: boolean }, tokens: { accessToken: string; refreshToken: string; expiresIn: number }) => void;
   onNavigateForgotPassword?: () => void;
-  onNavigateEmailVerification?: (email: string) => void;
 }
 
-export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForgotPassword, onNavigateEmailVerification }: LoginScreenProps) {
+export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForgotPassword }: LoginScreenProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const [email, setEmail] = useState('');
@@ -80,9 +59,6 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [unverifiedEmail, setUnverifiedEmail] = useState('');
-  const [resendLoading, setResendLoading] = useState(false);
-  const [resendSuccess, setResendSuccess] = useState('');
   const passwordRef = useRef<TextInput>(null);
   const titleAnim = useStaggeredEntrance(0, 80);
   const subtitleAnim = useStaggeredEntrance(1, 80);
@@ -93,8 +69,10 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
   const handleLogin = async () => {
     setError('');
     setEmailError('');
-    setUnverifiedEmail('');
-    setResendSuccess('');
+    if (!loginLimiter.canAttempt()) {
+      setError(`Too many attempts. Try again in ${Math.ceil(loginLimiter.remainingMs() / 1000)}s`);
+      return;
+    }
     const cleanEmail = trimEmail(email);
     if (cleanEmail && !isValidEmail(cleanEmail)) {
       setEmailError('Please enter a valid email address');
@@ -105,51 +83,30 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
       return;
     }
     setLoading(true);
+    loginLimiter.recordAttempt();
     try {
       const { data } = await api.post('auth/login', { email: cleanEmail, password });
       await saveTokens(data.access_token, data.refresh_token);
       onLoginSuccess(
-        { id: parseJwtSub(data.access_token), email: cleanEmail },
+        { id: parseJwtSub(data.access_token), email: cleanEmail, emailVerified: data.email_verified },
         {
           accessToken: data.access_token,
           refreshToken: data.refresh_token,
           expiresIn: data.expires_in,
         },
       );
-    } catch (err: any) {
-      const code = err?.response?.data?.code;
-      if (code === 'EMAIL_NOT_VERIFIED') {
-        setUnverifiedEmail(cleanEmail);
-        setError('');
-      } else {
-        setError(err?.response?.data?.message ?? err?.response?.data?.detail ?? 'Login failed. Please check your credentials.');
-      }
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Login failed. Please check your credentials.'));
       setEmailError('');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResendVerification = async () => {
-    setResendLoading(true);
-    setResendSuccess('');
-    try {
-      await api.post('auth/resend-verification-email', { email: unverifiedEmail });
-      setResendSuccess('Verification code sent! Check your email.');
-      if (onNavigateEmailVerification) {
-        onNavigateEmailVerification(unverifiedEmail);
-      }
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Failed to resend verification email');
-    } finally {
-      setResendLoading(false);
-    }
-  };
-
   const handleSocialSuccess = async (tokens: { access_token: string; refresh_token: string; expires_in: number }) => {
     await saveTokens(tokens.access_token, tokens.refresh_token);
     onLoginSuccess(
-      { id: parseJwtSub(tokens.access_token), email: '' },
+      { id: parseJwtSub(tokens.access_token), email: '', emailVerified: true },
       { accessToken: tokens.access_token, refreshToken: tokens.refresh_token, expiresIn: tokens.expires_in },
     );
   };
@@ -170,24 +127,6 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
         <Animated.View style={formAnim}>
         {error ? <ErrorBanner testID="login-error-message" message={error} onDismiss={() => setError('')} /> : null}
 
-        {unverifiedEmail ? (
-          <View testID="unverified-banner" style={[styles.unverifiedBanner, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}>
-            <Text style={[styles.unverifiedText, { color: c.text.primary }]}>
-              Your email is not verified yet. Please verify to continue.
-            </Text>
-            {resendSuccess ? (
-              <Text style={[styles.resendSuccess, { color: c.semantic.positive }]}>{resendSuccess}</Text>
-            ) : null}
-            <Button
-              testID="resend-verification-button"
-              title={resendLoading ? 'Sending…' : 'Resend Verification Email'}
-              onPress={handleResendVerification}
-              loading={resendLoading}
-              style={styles.resendBtn}
-            />
-          </View>
-        ) : null}
-
         <TextInput
           testID="login-email-input"
           style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}
@@ -203,7 +142,7 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
           accessibilityHint="Enter your email to sign in"
         />
         {emailError ? <Text style={[styles.emailError, { color: c.semantic.negative }]}>{emailError}</Text> : null}
-        <View style={{ position: 'relative' }}>
+        <View style={styles.inputWrapper}>
           <TextInput
             ref={passwordRef}
             testID="login-password-input"
@@ -220,7 +159,7 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
           />
           <TouchableOpacity
             onPress={() => setShowPassword(!showPassword)}
-            style={{ position: 'absolute', right: spacing[3], top: spacing[3], minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+            style={styles.eyeToggle}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
             accessibilityRole="button"
@@ -228,13 +167,13 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
             <Icon name={showPassword ? 'eye-off' : 'eye'} size={20} color={c.text.muted} />
           </TouchableOpacity>
         </View>
-        <View style={{ marginBottom: spacing[3] }} />
+        <View style={styles.spacerMd} />
         </Animated.View>
 
         <Animated.View style={buttonAnim}>
         {onNavigateForgotPassword ? (
-          <TouchableOpacity testID="forgot-password-link" onPress={onNavigateForgotPassword} style={{ alignItems: 'flex-end', marginBottom: spacing[3], minHeight: 44, justifyContent: 'center' }}>
-            <Text style={{ color: c.accent.primary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm }}>Forgot Password?</Text>
+          <TouchableOpacity testID="forgot-password-link" onPress={onNavigateForgotPassword} style={styles.forgotLink}>
+            <Text style={[styles.forgotText, { color: c.accent.primary }]}>Forgot Password?</Text>
           </TouchableOpacity>
         ) : null}
 
@@ -256,6 +195,11 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: c.bg.base },
+  inputWrapper: { position: 'relative' as const },
+  eyeToggle: { position: 'absolute' as const, right: spacing[3], top: spacing[3], minWidth: 44, minHeight: 44, alignItems: 'center' as const, justifyContent: 'center' as const },
+  spacerMd: { marginBottom: spacing[3] },
+  forgotLink: { alignItems: 'flex-end' as const, marginBottom: spacing[3], minHeight: 44, justifyContent: 'center' as const },
+  forgotText: { fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm },
   scroll: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -302,24 +246,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     lineHeight: typography.lineHeight.base,
   },
   btn: { marginTop: spacing[2] },
-  resendBtn: { marginTop: spacing[3] },
-  unverifiedBanner: {
-    borderRadius: radius.md,
-    borderWidth: 1,
-    padding: spacing[4],
-    marginBottom: spacing[4],
-  },
-  unverifiedText: {
-    fontSize: typography.size.sm,
-    lineHeight: typography.lineHeight.sm,
-    textAlign: 'center',
-  },
-  resendSuccess: {
-    fontSize: typography.size.sm,
-    lineHeight: typography.lineHeight.sm,
-    textAlign: 'center',
-    marginTop: spacing[2],
-  },
   link: { alignItems: 'center', marginTop: spacing[6], minHeight: 44, justifyContent: 'center' },
   linkText: { color: c.text.secondary, fontSize: typography.size.base, lineHeight: typography.lineHeight.base },
   linkAccent: { color: c.accent.primary, fontWeight: typography.weight.semibold },

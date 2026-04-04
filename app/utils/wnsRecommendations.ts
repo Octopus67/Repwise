@@ -5,6 +5,8 @@
  * and produces friendly, actionable recommendation strings.
  */
 
+import { formatMuscle } from './formatting';
+
 export interface VolumeLandmarks {
   mev: number;
   mavLow: number;
@@ -53,11 +55,4 @@ export function generateRecommendations(
   }
 
   return recs;
-}
-
-function formatMuscle(muscle: string): string {
-  return muscle
-    .split('_')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
 }

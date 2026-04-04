@@ -24,8 +24,8 @@ export function useTrial() {
     try {
       const res = await api.get('trial/eligibility');
       setEligibility(res.data);
-    } catch {
-      // Ignore
+    } catch (err) {
+      console.warn('[Trial] eligibility fetch failed:', String(err));
     }
   }, []);
 

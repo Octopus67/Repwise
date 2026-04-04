@@ -4,15 +4,12 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Platform,
-  Switch,
 } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { secureDelete, TOKEN_KEYS } from '../../utils/secureStorage';
 import { useNavigation } from '@react-navigation/native';
 import Animated from 'react-native-reanimated';
 import { spacing, typography, radius } from '../../theme/tokens';
-import { useThemeStore } from '../../store/useThemeStore';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../../components/common/Icon';
 import { Card } from '../../components/common/Card';
@@ -34,16 +31,9 @@ import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { useStore, isPremium } from '../../store';
 import api from '../../services/api';
 
-const TOKEN_KEYS = { access: 'rw_access_token', refresh: 'rw_refresh_token' };
-
 async function secureClear() {
-  if (Platform.OS === 'web') {
-    localStorage.removeItem(TOKEN_KEYS.access);
-    localStorage.removeItem(TOKEN_KEYS.refresh);
-  } else {
-    await SecureStore.deleteItemAsync(TOKEN_KEYS.access);
-    await SecureStore.deleteItemAsync(TOKEN_KEYS.refresh);
-  }
+  await secureDelete(TOKEN_KEYS.access);
+  await secureDelete(TOKEN_KEYS.refresh);
 }
 
 export function ProfileScreen() {
@@ -55,8 +45,6 @@ export function ProfileScreen() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const themeMode = useThemeStore((s) => s.theme);
-  const toggleTheme = useThemeStore((s) => s.toggleTheme);
 
   const headerAnim = useStaggeredEntrance(0, 60);
   const planPanelAnim = useStaggeredEntrance(1, 60);
@@ -134,7 +122,7 @@ export function ProfileScreen() {
       uri,
       name: 'avatar.jpg',
       type: 'image/jpeg',
-    } as any);
+    } as unknown as Blob);
     const { data } = await api.put('users/profile/avatar', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -143,7 +131,6 @@ export function ProfileScreen() {
 
   const handleLogout = async () => {
     await secureClear();
-    store.clearAuth();
   };
 
   const avatarInitial = (
@@ -152,7 +139,7 @@ export function ProfileScreen() {
   )[0].toUpperCase();
 
   const memberSince = store.profile
-    ? new Date((store.profile as any).createdAt ?? Date.now()).toLocaleDateString(undefined, {
+    ? new Date(store.profile.createdAt ?? Date.now()).toLocaleDateString(undefined, {
         month: 'short', year: 'numeric',
       })
     : '';
@@ -161,18 +148,18 @@ export function ProfileScreen() {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
         <ScrollView contentContainerStyle={styles.content}>
-          <View style={{ alignItems: 'center', paddingTop: spacing[6] }}>
+          <View style={styles.skeletonCenter}>
             <Skeleton width={80} height={80} variant="circle" />
-            <View style={{ height: spacing[3] }} />
+            <View style={styles.spacerMd} />
             <Skeleton width={160} height={20} />
-            <View style={{ height: spacing[2] }} />
+            <View style={styles.spacerSm} />
             <Skeleton width={100} height={16} />
           </View>
-          <View style={{ height: spacing[6] }} />
+          <View style={styles.spacerLg} />
           <Skeleton width="100%" height={120} borderRadius={12} />
-          <View style={{ height: spacing[3] }} />
+          <View style={styles.spacerMd} />
           <Skeleton width="100%" height={80} borderRadius={12} />
-          <View style={{ height: spacing[3] }} />
+          <View style={styles.spacerMd} />
           <Skeleton width="100%" height={200} borderRadius={12} />
         </ScrollView>
       </SafeAreaView>
@@ -210,21 +197,6 @@ export function ProfileScreen() {
         <Animated.View style={advancedSettingsAnim}>
           <AdvancedSettingsSection />
         </Animated.View>
-
-        <SectionHeader title="Appearance" />
-        <Card>
-          <View style={styles.subRow}>
-            <Text style={[styles.subLabel, { color: c.text.primary }]}>Dark Mode</Text>
-            <Switch
-              value={themeMode === 'dark'}
-              onValueChange={toggleTheme}
-              trackColor={{ false: c.border.default, true: c.accent.primary }}
-              thumbColor="#FFFFFF"
-              accessibilityLabel="Toggle dark mode"
-              accessibilityRole="switch"
-            />
-          </View>
-        </Card>
 
         <Animated.View style={featuresAnim}>
           <SectionHeader title="Features" />
@@ -312,4 +284,8 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   subActive: { color: c.semantic.positive },
   upgradeBtn: { marginTop: spacing[4] },
+  skeletonCenter: { alignItems: 'center', paddingTop: spacing[6] },
+  spacerSm: { height: spacing[2] },
+  spacerMd: { height: spacing[3] },
+  spacerLg: { height: spacing[6] },
 });

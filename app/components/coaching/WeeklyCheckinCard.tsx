@@ -15,12 +15,8 @@ import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThem
 // Types
 // ---------------------------------------------------------------------------
 
-export interface MacroTargets {
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-}
+import { MacroTargets } from '../../types/nutrition';
+export type { MacroTargets };
 
 export interface WeeklyCheckinData {
   has_sufficient_data: boolean;

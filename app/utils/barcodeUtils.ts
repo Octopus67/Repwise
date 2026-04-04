@@ -25,10 +25,13 @@ export function scaleBarcodeResult(
   };
 }
 
-/** Validates multiplier input: must be a positive finite number */
+/** Maximum allowed multiplier for barcode scanned items */
+export const MAX_MULTIPLIER = 99;
+
+/** Validates multiplier input: must be a positive finite number within bounds */
 export function isValidMultiplier(input: string): boolean {
   const n = parseFloat(input);
-  return !isNaN(n) && isFinite(n) && n > 0;
+  return !isNaN(n) && isFinite(n) && n > 0 && n <= MAX_MULTIPLIER;
 }
 
 /**

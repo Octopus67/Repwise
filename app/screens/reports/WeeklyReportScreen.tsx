@@ -11,6 +11,8 @@ import { ReportCard } from '../../components/reports/ReportCard';
 import { useWNSVolume } from '../../hooks/useWNSVolume';
 import type { WNSMuscleVolume } from '../../types/volume';
 import api from '../../services/api';
+import { getApiErrorMessage } from '../../utils/errors';
+import type { AnalyticsScreenProps } from '../../types/navigation';
 
 interface WeeklyReport {
   year: number;
@@ -77,8 +79,8 @@ function getGoalMultiplier(goalType: string, rate: number | null): number {
   return 1.0;
 }
 
-function getStatusLabel(status: WNSMuscleVolume['status']): { label: string; color: string } {
-  const c = useThemeColors();
+function getWNSStatusInfo(status: WNSMuscleVolume['status']): { label: string; color: string } {
+  const c = getThemeColors();
   switch (status) {
     case 'optimal': return { label: '✅ Optimal', color: c.semantic.positive };
     case 'below_mev': return { label: '⬇️ Below MEV', color: c.semantic.warning };
@@ -95,7 +97,7 @@ function getMuscleInsight(m: WNSMuscleVolume): string | null {
   return null;
 }
 
-export function WeeklyReportScreen({ navigation }: any) {
+export function WeeklyReportScreen({ navigation }: AnalyticsScreenProps<'WeeklyReport'>) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const now = getISOWeek(new Date());
@@ -124,7 +126,7 @@ export function WeeklyReportScreen({ navigation }: any) {
   useEffect(() => {
     api.get('users/goals').then(({ data }) => {
       if (data) setGoals({ goalType: data.goal_type, goalRatePerWeek: data.goal_rate_per_week ?? null });
-    }).catch(() => {});
+    }).catch(() => {}); // Intentional: goals fetch is best-effort for report display
   }, []);
 
   // Top trained muscles sorted by HU, limited to 4
@@ -141,8 +143,8 @@ export function WeeklyReportScreen({ navigation }: any) {
     try {
       const { data } = await api.get('reports/weekly', { params: { year: y, week: w } });
       setReport(data);
-    } catch (err: any) {
-      const message = err?.response?.data?.detail ?? err?.message ?? 'Failed to load report';
+    } catch (err: unknown) {
+      const message = getApiErrorMessage(err, 'Failed to load report');
       setError(message);
       setReport(null);
     }
@@ -330,7 +332,7 @@ export function WeeklyReportScreen({ navigation }: any) {
                     </>
                   )}
                   {topMuscles.map(m => {
-                    const { label, color } = getStatusLabel(m.status);
+                    const { label, color } = getWNSStatusInfo(m.status);
                     const insight = getMuscleInsight(m);
                     return (
                       <View key={m.muscle_group} style={[getStyles().muscleRow, { borderTopColor: c.border.subtle }]}>

@@ -36,7 +36,7 @@ export function PeriodizationCalendar() {
       if (blocksRes.status === 'fulfilled') setBlocks(blocksRes.value.data);
       if (sessionsRes.status === 'fulfilled') {
         const items = sessionsRes.value.data.items ?? sessionsRes.value.data ?? [];
-        setSessionDates(items.map((s: any) => s.session_date));
+        setSessionDates(items.map((s: { session_date: string }) => s.session_date));
       }
     } catch { /* best-effort */ } finally {
       setLoading(false);

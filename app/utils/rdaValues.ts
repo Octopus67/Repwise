@@ -8,7 +8,8 @@
  */
 
 export type AgeBracket = '19-30' | '31-50' | '51+';
-export type Sex = 'male' | 'female';
+export type { Sex } from '../types/onboarding';
+import type { Sex } from '../types/onboarding';
 
 export interface RDAEntry {
   male: Record<AgeBracket, number>;
@@ -156,6 +157,11 @@ export function getRDA(key: string, sex: Sex, age: number): number {
   const entry = RDA_TABLE[key];
   if (!entry) return 0;
   const bracket = getAgeBracket(age);
+  if (sex === 'other') {
+    const m = entry.male?.[bracket] ?? 0;
+    const f = entry.female?.[bracket] ?? 0;
+    return (m + f) / 2;
+  }
   return entry[sex]?.[bracket] ?? 0;
 }
 

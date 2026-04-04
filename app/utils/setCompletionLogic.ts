@@ -17,7 +17,7 @@ export function canCompleteSet(set: ActiveSet): { valid: boolean; errors: string
   const weight = parseFloat(set.weight);
   const reps = parseFloat(set.reps);
 
-  if (!set.weight.trim() || !Number.isFinite(weight) || weight < 0) {
+  if (!set.weight.trim() || !Number.isFinite(weight) || weight <= 0) {
     errors.push('weight');
   }
   if (!set.reps.trim() || !Number.isFinite(reps) || reps <= 0) {
@@ -27,12 +27,12 @@ export function canCompleteSet(set: ActiveSet): { valid: boolean; errors: string
 }
 
 /**
- * Check if any exercise has data worth saving (name filled or any set has weight/reps).
+ * Check if any exercise has data worth saving (any set has weight/reps entered or completed).
  */
 export function hasUnsavedData(exercises: ActiveExercise[]): boolean {
   for (const exercise of exercises) {
-    if (exercise.exerciseName.trim()) return true;
     for (const set of exercise.sets) {
+      if (set.completed) return true;
       if (set.weight.trim() || set.reps.trim()) return true;
     }
   }

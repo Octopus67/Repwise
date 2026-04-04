@@ -39,14 +39,14 @@ export function MealPlanTab({ onSelectPlan, onFavoriteSaved }: Props) {
     try {
       const res = await api.get('meals/custom', { params: { limit: 50 } });
       setCustomMeals(res.data.items ?? []);
-    } catch { setCustomMeals([]); }
+    } catch (err) { console.warn('[MealPlanTab] fetch meals failed:', String(err)); setCustomMeals([]); }
     finally { setCustomMealsLoading(false); }
   }, []);
 
   useEffect(() => { fetchCustomMeals(); }, [fetchCustomMeals]);
 
   const handleSelectPlan = (meal: CustomMeal) => {
-    const items: MealPlanItem[] = (meal.micro_nutrients as any)?._plan_items ?? [];
+    const items: MealPlanItem[] = (meal.micro_nutrients as Record<string, unknown> | undefined)?._plan_items as MealPlanItem[] ?? [];
     const agg = items.length > 0 ? aggregateMealPlan(items) : { calories: meal.calories, protein_g: meal.protein_g, carbs_g: meal.carbs_g, fat_g: meal.fat_g };
     onSelectPlan({
       calories: String(Math.round(agg.calories)),

@@ -6,13 +6,8 @@
 
 ;
 import { getThemeColors, type ThemeColors } from '../hooks/useThemeColors';
-
-export interface MacroValues {
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-}
+import { MacroValues } from '../types/nutrition';
+export type { MacroValues };
 
 /**
  * Compute remaining budget: target - consumed for each macro.

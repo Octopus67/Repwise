@@ -9,7 +9,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, Modal, TouchableOpacity, Switch, ScrollView, StyleSheet } from 'react-native';
 import { ActiveExercise } from '../../types/training';
-import { computeWorkoutSummary, formatMiniSummary } from '../../utils/workoutSummaryFormatter';
+import { computeLiveWorkoutSummary, formatMiniSummary } from '../../utils/workoutSummaryFormatter';
 import { calculateSetProgress } from '../../utils/setProgressCalculator';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
@@ -44,7 +44,7 @@ export const ConfirmationSheet = ({
     }
   }, [visible]);
 
-  const summary = computeWorkoutSummary(exercises, startedAt);
+  const summary = computeLiveWorkoutSummary(exercises, startedAt);
   const durationMin = Math.floor(summary.durationSeconds / 60);
 
   const volumeDisplay =

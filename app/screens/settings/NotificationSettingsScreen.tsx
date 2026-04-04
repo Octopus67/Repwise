@@ -114,15 +114,22 @@ export function NotificationSettingsScreen() {
     }
   };
 
+  const formatTime24 = (time: string | null): string | null => {
+    if (!time) return null;
+    const match = time.match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return null;
+    const h = Math.min(23, Math.max(0, parseInt(match[1], 10)));
+    const m = Math.min(59, Math.max(0, parseInt(match[2], 10)));
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  };
+
   const handleQuietTimeChange = async (field: 'quiet_hours_start' | 'quiet_hours_end', timeStr: string) => {
-    // Validate HH:MM format
-    if (!/^\d{2}:\d{2}$/.test(timeStr)) return;
-    const [h, m] = timeStr.split(':').map(Number);
-    if (h < 0 || h > 23 || m < 0 || m > 59) return;
+    const validated = formatTime24(timeStr);
+    if (!validated) return;
     const prev = prefs;
-    setPrefs((p) => ({ ...p, [field]: timeStr }));
+    setPrefs((p) => ({ ...p, [field]: validated }));
     try {
-      await api.patch('notifications/preferences', { [field]: timeStr });
+      await api.patch('notifications/preferences', { [field]: validated });
     } catch {
       setPrefs(prev);
       Alert.alert('Error', 'Failed to update quiet hours time.');
@@ -150,6 +157,7 @@ export function NotificationSettingsScreen() {
         },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 1 },
       });
+      Alert.alert('Test Sent', 'A test notification has been scheduled. On mobile, you will see it in 1 second.');
     } catch {
       Alert.alert('Error', 'Failed to send test notification.');
     } finally {
@@ -176,7 +184,7 @@ export function NotificationSettingsScreen() {
       <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
         <ScrollView contentContainerStyle={styles.content}>
           <Skeleton width="100%" height={60} borderRadius={12} />
-          <View style={{ height: spacing[3] }} />
+          <View style={styles.spacerMd} />
           <Skeleton width="100%" height={300} borderRadius={12} />
         </ScrollView>
       </SafeAreaView>
@@ -186,6 +194,11 @@ export function NotificationSettingsScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="notification-settings-screen">
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} accessibilityLabel="Go back" accessibilityRole="button">
+          <Text style={[styles.backChevron, { color: c.accent.primary }]}>‹</Text>
+          <Text style={[styles.backLabel, { color: c.accent.primary }]}>Back</Text>
+        </TouchableOpacity>
+
         <View style={styles.header}>
           <Text style={[styles.title, { color: c.text.primary }]}>Notifications</Text>
         </View>
@@ -217,6 +230,33 @@ export function NotificationSettingsScreen() {
                 <Text style={[styles.statusText, { color: c.semantic.positive }]}>Active</Text>
               </View>
             )}
+          </View>
+        </Card>
+
+        {/* Master Toggle */}
+        <SectionHeader title="Master" />
+        <Card>
+          <View style={styles.toggleRow} testID="toggle-all-notifications">
+            <View style={styles.rowText}>
+              <Text style={[styles.label, { color: c.text.primary }]}>All Notifications</Text>
+            </View>
+            <Switch
+              value={TOGGLE_ITEMS.every((item) => prefs[item.key] as boolean)}
+              onValueChange={(v) => {
+                const update: Record<string, boolean> = {};
+                TOGGLE_ITEMS.forEach((item) => { update[item.key] = v; });
+                const prev = prefs;
+                setPrefs((p) => ({ ...p, ...update }));
+                api.patch('notifications/preferences', update).catch(() => {
+                  setPrefs(prev);
+                  Alert.alert('Error', 'Failed to update preferences.');
+                });
+              }}
+              trackColor={{ false: c.border.default, true: c.accent.primaryMuted }}
+              thumbColor={TOGGLE_ITEMS.every((item) => prefs[item.key] as boolean) ? c.accent.primary : c.text.muted}
+              accessibilityLabel="Toggle all notifications"
+              accessibilityRole="switch"
+            />
           </View>
         </Card>
 
@@ -343,9 +383,13 @@ export function NotificationSettingsScreen() {
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: c.bg.base },
+  spacerMd: { height: spacing[3] },
+  backChevron: { fontSize: typography.size.lg },
+  backLabel: { fontSize: typography.size.base, fontWeight: typography.weight.medium },
   container: { flex: 1 },
   content: { padding: spacing[4], paddingBottom: spacing[12], gap: spacing[4] },
   header: { marginBottom: spacing[2] },
+  backButton: { flexDirection: 'row', alignItems: 'center', gap: spacing[1], marginBottom: spacing[2] },
   title: {
     color: c.text.primary,
     fontSize: typography.size.xl,

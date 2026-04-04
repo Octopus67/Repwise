@@ -29,13 +29,14 @@ import { convertWeight } from '../../utils/unitConversion';
 import { formatDuration } from '../../utils/durationFormat';
 import {
   shouldShowDuration,
-  calculateWorkingVolume,
+  calculateSessionVolume,
   formatSessionDate,
   isPRSet,
   calculateDurationSeconds,
 } from '../../utils/sessionDetailLogic';
 import { bestE1RMForExercise } from '../../utils/e1rmCalculator';
 import api from '../../services/api';
+import type { AxiosError } from 'axios';
 import type { TrainingSessionResponse } from '../../types/training';
 import type { Exercise } from '../../types/exercise';
 import { ShareCardCustomizer } from '../../components/sharing/ShareCardCustomizer';
@@ -72,9 +73,9 @@ export function SessionDetailScreen({ route, navigation, showE1RM = true }: Sess
         setError(null);
         const res = await api.get(`training/sessions/${sessionId}`);
         if (!cancelled) setSession(res.data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!cancelled) {
-          setError(err?.response?.status === 404 ? 'Session not found' : 'Failed to load session');
+          setError((err as AxiosError)?.response?.status === 404 ? 'Session not found' : 'Failed to load session');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -117,7 +118,7 @@ export function SessionDetailScreen({ route, navigation, showE1RM = true }: Sess
     : false;
 
   // Working volume
-  const workingVolume = session ? calculateWorkingVolume(session.exercises, unitSystem) : 0;
+  const workingVolume = session ? calculateSessionVolume(session.exercises, unitSystem) : 0;
 
   // Notes
   const notes = session?.metadata && typeof session.metadata === 'object'

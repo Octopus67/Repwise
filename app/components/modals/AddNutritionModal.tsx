@@ -5,6 +5,8 @@ import {
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { ModalContainer } from '../common/ModalContainer';
+import { useMutation } from '@tanstack/react-query';
+import { queryClient } from '../../services/queryClient';
 import api from '../../services/api';
 import { serializeMicroNutrients, MICRO_FIELDS } from '../../utils/microNutrientSerializer';
 import { ServingOption, buildServingOptions, scaleToServing } from '../../utils/servingOptions';
@@ -19,49 +21,59 @@ import { ManualEntryForm } from '../nutrition/ManualEntryForm';
 import { ServingSelector } from '../nutrition/ServingSelector';
 import { MealPlanTab } from '../nutrition/MealPlanTab';
 import { RecipeTab } from '../nutrition/RecipeTab';
+import type { FoodItem, MealFavorite } from '../../types/nutrition';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-
-interface FoodItem {
-  id: string;
-  name: string;
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-  serving_size: number;
-  serving_unit: string;
-  micro_nutrients?: Record<string, any> | null;
-  source?: 'usda' | 'verified' | 'community' | 'custom';
-  is_recipe?: boolean;
-  total_servings?: number | null;
-}
-
-interface MealFavorite {
-  id: string;
-  name: string;
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-}
 
 interface Props {
   visible: boolean;
   onClose: () => void;
   onSuccess: () => void;
   prefilledMealName?: string;
+  onAddItem?: (food: { name: string; calories: number; protein_g: number; carbs_g: number; fat_g: number }) => void;
 }
 
 // Re-export scaleMacros from utility for backward compatibility
 export { scaleMacros } from '../../utils/macroScaling';
 
-export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealName }: Props) {
+export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealName, onAddItem }: Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const selectedDate = useStore((s) => s.selectedDate);
   const isAuthenticated = useStore((s) => s.isAuthenticated);
   const adaptiveTargets = useStore((s) => s.adaptiveTargets);
+
+  const saveNutritionMutation = useMutation({
+    mutationKey: ['logNutrition'],
+    mutationFn: (entry: { entry_date: string; meal_name: string; food_name: string | null; calories: number; protein_g: number; carbs_g: number; fat_g: number; client_id: string; client_updated_at: string; food_item_id?: string; notes?: string; micro_nutrients?: Record<string, number> }) => api.post('nutrition/entries', entry),
+    onMutate: async (entry) => {
+      await queryClient.cancelQueries({ queryKey: ['nutrition'] });
+      const previous = queryClient.getQueryData(['nutrition']);
+      const optimisticEntry = {
+        id: `temp_${Date.now()}`,
+        ...entry,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      queryClient.setQueryData(['nutrition'], (old: unknown) => {
+        if (Array.isArray(old)) return [...old, optimisticEntry];
+        if (old && typeof old === 'object' && 'items' in old) {
+          const o = old as { items: unknown[] };
+          return { ...o, items: [...o.items, optimisticEntry] };
+        }
+        return old;
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(['nutrition'], context.previous);
+      Alert.alert('Save Failed', 'Nutrition entry failed — please try again.');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['nutrition'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
 
   const isLongPressingRef = useRef(false);
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -114,16 +126,16 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
       const res = await api.get('nutrition/entries', { params: { start_date: selectedDate, end_date: selectedDate } });
       const entries = res.data.items ?? [];
       setDayTotals(entries.reduce(
-        (acc: typeof dayTotals, e: any) => ({ calories: acc.calories + (e.calories ?? 0), protein_g: acc.protein_g + (e.protein_g ?? 0), carbs_g: acc.carbs_g + (e.carbs_g ?? 0), fat_g: acc.fat_g + (e.fat_g ?? 0) }),
+        (acc: typeof dayTotals, e: { calories?: number; protein_g?: number; carbs_g?: number; fat_g?: number }) => ({ calories: acc.calories + (e.calories ?? 0), protein_g: acc.protein_g + (e.protein_g ?? 0), carbs_g: acc.carbs_g + (e.carbs_g ?? 0), fat_g: acc.fat_g + (e.fat_g ?? 0) }),
         { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
       ));
-    } catch { /* non-critical */ }
+    } catch (err) { console.warn('[AddNutrition] day totals fetch failed:', String(err)); }
   };
 
   const fetchFavorites = async () => {
     setFavoritesLoading(true);
     try { const res = await api.get('meals/favorites', { params: { limit: 50 } }); setFavorites(res.data.items ?? []); }
-    catch { setFavorites([]); }
+    catch (err) { console.warn('[AddNutrition] favorites fetch failed:', String(err)); setFavorites([]); }
     finally { setFavoritesLoading(false); }
   };
 
@@ -137,10 +149,10 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
     setFat(String(scaleToServing(base, target, food.fat_g)));
     if (food.micro_nutrients) {
       const micros: Record<string, string> = {};
-      for (const field of MICRO_FIELDS) { const val = food.micro_nutrients?.[field.key]; if (val && val > 0) micros[field.key] = String(scaleToServing(base, target, val)); }
+      for (const field of MICRO_FIELDS) { const val = food.micro_nutrients?.[field.key]; if (typeof val === 'number' && val > 0) micros[field.key] = String(scaleToServing(base, target, val)); }
       setMicroNutrients(micros);
       const fibreVal = food.micro_nutrients?.fibre_g;
-      if (fibreVal && fibreVal > 0) setFibre(String(scaleToServing(base, target, fibreVal)));
+      if (typeof fibreVal === 'number' && fibreVal > 0) setFibre(String(scaleToServing(base, target, fibreVal)));
     }
   };
 
@@ -148,7 +160,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
     setSelectedFood(item);
     setServingMultiplier('1');
     setNotes(item.name);
-    const rawOptions: ServingOption[] | undefined = item.micro_nutrients?._serving_options?.map((o: any) => ({ label: o.label, grams: o.grams, isDefault: o.is_default ?? false }));
+    const rawOptions: ServingOption[] | undefined = item.micro_nutrients?._serving_options?.map((o: { label: string; grams: number; is_default?: boolean }) => ({ label: o.label, grams: o.grams, isDefault: o.is_default ?? false }));
     const opts = buildServingOptions(item.serving_size, item.serving_unit, rawOptions);
     setServingOptions(opts);
     const defaultOpt = opts.find((o) => o.isDefault) ?? opts[0];
@@ -176,10 +188,10 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
         setFat(String(scaleToServing(base, effectiveGrams, selectedFood.fat_g)));
         if (selectedFood.micro_nutrients) {
           const micros: Record<string, string> = {};
-          for (const field of MICRO_FIELDS) { const val = selectedFood.micro_nutrients?.[field.key]; if (val && val > 0) micros[field.key] = String(scaleToServing(base, effectiveGrams, val)); }
+          for (const field of MICRO_FIELDS) { const val = selectedFood.micro_nutrients?.[field.key]; if (typeof val === 'number' && val > 0) micros[field.key] = String(scaleToServing(base, effectiveGrams, val)); }
           setMicroNutrients(micros);
           const fibreVal = selectedFood.micro_nutrients?.fibre_g;
-          if (fibreVal && fibreVal > 0) setFibre(String(scaleToServing(base, effectiveGrams, fibreVal)));
+          if (typeof fibreVal === 'number' && fibreVal > 0) setFibre(String(scaleToServing(base, effectiveGrams, fibreVal)));
         }
       } else {
         const scaled = scaleMacros(selectedFood, num);
@@ -191,7 +203,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
     }
   };
 
-  const handleBarcodeFoodSelected = (item: any, mult: number) => {
+  const handleBarcodeFoodSelected = (item: FoodItem, mult: number) => {
     setShowBarcodeScanner(false);
     const scaled = scaleMacros(item, mult);
     setCalories(String(Math.round(scaled.calories)));
@@ -254,13 +266,28 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
       const maxMult = selectedServing?.label === 'Custom (g)' ? 10000 : 99;
       if (isNaN(mult) || mult <= 0 || mult > maxMult) { Alert.alert('Invalid amount', `Please enter a value between 1 and ${maxMult}.`); return; }
     }
-    setLoading(true);
     try {
+      if (onAddItem) {
+        onAddItem({
+          name: (selectedFood?.name ?? notes.trim()) || 'Quick entry',
+          calories: Number(calories) || 0,
+          protein_g: Number(protein) || 0,
+          carbs_g: Number(carbs) || 0,
+          fat_g: Number(fat) || 0,
+        });
+        clearForm();
+        onSuccess();
+        return;
+      }
+      setLoading(true);
       const microPayload = serializeMicroNutrients(microNutrients, fibre, waterGlasses);
-      await api.post('nutrition/entries', {
+      await saveNutritionMutation.mutateAsync({
         entry_date: selectedDate, meal_name: notes.trim() || (hasWater && !hasMacros ? 'Water' : 'Quick entry'),
         food_name: selectedFood?.name ?? null, calories: Number(calories) || 0, protein_g: Number(protein) || 0,
         carbs_g: Number(carbs) || 0, fat_g: Number(fat) || 0,
+        client_id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        client_updated_at: new Date().toISOString(),
+        ...(selectedFood?.id ? { food_item_id: selectedFood.id } : {}),
         ...(notes.trim() ? { notes: notes.trim() } : {}),
         ...(Object.keys(microPayload).length > 0 ? { micro_nutrients: microPayload } : {}),
       });
@@ -274,7 +301,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
       clearForm();
       if (successTimerRef.current) clearTimeout(successTimerRef.current);
       successTimerRef.current = setTimeout(() => setSuccessMessage(''), 2000);
-    } catch { Alert.alert('Error', 'Failed to log nutrition entry.'); }
+    } catch { /* onError handles rollback + user notification */ }
     finally { setLoading(false); }
   };
 
@@ -289,7 +316,8 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
     } else { reset(); onClose(); }
   };
 
-  const handleMacroChange = (field: string, value: any) => {
+  const handleMacroChange = (field: string, value: string | number | boolean | Record<string, string>) => {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     const setters: Record<string, (v: any) => void> = {
       calories: setCalories, protein: setProtein, carbs: setCarbs, fat: setFat,
       notes: setNotes, fibre: setFibre, waterGlasses: setWaterGlasses,
@@ -305,13 +333,13 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <><ModalContainer visible={visible} onClose={handleClose} title="Log Nutrition" testID="add-nutrition-modal" closeButtonTestID="nutrition-cancel-button">
+    <><ModalContainer visible={visible && !showRecipeBuilder} onClose={handleClose} title={onAddItem ? 'Add Food' : 'Log Nutrition'} testID="add-nutrition-modal" closeButtonTestID="nutrition-cancel-button">
       <ScrollView keyboardShouldPersistTaps="handled">
         <MacroBudgetPills consumed={dayTotals} targets={adaptiveTargets} />
 
         {successMessage && (
-          <View style={[styles.successRow, { backgroundColor: c.semantic.positive }]}>
-            <Text style={[styles.successText, { color: c.semantic.positive }]}>{successMessage}</Text>
+          <View style={styles.successRow}>
+            <Text style={styles.successText}>{successMessage}</Text>
             <TouchableOpacity onPress={handleSaveAsFavorite}>
               <Text style={[styles.saveFavLink, { color: c.accent.primary }]}>Save as Favorite</Text>
             </TouchableOpacity>
@@ -319,24 +347,32 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
         )}
 
         {/* Tab Selector */}
-        <View style={styles.tabRow}>
-          {(['quick', 'mealPlans', 'recipes'] as const).map((tab) => (
-            <TouchableOpacity key={tab} style={[styles.tab, activeTab === tab && styles.tabActive]}
-              onPress={() => setActiveTab(tab)} activeOpacity={0.7}>
-              <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                {tab === 'quick' ? 'Quick Log' : tab === 'mealPlans' ? 'Meal Plans' : 'Recipes'}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {!onAddItem && (
+          <View style={styles.tabRow}>
+            {(['quick', 'mealPlans', 'recipes'] as const).map((tab) => (
+              <TouchableOpacity key={tab} style={[styles.tab, activeTab === tab && styles.tabActive]}
+                onPress={() => setActiveTab(tab)} activeOpacity={0.7}>
+                <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+                  {tab === 'quick' ? 'Quick Log' : tab === 'mealPlans' ? 'Meal Plans' : 'Recipes'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* Meal Plans Tab */}
         {activeTab === 'mealPlans' && <MealPlanTab onSelectPlan={handleMealPlanSelect} onFavoriteSaved={fetchFavorites} />}
 
         {/* Recipes Tab */}
         {activeTab === 'recipes' && (
-          <RecipeTab selectedDate={selectedDate} onSuccess={onSuccess}
-            onDayTotalsUpdate={(delta) => setDayTotals((prev) => ({ calories: prev.calories + delta.calories, protein_g: prev.protein_g + delta.protein_g, carbs_g: prev.carbs_g + delta.carbs_g, fat_g: prev.fat_g + delta.fat_g }))} />
+          <>
+            <TouchableOpacity style={[styles.createPlanBtn, { borderColor: c.accent.primary }]}
+              onPress={() => setShowRecipeBuilder(true)} activeOpacity={0.7}>
+              <Text style={[styles.createPlanBtnText, { color: c.accent.primary }]}><Icon name="egg" /> Create Recipe</Text>
+            </TouchableOpacity>
+            <RecipeTab selectedDate={selectedDate} onSuccess={onSuccess}
+              onDayTotalsUpdate={(delta) => setDayTotals((prev) => ({ calories: prev.calories + delta.calories, protein_g: prev.protein_g + delta.protein_g, carbs_g: prev.carbs_g + delta.carbs_g, fat_g: prev.fat_g + delta.fat_g }))} />
+          </>
         )}
 
         {/* Quick Log Tab */}
@@ -361,12 +397,6 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
             )}
             {favoritesLoading && <ActivityIndicator color={c.accent.primary} style={{ marginBottom: spacing[2] }} />}
 
-            {/* Create Recipe */}
-            <TouchableOpacity style={[styles.createPlanBtn, { borderColor: c.accent.primary }]}
-              onPress={() => setShowRecipeBuilder(true)} activeOpacity={0.7}>
-              <Text style={[styles.createPlanBtnText, { color: c.accent.primary }]}><Icon name="egg" /> Create Recipe</Text>
-            </TouchableOpacity>
-
             {/* Food Search */}
             <FoodSearchPanel onFoodSelected={handleSelectFood} onBarcodePress={() => setShowBarcodeScanner(true)} onManualBarcodeResult={handleSelectFood} />
 
@@ -389,11 +419,11 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
       {activeTab === 'quick' && (
         <TouchableOpacity style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
           onPress={handleSubmit} disabled={loading} activeOpacity={0.7} testID="nutrition-submit-button">
-          {loading ? <ActivityIndicator color={c.text.primary} /> : <Text style={[styles.submitText, { color: c.text.primary }]}>Save</Text>}
+          {loading ? <ActivityIndicator color={c.text.primary} /> : <Text style={[styles.submitText, { color: c.text.primary }]}>{onAddItem ? 'Add to Meal' : 'Save'}</Text>}
         </TouchableOpacity>
       )}
 
-      <TouchableOpacity onPress={() => { reset(); onClose(); }} style={styles.doneBtn} activeOpacity={0.7}>
+      <TouchableOpacity onPress={handleClose} style={styles.doneBtn} activeOpacity={0.7}>
         <Text style={[styles.doneBtnText, { color: c.text.muted }]}>Done</Text>
       </TouchableOpacity>
     </ModalContainer>

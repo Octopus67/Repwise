@@ -14,9 +14,9 @@ import { filterByTimeRange } from '../../utils/filterByTimeRange';
 import { useStore } from '../../store';
 import { formatWeight } from '../../utils/unitConversion';
 import type { BodyMeasurement } from '../../types/measurements';
+import type { TimeRange } from '../../types/analytics';
 
 type Metric = 'weight' | 'bodyFat';
-type TimeRange = '7d' | '14d' | '30d' | '90d';
 
 interface MeasurementTrendChartProps {
   measurements: BodyMeasurement[];

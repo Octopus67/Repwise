@@ -38,19 +38,7 @@ import {
 // Types
 // ---------------------------------------------------------------------------
 
-interface FoodItem {
-  id: string;
-  name: string;
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-  serving_size: number;
-  serving_unit: string;
-  source?: string;
-  barcode?: string;
-  micro_nutrients?: Record<string, any> | null;
-}
+import type { FoodItem } from '../../types/nutrition';
 
 interface Props {
   onFoodSelected: (item: FoodItem, multiplier: number) => void;

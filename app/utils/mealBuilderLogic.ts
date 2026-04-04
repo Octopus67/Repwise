@@ -7,12 +7,10 @@
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export interface Macros {
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-}
+import { Macros } from '../types/nutrition';
+import { scaleMacros } from './macroScaling';
+export type { Macros };
+export { scaleMacros };
 
 export interface MealBuilderItem {
   tempId: string;
@@ -38,15 +36,6 @@ export type MealBuilderAction =
   | { type: 'RESET' };
 
 // ─── Pure helpers ────────────────────────────────────────────────────────────
-
-export function scaleMacros(base: Macros, multiplier: number): Macros {
-  return {
-    calories: base.calories * multiplier,
-    protein_g: base.protein_g * multiplier,
-    carbs_g: base.carbs_g * multiplier,
-    fat_g: base.fat_g * multiplier,
-  };
-}
 
 export function computeRunningTotals(items: MealBuilderItem[]): Macros {
   return items.reduce(

@@ -3,13 +3,16 @@
  * Extracted for testability in a Node environment.
  */
 
+import { colors } from '../theme/tokens';
+
 export type FoodSource = 'usda' | 'verified' | 'community' | 'custom';
 
-const GREEN = '#22C55E';
-const GRAY = '#9CA3AF';
+/** Badge colors — green for verified sources, gray for unverified. */
+const VERIFIED_COLOR = colors.semantic.positive;
+const UNVERIFIED_COLOR = colors.text.muted;
 
 export function getSourceBadgeColor(source: FoodSource): string {
-  return source === 'usda' || source === 'verified' ? GREEN : GRAY;
+  return source === 'usda' || source === 'verified' ? VERIFIED_COLOR : UNVERIFIED_COLOR;
 }
 
 export function getSourceBadgeIcon(

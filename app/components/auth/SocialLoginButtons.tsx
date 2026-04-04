@@ -33,7 +33,7 @@ export function SocialLoginButtons({ onSuccess, onError }: SocialLoginButtonsPro
     try {
       const tokens = await signInWithGoogle();
       onSuccess(tokens);
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = getGoogleSignInError(err);
       if (msg) onError(msg);
     } finally {
@@ -46,7 +46,7 @@ export function SocialLoginButtons({ onSuccess, onError }: SocialLoginButtonsPro
     try {
       const tokens = await signInWithApple();
       onSuccess(tokens);
-    } catch (err) {
+    } catch (err: unknown) {
       const msg = getAppleSignInError(err);
       if (msg) onError(msg);
     } finally {

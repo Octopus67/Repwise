@@ -80,7 +80,7 @@ export function TimelineSlider({
 
   const renderItem = useCallback(
     ({ item }: { item: PhotoMeta }) => {
-      const fileUri = pathMap[item.id];
+      const fileUri = pathMap[item.id] || item.image_url;
       const { dateLabel, weightLabel } = formatPhotoInfo(item);
 
       return (

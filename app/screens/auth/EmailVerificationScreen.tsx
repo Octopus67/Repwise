@@ -16,9 +16,11 @@ import { ErrorBanner } from '../../components/common/ErrorBanner';
 import api from '../../services/api';
 import Animated from 'react-native-reanimated';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
+import { createRateLimiter } from '../../utils/rateLimiter';
 
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
+const verifyLimiter = createRateLimiter(5, 60000);
 
 interface EmailVerificationScreenProps {
   email: string;
@@ -33,6 +35,7 @@ export function EmailVerificationScreen({ email, onVerified, onBack }: EmailVeri
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [resending, setResending] = useState(false);
   const inputRef = useRef<TextInput>(null);
   const titleAnim = useStaggeredEntrance(0, 80);
   const subtitleAnim = useStaggeredEntrance(1, 80);
@@ -48,9 +51,14 @@ export function EmailVerificationScreen({ email, onVerified, onBack }: EmailVeri
 
   const submitCode = useCallback(async (verificationCode: string) => {
     setError('');
+    if (!verifyLimiter.canAttempt()) {
+      setError(`Too many attempts. Try again in ${Math.ceil(verifyLimiter.remainingMs() / 1000)}s`);
+      return;
+    }
     setLoading(true);
+    verifyLimiter.recordAttempt();
     try {
-      await api.post('auth/verify-email', { email, code: verificationCode });
+      await api.post('auth/verify-email', { code: verificationCode });
       onVerified();
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Invalid verification code';
@@ -70,14 +78,17 @@ export function EmailVerificationScreen({ email, onVerified, onBack }: EmailVeri
   };
 
   const handleResend = async () => {
-    if (resendCooldown > 0) return;
+    if (resendCooldown > 0 || resending) return;
+    setResending(true);
     setError('');
     try {
-      await api.post('auth/resend-verification', { email });
+      await api.post('auth/resend-verification');
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to resend code';
       setError(msg);
+    } finally {
+      setResending(false);
     }
   };
 
@@ -156,7 +167,7 @@ export function EmailVerificationScreen({ email, onVerified, onBack }: EmailVeri
           <TouchableOpacity
             testID="verify-resend-button"
             onPress={handleResend}
-            disabled={resendCooldown > 0}
+            disabled={resendCooldown > 0 || resending}
             style={styles.resendLink}
             accessibilityLabel={resendCooldown > 0 ? `Resend code available in ${resendCooldown} seconds` : 'Resend verification code'}
             accessibilityRole="button"

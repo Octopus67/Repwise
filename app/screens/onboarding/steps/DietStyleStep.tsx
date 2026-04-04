@@ -42,6 +42,7 @@ export function DietStyleStep({ onNext }: Props) {
 
   const tdee = useMemo(() => {
     if (store.tdeeOverride) return store.tdeeOverride;
+    if (!store.sex) return 0;
     const bd = computeTDEEBreakdown(
       store.weightKg, store.heightCm, age, store.sex,
       store.activityLevel, store.exerciseSessionsPerWeek,
@@ -52,7 +53,7 @@ export function DietStyleStep({ onNext }: Props) {
   }, [store.tdeeOverride, store.weightKg, store.heightCm, age, store.sex, store.activityLevel, store.exerciseSessionsPerWeek, store.exerciseTypes, store.bodyFatPct]);
 
   const budget = useMemo(
-    () => computeCalorieBudget(tdee, goalType, store.rateKgPerWeek, store.sex).budget,
+    () => store.sex ? computeCalorieBudget(tdee, goalType, store.rateKgPerWeek, store.sex).budget : 0,
     [tdee, goalType, store.rateKgPerWeek, store.sex],
   );
 

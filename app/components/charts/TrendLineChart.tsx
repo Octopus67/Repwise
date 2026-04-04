@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableWithoutFeedback, GestureResponderEvent } from 'react-native';
 import Svg, { Line, Polyline, Circle, Text as SvgText } from 'react-native-svg';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
@@ -116,7 +116,7 @@ export function TrendLineChart({
     );
   }
 
-  const handlePress = (evt: any) => {
+  const handlePress = (evt: GestureResponderEvent) => {
     const locationX = evt.nativeEvent.locationX;
     const pw = CHART_WIDTH - PADDING.left - PADDING.right;
     const relX = locationX - PADDING.left;
@@ -300,6 +300,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.sm,
-    fontVariant: typography.numeric.fontVariant as any,
+    fontVariant: [...typography.numeric.fontVariant],
   },
 });

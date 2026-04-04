@@ -9,21 +9,19 @@ import {
 } from 'react-native';
 import { typography, spacing } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
-import { computeDaySummary, computeWeeklySummary } from '../../utils/mealPrepLogic';
+import api from '../../services/api';
+import { extractApiError } from '../../utils/extractApiError';
+import type { ProfileScreenProps } from '../../types/navigation';
+import { computeDaySummary, computeWeeklyMacroTotal } from '../../utils/mealPrepLogic';
 import type { MacroSummary, MealAssignment } from '../../utils/mealPrepLogic';
+import type { DayPlan } from '../../types/common';
 
 const ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const DEFAULT_SLOTS = ['breakfast', 'lunch', 'dinner', 'snack'];
 
-interface DayPlan {
-  day_index: number;
-  assignments: MealAssignment[];
-  unfilled_slots: string[];
-}
-
 type Step = 'days' | 'slots' | 'fill' | 'review' | 'confirm';
 
-export function PrepSundayFlow({ navigation }: any) {
+export function PrepSundayFlow({ navigation }: ProfileScreenProps<'PrepSunday'>) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const [step, setStep] = useState<Step>('days');
@@ -43,46 +41,38 @@ export function PrepSundayFlow({ navigation }: any) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/v1/meal-plans/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ num_days: selectedDays.length }),
+      const { data } = await api.post('meal-plans/generate', {
+        num_days: selectedDays.length,
+        slot_splits: slots,
       });
-      if (!res.ok) throw new Error('Failed to generate plan');
-      const data = await res.json();
       setDayPlans(data.days ?? []);
       setStep('review');
-    } catch (e: any) {
-      setError(e.message ?? 'Something went wrong');
+    } catch (e: unknown) {
+      setError(extractApiError(e, 'Failed to generate meal plan'));
     } finally {
       setLoading(false);
     }
-  }, [selectedDays]);
+  }, [selectedDays, slots]);
 
   const handleSave = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/v1/meal-plans/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: `Prep Sunday ${new Date().toLocaleDateString()}`,
-          start_date: new Date().toISOString().split('T')[0],
-          days: dayPlans,
-        }),
+      await api.post('meal-plans/save', {
+        name: `Prep Sunday ${new Date().toLocaleDateString()}`,
+        start_date: new Date().toISOString().split('T')[0],
+        days: dayPlans,
       });
-      if (!res.ok) throw new Error('Failed to save plan');
       setStep('confirm');
-    } catch (e: any) {
-      setError(e.message ?? 'Failed to save plan');
+    } catch (e: unknown) {
+      setError(extractApiError(e, 'Failed to save meal plan'));
     } finally {
       setLoading(false);
     }
   }, [dayPlans]);
 
   const daySummaries = dayPlans.map((d) => computeDaySummary(d.assignments));
-  const weeklySummary = daySummaries.length > 0 ? computeWeeklySummary(daySummaries) : null;
+  const weeklySummary = daySummaries.length > 0 ? computeWeeklyMacroTotal(daySummaries) : null;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]}>

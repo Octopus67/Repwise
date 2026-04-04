@@ -10,6 +10,8 @@ import { useStore as useMainStore } from '../../../store';
 import { buildOnboardingPayload } from '../../../utils/onboardingPayloadBuilder';
 import { showAlert } from '../../../utils/crossPlatformAlert';
 import api from '../../../services/api';
+import type { AxiosError } from 'axios';
+import { getApiErrorMessage } from '../../../utils/errors';
 import {
   computeTDEEBreakdown,
   computeCalorieBudget,
@@ -60,6 +62,7 @@ export function SummaryStep({ onComplete, onEditStep }: Props) {
 
   const tdee = useMemo(() => {
     if (store.tdeeOverride) return store.tdeeOverride;
+    if (!store.sex) return 0;
     const bd = computeTDEEBreakdown(
       store.weightKg, store.heightCm, age, store.sex,
       store.activityLevel, store.exerciseSessionsPerWeek,
@@ -70,7 +73,7 @@ export function SummaryStep({ onComplete, onEditStep }: Props) {
   }, [store.tdeeOverride, store.weightKg, store.heightCm, age, store.sex, store.activityLevel, store.exerciseSessionsPerWeek, store.exerciseTypes, store.bodyFatPct]);
 
   const budget = useMemo(
-    () => computeCalorieBudget(tdee, goalType, store.rateKgPerWeek, store.sex),
+    () => store.sex ? computeCalorieBudget(tdee, goalType, store.rateKgPerWeek, store.sex) : { budget: tdee, deficit: 0, floorApplied: false },
     [tdee, goalType, store.rateKgPerWeek, store.sex],
   );
 
@@ -112,16 +115,16 @@ export function SummaryStep({ onComplete, onEditStep }: Props) {
 
       store.reset();
       await onComplete?.();
-    } catch (err: any) {
-      if (err?.response?.status === 409) {
+    } catch (err: unknown) {
+      if ((err as AxiosError)?.response?.status === 409) {
         try {
           const [goalsRes, snapshotRes] = await Promise.all([
             api.get('users/goals'),
             api.get('adaptive/snapshots', { params: { limit: 1 } }),
           ]);
 
-          if (snapshotRes.data.items?.[0]) {
-            const snap = snapshotRes.data.items[0];
+          if (snapshotRes.data?.items?.[0]) {
+            const snap = snapshotRes.data?.items?.[0];
             mainStore.setAdaptiveTargets({
               calories: snap.target_calories,
               protein_g: snap.target_protein_g,
@@ -132,8 +135,8 @@ export function SummaryStep({ onComplete, onEditStep }: Props) {
           if (goalsRes.data) {
             mainStore.setGoals(goalsRes.data);
           }
-        } catch {
-          // Ignore fetch errors on 409 — dashboard will load data anyway
+        } catch (err) {
+          console.warn('[SummaryStep] post-409 data fetch failed:', String(err));
         }
 
         store.reset();
@@ -141,7 +144,7 @@ export function SummaryStep({ onComplete, onEditStep }: Props) {
         return;
       }
 
-      const message = err?.response?.data?.message || 'Failed to save your plan. Please try again.';
+      const message = getApiErrorMessage(err, 'Failed to save your plan. Please try again.');
       setError(message);
     } finally {
       setSubmitting(false);

@@ -45,7 +45,7 @@ export function DateScroller({ selectedDate, onDateSelect, loggedDates }: DateSc
   });
 
   const handleScrollEnd = useCallback(
-    (e: any) => {
+    (e: { nativeEvent: { contentOffset: { x: number } } }) => {
       const x = e.nativeEvent.contentOffset.x;
       const page = Math.round(x / SCREEN_WIDTH);
       if (page === 0) {

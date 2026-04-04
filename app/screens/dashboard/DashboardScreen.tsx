@@ -1,20 +1,21 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated from 'react-native-reanimated';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
+import { VerificationBanner } from '../../components/common/VerificationBanner';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { MacroRingsRow } from '../../components/dashboard/MacroRingsRow';
 import { TodaySummaryRow } from '../../components/dashboard/TodaySummaryRow';
 import { StreakIndicator } from '../../components/dashboard/StreakIndicator';
 import { QuickActionButton } from '../../components/dashboard/QuickActionButton';
 import { DateScroller } from '../../components/dashboard/DateScroller';
+import { WeeklyTrainingCalendar } from '../../components/dashboard/WeeklyTrainingCalendar';
 import { MealSlotDiary } from '../../components/dashboard/MealSlotDiary';
 import { BudgetBar } from '../../components/nutrition/BudgetBar';
-import { QuickAddModal } from '../../components/modals/QuickAddModal';
 import { SectionHeader } from '../../components/common/SectionHeader';
 import { Skeleton } from '../../components/common/Skeleton';
 import { PremiumBadge } from '../../components/premium/PremiumBadge';
@@ -27,9 +28,12 @@ import type { TrialInsights } from '../../utils/trialLogic';
 import { AddNutritionModal } from '../../components/modals/AddNutritionModal';
 import { AddTrainingModal } from '../../components/modals/AddTrainingModal';
 import { AddBodyweightModal } from '../../components/modals/AddBodyweightModal';
+import { QuickAddModal } from '../../components/modals/QuickAddModal';
 import { MealBuilder } from '../../components/nutrition/MealBuilder';
 import { CelebrationModal } from '../../components/achievements/CelebrationModal';
 import { TodayWorkoutCard } from '../../components/dashboard/TodayWorkoutCard';
+import { RestDayCard } from '../../components/dashboard/RestDayCard';
+import { WeeklyChallengeCard } from '../../components/dashboard/WeeklyChallengeCard';
 import { useStore, isPremium } from '../../store';
 import { useActiveWorkoutStore } from '../../store/activeWorkoutSlice';
 import { computeEMA, computeWeeklyChange, formatWeeklyChange } from '../../utils/emaTrend';
@@ -40,7 +44,9 @@ import NudgeCard from '../../components/dashboard/NudgeCard';
 import GoalProgressPill from '../../components/dashboard/GoalProgressPill';
 import { RecoveryCheckinModal } from '../../components/modals/RecoveryCheckinModal';
 import { Icon } from '../../components/common/Icon';
+import { TrendLineChart } from '../../components/charts/TrendLineChart';
 import api from '../../services/api';
+import { getApiErrorMessage } from '../../utils/errors';
 import { isPremiumWorkoutLoggerEnabled } from '../../utils/featureFlags';
 import { useDashboardData } from '../../hooks/useDashboardData';
 import { useDashboardModals } from '../../hooks/useDashboardModals';
@@ -48,20 +54,36 @@ import { useDashboardNavigation } from '../../hooks/useDashboardNavigation';
 import { useRecoveryScore } from '../../hooks/useRecoveryScore';
 import { RecoveryInsightCard } from '../../components/dashboard/RecoveryInsightCard';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
+import type { MacroTargets } from '../../types/nutrition';
+import type { DashboardScreenProps } from '../../types/navigation';
+import type { IconName } from '../../components/common/Icon';
 
 // ── Inline banner component to reduce JSX repetition ─────────────────────
-function InfoBanner({ icon, emoji, text, chevronColor, onPress, style, accessibilityLabel }: any) {
+interface InfoBannerProps {
+  icon?: IconName;
+  emoji?: string;
+  text: string;
+  chevronColor: string;
+  onPress: () => void;
+  style?: import('react-native').StyleProp<import('react-native').ViewStyle>;
+  accessibilityLabel?: string;
+}
+
+function InfoBanner({ icon, emoji, text, chevronColor, onPress, style, accessibilityLabel }: InfoBannerProps) {
+  const c = useThemeColors();
   return (
     <TouchableOpacity style={style} onPress={onPress} activeOpacity={0.7} accessibilityLabel={accessibilityLabel} accessibilityRole="button">
-      {icon && <Icon name={icon} size={16} color={chevronColor} />}
+      {icon && <Icon name={icon} size={16} color={c.accent.primary} />}
       {emoji && <Text style={{ fontSize: 16 }}>{emoji}</Text>}
-      <Text style={{ flex: 1, fontSize: typography.size.sm, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.sm }} numberOfLines={1}>{text}</Text>
+      <Text style={{ flex: 1, fontSize: typography.size.sm, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.sm, color: c.text.primary }} numberOfLines={1}>{text}</Text>
       <Text style={{ color: chevronColor, fontSize: typography.size.lg }}>›</Text>
     </TouchableOpacity>
   );
 }
 
-export function DashboardScreen({ navigation }: any) {
+const TRIAL_MODAL_DISMISS_KEY = '@repwise:trial_modal_dismissed';
+
+export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardHome'>) {
   const c = useThemeColors();
   const s = getThemedStyles(c);
   const store = useStore();
@@ -69,10 +91,26 @@ export function DashboardScreen({ navigation }: any) {
   const { status: trialStatus, eligibility: trialEligibility, startTrial, fetchInsights } = useTrial();
   const [showTrialExpiration, setShowTrialExpiration] = useState(false);
   const [trialInsights, setTrialInsights] = useState<TrialInsights | null>(null);
+  const [trialModalDismissed, setTrialModalDismissed] = useState(false);
   const pendingCelebrations = useStore((st) => st.pendingCelebrations);
   const clearCelebrations = useStore((st) => st.clearCelebrations);
   const isWorkoutActive = useActiveWorkoutStore(st => st.exercises.length > 0);
   const activeExerciseCount = useActiveWorkoutStore(st => st.exercises.length);
+  const emailVerified = useStore((st) => st.user?.emailVerified);
+  const [verifyDismissed, setVerifyDismissed] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem('@repwise:verify_dismissed').then(val => {
+      if (val && Date.now() - Number(val) < 86_400_000) setVerifyDismissed(true);
+    });
+    AsyncStorage.getItem(TRIAL_MODAL_DISMISS_KEY).then(val => {
+      if (val && Date.now() - Number(val) < 86_400_000) setTrialModalDismissed(true);
+    });
+  }, []);
+  const dismissVerify = () => {
+    setVerifyDismissed(true);
+    AsyncStorage.setItem('@repwise:verify_dismissed', Date.now().toString());
+  };
 
   const { data, setData, isLoading, error, setError, refreshing, dateLoading, handleDateSelect, handleRefresh, loadDashboardData, targets, consumed, volumeFlagEnabled, selectedDate } = useDashboardData();
   const { modals, openNutrition, closeNutrition, openUpgrade, closeUpgrade, openTraining, closeTraining, openBodyweight, closeBodyweight, openQuickAdd, closeQuickAdd, openMealBuilder, closeMealBuilder, openCheckin, closeCheckin } = useDashboardModals();
@@ -80,15 +118,10 @@ export function DashboardScreen({ navigation }: any) {
   const recovery = useRecoveryScore();
   const { enabled: combinedReadinessEnabled } = useFeatureFlag('combined_readiness');
 
-  useEffect(() => { if (trialStatus && !trialStatus.active && trialStatus.has_used_trial && trialStatus.days_remaining === 0) { fetchInsights().then(setTrialInsights); setShowTrialExpiration(true); } }, [trialStatus, fetchInsights]);
+  useEffect(() => { if (trialStatus && !trialStatus.active && trialStatus.has_used_trial && trialStatus.days_remaining === 0 && !trialModalDismissed) { fetchInsights().then(setTrialInsights); setShowTrialExpiration(true); } }, [trialStatus, fetchInsights, trialModalDismissed]);
   
-  // Load data on mount and when date changes - handled by useDashboardData hook internally
-  // useFocusEffect for refresh on tab focus
-  useFocusEffect(useCallback(() => { 
-    const ac = new AbortController(); 
-    loadDashboardData(selectedDate, ac.signal); 
-    return () => ac.abort(); 
-  }, [selectedDate])); // Remove loadDashboardData from deps!
+  // Load data on mount and when date changes - handled by useDashboardQueries via TanStack Query
+  // TanStack Query auto-refetches stale data, no manual useFocusEffect needed
 
   const anim = useStaggeredEntrance;
   const hA = anim(0, 60);
@@ -105,9 +138,18 @@ export function DashboardScreen({ navigation }: any) {
   const unitSys = store.unitSystem;
   const unit = unitSys === 'metric' ? 'kg' : 'lbs';
 
-  const handleCheckinAccept = async (id: string) => { try { await api.post(`adaptive/suggestions/${id}/accept`); store.setWeeklyCheckin(null); loadDashboardData(selectedDate); } catch {} };
-  const handleCheckinModify = async (id: string, t: any) => { try { await api.post(`adaptive/suggestions/${id}/modify`, t); store.setWeeklyCheckin(null); loadDashboardData(selectedDate); } catch {} };
-  const handleCheckinDismiss = async (id: string) => { try { await api.post(`adaptive/suggestions/${id}/dismiss`); store.setWeeklyCheckin(null); } catch {} };
+  const today = new Date().toISOString().slice(0, 10);
+  const isToday = selectedDate === today;
+  const showRestDay = !isLoading && data.trainingSessions.length === 0 && (!isToday || new Date().getHours() >= 14);
+
+  const handleCheckinAccept = async (id: string) => { try { await api.post(`adaptive/suggestions/${id}/accept`); store.setWeeklyCheckin(null); loadDashboardData(selectedDate); } catch (err: unknown) { Alert.alert('Error', 'Could not update. Please try again.'); } };
+  const handleCheckinModify = async (id: string, t: MacroTargets) => { try { await api.post(`adaptive/suggestions/${id}/modify`, t); store.setWeeklyCheckin(null); loadDashboardData(selectedDate); } catch (err: unknown) { Alert.alert('Error', 'Could not update. Please try again.'); } };
+  const handleCheckinDismiss = async (id: string) => { try { await api.post(`adaptive/suggestions/${id}/dismiss`); store.setWeeklyCheckin(null); } catch (err: unknown) { Alert.alert('Error', 'Could not update. Please try again.'); } };
+
+  const dismissTrialModal = () => {
+    setShowTrialExpiration(false);
+    AsyncStorage.setItem(TRIAL_MODAL_DISMISS_KEY, Date.now().toString());
+  };
 
   // ── Weight trend render ────────────────────────────────────────────────
   const renderWeightTrend = () => {
@@ -123,19 +165,29 @@ export function DashboardScreen({ navigation }: any) {
     const dw = unitSys === 'metric' ? tw.toFixed(1) : (tw * 2.20462).toFixed(1);
     const bc = wc === null ? c.text.secondary : wc < 0 ? c.semantic.positive : c.accent.primary;
     return (
-      <TouchableOpacity style={s.trendSection} onPress={openBodyweight} activeOpacity={0.7} accessibilityLabel="Log bodyweight" accessibilityRole="button">
-        <View style={s.trendRow}>
-          <Text style={[s.trendLabel, { color: c.text.secondary }]}>Trend: {dw}{unit}</Text>
-          <Text style={[s.trendBadge, { color: bc }]}>{formatWeeklyChange(wc, unit)}</Text>
-          <Text style={[s.trendLogHint, { color: c.accent.primary }]}>+ Log</Text>
-        </View>
-      </TouchableOpacity>
+      <View style={s.trendSection}>
+        <TouchableOpacity onPress={openBodyweight} activeOpacity={0.7} accessibilityLabel="Log bodyweight" accessibilityRole="button">
+          <View style={s.trendRow}>
+            <Text style={[s.trendLabel, { color: c.text.secondary }]}>Trend: {dw}{unit}</Text>
+            <Text style={[s.trendBadge, { color: bc }]}>{formatWeeklyChange(wc, unit)}</Text>
+            <Text style={[s.trendLogHint, { color: c.accent.primary }]}>+ Log</Text>
+          </View>
+        </TouchableOpacity>
+        {emaSeries.length >= 3 && (
+          <TrendLineChart
+            data={emaSeries}
+            color={c.accent.primary}
+            suffix={unit}
+          />
+        )}
+      </View>
     );
   };
 
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
       <ScrollView testID="dashboard-screen" style={s.container} contentContainerStyle={s.content}
+        removeClippedSubviews={Platform.OS !== 'web'}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={c.accent.primary} />}>
 
         <Animated.View style={hA}><View style={s.header} testID="dashboard-greeting">
@@ -144,7 +196,43 @@ export function DashboardScreen({ navigation }: any) {
         </View></Animated.View>
 
         {error && <ErrorBanner message={error} onRetry={() => loadDashboardData(selectedDate)} onDismiss={() => setError(null)} />}
+        {emailVerified === false && !verifyDismissed && (
+          <VerificationBanner onVerify={async () => {
+            try {
+              await api.post('auth/resend-verification');
+              const verifyCode = async (code: string | null) => {
+                if (!code || code.length !== 6) return;
+                try {
+                  await api.post('auth/verify-email', { code });
+                  Alert.alert('Verified!', 'Your email has been verified.');
+                  useStore.getState().setAuth(
+                    { ...useStore.getState().user!, emailVerified: true },
+                    useStore.getState().tokens!,
+                  );
+                  setVerifyDismissed(true);
+                } catch {
+                  Alert.alert('Error', 'Invalid code. Please try again.');
+                }
+              };
+              if (Platform.OS === 'web') {
+                const code = window.prompt('Enter the 6-digit verification code sent to your email:');
+                await verifyCode(code);
+              } else {
+                Alert.prompt(
+                  'Enter Verification Code',
+                  'We sent a 6-digit code to your email.',
+                  async (code) => { await verifyCode(code); },
+                  'plain-text',
+                );
+              }
+            } catch (err: unknown) {
+              const msg = getApiErrorMessage(err, 'Could not send verification email. Please try again later.');
+              Alert.alert('Error', msg);
+            }
+          }} onDismiss={dismissVerify} />
+        )}
         <Animated.View style={dsA} testID="dashboard-date-scroller"><DateScroller selectedDate={selectedDate} onDateSelect={handleDateSelect} loggedDates={data.loggedDates} /></Animated.View>
+        {!isLoading && <WeeklyTrainingCalendar selectedDate={selectedDate} trainedDates={data.trainedDates} onDateSelect={handleDateSelect} />}
         {!isLoading && store.goals?.goalType && <View style={s.goalPill}><GoalProgressPill goalType={store.goals.goalType} targetCalories={targets.calories} /></View>}
 
         <Animated.View style={qaA}>
@@ -170,8 +258,12 @@ export function DashboardScreen({ navigation }: any) {
         <Animated.View style={bA}>{!isLoading && <BudgetBar consumed={consumed} targets={targets} />}</Animated.View>
         <Animated.View style={msA}>{!isLoading && <MealSlotDiary entries={data.nutritionEntries} onAddToSlot={nav.handleAddToSlot} />}</Animated.View>
 
-        {!isLoading && data.nudges.length > 0 && <NudgeCard nudge={data.nudges[0]} onDismiss={() => setData((p) => ({ ...p, nudges: [] }))} onAction={(a) => { if (a === 'recalculate') navigation?.navigate?.('Recalculate'); else if (a === 'edit_goals') navigation?.navigate?.('Goals'); }} />}
-        {!isLoading && <TodayWorkoutCard sessions={data.trainingSessions} isWorkoutActive={isWorkoutActive} activeExerciseCount={activeExerciseCount} onPress={nav.handleSessionPress} onResume={nav.handleResumeWorkout} onStartWorkout={nav.handleStartWorkout} />}
+        {!isLoading && data.nudges.length > 0 && <NudgeCard nudge={data.nudges[0]} onDismiss={() => setData((p) => ({ ...p, nudges: [] }))} onAction={(a) => { console.warn('[Dashboard] Unhandled nudge action:', a); }} />}
+        {showRestDay
+          ? <RestDayCard proteinTarget={targets.protein_g} />
+          : !isLoading && <TodayWorkoutCard sessions={data.trainingSessions} isWorkoutActive={isWorkoutActive} activeExerciseCount={activeExerciseCount} onPress={nav.handleSessionPress} onResume={nav.handleResumeWorkout} onStartWorkout={nav.handleStartWorkout} />}
+
+        {!isLoading && <WeeklyChallengeCard challenges={data.challenges} />}
 
         <Animated.View style={[smA, s.summarySection]}>
           {isLoading ? <View style={s.skelSummary}><Skeleton width={120} height={24} /><Skeleton width={120} height={24} /></View> : (
@@ -207,12 +299,21 @@ export function DashboardScreen({ navigation }: any) {
       </ScrollView>
 
       <UpgradeModal visible={modals.showUpgrade} onClose={closeUpgrade} trialEligible={trialEligibility?.eligible} onStartTrial={startTrial} />
-      <TrialExpirationModal visible={showTrialExpiration} onClose={() => setShowTrialExpiration(false)} onUpgrade={() => { setShowTrialExpiration(false); openUpgrade(); }} insights={trialInsights} />
+      <TrialExpirationModal visible={showTrialExpiration} onClose={dismissTrialModal} onUpgrade={(planId?: string) => {
+          setShowTrialExpiration(false);
+          if (planId) {
+            // TODO: payments/subscribe endpoint removed — purchases go through RevenueCat SDK
+            // Once RevenueCat integration is wired, call Purchases.purchasePackage() here
+            Alert.alert('Coming Soon', 'In-app purchase flow is being finalized.');
+          } else {
+            openUpgrade();
+          }
+        }} insights={trialInsights} />
       <AddNutritionModal visible={modals.showNutrition} onClose={closeNutrition} onSuccess={() => loadDashboardData(selectedDate)} prefilledMealName={modals.prefilledMealName} />
       {!isPremiumWorkoutLoggerEnabled() && <AddTrainingModal visible={modals.showTraining} onClose={closeTraining} onSuccess={() => loadDashboardData(selectedDate)} />}
       <AddBodyweightModal visible={modals.showBodyweight} onClose={closeBodyweight} onSuccess={() => loadDashboardData(selectedDate)} />
       <QuickAddModal visible={modals.showQuickAdd} onClose={closeQuickAdd} onSuccess={() => loadDashboardData(selectedDate)} targetDate={selectedDate} />
-      <MealBuilder visible={modals.showMealBuilder} onClose={closeMealBuilder} onSuccess={() => loadDashboardData(selectedDate)} />
+      <MealBuilder visible={modals.showMealBuilder} onClose={closeMealBuilder} onSuccess={() => loadDashboardData(selectedDate)} targets={targets} consumed={consumed} />
       <CelebrationModal achievements={pendingCelebrations} visible={pendingCelebrations.length > 0} onDismiss={clearCelebrations} />
       <RecoveryCheckinModal visible={modals.showCheckin} onClose={closeCheckin} onSuccess={() => loadDashboardData(selectedDate)} />
     </SafeAreaView>

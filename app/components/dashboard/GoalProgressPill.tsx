@@ -8,7 +8,7 @@ interface GoalProgressPillProps {
   targetCalories: number;
 }
 
-export default function GoalProgressPill({ goalType, targetCalories }: GoalProgressPillProps) {
+export default React.memo(function GoalProgressPill({ goalType, targetCalories }: GoalProgressPillProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const getGoalLabel = (type: string) => {
@@ -28,7 +28,7 @@ export default function GoalProgressPill({ goalType, targetCalories }: GoalProgr
       </Text>
     </View>
   );
-}
+});
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {

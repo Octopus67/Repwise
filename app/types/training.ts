@@ -146,6 +146,9 @@ export interface ActiveWorkoutActions {
 
 /** Payload sent to POST/PUT /api/v1/training/sessions */
 export interface ActiveWorkoutPayload {
+  client_id?: string;
+  client_updated_at?: string;
+  [key: string]: unknown;
   session_date: string;
   exercises: Array<{
     exercise_name: string;
@@ -256,7 +259,13 @@ export interface ActiveWorkoutScreenParams {
   sessionId?: string;
   templateId?: string;
   sessionDate?: string;
+  swappedExerciseName?: string;
+  swapTargetLocalId?: string;
 }
+
+// ─── Timer State ────────────────────────────────────────────────────────────
+
+export type TimerState = 'IDLE' | 'RUNNING' | 'PAUSED' | 'COMPLETED';
 
 // ─── Re-export UnitSystem for convenience ───────────────────────────────────
 

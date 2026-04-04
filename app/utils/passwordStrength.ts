@@ -4,6 +4,9 @@ export type StrengthLevel = 'weak' | 'fair' | 'good' | 'strong';
 
 export interface PasswordValidation {
   minLength: boolean;
+  hasUppercase: boolean;
+  hasLowercase: boolean;
+  hasDigit: boolean;
 }
 
 export interface PasswordStrengthResult {
@@ -16,12 +19,13 @@ export interface PasswordStrengthResult {
 export function getPasswordStrength(password: string): PasswordStrengthResult {
   const validation: PasswordValidation = {
     minLength: password.length >= 8,
+    hasUppercase: /[A-Z]/.test(password),
+    hasLowercase: /[a-z]/.test(password),
+    hasDigit: /[0-9]/.test(password),
   };
 
-  const isValid = validation.minLength;
-
   if (!password) {
-    return { score: 0, level: 'weak', validation, isValid };
+    return { score: 0, level: 'weak', validation, isValid: false };
   }
 
   const { score } = zxcvbn(password);
@@ -31,6 +35,12 @@ export function getPasswordStrength(password: string): PasswordStrengthResult {
   else if (score === 2) level = 'fair';
   else if (score === 3) level = 'good';
   else level = 'strong';
+
+  const isValid = validation.minLength &&
+    validation.hasUppercase &&
+    validation.hasLowercase &&
+    validation.hasDigit &&
+    score >= 2;
 
   return { score, level, validation, isValid };
 }

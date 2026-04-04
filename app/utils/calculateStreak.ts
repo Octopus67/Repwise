@@ -6,7 +6,7 @@
  * - Walks backwards counting consecutive dates (each exactly 1 day apart)
  * - Returns the count (including today)
  */
-export function calculateStreak(logDates: string[], today: string): number {
+export function calculateStreak(logDates: string[], today: string, frozenDates?: Set<string>): number {
   if (!logDates || logDates.length === 0) return 0;
   if (!isValidDateStr(today)) return 0;
 
@@ -26,6 +26,8 @@ export function calculateStreak(logDates: string[], today: string): number {
     if (dateSet.has(prev)) {
       count++;
       current = prev;
+    } else if (frozenDates?.has(prev)) {
+      current = prev;  // Frozen day preserves streak but doesn't count
     } else {
       break;
     }

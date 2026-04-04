@@ -25,6 +25,7 @@ const BAR_DELAYS = { bmr: 200, neat: 350, eat: 500, tef: 650 };
 
 function AnimatedTDEEText({ value }: { value: SharedValue<number> }) {
   const c = useThemeColors();
+  const s = getThemedStyles(c);
   const [display, setDisplay] = useState(0);
   useAnimatedReaction(
     () => Math.round(value.value),
@@ -32,7 +33,7 @@ function AnimatedTDEEText({ value }: { value: SharedValue<number> }) {
     [value],
   );
   return (
-    <Text style={{ color: c.text.primary, fontSize: typography.size['3xl'], fontWeight: typography.weight.bold, lineHeight: typography.lineHeight['3xl'] }}>~{display.toLocaleString()} kcal/day</Text>
+    <Text style={[s.totalValue, { color: c.text.primary }]}>~{display.toLocaleString()} kcal/day</Text>
   );
 }
 
@@ -71,7 +72,7 @@ export function TDEERevealStep({ onNext }: Props) {
 
   const breakdown = useMemo(
     () =>
-      computeTDEEBreakdown(
+      store.sex ? computeTDEEBreakdown(
         store.weightKg,
         store.heightCm,
         age,
@@ -80,7 +81,7 @@ export function TDEERevealStep({ onNext }: Props) {
         store.exerciseSessionsPerWeek,
         store.exerciseTypes.length > 0 ? store.exerciseTypes : ['strength'],
         store.bodyFatPct ?? undefined,
-      ),
+      ) : { bmr: 0, neat: 0, eat: 0, tef: 0, total: 0 },
     [store.weightKg, store.heightCm, age, store.sex, store.activityLevel, store.exerciseSessionsPerWeek, store.exerciseTypes, store.bodyFatPct],
   );
 
@@ -186,6 +187,32 @@ export function TDEERevealStep({ onNext }: Props) {
         </View>
       )}
 
+      {/* Divider */}
+      <View style={[styles.divider, { backgroundColor: c.border.default }]} />
+
+      {/* Smart Training comparison */}
+      <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Smart Training</Text>
+      <View style={styles.comparisonGrid}>
+        <View style={[styles.compCard, { backgroundColor: c.bg.surface, borderColor: c.border.subtle, opacity: 0.7 }]}>
+          <Text style={[styles.compCardTitle, { color: c.text.secondary }]}>Static Plans</Text>
+          <View style={[styles.compCardDivider, { backgroundColor: c.border.default }]} />
+          <Text style={[styles.compCardItem, { color: c.text.muted }]}>Same volume every week</Text>
+          <Text style={[styles.compCardItem, { color: c.text.muted }]}>Ignores calorie intake</Text>
+          <Text style={[styles.compCardItem, { color: c.text.muted }]}>No recovery adjustment</Text>
+          <View style={styles.spacerSm} />
+          <Text style={[styles.compCardResult, { color: c.semantic.negative }]}>Risk: Overtraining or plateau</Text>
+        </View>
+        <View style={[styles.compCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.accent.primary, borderWidth: 2 }]}>
+          <Text style={[styles.compCardTitle, { color: c.accent.primary }]}>Repwise Adaptive</Text>
+          <View style={[styles.compCardDivider, { backgroundColor: c.accent.primary }]} />
+          <Text style={[styles.compCardItem, { color: c.text.secondary }]}>Adjusts weekly</Text>
+          <Text style={[styles.compCardItem, { color: c.text.secondary }]}>Matches your calories</Text>
+          <Text style={[styles.compCardItem, { color: c.text.secondary }]}>Responds to recovery</Text>
+          <View style={styles.spacerSm} />
+          <Text style={[styles.compCardResult, { color: c.semantic.positive }]}>Result: Optimal progress</Text>
+        </View>
+      </View>
+
       {/* Educational note */}
       <Text style={[styles.note, { color: c.text.muted }]}>
         This will get more accurate as you log food and weight
@@ -249,5 +276,14 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   clearOverride: { color: c.semantic.negative, fontSize: typography.size.sm, textAlign: 'center', lineHeight: typography.lineHeight.sm },
   note: { color: c.text.muted, fontSize: typography.size.xs, textAlign: 'center', marginBottom: spacing[6], lineHeight: typography.lineHeight.xs },
+  divider: { height: 1, marginVertical: spacing[5] },
+  sectionTitle: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, marginBottom: spacing[3], lineHeight: typography.lineHeight.lg },
+  comparisonGrid: { flexDirection: 'row', gap: spacing[3], marginBottom: spacing[5] },
+  compCard: { flex: 1, borderRadius: radius.md, borderWidth: 1, padding: spacing[4] },
+  compCardTitle: { fontSize: typography.size.base, fontWeight: typography.weight.bold, marginBottom: spacing[2], textAlign: 'center' },
+  compCardDivider: { height: 2, marginBottom: spacing[3] },
+  compCardItem: { fontSize: typography.size.sm, marginBottom: spacing[1], lineHeight: typography.lineHeight.sm },
+  compCardResult: { fontSize: typography.size.sm, fontWeight: typography.weight.semibold, marginTop: spacing[2], lineHeight: typography.lineHeight.sm },
   btn: { marginTop: spacing[2] },
+  spacerSm: { height: spacing[2] },
 });

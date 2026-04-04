@@ -1,12 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useFeatureFlag } from './useFeatureFlag';
 import api from '../services/api';
-
-interface RecoveryFactor {
-  name: string;
-  value: number;
-  source: string;
-}
+import type { RecoveryFactor } from '../types/common';
 
 interface RecoveryScore {
   score: number;
@@ -68,7 +63,7 @@ export function useRecoveryScore(): RecoveryScore {
             score: data.score ?? 0,
             volumeMultiplier: 1.0,
             label: data.score != null ? (data.score >= 70 ? 'Ready to Push' : data.score >= 40 ? 'Train Smart' : 'Recovery Day') : '',
-            factors: (data.factors ?? []).map((f: any) => ({ name: f.name, value: f.normalized * 100, source: 'readiness' })),
+            factors: (data.factors ?? []).map((f: { name: string; normalized: number }) => ({ name: f.name, value: f.normalized * 100, source: 'readiness' })),
             isLoading: false,
           });
         }

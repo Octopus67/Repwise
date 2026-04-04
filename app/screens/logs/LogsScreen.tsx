@@ -8,11 +8,12 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import type { StackNavigationProp } from '@react-navigation/stack';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../../components/common/Card';
@@ -20,7 +21,7 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { Skeleton } from '../../components/common/Skeleton';
 import { SwipeableRow } from '../../components/common/SwipeableRow';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
-import { CopyMealsBar } from '../../components/nutrition/CopyMealsBar';
+
 import { BudgetBar } from '../../components/nutrition/BudgetBar';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { useHaptics } from '../../hooks/useHaptics';
@@ -34,6 +35,7 @@ import { useStore } from '../../store';
 import { Icon } from '../../components/common/Icon';
 import api from '../../services/api';
 import type { TrainingSessionResponse, WorkoutTemplateResponse } from '../../types/training';
+import type { MealFavorite } from '../../types/nutrition';
 import type { LogsStackParamList } from '../../navigation/BottomTabNavigator';
 
 // ── New imports for redesign ────────────────────────────────────────────────
@@ -70,7 +72,7 @@ export function LogsScreen() {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const pillStyles = getPillStyles(c);
-  const navigation = useNavigation<StackNavigationProp<LogsStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<LogsStackParamList>>();
   const fabAnim = useStaggeredEntrance(0, 200);
   const { impact } = useHaptics();
   const [tab, setTab] = useState<Tab>('nutrition');
@@ -89,12 +91,12 @@ export function LogsScreen() {
   const [trainingLoadingMore, setTrainingLoadingMore] = useState(false);
 
   // ── New state: Quick Re-log, favorites, templates ─────────────────────────
-  const [favorites, setFavorites] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<MealFavorite[]>([]);
   const [recentEntries, setRecentEntries] = useState<NutritionEntry[]>([]);
   const [quickRelogItems, setQuickRelogItems] = useState<QuickRelogItem[]>([]);
   const [quickRelogLoading, setQuickRelogLoading] = useState(true);
   const [userTemplates, setUserTemplates] = useState<WorkoutTemplateResponse[]>([]);
-  const [staticTemplates, setStaticTemplates] = useState<any[]>([]);
+  const [staticTemplates, setStaticTemplates] = useState<WorkoutTemplateResponse[]>([]);
 
   const selectedDate = useStore((s) => s.selectedDate);
   const setSelectedDate = useStore((s) => s.setSelectedDate);
@@ -114,7 +116,7 @@ export function LogsScreen() {
       const start = selectedDate;
       const end = selectedDate;
       const res = await api.get('nutrition/entries', { params: { start_date: start, end_date: end, limit: 50 } });
-      setNutritionEntries(res.data.items ?? []);
+      setNutritionEntries(res.data?.items ?? []);
     } catch {
       // best-effort
     }
@@ -130,8 +132,8 @@ export function LogsScreen() {
           limit: TRAINING_PAGE_SIZE 
         },
       });
-      const items: TrainingSessionResponse[] = res.data.items ?? [];
-      const totalCount: number = res.data.total_count ?? 0;
+      const items: TrainingSessionResponse[] = res.data?.items ?? [];
+      const totalCount: number = res.data?.total_count ?? 0;
 
       if (replace) {
         setTrainingSessions(items);
@@ -168,8 +170,8 @@ export function LogsScreen() {
         api.get('training/templates'),
       ]);
 
-      if (favoritesRes.status === 'fulfilled') setFavorites(favoritesRes.value.data.items ?? []);
-      if (recentRes.status === 'fulfilled') setRecentEntries(recentRes.value.data.items ?? []);
+      if (favoritesRes.status === 'fulfilled') setFavorites(favoritesRes.value.data?.items ?? []);
+      if (recentRes.status === 'fulfilled') setRecentEntries(recentRes.value.data?.items ?? []);
       if (userTemplatesRes.status === 'fulfilled') setUserTemplates(userTemplatesRes.value.data ?? []);
       if (staticTemplatesRes.status === 'fulfilled') setStaticTemplates(staticTemplatesRes.value.data ?? []);
     } catch {
@@ -212,14 +214,14 @@ export function LogsScreen() {
     try {
       await api.delete(`nutrition/entries/${id}`);
       loadNutritionData();
-    } catch { /* ignore */ }
+    } catch (err: unknown) { Alert.alert('Error', 'Failed to delete. Please try again.'); }
   };
 
   const handleDeleteTraining = async (id: string) => {
     try {
       await api.delete(`training/sessions/${id}`);
       setTrainingSessions((prev) => prev.filter((s) => s.id !== id));
-    } catch { /* ignore */ }
+    } catch (err: unknown) { Alert.alert('Error', 'Failed to delete. Please try again.'); }
   };
 
   // Group training sessions by date using utility
@@ -355,7 +357,7 @@ export function LogsScreen() {
       {/* My Templates section — hidden if empty */}
       {userTemplates.length > 0 && (
         <CollapsibleSection title="My Templates" defaultExpanded={true}>
-          <View style={{ gap: spacing[2] }}>
+          <View style={styles.templateGap}>
             {userTemplates.map((t) => (
               <TemplateRow
                 key={t.id}
@@ -503,8 +505,8 @@ export function LogsScreen() {
             defaultExpanded={quickRelogItems.length < 3}
           >
             {favorites.length > 0 ? (
-              <View style={{ gap: spacing[2] }}>
-                {favorites.map((fav: any) => (
+              <View style={styles.templateGap}>
+                {favorites.map((fav) => (
                   <TouchableOpacity
                     key={fav.id}
                     style={[styles.favoriteRow, { borderBottomColor: c.border.subtle }]}
@@ -514,7 +516,7 @@ export function LogsScreen() {
                     }}
                     activeOpacity={0.7}
                   >
-                    <View style={{ flex: 1 }}>
+                    <View style={styles.flexOne}>
                       <Text style={[styles.favoriteName, { color: c.text.primary }]}>{fav.name}</Text>
                       <Text style={[styles.favoriteMacros, { color: c.text.secondary }]}>
                         {Math.round(fav.calories)} kcal
@@ -531,10 +533,7 @@ export function LogsScreen() {
             )}
           </CollapsibleSection>
 
-          {/* 5. CopyMealsBar at bottom */}
-          <View style={{ marginTop: spacing[3] }}>
-            <CopyMealsBar targetDate={selectedDate} onCopyComplete={loadData} />
-          </View>
+
         </ScrollView>
       ) : (
         /* ── Training Tab ──────────────────────────────────────────────── */
@@ -631,6 +630,8 @@ const getPillStyles = (c: ThemeColors) => StyleSheet.create({
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: c.bg.base },
+  templateGap: { gap: spacing[2] },
+  flexOne: { flex: 1 },
   title: {
     color: c.text.primary,
     fontSize: typography.size.xl,

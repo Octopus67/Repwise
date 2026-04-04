@@ -27,7 +27,7 @@ function getPillColor(current: number, mavLow: number, mavHigh: number, c: Theme
   return { bg: c.bg.surfaceRaised, text: c.text.secondary };
 }
 
-export const VolumePills: React.FC<VolumePillsProps> = ({ muscleVolumes, goalMultiplier }) => {
+export const VolumePills = React.memo<VolumePillsProps>(({ muscleVolumes, goalMultiplier }) => {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   if (!muscleVolumes.length) return null;
@@ -64,7 +64,7 @@ export const VolumePills: React.FC<VolumePillsProps> = ({ muscleVolumes, goalMul
       })}
     </ScrollView>
   );
-};
+});
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   scroll: {

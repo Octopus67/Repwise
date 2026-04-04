@@ -7,11 +7,11 @@ export interface WorkoutSummary {
   durationSeconds: number;
 }
 
-export function computeWorkoutSummary(
+export function computeLiveWorkoutSummary(
   exercises: ActiveExercise[],
   startedAt: string
 ): WorkoutSummary {
-  const activeExercises = exercises.filter(e => !(e as any).skipped);
+  const activeExercises = exercises.filter(e => !e.skipped);
   const completedSets = activeExercises.flatMap(e => e.sets).filter(s => s.completed);
   const totalVolumeKg = completedSets.reduce((sum, s) => {
     const w = parseFloat(s.weight) || 0;
@@ -34,3 +34,6 @@ export function formatMiniSummary(summary: WorkoutSummary): string {
   const mins = Math.floor(summary.durationSeconds / 60);
   return `${summary.exerciseCount} exercises · ${summary.completedSetCount} sets · ${mins} min`;
 }
+
+/** @deprecated Use computeLiveWorkoutSummary instead. */
+export const computeWorkoutSummary = computeLiveWorkoutSummary;

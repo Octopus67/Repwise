@@ -264,7 +264,7 @@ describe('Calculation integration with store values', () => {
     const s = getState();
     const age = computeAge(s.birthYear, s.birthMonth);
     const tdee = computeTDEEBreakdown(
-      s.weightKg, s.heightCm, age, s.sex,
+      s.weightKg, s.heightCm, age, s.sex!,
       s.activityLevel, s.exerciseSessionsPerWeek,
       s.exerciseTypes, s.bodyFatPct ?? undefined,
     );

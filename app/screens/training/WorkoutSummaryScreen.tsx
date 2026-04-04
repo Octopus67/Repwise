@@ -22,9 +22,13 @@ import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThem
 import { formatDuration } from '../../utils/durationFormat';
 import type { PersonalRecordResponse } from '../../types/training';
 import type { WorkoutSummaryResult } from '../../utils/workoutSummary';
+import type { DashboardScreenProps } from '../../types/navigation';
 import { Icon } from '../../components/common/Icon';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 import { ErrorBoundary } from '../../components/common/ErrorBoundary';
+import { SimpleModeDiscoveryModal } from '../../components/training/SimpleModeDiscoveryModal';
+import { StimulusSummary } from '../../components/training/StimulusSummary';
+import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -37,11 +41,12 @@ interface WorkoutSummaryScreenParams {
     setsCompleted: number;
     bestSet: { weight: string; reps: string } | null;
   }>;
+  huByMuscle?: Record<string, number>;
 }
 
 interface WorkoutSummaryScreenProps {
   route: { params: WorkoutSummaryScreenParams };
-  navigation: any;
+  navigation: DashboardScreenProps<'WorkoutSummary'>['navigation'];
 }
 
 // ─── Components ──────────────────────────────────────────────────────────────
@@ -76,9 +81,19 @@ function StatCard({ label, value }: { label: string; value: string }) {
 function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
-  const { summary, duration, personalRecords, exerciseBreakdown } = route.params;
+  const { summary, duration, personalRecords, exerciseBreakdown, huByMuscle } = route.params;
   const [sharePromptDismissed, setSharePromptDismissed] = useState(false);
   const { enabled: sharingEnabled } = useFeatureFlag('social_sharing');
+
+  const { simpleMode, hasCompletedFirstManualWorkout, simpleModeDiscoveryCount } =
+    useWorkoutPreferencesStore();
+  const showDiscovery =
+    !simpleMode && hasCompletedFirstManualWorkout && simpleModeDiscoveryCount < 3;
+  const [discoveryVisible, setDiscoveryVisible] = useState(showDiscovery);
+
+  const muscleData = huByMuscle
+    ? Object.entries(huByMuscle).map(([muscle, hu]) => ({ muscle, hu }))
+    : [];
 
   const handleDone = () => {
     navigation.navigate('DashboardHome');
@@ -194,7 +209,20 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
             </View>
           </TouchableOpacity>
         )}
+
+        {/* Stimulus Summary — shown when simpleMode is ON */}
+        {simpleMode && muscleData.length > 0 && (
+          <View style={getStyles().section}>
+            <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Muscle Stimulus</Text>
+            <View style={[getStyles().sectionContent, { backgroundColor: c.bg.surface, borderColor: c.border.default, padding: spacing[3] }]}>
+              <StimulusSummary muscleData={muscleData} />
+            </View>
+          </View>
+        )}
       </ScrollView>
+
+      {/* Discovery Modal */}
+      <SimpleModeDiscoveryModal visible={discoveryVisible} onClose={() => setDiscoveryVisible(false)} />
 
       {/* Done Button */}
       <View style={[getStyles().bottomBar, { borderTopColor: c.border.subtle }]}>

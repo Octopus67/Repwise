@@ -9,8 +9,10 @@ import {
   ActionSheetIOS,
   Alert,
   Platform,
+  Share,
 } from 'react-native';
 import api from '../../services/api';
+import { buildTemplateShareUrl } from '../../services/sharing';
 import { orderTemplates } from '../../utils/templateConversion';
 import type { WorkoutTemplateResponse } from '../../types/training';
 import { spacing, typography, radius, shadows, letterSpacing as ls } from '../../theme/tokens';
@@ -111,6 +113,14 @@ export function TemplatePicker({
     [onSelectTemplate, deleteTemplate],
   );
 
+  const shareTemplate = useCallback(async (templateId: string) => {
+    try {
+      await Share.share({ message: buildTemplateShareUrl(templateId) });
+    } catch {
+      // user cancelled or share failed — no action needed
+    }
+  }, []);
+
   const ordered = orderTemplates(userTemplates, systemTemplates);
 
   if (loading) {
@@ -140,8 +150,10 @@ export function TemplatePicker({
             <TemplateCard
               key={t.id}
               template={t}
+              colors={c}
               onPress={() => onSelectTemplate(t.id, false)}
               onLongPress={() => handleLongPress(t)}
+              onShare={() => shareTemplate(t.id)}
             />
           ))}
         </>
@@ -155,7 +167,9 @@ export function TemplatePicker({
             <TemplateCard
               key={t.id}
               template={t}
+              colors={c}
               onPress={() => onSelectTemplate(t.id, true)}
+              onShare={() => shareTemplate(t.id)}
             />
           ))}
         </>
@@ -166,29 +180,40 @@ export function TemplatePicker({
 
 function TemplateCard({
   template,
+  colors,
   onPress,
   onLongPress,
+  onShare,
 }: {
   template: WorkoutTemplateResponse;
+  colors: ThemeColors;
   onPress: () => void;
   onLongPress?: () => void;
+  onShare: () => void;
 }) {
   return (
     <TouchableOpacity
-      style={[getStyles().card, { backgroundColor: getThemeColors().bg.surfaceRaised, borderColor: getThemeColors().border.default }]}
+      style={[getStyles().card, { backgroundColor: colors.bg.surfaceRaised, borderColor: colors.border.default }]}
       onPress={onPress}
       onLongPress={onLongPress}
       activeOpacity={0.7}
     >
-      <Text style={[getStyles().cardName, { color: getThemeColors().text.primary }]}>{template.name}</Text>
-      {template.description ? (
-        <Text style={[getStyles().cardDesc, { color: getThemeColors().text.secondary }]} numberOfLines={1}>
-          {template.description}
-        </Text>
-      ) : null}
-      <Text style={[getStyles().cardMeta, { color: getThemeColors().text.muted }]}>
-        {template.exercises.length} exercise{template.exercises.length !== 1 ? 's' : ''}
-      </Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <View style={{ flex: 1 }}>
+          <Text style={[getStyles().cardName, { color: colors.text.primary }]}>{template.name}</Text>
+          {template.description ? (
+            <Text style={[getStyles().cardDesc, { color: colors.text.secondary }]} numberOfLines={1}>
+              {template.description}
+            </Text>
+          ) : null}
+          <Text style={[getStyles().cardMeta, { color: colors.text.muted }]}>
+            {template.exercises.length} exercise{template.exercises.length !== 1 ? 's' : ''}
+          </Text>
+        </View>
+        <TouchableOpacity onPress={onShare} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel="Share template" accessibilityRole="button">
+          <Text style={{ fontSize: 18 }}>↗</Text>
+        </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 }

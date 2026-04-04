@@ -39,7 +39,8 @@ export function calculateNavyBF(input: NavyBFInput): number | null {
   }
 
   // Clamp to reasonable range
-  if (bf < 2 || bf > 60 || !isFinite(bf)) return null;
+  if (!isFinite(bf)) return null;
+  bf = Math.max(2, Math.min(60, bf));
 
   return Math.round(bf * 10) / 10;
 }

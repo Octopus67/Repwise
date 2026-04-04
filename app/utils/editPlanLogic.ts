@@ -17,8 +17,8 @@ import type { UnitSystem } from './unitConversion';
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 
-export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
-export type GoalType = 'cutting' | 'maintaining' | 'bulking';
+export type { ActivityLevel, GoalType } from '../types/onboarding';
+import type { ActivityLevel, GoalType } from '../types/onboarding';
 
 export interface EditDraft {
   weight: string;
@@ -32,10 +32,8 @@ export interface EditDraft {
   goalRate: string;
 }
 
-export interface ValidationResult {
-  valid: boolean;
-  errors: Partial<Record<keyof EditDraft, string>>;
-}
+export type { ValidationResult } from '../types/common';
+import type { ValidationResult } from '../types/common';
 
 export interface SummaryFields {
   weight: string;

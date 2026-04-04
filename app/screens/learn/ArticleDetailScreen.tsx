@@ -9,6 +9,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   ActivityIndicator,
+  type DimensionValue,
 } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +21,7 @@ import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { ArticleChart } from '../../components/learn/ArticleChart';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 import api from '../../services/api';
+import { getApiErrorMessage } from '../../utils/errors';
 
 interface ArticleDetail {
   id: string;
@@ -53,9 +55,8 @@ export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDeta
     try {
       const { data } = await api.get(`content/articles/${articleId}`);
       setArticle(data);
-    } catch (err: any) {
-      const msg = err?.response?.data?.message ?? err?.message ?? 'Failed to load article';
-      setError(msg);
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Failed to load article'));
     }
   }, [articleId]);
 
@@ -113,7 +114,7 @@ export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDeta
   }, [article]);
 
   const progressBarStyle = useAnimatedStyle(() => ({
-    width: `${progressValue.value * 100}%` as any,
+    width: `${progressValue.value * 100}%` as DimensionValue,
   }));
 
   if (!article) {

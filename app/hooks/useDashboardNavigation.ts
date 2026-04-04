@@ -3,7 +3,9 @@ import { useHaptics } from './useHaptics';
 import { isPremiumWorkoutLoggerEnabled } from '../utils/featureFlags';
 
 interface NavigationActions {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   navigate?: (...args: any[]) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   push?: (...args: any[]) => void;
 }
 
@@ -57,7 +59,7 @@ export function useDashboardNavigation({
     navigation?.navigate?.('ActiveWorkout');
   }, [navigation]);
 
-  const handleNavigateAnalytics = useCallback((params?: any) => {
+  const handleNavigateAnalytics = useCallback((params?: Record<string, unknown>) => {
     navigation?.navigate?.('Analytics', params);
   }, [navigation]);
 

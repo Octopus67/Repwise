@@ -9,11 +9,10 @@ import {
 } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { formatRestTimer } from '../../utils/durationFormat';
-import { getTimerColor } from '../../utils/restDurationV2';
+import { getTimerRingColor } from '../../utils/restDurationV2';
 import { spacing, typography, radius, motion } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
-
-type TimerState = 'IDLE' | 'RUNNING' | 'PAUSED' | 'COMPLETED';
+import type { TimerState } from '../../types/training';
 
 interface RestTimerV2Props {
   durationSeconds: number;
@@ -117,7 +116,7 @@ export function RestTimerV2({
 
   if (!visible) return null;
 
-  const timerColor = getTimerColor(remaining);
+  const timerColor = getTimerRingColor(remaining);
   const ringColor =
     timerColor === 'green'
       ? c.semantic.positive
@@ -217,9 +216,9 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 function playCompletionSound() {
   try {
     const { Audio } = require('expo-av');
-    Audio.Sound.createAsync(require('../../assets/timer-done.mp3')).catch(() => {});
+    Audio.Sound.createAsync(require('../../assets/timer-done.mp3')).catch(() => {}); // Intentional: audio playback failure is non-critical
   } catch {
-    // expo-av not available — silent fallback
+    // Intentional: expo-av not available — audio is non-critical
   }
 }
 

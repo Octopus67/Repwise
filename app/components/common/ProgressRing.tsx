@@ -16,7 +16,8 @@ import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThem
 import { computeRingFill, formatRingLabel } from '../../utils/progressRingLogic';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const isWeb = Platform.OS === 'web';
+const AnimatedCircle = isWeb ? Circle : Animated.createAnimatedComponent(Circle);
 
 interface ProgressRingProps {
   value: number;
@@ -115,18 +116,33 @@ export const ProgressRing = memo(function ProgressRing({
         />
         {/* Fill circle */}
         {!fill.isMissing && (
-          <AnimatedCircle
-            cx={center}
-            cy={center}
-            r={r}
-            stroke={fill.fillColor}
-            strokeWidth={strokeWidth}
-            fill="none"
-            strokeDasharray={circumference}
-            animatedProps={animatedProps}
-            strokeLinecap="round"
-            transform={`rotate(-90 ${center} ${center})`}
-          />
+          isWeb ? (
+            <Circle
+              cx={center}
+              cy={center}
+              r={r}
+              stroke={fill.fillColor}
+              strokeWidth={strokeWidth}
+              fill="none"
+              strokeDasharray={circumference}
+              strokeDashoffset={circumference * (1 - (fill.percentage / 100))}
+              strokeLinecap="round"
+              transform={`rotate(-90 ${center} ${center})`}
+            />
+          ) : (
+            <AnimatedCircle
+              cx={center}
+              cy={center}
+              r={r}
+              stroke={fill.fillColor}
+              strokeWidth={strokeWidth}
+              fill="none"
+              strokeDasharray={circumference}
+              animatedProps={animatedProps}
+              strokeLinecap="round"
+              transform={`rotate(-90 ${center} ${center})`}
+            />
+          )
         )}
       </Svg>
       <View style={getStyles().labelContainer}>

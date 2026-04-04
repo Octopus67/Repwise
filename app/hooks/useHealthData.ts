@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
+import { getErrorMessage } from '../utils/errors';
 
 export interface HealthData {
   hrv_ms: number | null;
@@ -40,9 +41,9 @@ export function useHealthData(): HealthData {
           // Web or unsupported platform
           if (!cancelled) setData(NULL_DATA);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!cancelled) {
-          setData({ ...NULL_DATA, error: err?.message ?? 'Health data unavailable' });
+          setData({ ...NULL_DATA, error: getErrorMessage(err) || 'Health data unavailable' });
         }
       }
     }
@@ -90,14 +91,14 @@ async function fetchAndroid(
       if (hrvRecords?.records?.length > 0) {
         hrv = hrvRecords.records[hrvRecords.records.length - 1].heartRateVariabilityMillis;
       }
-    } catch {}
+    } catch (err) { console.warn('[HealthData] HRV read failed:', String(err)); }
 
     try {
       const rhrRecords = await HC.readRecords('RestingHeartRate', { timeRangeFilter: { operatorType: 'between', ...timeRange } });
       if (rhrRecords?.records?.length > 0) {
         rhr = rhrRecords.records[rhrRecords.records.length - 1].beatsPerMinute;
       }
-    } catch {}
+    } catch (err) { console.warn('[HealthData] RHR read failed:', String(err)); }
 
     try {
       const sleepRecords = await HC.readRecords('SleepSession', { timeRangeFilter: { operatorType: 'between', ...timeRange } });
@@ -107,7 +108,7 @@ async function fetchAndroid(
         const end = new Date(last.endTime).getTime();
         sleep = (end - start) / (1000 * 60 * 60);
       }
-    } catch {}
+    } catch (err) { console.warn('[HealthData] Sleep read failed:', String(err)); }
 
     if (!cancelled) {
       setData({ hrv_ms: hrv, resting_hr_bpm: rhr, sleep_duration_hours: sleep, permissionGranted: true, loading: false, error: null });
@@ -129,7 +130,7 @@ async function fetchIOS(
       },
     };
 
-    AppleHealthKit.initHealthKit(permissions, (err: any) => {
+    AppleHealthKit.initHealthKit(permissions, (err: string | null) => {
       if (err) {
         if (!cancelled) setData(NULL_DATA);
         return;
@@ -148,17 +149,17 @@ async function fetchIOS(
         }
       };
 
-      AppleHealthKit.getHeartRateVariabilitySamples(opts, (_e: any, results: any[]) => {
+      AppleHealthKit.getHeartRateVariabilitySamples(opts, (_e: string | null, results: { value: number }[]) => {
         if (results?.length > 0) hrv = results[results.length - 1].value * 1000;
         done();
       });
 
-      AppleHealthKit.getRestingHeartRateSamples(opts, (_e: any, results: any[]) => {
+      AppleHealthKit.getRestingHeartRateSamples(opts, (_e: string | null, results: { value: number }[]) => {
         if (results?.length > 0) rhr = results[results.length - 1].value;
         done();
       });
 
-      AppleHealthKit.getSleepSamples(opts, (_e: any, results: any[]) => {
+      AppleHealthKit.getSleepSamples(opts, (_e: string | null, results: { startDate: string; endDate: string }[]) => {
         if (results?.length > 0) {
           const last = results[results.length - 1];
           const start = new Date(last.startDate).getTime();

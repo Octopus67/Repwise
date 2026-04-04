@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { getWeekDates, formatDayCell } from '../../utils/dateScrollerLogic';
@@ -8,9 +8,10 @@ import { Icon } from '../common/Icon';
 interface WeeklyTrainingCalendarProps {
   selectedDate: string;
   trainedDates: Set<string>;
+  onDateSelect?: (date: string) => void;
 }
 
-export function WeeklyTrainingCalendar({ selectedDate, trainedDates }: WeeklyTrainingCalendarProps) {
+export function WeeklyTrainingCalendar({ selectedDate, trainedDates, onDateSelect }: WeeklyTrainingCalendarProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const weekDates = getWeekDates(selectedDate);
@@ -26,9 +27,11 @@ export function WeeklyTrainingCalendar({ selectedDate, trainedDates }: WeeklyTra
           const isFuture = dateStr > today;
 
           return (
-            <View
+            <TouchableOpacity
               key={dateStr}
               testID={`day-circle-${dateStr}`}
+              activeOpacity={0.7}
+              onPress={() => onDateSelect?.(dateStr)}
               style={[
                 styles.dayCircle,
                 isTrained && styles.dayCircleTrained,
@@ -55,7 +58,7 @@ export function WeeklyTrainingCalendar({ selectedDate, trainedDates }: WeeklyTra
                   />
                 </View>
               )}
-            </View>
+            </TouchableOpacity>
           );
         })}
       </View>
@@ -93,7 +96,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     borderWidth: 2,
   },
   dayCircleFuture: {
-    opacity: 0.4,
+    opacity: 0.6,
   },
   dayLetter: {
     fontSize: typography.size.sm,

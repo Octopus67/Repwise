@@ -9,7 +9,7 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
-import type { StackScreenProps } from '@react-navigation/stack';
+import type { NativeStackScreenProps, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../../components/common/Icon';
@@ -24,6 +24,7 @@ import { RecentExercises } from '../../components/exercise-picker/RecentExercise
 import { useActiveWorkoutStore } from '../../store/activeWorkoutSlice';
 import { ExerciseDetailSheet } from '../../components/training/ExerciseDetailSheet';
 import { CustomExerciseForm } from '../../components/exercise-picker/CustomExerciseForm';
+import type { DashboardStackParamList } from '../../navigation/BottomTabNavigator';
 
 type ExercisePickerParams = {
   ExercisePicker: {
@@ -33,7 +34,7 @@ type ExercisePickerParams = {
   };
 };
 
-type Props = StackScreenProps<ExercisePickerParams, 'ExercisePicker'>;
+type Props = NativeStackScreenProps<ExercisePickerParams, 'ExercisePicker'>;
 
 const EQUIPMENT_FILTERS = ['All', 'Barbell', 'Dumbbell', 'Cable', 'Machine', 'Bodyweight', 'Band', 'Kettlebell'] as const;
 export { EQUIPMENT_FILTERS };
@@ -42,8 +43,8 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const { target = 'activeWorkout' } = route.params ?? {};
-  const currentExerciseLocalId = (route.params as any)?.currentExerciseLocalId;
-  const initialMuscleGroup = (route.params as any)?.muscleGroup;
+  const currentExerciseLocalId = route.params?.currentExerciseLocalId;
+  const initialMuscleGroup = route.params?.muscleGroup;
 
   const didSelectRef = useRef(false);
 
@@ -98,7 +99,8 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
       setExercises(allExercises);
       const sessions: TrainingSession[] = Array.isArray(sessRes.data) ? sessRes.data : [];
       setRecentExercises(extractRecentExercises(sessions, allExercises));
-    } catch {
+    } catch (err) {
+      console.warn('[ExercisePicker] fetch failed:', String(err));
       setError(true);
     } finally {
       setLoading(false);
@@ -125,11 +127,8 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
   const handleExercisePress = useCallback((exercise: Exercise) => {
     didSelectRef.current = true;
     if (target === 'swapExercise' && currentExerciseLocalId) {
-      navigation.navigate({
-        name: 'ActiveWorkout' as any,
-        params: { swappedExerciseName: exercise.name, swapTargetLocalId: currentExerciseLocalId },
-        merge: true,
-      } as any);
+      const nav = navigation as unknown as NativeStackNavigationProp<DashboardStackParamList>;
+      nav.navigate('ActiveWorkout', { mode: 'new', swappedExerciseName: exercise.name, swapTargetLocalId: currentExerciseLocalId });
     } else {
       useActiveWorkoutStore.getState().addExercise(exercise.name);
       navigation.goBack();
@@ -145,11 +144,8 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
     setShowCustomForm(false);
     didSelectRef.current = true;
     if (target === 'swapExercise' && currentExerciseLocalId) {
-      navigation.navigate({
-        name: 'ActiveWorkout' as any,
-        params: { swappedExerciseName: exercise.name, swapTargetLocalId: currentExerciseLocalId },
-        merge: true,
-      } as any);
+      const nav = navigation as unknown as NativeStackNavigationProp<DashboardStackParamList>;
+      nav.navigate('ActiveWorkout', { mode: 'new', swappedExerciseName: exercise.name, swapTargetLocalId: currentExerciseLocalId });
     } else {
       useActiveWorkoutStore.getState().addExercise(exercise.name);
       navigation.goBack();
@@ -285,8 +281,9 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
         )
       ) : (
         <FlatList
-          data={[]}
+          data={[] as { id: string; name: string }[]}
           renderItem={null}
+          keyExtractor={(item) => item.id || item.name}
           ListHeaderComponent={
             <>
               <RecentExercises exercises={recentExercises} onPress={handleExercisePress} />

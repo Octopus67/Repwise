@@ -2,7 +2,7 @@ import { Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { spacing, radius, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 
 type ErrorBannerVariant = 'error' | 'warning' | 'info';
 
@@ -14,7 +14,7 @@ interface ErrorBannerProps {
   testID?: string;
 }
 
-const getVariantConfig = (c: ThemeColors): Record<ErrorBannerVariant, { bg: string; accent: string; icon: string }> => ({
+const getVariantConfig = (c: ThemeColors): Record<ErrorBannerVariant, { bg: string; accent: string; icon: IconName }> => ({
   error: {
     bg: c.semantic.negativeSubtle,
     accent: c.semantic.negative,
@@ -52,7 +52,7 @@ export function ErrorBanner({
       accessibilityLiveRegion="assertive"
       testID={testID}
     >
-      <Icon name={config.icon as any} size={20} color={config.accent} />
+      <Icon name={config.icon} size={20} color={config.accent} />
       <Text style={[styles.message, { color: c.text.secondary }]} numberOfLines={3}>
         {message}
       </Text>

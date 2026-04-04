@@ -9,17 +9,17 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://hypertrophyos-production.up.railway.app",
-        "EXPO_PUBLIC_POSTHOG_KEY": "<staging-key>",
-        "EXPO_PUBLIC_SENTRY_DSN": "<staging-sentry-dsn>",
+        "EXPO_PUBLIC_POSTHOG_KEY": "phc_v6tVok9EaERgQ9NKJJATGgsfvM2Ea78GFfs8jA6kaRaw",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://1fc3a257081e1053ffaeacb4edf3be86@o4510946415607808.ingest.us.sentry.io/4511163459960832",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
     "production": {
       "distribution": "store",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://hypertrophyos-production.up.railway.app",
-        "EXPO_PUBLIC_POSTHOG_KEY": "<production-key>",
-        "EXPO_PUBLIC_SENTRY_DSN": "<production-sentry-dsn>",
+        "EXPO_PUBLIC_API_URL": "https://api.repwise.app",
+        "EXPO_PUBLIC_POSTHOG_KEY": "phc_v6tVok9EaERgQ9NKJJATGgsfvM2Ea78GFfs8jA6kaRaw",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://1fc3a257081e1053ffaeacb4edf3be86@o4510946415607808.ingest.us.sentry.io/4511163459960832",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     }
@@ -27,9 +27,9 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "<apple-id>",
-        "ascAppId": "<app-store-connect-app-id>",
-        "appleTeamId": "<team-id>"
+        "appleId": "manavmehta2003@gmail.com",
+        "ascAppId": "6761667763",
+        "appleTeamId": "RYP66CBGJP"
       },
       "android": {
         "serviceAccountKeyPath": "./google-play-service-account.json",

@@ -77,6 +77,13 @@ export function AddBodyweightModal({ visible, onClose, onSuccess }: Props) {
   };
 
   const handleClose = () => {
+    if (weight) {
+      Alert.alert('Discard Entry?', 'You have unsaved data. Are you sure?', [
+        { text: 'Keep Editing', style: 'cancel' },
+        { text: 'Discard', style: 'destructive', onPress: () => { reset(); onClose(); } },
+      ]);
+      return;
+    }
     reset();
     onClose();
   };

@@ -5,16 +5,7 @@ import { Skeleton } from '../common/Skeleton';
 import { MUSCLE_REGIONS, BODY_OUTLINES } from './anatomicalPaths';
 import { BodySilhouette } from './BodySilhouette';
 import { HeatMapLegend } from './HeatMapLegend';
-
-interface MuscleGroupVolume {
-  muscle_group: string;
-  effective_sets: number;
-  frequency: number;
-  volume_status: string;
-  mev: number;
-  mav: number;
-  mrv: number;
-}
+import type { MuscleGroupVolume } from '../../types/analytics';
 
 interface BodyHeatMapProps {
   muscleVolumes: MuscleGroupVolume[];

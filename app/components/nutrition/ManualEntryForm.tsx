@@ -1,9 +1,10 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+
+import { countFilledFields, MICRO_FIELDS } from '../../utils/microNutrientSerializer';
 import { WaterTracker } from './WaterTracker';
 import { incrementGlasses, decrementGlasses } from '../../utils/waterLogic';
-import { countFilledFields, MICRO_FIELDS } from '../../utils/microNutrientSerializer';
 
 interface MacroValues {
   calories: string;
@@ -19,13 +20,21 @@ interface MacroValues {
 
 interface Props {
   values: MacroValues;
-  onChange: (field: keyof MacroValues, value: any) => void;
+  onChange: (field: keyof MacroValues, value: MacroValues[keyof MacroValues]) => void;
   locked?: boolean;
 }
 
 export function ManualEntryForm({ values, onChange, locked }: Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+
+  const handleNumericChange = (field: keyof MacroValues, v: string) => {
+    if (v !== '' && v !== '-') {
+      const n = parseFloat(v);
+      if (!isNaN(n) && n < 0) return;
+    }
+    onChange(field, v);
+  };
 
   return (
     <View>
@@ -34,13 +43,13 @@ export function ManualEntryForm({ values, onChange, locked }: Props) {
         <View style={styles.fieldHalf}>
           <Text style={[styles.label, { color: c.text.secondary }]}>Calories</Text>
           <TextInput style={[styles.input, locked && styles.inputLocked]} value={values.calories}
-            onChangeText={(v) => onChange('calories', v)} keyboardType="numeric" placeholder="kcal"
+            onChangeText={(v) => handleNumericChange('calories', v)} keyboardType="numeric" placeholder="kcal"
             placeholderTextColor={c.text.muted} editable={!locked} testID="nutrition-calories-input" />
         </View>
         <View style={styles.fieldHalf}>
           <Text style={[styles.label, { color: c.text.secondary }]}>Protein (g)</Text>
           <TextInput style={[styles.input, locked && styles.inputLocked]} value={values.protein}
-            onChangeText={(v) => onChange('protein', v)} keyboardType="numeric" placeholder="g"
+            onChangeText={(v) => handleNumericChange('protein', v)} keyboardType="numeric" placeholder="g"
             placeholderTextColor={c.text.muted} editable={!locked} testID="nutrition-protein-input" />
         </View>
       </View>
@@ -49,13 +58,13 @@ export function ManualEntryForm({ values, onChange, locked }: Props) {
         <View style={styles.fieldHalf}>
           <Text style={[styles.label, { color: c.text.secondary }]}>Carbs (g)</Text>
           <TextInput style={[styles.input, locked && styles.inputLocked]} value={values.carbs}
-            onChangeText={(v) => onChange('carbs', v)} keyboardType="numeric" placeholder="g"
+            onChangeText={(v) => handleNumericChange('carbs', v)} keyboardType="numeric" placeholder="g"
             placeholderTextColor={c.text.muted} editable={!locked} testID="nutrition-carbs-input" />
         </View>
         <View style={styles.fieldHalf}>
           <Text style={[styles.label, { color: c.text.secondary }]}>Fat (g)</Text>
           <TextInput style={[styles.input, locked && styles.inputLocked]} value={values.fat}
-            onChangeText={(v) => onChange('fat', v)} keyboardType="numeric" placeholder="g"
+            onChangeText={(v) => handleNumericChange('fat', v)} keyboardType="numeric" placeholder="g"
             placeholderTextColor={c.text.muted} editable={!locked} testID="nutrition-fat-input" />
         </View>
       </View>
@@ -64,7 +73,7 @@ export function ManualEntryForm({ values, onChange, locked }: Props) {
       <View style={styles.field}>
         <Text style={[styles.label, { color: c.text.secondary }]}>Fibre (g)</Text>
         <TextInput style={[styles.input, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
-          value={values.fibre} onChangeText={(v) => onChange('fibre', v)} keyboardType="numeric" placeholder="g" placeholderTextColor={c.text.muted} />
+          value={values.fibre} onChangeText={(v) => handleNumericChange('fibre', v)} keyboardType="numeric" placeholder="g" placeholderTextColor={c.text.muted} />
       </View>
 
       {/* Water */}

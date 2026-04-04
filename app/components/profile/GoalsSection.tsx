@@ -14,15 +14,14 @@ import { EmptyState } from '../common/EmptyState';
 import { Icon } from '../common/Icon';
 import { formatWeight, parseWeightInput } from '../../utils/unitConversion';
 import { useRecalculate } from '../../hooks/useRecalculate';
+import type { GoalType } from '../../types/onboarding';
 
-const GOAL_TYPES = [
+const GOAL_TYPES: { value: GoalType; label: string }[] = [
   { value: 'cutting', label: 'Cutting' },
   { value: 'maintaining', label: 'Maintaining' },
   { value: 'bulking', label: 'Bulking' },
   { value: 'recomposition', label: 'Body Recomposition' },
-] as const;
-
-type GoalType = (typeof GOAL_TYPES)[number]['value'];
+];
 
 interface GoalsSectionProps {
   goals: {

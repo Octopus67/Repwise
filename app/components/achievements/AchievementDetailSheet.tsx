@@ -36,8 +36,7 @@ function getAchievementIcon(iconStr: string): IconName {
   return 'star';
 }
 
-function getAchievementColor(iconStr: string): string {
-  const c = useThemeColors();
+function getAchievementColor(iconStr: string, c: ThemeColors): string {
   if (iconStr.includes('bench') || iconStr.includes('squat') || iconStr.includes('dl') || iconStr.includes('deadlift')) return c.macro.protein;
   if (iconStr.includes('streak')) return c.semantic.warning;
   if (iconStr.includes('vol')) return '#8B5CF6';
@@ -96,7 +95,7 @@ export function AchievementDetailSheet({ visible, onClose, achievement }: Achiev
 
   if (!achievement) return null;
 
-  const categoryColor = getAchievementColor(achievement.icon || '');
+  const categoryColor = getAchievementColor(achievement.icon || '', c);
   const iconName = getAchievementIcon(achievement.icon || '');
   const progressText = formatProgressText(
     achievement.category,

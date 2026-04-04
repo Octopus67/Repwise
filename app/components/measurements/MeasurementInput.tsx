@@ -63,6 +63,13 @@ export function MeasurementInput({ onSubmit, loading, onOpenNavyCalc, bodyFatPct
   }, [bodyFatPctFromCalc]);
 
   const updateField = useCallback((field: keyof MeasurementFormData, value: string) => {
+    // Prevent future dates using proper date comparison
+    if (field === 'measuredAt') {
+      const parsed = new Date(value + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (!isNaN(parsed.getTime()) && parsed > today) return;
+    }
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => {
       if (!prev[field]) return prev;

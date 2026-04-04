@@ -23,19 +23,71 @@ export function setTokenProvider(provider: {
   getAccess: () => Promise<string | null>;
   getRefresh: () => Promise<string | null>;
   onRefreshed: (access: string, refresh: string) => Promise<void>;
-  onRefreshFailed: () => void;
+  onRefreshFailed: () => void | Promise<void>;
 }) {
   getAccessToken = provider.getAccess;
   getRefreshToken = provider.getRefresh;
   onTokensRefreshed = provider.onRefreshed;
   onRefreshFailed = provider.onRefreshFailed;
+  proactiveRefreshFailed = false;
 }
 
 // ─── Request interceptor — attach JWT ────────────────────────────────────────
 
+let proactiveRefreshFailed = false;
+
+function getJwtExp(token: string): number | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return typeof payload.exp === 'number' ? payload.exp : null;
+  } catch { return null; }
+}
+
+// ─── Shared refresh coordination ─────────────────────────────────────────────
+// A single Promise coalesces all concurrent refresh attempts, eliminating the
+// TOCTOU race that existed with the old boolean `isRefreshing` flag.
+
+let refreshPromise: Promise<string> | null = null;
+
+function doRefresh(): Promise<string> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const refresh = await getRefreshToken!();
+    if (!refresh) throw new Error('No refresh token');
+
+    const { data } = await axios.post(`${API_BASE_URL}/api/v1/auth/refresh`, {
+      refresh_token: refresh,
+    });
+
+    await onTokensRefreshed!(data.access_token, data.refresh_token);
+    proactiveRefreshFailed = false;
+    return data.access_token as string;
+  })().catch((err) => {
+    onRefreshFailed?.();
+    throw err;
+  }).finally(() => {
+    refreshPromise = null;
+  });
+
+  return refreshPromise;
+}
+
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   if (getAccessToken) {
-    const token = await getAccessToken();
+    let token = await getAccessToken();
+    // Proactive refresh: if token expires within 30s, refresh before attaching
+    if (token && getRefreshToken && onTokensRefreshed && !proactiveRefreshFailed) {
+      const exp = getJwtExp(token);
+      if (exp && exp - Date.now() / 1000 < 30) {
+        try {
+          token = await doRefresh();
+        } catch {
+          console.warn('[api] Token refresh failed');
+          proactiveRefreshFailed = true;
+        }
+      }
+    }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -44,20 +96,6 @@ api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
 });
 
 // ─── Response interceptor — 401 → refresh → retry ───────────────────────────
-
-let isRefreshing = false;
-let pendingQueue: Array<{
-  resolve: (token: string) => void;
-  reject: (err: unknown) => void;
-}> = [];
-
-function processPendingQueue(token: string | null, error: unknown = null) {
-  pendingQueue.forEach(({ resolve, reject }) => {
-    if (error) reject(error);
-    else if (token) resolve(token);
-  });
-  pendingQueue = [];
-}
 
 api.interceptors.response.use(
   (response) => response,
@@ -72,42 +110,14 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (isRefreshing) {
-      // Queue this request until the refresh completes
-      return new Promise<string>((resolve, reject) => {
-        pendingQueue.push({ resolve, reject });
-      }).then((newToken) => {
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return api(originalRequest);
-      });
-    }
-
     originalRequest._retry = true;
-    isRefreshing = true;
 
     try {
-      const refreshToken = await getRefreshToken();
-      if (!refreshToken) throw new Error('No refresh token');
-
-      const { data } = await axios.post(`${API_BASE_URL}/api/v1/auth/refresh`, {
-        refresh_token: refreshToken,
-      });
-
-      const newAccess: string = data.access_token;
-      const newRefresh: string = data.refresh_token;
-
-      await onTokensRefreshed(newAccess, newRefresh);
-
+      const newAccess = await doRefresh();
       originalRequest.headers.Authorization = `Bearer ${newAccess}`;
-      processPendingQueue(newAccess);
-
       return api(originalRequest);
     } catch (refreshError) {
-      processPendingQueue(null, refreshError);
-      onRefreshFailed?.();
       return Promise.reject(refreshError);
-    } finally {
-      isRefreshing = false;
     }
   },
 );

@@ -33,6 +33,12 @@ export function buildShareUrl(sessionId: string, userId?: string): string {
 }
 
 /**
+ * Build the public share URL for a workout template.
+ */
+export const buildTemplateShareUrl = (templateId: string): string =>
+  `https://repwise.app/share/template/${templateId}`;
+
+/**
  * Open the native share sheet with a captured image and share URL.
  */
 export async function shareImage(

@@ -15,30 +15,22 @@ import { getComparisonColor } from '../../utils/comparisonColor';
 import { computeEMA } from '../../utils/emaTrend';
 import { WeeklySummaryCard } from '../../components/analytics/WeeklySummaryCard';
 import { ExpenditureTrendCard } from '../../components/analytics/ExpenditureTrendCard';
-import { StrengthStandardsCard } from '../../components/analytics/StrengthStandardsCard';
-import { StrengthLeaderboard } from '../../components/analytics/StrengthLeaderboard';
 import { useStore, isPremium } from '../../store';
 import { Icon } from '../../components/common/Icon';
 import api from '../../services/api';
+import { getErrorMessage } from '../../utils/errors';
 import { useNavigation } from '@react-navigation/native';
 import { useHaptics } from '../../hooks/useHaptics';
 import { PeriodizationCalendar } from '../../components/periodization/PeriodizationCalendar';
-import { HeatMapCard } from '../../components/analytics/HeatMapCard';
-import { FatigueHeatMapOverlay } from '../../components/analytics/FatigueHeatMapOverlay';
-import { FatigueBreakdownModal } from '../../components/analytics/FatigueBreakdownModal';
+import { TrainingTabContent } from './TrainingTabContent';
 import { ReadinessTrendChart } from '../../components/analytics/ReadinessTrendChart';
 import { VolumeLandmarksCard } from '../../components/volume/VolumeLandmarksCard';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 import { useRoute } from '@react-navigation/native';
 import type { WNSMuscleVolume } from '../../types/volume';
+import type { TimeRange, TrendPoint, FatigueScore, Classification } from '../../types/analytics';
 
-type TimeRange = '7d' | '14d' | '30d' | '90d';
 type AnalyticsTab = 'nutrition' | 'training' | 'body' | 'volume';
-
-interface TrendPoint {
-  date: string;
-  value: number;
-}
 
 interface DietaryGap {
   nutrient: string;
@@ -101,12 +93,12 @@ export function AnalyticsScreen() {
   const [e1rmTrend, setE1rmTrend] = useState<TrendPoint[]>([]);
   const [selectedE1RMExercise, setSelectedE1RMExercise] = useState<E1RMExerciseOption>(E1RM_EXERCISE_OPTIONS[0]);
   const [strengthStandards, setStrengthStandards] = useState<{
-    classifications: any[];
-    milestones: any[];
+    classifications: Classification[];
+    milestones: { message: string }[];
     bodyweight_kg: number | null;
   } | null>(null);
-  const [fatigueScores, setFatigueScores] = useState<any[]>([]);
-  const [selectedFatigueGroup, setSelectedFatigueGroup] = useState<any | null>(null);
+  const [fatigueScores, setFatigueScores] = useState<FatigueScore[]>([]);
+  const [selectedFatigueGroup, setSelectedFatigueGroup] = useState<FatigueScore | null>(null);
   const [wnsExplainerExpanded, setWnsExplainerExpanded] = useState(false);
   const [volumeLandmarks, setVolumeLandmarks] = useState<WNSMuscleVolume[]>([]);
   const [volumeLoading, setVolumeLoading] = useState(false);
@@ -114,25 +106,29 @@ export function AnalyticsScreen() {
 
   const loadAnalytics = useCallback(async (signal?: AbortSignal) => {
     setError(null);
+    setIsLoading(true);
     try {
       const end = new Date().toISOString().split('T')[0];
-      const start = new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0];
+      const days = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }[timeRange];
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      const start = startDate.toISOString().split('T')[0];
 
       const [bwRes, nutritionRes, adaptiveRes] = await Promise.allSettled([
-        api.get('users/bodyweight/history', { params: { limit: 90 }, signal }),
+        api.get('users/bodyweight/history', { params: { limit: days }, signal }),
         api.get('nutrition/entries', { params: { start_date: start, end_date: end, limit: 500 }, signal }),
         api.get('adaptive/snapshots', { params: { limit: 1 }, signal }),
       ]);
 
       if (bwRes.status === 'fulfilled') {
-        const logs = bwRes.value.data.items ?? [];
-        setWeightTrend(logs.map((l: any) => ({ date: l.recorded_date, value: l.weight_kg })));
+        const logs = bwRes.value.data?.items ?? [];
+        setWeightTrend(logs.map((l: { recorded_date: string; weight_kg: number }) => ({ date: l.recorded_date, value: l.weight_kg })));
       }
 
       if (nutritionRes.status === 'fulfilled') {
-        const entries = nutritionRes.value.data.items ?? [];
+        const entries = nutritionRes.value.data?.items ?? [];
         const byDate: Record<string, { cal: number; pro: number }> = {};
-        entries.forEach((e: any) => {
+        entries.forEach((e: { entry_date: string; calories?: number; protein_g?: number }) => {
           if (!byDate[e.entry_date]) byDate[e.entry_date] = { cal: 0, pro: 0 };
           byDate[e.entry_date].cal += e.calories ?? 0;
           byDate[e.entry_date].pro += e.protein_g ?? 0;
@@ -154,16 +150,17 @@ export function AnalyticsScreen() {
 
       if (premium) {
         try {
-          const { data } = await api.get('dietary-analysis/gaps', { params: { window_days: 14 }, signal });
+          const { data } = await api.get('dietary/gaps', { params: { window_days: 14 }, signal });
           setGaps(data.gaps ?? []);
-        } catch { /* ignore */ }
+        } catch (e: unknown) { console.warn('[Analytics] dietary gaps fetch failed:', getErrorMessage(e)); }
       }
 
       // Fetch fatigue scores
       try {
         const { data } = await api.get('training/fatigue', { signal });
         setFatigueScores(data.scores ?? []);
-      } catch {
+      } catch (e: unknown) {
+        console.warn('[Analytics] fatigue fetch failed:', getErrorMessage(e));
         setFatigueScores([]);
       }
     } catch {
@@ -171,52 +168,58 @@ export function AnalyticsScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [premium]);
+  }, [premium, timeRange]);
 
   const loadVolumeTrend = useCallback(async () => {
     try {
       const end = new Date().toISOString().split('T')[0];
       const days = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }[timeRange];
-      const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
-      const { data } = await api.get('training/analytics/volume', {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      const start = startDate.toISOString().split('T')[0];
+      const { data } = await api.get('training/analytics/volume-trend', {
         params: { start_date: start, end_date: end },
       });
       const items = data.items ?? data ?? [];
-      setVolumeTrend(items.map((p: any) => ({ date: p.date, value: p.total_volume })));
-    } catch { /* best-effort */ }
+      setVolumeTrend(items.map((p: { date: string; total_volume: number }) => ({ date: p.date, value: p.total_volume })));
+    } catch (e: unknown) { console.warn('[Analytics] volume trend fetch failed:', getErrorMessage(e)); }
   }, [timeRange]);
 
   const loadStrengthProgression = useCallback(async () => {
     try {
       const end = new Date().toISOString().split('T')[0];
       const days = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }[timeRange];
-      const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
-      const { data } = await api.get(`training/analytics/strength/${encodeURIComponent(selectedExercise)}`, {
-        params: { start_date: start, end_date: end },
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      const start = startDate.toISOString().split('T')[0];
+      const { data } = await api.get('training/analytics/strength-progression', {
+        params: { exercise_name: selectedExercise, start_date: start, end_date: end },
       });
       const items = data.items ?? data ?? [];
-      setStrengthData(items.map((p: any) => ({ date: p.date, value: p.best_weight_kg })));
-    } catch { /* best-effort */ }
+      setStrengthData(items.map((p: { date: string; best_weight_kg: number }) => ({ date: p.date, value: p.best_weight_kg })));
+    } catch (e: unknown) { console.warn('[Analytics] strength progression fetch failed:', getErrorMessage(e)); }
   }, [selectedExercise, timeRange]);
 
   const loadE1RMTrend = useCallback(async () => {
     try {
       const end = new Date().toISOString().split('T')[0];
       const days = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }[timeRange];
-      const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      const start = startDate.toISOString().split('T')[0];
       const { data } = await api.get('training/analytics/e1rm-history', {
         params: { exercise_name: selectedE1RMExercise, start_date: start, end_date: end },
       });
       const items = Array.isArray(data) ? data : data.items ?? [];
-      setE1rmTrend(items.map((p: any) => ({ date: p.date, value: p.e1rm_kg })));
-    } catch { /* best-effort */ }
+      setE1rmTrend(items.map((p: { date: string; e1rm_kg: number }) => ({ date: p.date, value: p.e1rm_kg })));
+    } catch (e: unknown) { console.warn('[Analytics] e1rm trend fetch failed:', getErrorMessage(e)); }
   }, [selectedE1RMExercise, timeRange]);
 
   const loadStrengthStandards = useCallback(async () => {
     try {
       const { data } = await api.get('training/analytics/strength-standards');
       setStrengthStandards(data);
-    } catch { /* best-effort */ }
+    } catch (e: unknown) { console.warn('[Analytics] strength standards fetch failed:', getErrorMessage(e)); }
   }, []);
 
   const loadVolumeLandmarks = useCallback(async () => {
@@ -226,7 +229,7 @@ export function AnalyticsScreen() {
       const groups: WNSMuscleVolume[] = data.muscle_groups ?? data ?? [];
       groups.sort((a, b) => (b.hypertrophy_units ?? 0) - (a.hypertrophy_units ?? 0));
       setVolumeLandmarks(groups);
-    } catch { /* best-effort */ }
+    } catch (e: unknown) { console.warn('[Analytics] volume landmarks fetch failed:', getErrorMessage(e)); }
     finally { setVolumeLoading(false); }
   }, []);
 
@@ -462,177 +465,29 @@ export function AnalyticsScreen() {
 
         {/* ===== TRAINING TAB ===== */}
         {selectedTab === 'training' && (
-          <>
-            {/* WNS Explainer Card */}
-            <TouchableOpacity
-              onPress={() => setWnsExplainerExpanded(!wnsExplainerExpanded)}
-              style={[styles.explainerCard, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
-              testID="wns-explainer-card"
-              activeOpacity={0.7}
-            >
-              <View style={styles.explainerHeader}>
-                <Text style={[styles.explainerTitle, { color: c.text.primary }]}>🧠 Why Repwise Tracks Hypertrophy Units (HU)</Text>
-                <Text style={[styles.chevron, { color: c.text.muted }]}>{wnsExplainerExpanded ? '▼' : '▶'}</Text>
-              </View>
-              {wnsExplainerExpanded && (
-                <View style={styles.explainerContent}>
-                  <Text style={[styles.explainerSubhead, { color: c.accent.primary }]}>Traditional Apps</Text>
-                  <Text style={[styles.explainerText, { color: c.text.secondary }]}>Count total sets — treats every set equally regardless of effort or fatigue.</Text>
-
-                  <Text style={[styles.explainerSubhead, { color: c.accent.primary }]}>Repwise (HU)</Text>
-                  <Text style={[styles.explainerText, { color: c.text.secondary }]}>Counts effective stimulus by weighing each set based on:</Text>
-
-                  <Text style={[styles.explainerBullet, { color: c.text.secondary }]}>• <Text style={[styles.explainerBold, { color: c.text.primary }]}>Intensity</Text> — harder sets score higher</Text>
-                  <Text style={[styles.explainerBullet, { color: c.text.secondary }]}>• <Text style={[styles.explainerBold, { color: c.text.primary }]}>Diminishing returns</Text> — junk volume is discounted</Text>
-                  <Text style={[styles.explainerBullet, { color: c.text.secondary }]}>• <Text style={[styles.explainerBold, { color: c.text.primary }]}>Frequency</Text> — spreading work across days is rewarded</Text>
-                  <Text style={[styles.explainerBullet, { color: c.text.secondary }]}>• <Text style={[styles.explainerBold, { color: c.text.primary }]}>Goal adjustment</Text> — targets adapt to your training phase</Text>
-
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate('HUExplainer')}
-                    style={styles.learnMoreBtn}
-                  >
-                    <Text style={[styles.learnMoreText, { color: c.accent.primary }]}>Learn More →</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </TouchableOpacity>
-
-            {/* Training Volume */}
-            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Training Volume</Text>
-            <Card>
-              {isLoading ? (
-                <ChartSkeleton />
-              ) : volumeTrend.length === 0 ? (
-                <EmptyState
-                  icon={<Icon name="chart" />}
-                  title="No volume data"
-                  description="Log training sessions to see volume trends"
-                />
-              ) : (
-                <TrendLineChart
-                  data={volumeTrend}
-                  color={c.accent.primary}
-                  suffix=" kg"
-                  emptyMessage="No training volume data for this period"
-                />
-              )}
-            </Card>
-
-            {/* Muscle Volume Heat Map */}
-            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Muscle Volume Heat Map</Text>
-            <HeatMapCard />
-
-            {/* Muscle Fatigue */}
-            {fatigueScores.length > 0 && (
-              <>
-                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Muscle Fatigue</Text>
-                <Card>
-                  <FatigueHeatMapOverlay
-                    scores={fatigueScores}
-                    onMuscleGroupPress={(mg) => {
-                      const found = fatigueScores.find((s: any) => s.muscle_group === mg);
-                      setSelectedFatigueGroup(found ?? null);
-                    }}
-                  />
-                </Card>
-              </>
-            )}
-
-            <FatigueBreakdownModal
-              visible={!!selectedFatigueGroup}
-              score={selectedFatigueGroup}
-              onClose={() => setSelectedFatigueGroup(null)}
-            />
-
-            {/* Strength Progression */}
-            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Strength Progression</Text>
-            <Card>
-              <View style={styles.exerciseSelector}>
-                {EXERCISE_OPTIONS.map((ex) => (
-                  <TouchableOpacity
-                    key={ex}
-                    style={[
-                      styles.exercisePill,
-                      selectedExercise === ex && styles.exercisePillActive,
-                    ]}
-                    onPress={() => setSelectedExercise(ex)}
-                  >
-                    <Text
-                      style={[
-                        styles.exercisePillText,
-                        selectedExercise === ex && styles.exercisePillTextActive,
-                      ]}
-                    >
-                      {ex.split(' ').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ')}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              {isLoading ? (
-                <ChartSkeleton />
-              ) : (
-                <TrendLineChart
-                  data={strengthData.map((p) => ({
-                    date: p.date,
-                    value: Number(formatWeight(p.value, unitSystem).split(' ')[0]),
-                  }))}
-                  color={c.semantic.positive}
-                  suffix={weightSuffix}
-                  emptyMessage={`No data for ${selectedExercise} in this period`}
-                />
-              )}
-            </Card>
-
-            {/* e1RM Trend, Strength Standards, Strength Leaderboard */}
-            {!isLoading && (
-              <>
-                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>e1RM Trend</Text>
-                <Card>
-                  <View style={styles.exerciseSelector}>
-                    {E1RM_EXERCISE_OPTIONS.map((ex) => (
-                      <TouchableOpacity
-                        key={ex}
-                        style={[
-                          styles.exercisePill,
-                          selectedE1RMExercise === ex && styles.exercisePillActive,
-                        ]}
-                        onPress={() => setSelectedE1RMExercise(ex)}
-                      >
-                        <Text
-                          style={[
-                            styles.exercisePillText,
-                            selectedE1RMExercise === ex && styles.exercisePillTextActive,
-                          ]}
-                        >
-                          {ex.split(' ').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ')}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                  <TrendLineChart
-                    data={e1rmTrend.map((p) => ({
-                      date: p.date,
-                      value: Number(formatWeight(p.value, unitSystem).split(' ')[0]),
-                    }))}
-                    color={c.accent.primary}
-                    suffix={weightSuffix}
-                    emptyMessage={`No e1RM data for ${selectedE1RMExercise} in this period`}
-                  />
-                </Card>
-
-                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Strength Standards</Text>
-                <StrengthStandardsCard
-                  classifications={strengthStandards?.classifications ?? []}
-                  bodyweightKg={strengthStandards?.bodyweight_kg ?? null}
-                />
-
-                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Strength Leaderboard</Text>
-                <StrengthLeaderboard
-                  classifications={strengthStandards?.classifications ?? []}
-                />
-              </>
-            )}
-          </>
+          <TrainingTabContent
+            c={c}
+            isLoading={isLoading}
+            unitSystem={unitSystem}
+            wnsExplainerExpanded={wnsExplainerExpanded}
+            onToggleWnsExplainer={() => setWnsExplainerExpanded(!wnsExplainerExpanded)}
+            onNavigateHUExplainer={() => navigation.navigate('HUExplainer')}
+            volumeTrend={volumeTrend}
+            fatigueScores={fatigueScores}
+            selectedFatigueGroup={selectedFatigueGroup}
+            onFatigueGroupPress={(mg) => {
+              const found = fatigueScores.find((s) => s.muscle_group === mg);
+              setSelectedFatigueGroup(found ?? null);
+            }}
+            onFatigueModalClose={() => setSelectedFatigueGroup(null)}
+            selectedExercise={selectedExercise}
+            onSelectExercise={setSelectedExercise}
+            strengthData={strengthData}
+            selectedE1RMExercise={selectedE1RMExercise}
+            onSelectE1RMExercise={setSelectedE1RMExercise}
+            e1rmTrend={e1rmTrend}
+            strengthStandards={strengthStandards}
+          />
         )}
 
         {/* ===== BODY TAB ===== */}
@@ -701,7 +556,7 @@ export function AnalyticsScreen() {
                 description="Volume landmarks are not yet available for your account"
               />
             ) : volumeLoading ? (
-              <View style={{ marginTop: spacing[4], gap: spacing[3] }}>
+              <View style={styles.volumeSkeletonContainer}>
                 <Skeleton width="100%" height={140} borderRadius={8} />
                 <Skeleton width="100%" height={140} borderRadius={8} />
                 <Skeleton width="100%" height={140} borderRadius={8} />
@@ -810,33 +665,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     letterSpacing: letterSpacing.tight,
   },
   comparisonRow: { flexDirection: 'row', gap: spacing[4] },
-  exerciseSelector: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing[2],
-    marginBottom: spacing[3],
-  },
-  exercisePill: {
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1],
-    borderRadius: radius.full,
-    backgroundColor: c.bg.surfaceRaised,
-    borderWidth: 1,
-    borderColor: c.border.subtle,
-  },
-  exercisePillActive: {
-    backgroundColor: c.accent.primaryMuted,
-    borderColor: c.accent.primary,
-  },
-  exercisePillText: {
-    color: c.text.secondary,
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.medium,
-    lineHeight: typography.lineHeight.xs,
-  },
-  exercisePillTextActive: {
-    color: c.accent.primary,
-  },
   gapRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -860,6 +688,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     padding: spacing[1],
     marginBottom: spacing[3],
   },
+  volumeSkeletonContainer: { marginTop: spacing[4], gap: spacing[3] },
   analyticsTab: {
     flex: 1,
     paddingVertical: spacing[2],
@@ -869,66 +698,4 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   analyticsTabActive: { backgroundColor: c.accent.primaryMuted },
   analyticsTabText: { color: c.text.muted, fontSize: typography.size.base, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.base },
   analyticsTabTextActive: { color: c.accent.primary },
-  explainerCard: {
-    backgroundColor: c.bg.surface,
-    borderRadius: radius.sm,
-    padding: spacing[3],
-    marginTop: spacing[4],
-    borderWidth: 1,
-    borderColor: c.border.subtle,
-  },
-  explainerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  explainerTitle: {
-    color: c.text.primary,
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    flex: 1,
-    lineHeight: typography.lineHeight.base,
-  },
-  chevron: {
-    color: c.text.muted,
-    fontSize: typography.size.sm,
-    marginLeft: spacing[2],
-  },
-  explainerContent: {
-    marginTop: spacing[3],
-  },
-  explainerSubhead: {
-    color: c.accent.primary,
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    marginTop: spacing[2],
-    marginBottom: spacing[1],
-    lineHeight: typography.lineHeight.sm,
-  },
-  explainerText: {
-    color: c.text.secondary,
-    fontSize: typography.size.sm,
-    lineHeight: typography.lineHeight.sm,
-  },
-  explainerBullet: {
-    color: c.text.secondary,
-    fontSize: typography.size.sm,
-    lineHeight: typography.lineHeight.sm,
-    marginLeft: spacing[2],
-    marginTop: spacing[1],
-  },
-  explainerBold: {
-    fontWeight: typography.weight.semibold,
-    color: c.text.primary,
-  },
-  learnMoreBtn: {
-    marginTop: spacing[3],
-    alignSelf: 'flex-start',
-  },
-  learnMoreText: {
-    color: c.accent.primary,
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
-    lineHeight: typography.lineHeight.sm,
-  },
 });

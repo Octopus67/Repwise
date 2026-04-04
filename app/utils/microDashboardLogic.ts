@@ -7,7 +7,7 @@ import { getThemeColors, type ThemeColors } from '../hooks/useThemeColors';
 
 export type NutrientStatus = 'deficient' | 'low' | 'adequate' | 'excess' | 'no_data';
 
-export function getStatusColor(status: NutrientStatus, c: ThemeColors = getThemeColors()): string {
+export function getNutrientStatusColor(status: NutrientStatus, c: ThemeColors = getThemeColors()): string {
   switch (status) {
     case 'deficient': return c.semantic.negative;
     case 'low': return c.semantic.warning;
@@ -17,7 +17,7 @@ export function getStatusColor(status: NutrientStatus, c: ThemeColors = getTheme
   }
 }
 
-export function getStatusLabel(status: NutrientStatus): string {
+export function getNutrientStatusLabel(status: NutrientStatus): string {
   switch (status) {
     case 'deficient': return 'Deficient';
     case 'low': return 'Low';
@@ -53,3 +53,8 @@ export function formatNutrientValue(value: number, unit: string): string {
 export function clampPct(pct: number): number {
   return Math.max(0, Math.min(pct, 100));
 }
+
+/** @deprecated Use getNutrientStatusColor instead. */
+export const getStatusColor = getNutrientStatusColor;
+/** @deprecated Use getNutrientStatusLabel instead. */
+export const getStatusLabel = getNutrientStatusLabel;

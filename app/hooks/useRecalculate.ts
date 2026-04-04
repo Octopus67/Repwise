@@ -79,7 +79,7 @@ export function useRecalculate() {
       }
 
       waiters.forEach((w) => w.resolve());
-    } catch (err) {
+    } catch (err: unknown) {
       waiters.forEach((w) => w.reject(err));
     }
   }, [store]);

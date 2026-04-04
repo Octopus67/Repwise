@@ -71,8 +71,8 @@ export async function registerForPushNotifications(): Promise<string | null> {
     });
 
     return token;
-  } catch (error) {
-    console.warn('[Notifications] Registration failed:', error);
+  } catch (error: unknown) {
+    console.warn('[Notifications] Registration failed:', String(error));
     return null;
   }
 }
@@ -86,7 +86,7 @@ export function setupNotificationListeners(
 ): () => void {
   // Foreground notification received
   const receivedSub = Notifications.addNotificationReceivedListener((notification) => {
-    console.log('[Notifications] Received:', notification.request.content.title);
+    if (__DEV__) console.log('[Notifications] Received:', notification.request.content.title);
   });
 
   // User tapped notification
@@ -117,7 +117,7 @@ export async function handleInitialNotification(
         navigation.navigate(data.screen as string, data.params as object | undefined);
       }
     }
-  } catch {
-    // Silently ignore — app should still function
+  } catch (err) {
+    console.warn('[Notifications] tap handler failed:', String(err));
   }
 }

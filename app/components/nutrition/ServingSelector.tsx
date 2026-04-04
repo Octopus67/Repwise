@@ -2,12 +2,7 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from 
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import type { ServingOption } from '../../utils/servingOptions';
-
-interface FoodItem {
-  name: string;
-  serving_size: number;
-  serving_unit: string;
-}
+import type { FoodItem } from '../../types/nutrition';
 
 interface Props {
   food: FoodItem;

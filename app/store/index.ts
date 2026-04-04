@@ -6,6 +6,7 @@ export interface User {
   id: string;
   email: string;
   role: 'user' | 'premium' | 'admin';
+  emailVerified?: boolean;
 }
 
 export interface AuthTokens {
@@ -241,7 +242,7 @@ export const useStore = create<AppStore>((set) => ({
   // Profile actions
   setProfile: (profile) => {
     const unitSystem = profile.preferences?.unit_system === 'imperial' ? 'imperial' : 'metric';
-    const coachingMode = (profile.coachingMode as any) || 'coached';
+    const coachingMode = (profile.coachingMode as 'coached' | 'collaborative' | 'manual') || 'coached';
     set({ profile, unitSystem, coachingMode });
   },
 

@@ -6,21 +6,21 @@ import {
   Alert,
   StyleSheet,
   Linking,
-  Platform,
 } from 'react-native';
 import Animated, { Layout } from 'react-native-reanimated';
 import Constants from 'expo-constants';
-import * as SecureStore from 'expo-secure-store';
 import { spacing, typography } from '../../theme/tokens';
+import { secureGet, TOKEN_KEYS } from '../../utils/secureStorage';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { useStore } from '../../store';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 import api from '../../services/api';
+import { LEGAL_URLS } from '../../constants/urls';
 
 interface AccountSectionProps {
-  onLogout: () => void;
+  onLogout: () => void | Promise<void>;
 }
 
 export function AccountSection({ onLogout }: AccountSectionProps) {
@@ -37,20 +37,17 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
 
   const handleLogout = useCallback(async () => {
     try {
-      // Get refresh token from storage (use correct key)
-      const refreshToken = await (Platform.OS === 'web' 
-        ? Promise.resolve(localStorage.getItem('rw_refresh_token'))
-        : SecureStore.getItemAsync('rw_refresh_token'));
+      const refreshToken = await secureGet(TOKEN_KEYS.refresh);
       
       // Call backend logout to blacklist both tokens
       await api.post('auth/logout', { refresh_token: refreshToken });
-    } catch (error) {
+    } catch (error: unknown) {
       // Continue with logout even if API call fails
-      console.warn('Logout API call failed:', error);
+      console.warn('Logout API call failed:', String(error));
     } finally {
-      // Clear local auth state
+      // Clear local auth state — await onLogout (secureClear) before clearing Zustand
+      await onLogout();
       store.clearAuth();
-      onLogout();
     }
   }, [store, onLogout]);
 
@@ -118,14 +115,14 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
       <View style={[styles.legalSection, { borderBottomColor: c.border.subtle }]}>
         <TouchableOpacity
           style={styles.legalLink}
-          onPress={() => Linking.openURL('https://repwise.app/privacy')}
+          onPress={() => Linking.openURL(LEGAL_URLS.privacy)}
           accessibilityRole="link"
         >
           <Text style={[styles.legalText, { color: c.accent.primary }]}>Privacy Policy</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.legalLink}
-          onPress={() => Linking.openURL('https://repwise.app/terms')}
+          onPress={() => Linking.openURL(LEGAL_URLS.terms)}
           accessibilityRole="link"
         >
           <Text style={[styles.legalText, { color: c.accent.primary }]}>Terms of Service</Text>

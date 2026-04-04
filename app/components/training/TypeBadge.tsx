@@ -1,3 +1,4 @@
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SetType } from '../../types/training';
 import { radius, typography } from '../../theme/tokens';
@@ -13,7 +14,7 @@ const labelMap: Record<string, string> = {
   'amrap': 'A',
 };
 
-export function TypeBadge({ setType }: TypeBadgeProps) {
+export const TypeBadge = React.memo(function TypeBadge({ setType }: TypeBadgeProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const label = labelMap[setType];
@@ -24,7 +25,7 @@ export function TypeBadge({ setType }: TypeBadgeProps) {
       <Text style={[styles.label, { color: c.accent.primary }]}>{label}</Text>
     </View>
   );
-}
+});
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   pill: {

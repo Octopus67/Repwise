@@ -29,6 +29,8 @@ const INITIAL_DATA: DashboardData = {
   recompMetrics: null,
   nudges: [],
   volumeSummary: null,
+  trainedDates: new Set(),
+  challenges: [],
 };
 
 /** Simulate processing nutrition API response */

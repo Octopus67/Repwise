@@ -14,8 +14,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Pressable,
   StyleSheet,
-  FlatList,
   Alert,
   ActivityIndicator,
   ScrollView,
@@ -26,22 +26,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import api from '../../services/api';
+import type { FoodItem, Macros } from '../../types/nutrition';
+import { AddIngredientsStep } from './AddIngredientsStep';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Step = 'NAMING' | 'ADDING_INGREDIENTS' | 'REVIEW' | 'SAVED';
-
-interface FoodItem {
-  id: string;
-  name: string;
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-  serving_size: number;
-  serving_unit: string;
-  source?: string;
-}
 
 interface RecipeIngredient {
   tempId: string;
@@ -58,15 +48,6 @@ const UNIT_TO_GRAMS: Record<IngredientUnit, number> = {
   cups: 240,
   tbsp: 15,
 };
-
-const UNIT_OPTIONS: IngredientUnit[] = ['g', 'oz', 'cups', 'tbsp'];
-
-interface Macros {
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-}
 
 interface Props {
   visible: boolean;
@@ -295,16 +276,16 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
     >
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: c.bg.surfaceRaised }]}>
-        <TouchableOpacity onPress={handleClose} activeOpacity={0.7}>
+        <Pressable onPress={handleClose} style={styles.closeBtn}>
           <Ionicons name="close" size={24} color={c.text.primary} />
-        </TouchableOpacity>
+        </Pressable>
         <Text style={[styles.headerTitle, { color: c.text.primary }]}>
           {step === 'NAMING' && 'New Recipe'}
           {step === 'ADDING_INGREDIENTS' && 'Add Ingredients'}
           {step === 'REVIEW' && 'Review Recipe'}
           {step === 'SAVED' && 'Recipe Saved'}
         </Text>
-        <View style={{ width: 24 }} />
+        <View style={styles.headerSpacer} />
       </View>
 
       {/* Step: NAMING */}
@@ -354,141 +335,25 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
 
       {/* Step: ADDING_INGREDIENTS */}
       {step === 'ADDING_INGREDIENTS' && (
-        <View style={styles.content}>
-          {/* Running totals bar */}
-          <View style={[styles.totalsBar, { backgroundColor: c.bg.surfaceRaised }]}>
-            <Text style={[styles.totalsLabel, { color: c.text.secondary }]}>Per Serving:</Text>
-            <Text style={[styles.totalsValue, { color: c.text.primary }]}>
-              {Math.round(perServing.calories)} kcal · {Math.round(perServing.protein_g)}g P ·{' '}
-              {Math.round(perServing.carbs_g)}g C · {Math.round(perServing.fat_g)}g F
-            </Text>
-          </View>
-
-          {/* Search bar + quantity */}
-          <View style={styles.searchRow}>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              value={searchQuery}
-              onChangeText={handleSearchChange}
-              placeholder="Search foods..."
-              placeholderTextColor={c.text.muted}
-            />
-            <View style={styles.qtyInputRow}>
-              <TextInput
-                style={[styles.qtyInput, { color: c.text.primary, backgroundColor: c.bg.base }]}
-                value={quantityInput}
-                onChangeText={setQuantityInput}
-                keyboardType="numeric"
-                placeholder="100"
-                placeholderTextColor={c.text.muted}
-              />
-              <View style={styles.unitPicker}>
-                {UNIT_OPTIONS.map((u) => (
-                  <TouchableOpacity
-                    key={u}
-                    style={[styles.unitOption, selectedUnit === u && styles.unitOptionActive]}
-                    onPress={() => setSelectedUnit(u)}
-                    accessibilityLabel={`Unit: ${u}`}
-                    accessibilityRole="button"
-                  >
-                    <Text style={[styles.unitOptionText, { color: selectedUnit === u ? c.accent.primary : c.text.muted }]}>{u}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          </View>
-
-          {/* Search results */}
-          {searchLoading && (
-            <ActivityIndicator color={c.accent.primary} style={{ marginVertical: spacing[2] }} />
-          )}
-          {searchResults.length > 0 && (
-            <View style={styles.searchResultsContainer}>
-              <FlatList
-                data={searchResults.slice(0, 10)}
-                keyExtractor={(item) => item.id}
-                style={[styles.searchResults, { backgroundColor: c.bg.surfaceRaised }]}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[styles.searchResultRow, { borderBottomColor: c.bg.base }]}
-                    onPress={() => handleAddIngredient(item)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.foodName, { color: c.text.primary }]} numberOfLines={1}>{item.name}</Text>
-                      <Text style={[styles.foodMacros, { color: c.text.muted }]}>
-                        {Math.round(item.calories)} kcal · {item.serving_size}{item.serving_unit}
-                      </Text>
-                    </View>
-                    <Ionicons name="add-circle" size={24} color={c.accent.primary} />
-                  </TouchableOpacity>
-                )}
-              />
-            </View>
-          )}
-
-          {/* Current ingredients list */}
-          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>
-            Ingredients ({ingredients.length})
-          </Text>
-          <FlatList
-            data={ingredients}
-            keyExtractor={(item) => item.tempId}
-            style={{ flex: 1 }}
-            renderItem={({ item }) => (
-              <View style={[styles.ingredientRow, { borderBottomColor: c.bg.surfaceRaised }]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.foodName, { color: c.text.primary }]} numberOfLines={1}>{item.foodItem.name}</Text>
-                  <Text style={[styles.foodMacros, { color: c.text.muted }]}>
-                    {Math.round(item.foodItem.calories * (item.quantity * UNIT_TO_GRAMS[item.unit] / item.foodItem.serving_size))} kcal
-                  </Text>
-                </View>
-                <TextInput
-                  style={[styles.qtyInputSmall, { color: c.text.primary, backgroundColor: c.bg.surfaceRaised }]}
-                  defaultValue={String(item.quantity)}
-                  onEndEditing={(e) => handleUpdateQuantity(item.tempId, e.nativeEvent.text)}
-                  keyboardType="numeric"
-                />
-                <TouchableOpacity
-                  onPress={() => {
-                    const idx = UNIT_OPTIONS.indexOf(item.unit);
-                    handleUpdateUnit(item.tempId, UNIT_OPTIONS[(idx + 1) % UNIT_OPTIONS.length]);
-                  }}
-                  accessibilityLabel={`Change unit, currently ${item.unit}`}
-                  accessibilityRole="button"
-                  hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-                >
-                  <Text style={[styles.unitBadge, { color: c.accent.primary, borderColor: c.accent.primary }]}>{item.unit}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleRemoveIngredient(item.tempId)}>
-                  <Ionicons name="trash-outline" size={20} color={c.semantic.negative} />
-                </TouchableOpacity>
-              </View>
-            )}
-            ListEmptyComponent={
-              <Text style={[styles.emptyText, { color: c.text.muted }]}>Search and add ingredients above.</Text>
-            }
-          />
-
-          {/* Navigation buttons */}
-          <View style={styles.navRow}>
-            <TouchableOpacity
-              style={[styles.secondaryBtn, { backgroundColor: c.bg.surfaceRaised }]}
-              onPress={() => setStep('NAMING')}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.secondaryBtnText, { color: c.text.secondary }]}>Back</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.primaryBtn, ingredients.length === 0 && styles.btnDisabled]}
-              onPress={() => setStep('REVIEW')}
-              disabled={ingredients.length === 0}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.primaryBtnText, { color: c.text.primary }]}>Review</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <AddIngredientsStep
+          c={c}
+          perServing={perServing}
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          searchLoading={searchLoading}
+          searchResults={searchResults}
+          quantityInput={quantityInput}
+          onQuantityChange={setQuantityInput}
+          selectedUnit={selectedUnit}
+          onSelectUnit={setSelectedUnit}
+          onAddIngredient={handleAddIngredient}
+          ingredients={ingredients}
+          onRemoveIngredient={handleRemoveIngredient}
+          onUpdateQuantity={handleUpdateQuantity}
+          onUpdateUnit={handleUpdateUnit}
+          onBack={() => setStep('NAMING')}
+          onNext={() => setStep('REVIEW')}
+        />
       )}
 
       {/* Step: REVIEW */}
@@ -596,6 +461,15 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     flex: 1,
     backgroundColor: c.bg.base,
   },
+  closeBtn: {
+    padding: 4,
+  },
+  headerSpacer: {
+    width: 24,
+  },
+  flexOne: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -665,41 +539,11 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   btnDisabled: {
     opacity: 0.5,
   },
-  totalsBar: {
-    backgroundColor: c.bg.surfaceRaised,
-    borderRadius: radius.md,
-    padding: spacing[3],
-    marginBottom: spacing[3],
-  },
-  totalsLabel: {
-    fontSize: typography.size.xs, fontWeight: typography.weight.regular,
-    color: c.text.secondary,
-    marginBottom: spacing[1],
-  },
-  totalsValue: {
-    fontSize: typography.size.base,
+  sectionTitle: {
+    fontSize: typography.size.lg, fontWeight: typography.weight.semibold,
     color: c.text.primary,
-    fontWeight: '600',
-  },
-  searchRow: {
-    flexDirection: 'row',
+    marginTop: spacing[3],
     marginBottom: spacing[2],
-  },
-  searchResultsContainer: {
-    maxHeight: 200,
-    marginBottom: spacing[2],
-  },
-  searchResults: {
-    backgroundColor: c.bg.surfaceRaised,
-    borderRadius: radius.md,
-  },
-  searchResultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing[3],
-    borderBottomWidth: 1,
-    borderBottomColor: c.bg.base,
-    gap: spacing[2],
   },
   foodName: {
     fontSize: typography.size.base, fontWeight: typography.weight.regular,
@@ -708,81 +552,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   foodMacros: {
     fontSize: typography.size.xs, fontWeight: typography.weight.regular,
     color: c.text.muted,
-  },
-  qtyInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  qtyInput: {
-    backgroundColor: c.bg.base,
-    color: c.text.primary,
-    borderRadius: radius.sm,
-    paddingHorizontal: spacing[2],
-    paddingVertical: spacing[1],
-    width: 60,
-    textAlign: 'center',
-    fontSize: 14,
-  },
-  qtyInputSmall: {
-    backgroundColor: c.bg.surfaceRaised,
-    color: c.text.primary,
-    borderRadius: radius.sm,
-    paddingHorizontal: spacing[2],
-    paddingVertical: spacing[1],
-    width: 60,
-    textAlign: 'center',
-    fontSize: 14,
-  },
-  qtyUnit: {
-    fontSize: typography.size.xs, fontWeight: typography.weight.regular,
-    color: c.text.muted,
-  },
-  unitPicker: {
-    flexDirection: 'row',
-    gap: 2,
-  },
-  unitOption: {
-    paddingHorizontal: spacing[1],
-    paddingVertical: 2,
-    borderRadius: radius.sm,
-  },
-  unitOptionActive: {
-    backgroundColor: c.accent.primaryMuted,
-  },
-  unitOptionText: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
-  },
-  unitBadge: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
-    borderWidth: 1,
-    borderRadius: radius.sm,
-    paddingHorizontal: spacing[1],
-    paddingVertical: 1,
-    textAlign: 'center',
-    overflow: 'hidden',
-  },
-  sectionTitle: {
-    fontSize: typography.size.lg, fontWeight: typography.weight.semibold,
-    color: c.text.primary,
-    marginTop: spacing[3],
-    marginBottom: spacing[2],
-  },
-  ingredientRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing[2],
-    borderBottomWidth: 1,
-    borderBottomColor: c.bg.surfaceRaised,
-    gap: spacing[2],
-  },
-  emptyText: {
-    fontSize: typography.size.base, fontWeight: typography.weight.regular,
-    color: c.text.muted,
-    textAlign: 'center',
-    paddingVertical: spacing[4],
   },
   navRow: {
     flexDirection: 'row',

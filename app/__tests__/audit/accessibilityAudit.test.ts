@@ -280,7 +280,7 @@ describe('Property 18 — Accessibility Label Coverage', () => {
     for (let i = 1; i < closeIconSections.length; i++) {
       const preceding = closeIconSections[i - 1].slice(-300);
       const hasLabel = preceding.includes('accessibilityLabel');
-      expect(hasLabel).toBe(false); // Confirms the known failure
+      expect(hasLabel).toBe(true); // Fixed: close button now has accessibilityLabel
     }
   });
 

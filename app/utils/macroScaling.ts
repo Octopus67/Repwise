@@ -3,12 +3,8 @@
  * Extracted to avoid circular dependency between AddNutritionModal and RecipeTab.
  */
 
-export interface Macros {
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-}
+import { Macros } from '../types/nutrition';
+export type { Macros };
 
 /**
  * Scale macros by a multiplier (e.g., for serving size adjustments).

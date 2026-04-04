@@ -18,16 +18,7 @@ const SIDE_WIDTH = (SCREEN_WIDTH - spacing[4] * 2 - spacing[2]) / 2;
 const PHOTO_HEIGHT = SIDE_WIDTH * 1.5;
 const SWIPE_THRESHOLD = 50;
 
-interface PhotoMeta {
-  id: string;
-  capture_date: string;
-  bodyweight_kg: number | null;
-  pose_type: string;
-}
-
-interface PhotoPathMap {
-  [photoId: string]: string;
-}
+import type { PhotoMeta, PhotoPathMap } from '../../utils/progressPhotoTypes';
 
 interface PhotoComparisonProps {
   photos: PhotoMeta[];
@@ -140,7 +131,7 @@ function ComparisonSide({
   onImageError,
 }: ComparisonSideProps) {
   const c = useThemeColors();
-  const fileUri = photo ? pathMap[photo.id] : undefined;
+  const fileUri = photo ? (pathMap[photo.id] || photo.image_url) : undefined;
   const hasImageError = photo ? imageErrors[photo.id] === true : false;
   const dateLabel = new Date(date).toLocaleDateString(undefined, {
     month: 'short',

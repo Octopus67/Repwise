@@ -28,6 +28,8 @@ const INITIAL_DATA: DashboardData = {
   recompMetrics: null,
   nudges: [],
   volumeSummary: null,
+  trainedDates: new Set(),
+  challenges: [],
 };
 
 /** Compute nutrition totals from entries — mirrors hook logic */

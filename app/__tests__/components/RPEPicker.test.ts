@@ -23,13 +23,13 @@ describe('RPE mode values', () => {
     expect(RPE_VALUES).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10]);
   });
 
-  it('RPE_VALUES has 5 entries', () => {
-    expect(RPE_VALUES).toHaveLength(5);
+  it('RPE_VALUES has 9 entries', () => {
+    expect(RPE_VALUES).toHaveLength(9);
   });
 
-  it('all RPE values are between 6 and 10', () => {
+  it('all RPE values are between 2 and 10', () => {
     RPE_VALUES.forEach((v) => {
-      expect(v).toBeGreaterThanOrEqual(6);
+      expect(v).toBeGreaterThanOrEqual(2);
       expect(v).toBeLessThanOrEqual(10);
     });
   });

@@ -20,9 +20,9 @@ export function useHaptics() {
           medium: 'Medium',
           heavy: 'Heavy',
         };
-        Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle[styleMap[style]])?.catch?.(() => {});
+        Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle[styleMap[style]])?.catch?.(() => {}); // Intentional: haptic failure is non-critical
       } catch {
-        // expo-haptics not available
+        // Intentional: expo-haptics not available on all platforms
       }
     },
     [reduceMotion],
@@ -38,9 +38,9 @@ export function useHaptics() {
           warning: 'Warning',
           error: 'Error',
         };
-        Haptics?.notificationAsync?.(Haptics.NotificationFeedbackType[typeMap[type]])?.catch?.(() => {});
+        Haptics?.notificationAsync?.(Haptics.NotificationFeedbackType[typeMap[type]])?.catch?.(() => {}); // Intentional: haptic failure is non-critical
       } catch {
-        // expo-haptics not available
+        // Intentional: expo-haptics not available on all platforms
       }
     },
     [reduceMotion],
@@ -61,8 +61,8 @@ export function triggerHaptic(style: ImpactStyle = 'light') {
       medium: 'Medium',
       heavy: 'Heavy',
     };
-    Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle[styleMap[style]])?.catch?.(() => {});
+    Haptics?.impactAsync?.(Haptics.ImpactFeedbackStyle[styleMap[style]])?.catch?.(() => {}); // Intentional: haptic failure is non-critical
   } catch {
-    // expo-haptics not available
+    // Intentional: expo-haptics not available on all platforms
   }
 }

@@ -5,7 +5,7 @@ import { triggerHaptic } from '../../hooks/useHaptics';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 
 // Conditionally import Swipeable — only available on native
-let Swipeable: any = null;
+let Swipeable: React.ComponentType<Record<string, unknown>> | null = null;
 if (Platform.OS !== 'web') {
   try {
     Swipeable = require('react-native-gesture-handler').Swipeable;
@@ -30,7 +30,7 @@ function DeleteAction({ onDelete }: { onDelete: () => void }) {
 export function SwipeableRow({ children, onDelete }: SwipeableRowProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
-  const swipeableRef = useRef<any>(null);
+  const swipeableRef = useRef<{ close: () => void } | null>(null);
 
   // Web fallback: render children without swipe
   if (Platform.OS === 'web' || !Swipeable) {

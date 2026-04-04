@@ -11,6 +11,7 @@ import {
   computeCalorieBudget,
   computeProjectedDate,
 } from '../../../utils/onboardingCalculations';
+import { formatDateDisplay } from '../../../utils/formatting';
 
 interface Props { onNext?: () => void; onBack?: () => void; onSkip?: () => void; onComplete?: () => void; onEditStep?: (step: number) => void; }
 
@@ -24,10 +25,6 @@ function rateColor(rate: number, isLose: boolean, c: ThemeColors): string {
   return c.semantic.negative;
 }
 
-function formatDate(d: Date): string {
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
 export function GoalStep({ onNext }: Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
@@ -37,6 +34,7 @@ export function GoalStep({ onNext }: Props) {
 
   const tdee = useMemo(() => {
     if (store.tdeeOverride) return store.tdeeOverride;
+    if (!store.sex) return 0;
     const bd = computeTDEEBreakdown(
       store.weightKg, store.heightCm, age, store.sex,
       store.activityLevel, store.exerciseSessionsPerWeek,
@@ -58,7 +56,7 @@ export function GoalStep({ onNext }: Props) {
   const rates = isLose ? LOSE_RATES : isBuild ? BUILD_RATES : [];
 
   const budget = useMemo(
-    () => computeCalorieBudget(tdee, goalType, store.rateKgPerWeek, store.sex),
+    () => store.sex ? computeCalorieBudget(tdee, goalType, store.rateKgPerWeek, store.sex) : { budget: tdee, deficit: 0, floorApplied: false },
     [tdee, goalType, store.rateKgPerWeek, store.sex],
   );
 
@@ -133,7 +131,7 @@ export function GoalStep({ onNext }: Props) {
       {/* Projected date */}
       {projectedDate && (
         <Text style={[styles.projected, { color: c.text.secondary }]}>
-          You'll reach your goal by {formatDate(projectedDate)}
+          You'll reach your goal by {formatDateDisplay(projectedDate)}
         </Text>
       )}
 
@@ -162,7 +160,7 @@ export function GoalStep({ onNext }: Props) {
         </View>
       )}
 
-      {onNext && <Button title="Next" onPress={onNext} style={styles.btn} />}
+      {onNext && <Button title="Next" onPress={onNext} disabled={!targetWeightValid || !!targetDirectionWarning} style={styles.btn} />}
     </ScrollView>
   );
 }

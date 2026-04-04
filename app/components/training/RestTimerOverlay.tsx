@@ -11,8 +11,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { RestTimerRing } from './RestTimerRing';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
-
-type TimerState = 'RUNNING' | 'PAUSED' | 'COMPLETED';
+import type { TimerState } from '../../types/training';
 
 export interface RestTimerOverlayProps {
   /** Total rest duration in seconds */
@@ -165,9 +164,9 @@ export function RestTimerOverlay({
 function playCompletionSound() {
   try {
     const { Audio } = require('expo-av');
-    Audio.Sound.createAsync(require('../../assets/timer-done.mp3')).catch(() => {});
+    Audio.Sound.createAsync(require('../../assets/timer-done.mp3')).catch(() => {}); // Intentional: audio playback failure is non-critical
   } catch {
-    // expo-av not available — silent fallback
+    // Intentional: expo-av not available — audio is non-critical
   }
 }
 

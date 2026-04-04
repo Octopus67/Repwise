@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal,
   View,
@@ -7,12 +7,15 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../common/Icon';
 import { Button } from '../common/Button';
 import api from '../../services/api';
+import { getApiErrorMessage } from '../../utils/errors';
+import { getOfferings, purchasePackage, restorePurchases } from '../../services/purchases';
 
 interface UpgradeModalProps {
   visible: boolean;
@@ -41,6 +44,56 @@ export function UpgradeModal({ visible, onClose, trialEligible, onStartTrial }: 
   const [selectedPlan, setSelectedPlan] = React.useState<'monthly' | 'yearly'>('yearly');
   const [loading, setLoading] = React.useState(false);
   const [trialLoading, setTrialLoading] = React.useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [rcOfferings, setRcOfferings] = useState<any>(null);
+  const [rcLoading, setRcLoading] = useState(true);
+  const [restoreLoading, setRestoreLoading] = useState(false);
+
+  useEffect(() => {
+    if (!visible) return;
+    setRcLoading(true);
+    getOfferings().then(setRcOfferings).finally(() => setRcLoading(false));
+  }, [visible]);
+
+  const handlePurchase = async () => {
+    if (!rcOfferings) return;
+    const pkg = selectedPlan === 'yearly'
+      ? rcOfferings.annual ?? rcOfferings.availablePackages?.find((p: { identifier: string }) => p.identifier === '$rc_annual')
+      : rcOfferings.monthly ?? rcOfferings.availablePackages?.find((p: { identifier: string }) => p.identifier === '$rc_monthly');
+    if (!pkg) { Alert.alert('Error', 'Package not available'); return; }
+    setLoading(true);
+    try {
+      const customerInfo = await purchasePackage(pkg);
+      if (customerInfo.entitlements.active['premium']) {
+        await api.get('payments/status');
+        Alert.alert('Success', 'Subscription activated!');
+        onClose();
+      }
+    } catch (e: any) {
+      if (e.userCancelled) return;
+      Alert.alert('Purchase Failed', e.message ?? 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    setRestoreLoading(true);
+    try {
+      const info = await restorePurchases();
+      if (info?.entitlements?.active['premium']) {
+        await api.get('payments/status');
+        Alert.alert('Restored!', 'Your premium subscription has been restored.');
+        onClose();
+      } else {
+        Alert.alert('No Purchases Found', 'No active subscriptions to restore.');
+      }
+    } catch (e: any) {
+      Alert.alert('Restore Failed', e.message ?? 'Something went wrong');
+    } finally {
+      setRestoreLoading(false);
+    }
+  };
 
   React.useEffect(() => {
     if (!visible) {
@@ -50,52 +103,33 @@ export function UpgradeModal({ visible, onClose, trialEligible, onStartTrial }: 
     }
   }, [visible]);
 
+  const handleDismiss = () => {
+    onClose();
+  };
+
   const handleStartTrial = async () => {
     if (!onStartTrial) return;
     setTrialLoading(true);
     try {
       await api.post('trial/start');
-      Alert.alert('Trial Started!', 'Enjoy 7 days of premium features.');
+      Alert.alert('Trial Started!', 'Enjoy 14 days of premium features.');
       onStartTrial();
       onClose();
-    } catch (err: any) {
-      const message = err?.response?.data?.message ?? 'Could not start trial';
+    } catch (err: unknown) {
+      const message = getApiErrorMessage(err, 'Could not start trial');
       Alert.alert('Error', message);
     } finally {
       setTrialLoading(false);
     }
   };
 
-  const handleSubscribe = async () => {
-    setLoading(true);
-    try {
-      // Detect region from profile or default to US
-      const profileRes = await api.get('users/profile').catch(() => null);
-      const region = profileRes?.data?.region || 'US';
-      const currency = region === 'IN' ? 'INR' : 'USD';
-
-      await api.post('payments/subscribe', {
-        plan_id: selectedPlan,
-        region,
-        currency,
-      });
-      Alert.alert('Success', 'Subscription activated!');
-      onClose();
-    } catch (err: any) {
-      const message = err?.response?.data?.detail ?? err?.response?.data?.message ?? err?.message ?? 'Something went wrong';
-      Alert.alert('Error', message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={handleDismiss}>
       <View style={[styles.overlay, { backgroundColor: c.bg.overlay }]}>
         <View style={[styles.sheet, { backgroundColor: c.bg.surface }]}>
           <View style={[styles.handle, { backgroundColor: c.border.default }]} />
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
             <Text style={[styles.title, { color: c.text.primary }]}>Upgrade to Premium</Text>
             <Text style={[styles.subtitle, { color: c.text.secondary }]}>
               Unlock the full Repwise experience
@@ -132,21 +166,34 @@ export function UpgradeModal({ visible, onClose, trialEligible, onStartTrial }: 
 
             <Button
               title="Subscribe Now"
-              onPress={handleSubscribe}
+              onPress={handlePurchase}
               loading={loading}
               style={styles.cta}
+              disabled={rcLoading}
             />
+            {rcLoading && (
+              <ActivityIndicator size="small" style={{ marginBottom: spacing[3] }} />
+            )}
             {trialEligible && (
               <Button
-                title="Start 7-Day Free Trial"
+                title="Start 14-Day Free Trial"
                 onPress={handleStartTrial}
                 loading={trialLoading}
                 variant="ghost"
                 style={styles.trialCta}
               />
             )}
-            <TouchableOpacity onPress={onClose} style={styles.cancelBtn}>
-              <Text style={[styles.cancelText, { color: c.text.muted }]}>Maybe later</Text>
+            <Button
+              title="Restore Purchases"
+              onPress={handleRestore}
+              loading={restoreLoading}
+              variant="ghost"
+              style={styles.trialCta}
+            />
+            <TouchableOpacity onPress={handleDismiss} style={styles.cancelBtn}>
+              <Text style={[styles.cancelText, { color: c.text.muted }]}>
+                Maybe later
+              </Text>
             </TouchableOpacity>
           </ScrollView>
         </View>

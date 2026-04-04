@@ -65,11 +65,14 @@ export interface ExerciseCardPremiumProps {
   onSetExerciseNotes?: (localId: string, notes: string) => void;
   onShowHUExplainer?: () => void;
   onOpenPlateCalculator?: (weightKg: number) => void;
+  onLinkSuperset?: () => void;
+  onUnlinkSuperset?: () => void;
+  isSupersetMember?: boolean;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
+export const ExerciseCardPremium = React.memo<ExerciseCardPremiumProps>(({
   exercise,
   previousPerformance,
   overloadSuggestion,
@@ -96,6 +99,9 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
   onSetExerciseNotes,
   onShowHUExplainer,
   onOpenPlateCalculator,
+  onLinkSuperset,
+  onUnlinkSuperset,
+  isSupersetMember,
 }) => {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
@@ -135,16 +141,18 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
     setMenuVisible((v) => !v);
   }, []);
 
-  const handleMenuAction = useCallback((index: number) => {
+  const handleMenuAction = useCallback((action: string) => {
     setMenuVisible(false);
-    switch (index) {
-      case 0: onSwap(); break;
-      case 1: onSkip(); break;
-      case 2: onGenerateWarmUp(); break;
-      case 3: setNotesVisible((v) => !v); break;
-      case 4: onRemove(); break;
+    switch (action) {
+      case 'swap': onSwap(); break;
+      case 'skip': onSkip(); break;
+      case 'warmup': onGenerateWarmUp(); break;
+      case 'notes': setNotesVisible((v) => !v); break;
+      case 'remove': onRemove(); break;
+      case 'link-superset': onLinkSuperset?.(); break;
+      case 'unlink-superset': onUnlinkSuperset?.(); break;
     }
-  }, [onSwap, onSkip, onGenerateWarmUp, onRemove]);
+  }, [onSwap, onSkip, onGenerateWarmUp, onRemove, onLinkSuperset, onUnlinkSuperset]);
 
   const handleApplyOverload = useCallback(() => {
     onApplyOverload?.();
@@ -254,19 +262,28 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
         <>
           <Pressable style={styles.menuBackdrop} onPress={() => setMenuVisible(false)} />
           <View style={styles.actionMenu}>
-            <TouchableOpacity style={styles.actionMenuItem} onPress={() => handleMenuAction(0)}>
+            <TouchableOpacity style={styles.actionMenuItem} onPress={() => handleMenuAction('swap')}>
               <Text style={styles.actionMenuItemText}>Swap Exercise</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionMenuItem} onPress={() => handleMenuAction(1)}>
+            <TouchableOpacity style={styles.actionMenuItem} onPress={() => handleMenuAction('skip')}>
               <Text style={styles.actionMenuItemText}>Skip</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionMenuItem} onPress={() => handleMenuAction(2)}>
+            <TouchableOpacity style={styles.actionMenuItem} onPress={() => handleMenuAction('warmup')}>
               <Text style={styles.actionMenuItemText}>Generate Warm-Up</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionMenuItem} onPress={() => handleMenuAction(3)}>
+            <TouchableOpacity style={styles.actionMenuItem} onPress={() => handleMenuAction('notes')}>
               <Text style={styles.actionMenuItemText}>Add Note</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionMenuItem} onPress={() => handleMenuAction(4)}>
+            {isSupersetMember ? (
+              <TouchableOpacity style={styles.actionMenuItem} onPress={() => handleMenuAction('unlink-superset')}>
+                <Text style={styles.actionMenuItemText}>Unlink Superset</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={styles.actionMenuItem} onPress={() => handleMenuAction('link-superset')}>
+                <Text style={styles.actionMenuItemText}>Link Superset</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.actionMenuItem} onPress={() => handleMenuAction('remove')}>
               <Text style={styles.actionMenuItemTextDanger}>Remove</Text>
             </TouchableOpacity>
           </View>
@@ -341,6 +358,7 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
             onWeightStep={(dir) => onWeightStep(set.localId, dir)}
             onSetTypeChange={onUpdateSetType ? (type) => onUpdateSetType(set.localId, type) : undefined}
             onOpenPlateCalculator={onOpenPlateCalculator}
+            onRemoveSet={() => onRemoveSet(set.localId)}
           />
         );
       })}
@@ -373,7 +391,7 @@ export const ExerciseCardPremium: React.FC<ExerciseCardPremiumProps> = ({
       )}
     </View>
   );
-};
+});
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 

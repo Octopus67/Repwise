@@ -1,45 +1,74 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator, StackCardInterpolationProps } from '@react-navigation/stack';
-import { Animated, Easing, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navigation/native-stack';
+import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Svg, { Path, Circle, Rect, Line } from 'react-native-svg';
-import { typography, spacing, motion } from '../theme/tokens';
+import { typography, spacing } from '../theme/tokens';
 import { triggerHaptic } from '../hooks/useHaptics';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { useThemeColors, getThemeColors, ThemeColors } from '../hooks/useThemeColors';
 
-// Screen imports
+// Eagerly loaded screens (tab roots + frequently navigated)
 import { DashboardScreen } from '../screens/dashboard/DashboardScreen';
 import { LogsScreen } from '../screens/logs/LogsScreen';
-import { AnalyticsScreen } from '../screens/analytics/AnalyticsScreen';
-import { LearnScreen } from '../screens/learn/LearnScreen';
-import { ArticleDetailScreen } from '../screens/learn/ArticleDetailScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
-import { CoachingScreen } from '../screens/coaching/CoachingScreen';
-import { CommunityScreen } from '../screens/community/CommunityScreen';
-import { FounderStoryScreen } from '../screens/founder/FounderStoryScreen';
-
 import { ExercisePickerScreen } from '../screens/exercise-picker/ExercisePickerScreen';
-import { ProgressPhotosScreen } from '../screens/profile/ProgressPhotosScreen';
-import { MeasurementsScreen } from '../screens/measurements/MeasurementsScreen';
-import { NotificationSettingsScreen } from '../screens/settings/NotificationSettingsScreen';
-import { NutritionReportScreen } from '../screens/nutrition/NutritionReportScreen';
-import { MicronutrientDashboardScreen } from '../screens/nutrition/MicronutrientDashboardScreen';
-import { MealPlanScreen } from '../screens/meal-prep/MealPlanScreen';
-import { ShoppingListView } from '../screens/meal-prep/ShoppingListView';
-import { PrepSundayFlow } from '../screens/meal-prep/PrepSundayFlow';
-import { WeeklyReportScreen } from '../screens/reports/WeeklyReportScreen';
-import { SessionDetailScreen } from '../screens/training/SessionDetailScreen';
 import { ActiveWorkoutScreen } from '../screens/training/ActiveWorkoutScreen';
 import { WorkoutSummaryScreen } from '../screens/training/WorkoutSummaryScreen';
-import { DataExportScreen } from '../screens/profile/DataExportScreen';
+import { SessionDetailScreen } from '../screens/training/SessionDetailScreen';
+
+// Lazily loaded screens (heavy / infrequently visited)
+const AnalyticsScreen = React.lazy(() => import('../screens/analytics/AnalyticsScreen').then(m => ({ default: m.AnalyticsScreen })));
+const LearnScreen = React.lazy(() => import('../screens/learn/LearnScreen').then(m => ({ default: m.LearnScreen })));
+const ArticleDetailScreen = React.lazy(() => import('../screens/learn/ArticleDetailScreen').then(m => ({ default: m.ArticleDetailScreen })));
+const MicronutrientDashboardScreen = React.lazy(() => import('../screens/nutrition/MicronutrientDashboardScreen').then(m => ({ default: m.MicronutrientDashboardScreen })));
+const PRHistoryScreen = React.lazy(() => import('../screens/training/PRHistoryScreen').then(m => ({ default: m.PRHistoryScreen })));
+const CoachingScreen = React.lazy(() => import('../screens/coaching/CoachingScreen').then(m => ({ default: m.CoachingScreen })));
+const CommunityScreen = React.lazy(() => import('../screens/community/CommunityScreen').then(m => ({ default: m.CommunityScreen })));
+const FeedScreen = React.lazy(() => import('../screens/social/FeedScreen').then(m => ({ default: m.FeedScreen })));
+const LeaderboardScreen = React.lazy(() => import('../screens/social/LeaderboardScreen').then(m => ({ default: m.LeaderboardScreen })));
+const FounderStoryScreen = React.lazy(() => import('../screens/founder/FounderStoryScreen').then(m => ({ default: m.FounderStoryScreen })));
+const NutritionReportScreen = React.lazy(() => import('../screens/nutrition/NutritionReportScreen').then(m => ({ default: m.NutritionReportScreen })));
+const ExerciseHistoryScreen = React.lazy(() => import('../screens/training/ExerciseHistoryScreen').then(m => ({ default: m.ExerciseHistoryScreen })));
+const WeeklyReportScreen = React.lazy(() => import('../screens/reports/WeeklyReportScreen').then(m => ({ default: m.WeeklyReportScreen })));
+const MonthlyReportScreen = React.lazy(() => import('../screens/reports/MonthlyReportScreen').then(m => ({ default: m.MonthlyReportScreen })));
+const YearInReviewScreen = React.lazy(() => import('../screens/reports/YearInReviewScreen').then(m => ({ default: m.YearInReviewScreen })));
+const ProgressPhotosScreen = React.lazy(() => import('../screens/profile/ProgressPhotosScreen').then(m => ({ default: m.ProgressPhotosScreen })));
+const MeasurementsScreen = React.lazy(() => import('../screens/measurements/MeasurementsScreen').then(m => ({ default: m.MeasurementsScreen })));
+const NotificationSettingsScreen = React.lazy(() => import('../screens/settings/NotificationSettingsScreen').then(m => ({ default: m.NotificationSettingsScreen })));
+const MealPlanScreen = React.lazy(() => import('../screens/meal-prep/MealPlanScreen').then(m => ({ default: m.MealPlanScreen })));
+const ShoppingListView = React.lazy(() => import('../screens/meal-prep/ShoppingListView').then(m => ({ default: m.ShoppingListView })));
+const PrepSundayFlow = React.lazy(() => import('../screens/meal-prep/PrepSundayFlow').then(m => ({ default: m.PrepSundayFlow })));
+const DataExportScreen = React.lazy(() => import('../screens/profile/DataExportScreen').then(m => ({ default: m.DataExportScreen })));
+const ImportDataScreen = React.lazy(() => import('../screens/settings/ImportDataScreen').then(m => ({ default: m.ImportDataScreen })));
+
+function LazyFallback() {
+  const c = getThemeColors();
+  return (
+    <View style={{ flex: 1, backgroundColor: c.bg.base, alignItems: 'center', justifyContent: 'center' }}>
+      <ActivityIndicator size="small" color={c.accent.primary} />
+    </View>
+  );
+}
+
+/** Wrap a lazy component for use with React Navigation's component prop */
+function withSuspense<P extends object>(LazyComponent: React.LazyExoticComponent<React.ComponentType<P>>) {
+  return function SuspenseWrapper(props: P) {
+    return (
+      <Suspense fallback={<LazyFallback />}>
+        <LazyComponent {...props} />
+      </Suspense>
+    );
+  };
+}
+
 import type { ActiveWorkoutScreenParams } from '../types/training';
 
 // ─── Param lists ─────────────────────────────────────────────────────────────
 
 export type DashboardStackParamList = {
   DashboardHome: undefined;
-  ExercisePicker: { target?: 'modal' | 'activeWorkout' };
+  ExercisePicker: { target?: 'modal' | 'activeWorkout' | 'swapExercise'; currentExerciseLocalId?: string; muscleGroup?: string };
   ActiveWorkout: ActiveWorkoutScreenParams;
   WorkoutSummary: {
     summary: import('../utils/workoutSummary').WorkoutSummaryResult;
@@ -50,6 +79,8 @@ export type DashboardStackParamList = {
       setsCompleted: number;
       bestSet: { weight: string; reps: string } | null;
     }>;
+    huByMuscle?: Record<string, number>;
+    recommendations?: string[];
   };
   WeeklyReport: undefined;
   ArticleDetail: { articleId: string };
@@ -58,7 +89,7 @@ export type DashboardStackParamList = {
 
 export type LogsStackParamList = {
   LogsHome: undefined;
-  ExercisePicker: { target?: 'modal' | 'activeWorkout' };
+  ExercisePicker: { target?: 'modal' | 'activeWorkout' | 'swapExercise'; currentExerciseLocalId?: string; muscleGroup?: string };
   ActiveWorkout: ActiveWorkoutScreenParams;
   WorkoutSummary: {
     summary: import('../utils/workoutSummary').WorkoutSummaryResult;
@@ -69,6 +100,8 @@ export type LogsStackParamList = {
       setsCompleted: number;
       bestSet: { weight: string; reps: string } | null;
     }>;
+    huByMuscle?: Record<string, number>;
+    recommendations?: string[];
   };
   SessionDetail: { sessionId: string };
 };
@@ -78,6 +111,8 @@ export type AnalyticsStackParamList = {
   NutritionReport: undefined;
   MicronutrientDashboard: undefined;
   WeeklyReport: undefined;
+  MonthlyReport: undefined;
+  ExerciseHistory: { exerciseName: string };
 };
 
 export type ProfileStackParamList = {
@@ -86,6 +121,8 @@ export type ProfileStackParamList = {
   ArticleDetail: { articleId: string };
   Coaching: undefined;
   Community: undefined;
+  Feed: undefined;
+  Leaderboard: undefined;
   FounderStory: undefined;
   ProgressPhotos: undefined;
   Measurements: undefined;
@@ -94,6 +131,9 @@ export type ProfileStackParamList = {
   PrepSunday: undefined;
   NotificationSettings: undefined;
   DataExport: undefined;
+  PRHistory: undefined;
+  YearInReview: undefined;
+  ImportData: undefined;
 };
 
 export type BottomTabParamList = {
@@ -107,54 +147,19 @@ export type BottomTabParamList = {
 
 export const TAB_NAMES: (keyof BottomTabParamList)[] = ['Home', 'Log', 'Analytics', 'Profile'];
 export const PROFILE_STACK_ROUTES: (keyof ProfileStackParamList)[] = [
-  'ProfileHome', 'Learn', 'ArticleDetail', 'Coaching', 'Community', 'FounderStory', 'ProgressPhotos', 'Measurements', 'MealPlan', 'ShoppingList', 'PrepSunday', 'NotificationSettings', 'DataExport',
+  'ProfileHome', 'Learn', 'ArticleDetail', 'Coaching', 'Community', 'Feed', 'Leaderboard', 'FounderStory', 'ProgressPhotos', 'Measurements', 'MealPlan', 'ShoppingList', 'PrepSunday', 'NotificationSettings', 'DataExport', 'PRHistory', 'YearInReview', 'ImportData',
 ];
-
-// ─── Custom card style interpolator ──────────────────────────────────────────
-
-function slideFromRight({ current, layouts }: StackCardInterpolationProps) {
-  return {
-    cardStyle: {
-      transform: [
-        {
-          translateX: current.progress.interpolate({
-            inputRange: [0, 1],
-            outputRange: [layouts.screen.width * 0.3, 0],
-          }),
-        },
-      ],
-      opacity: current.progress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0.95, 1],
-      }),
-    },
-  };
-}
-
-const pushTransitionSpec = {
-  animation: 'timing' as const,
-  config: { duration: motion.duration.moderate, easing: Easing.out(Easing.ease) },
-};
-
-const popTransitionSpec = {
-  animation: 'timing' as const,
-  config: { duration: motion.duration.default, easing: Easing.inOut(Easing.ease) },
-};
 
 // ─── Stack navigators ────────────────────────────────────────────────────────
 
-const DashboardStack = createStackNavigator<DashboardStackParamList>();
-const LogsStack = createStackNavigator<LogsStackParamList>();
-const AnalyticsStack = createStackNavigator<AnalyticsStackParamList>();
-const ProfileStack = createStackNavigator<ProfileStackParamList>();
+const DashboardStack = createNativeStackNavigator<DashboardStackParamList>();
+const LogsStack = createNativeStackNavigator<LogsStackParamList>();
+const AnalyticsStack = createNativeStackNavigator<AnalyticsStackParamList>();
+const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 
 const stackScreenOptions = {
   headerShown: false,
-  cardStyleInterpolator: slideFromRight,
-  transitionSpec: {
-    open: pushTransitionSpec,
-    close: popTransitionSpec,
-  },
+  animation: 'slide_from_right',
 } as const;
 
 function DashboardStackScreen() {
@@ -180,17 +185,19 @@ function DashboardStackScreen() {
       <DashboardStack.Screen name="ExercisePicker" component={ExercisePickerScreen} />
       <DashboardStack.Screen name="ActiveWorkout" component={ActiveWorkoutScreen} options={{ headerShown: false }} />
       <DashboardStack.Screen name="WorkoutSummary" component={WorkoutSummaryScreen} options={{ headerShown: false }} />
-      <DashboardStack.Screen name="WeeklyReport" component={WeeklyReportScreen} />
+      <DashboardStack.Screen name="WeeklyReport" component={withSuspense(WeeklyReportScreen)} />
       <DashboardStack.Screen name="ArticleDetail">
-        {({ route, navigation }: any) => (
-          <ArticleDetailScreen
-            articleId={route.params.articleId}
-            onBack={() => navigation.goBack()}
-            onSeeAll={() => navigation.navigate('Learn')}
-          />
+        {({ route, navigation }: NativeStackScreenProps<DashboardStackParamList, 'ArticleDetail'>) => (
+          <Suspense fallback={<LazyFallback />}>
+            <ArticleDetailScreen
+              articleId={route.params.articleId}
+              onBack={() => navigation.goBack()}
+              onSeeAll={() => navigation.navigate('Learn')}
+            />
+          </Suspense>
         )}
       </DashboardStack.Screen>
-      <DashboardStack.Screen name="Learn" component={LearnScreen} />
+      <DashboardStack.Screen name="Learn" component={withSuspense(LearnScreen)} />
     </DashboardStack.Navigator>
     </ErrorBoundary>
   );
@@ -244,10 +251,12 @@ function AnalyticsStackScreen() {
       )}
     >
     <AnalyticsStack.Navigator screenOptions={stackScreenOptions}>
-      <AnalyticsStack.Screen name="AnalyticsHome" component={AnalyticsScreen} />
-      <AnalyticsStack.Screen name="NutritionReport" component={NutritionReportScreen} />
-      <AnalyticsStack.Screen name="MicronutrientDashboard" component={MicronutrientDashboardScreen} />
-      <AnalyticsStack.Screen name="WeeklyReport" component={WeeklyReportScreen} />
+      <AnalyticsStack.Screen name="AnalyticsHome" component={withSuspense(AnalyticsScreen)} />
+      <AnalyticsStack.Screen name="NutritionReport" component={withSuspense(NutritionReportScreen)} />
+      <AnalyticsStack.Screen name="MicronutrientDashboard" component={withSuspense(MicronutrientDashboardScreen)} />
+      <AnalyticsStack.Screen name="WeeklyReport" component={withSuspense(WeeklyReportScreen)} />
+      <AnalyticsStack.Screen name="MonthlyReport" component={withSuspense(MonthlyReportScreen)} />
+      <AnalyticsStack.Screen name="ExerciseHistory" component={withSuspense(ExerciseHistoryScreen)} options={{ headerShown: false }} />
     </AnalyticsStack.Navigator>
     </ErrorBoundary>
   );
@@ -273,27 +282,34 @@ function ProfileStackScreen() {
     >
     <ProfileStack.Navigator screenOptions={stackScreenOptions}>
       <ProfileStack.Screen name="ProfileHome" component={ProfileScreen} />
-      <ProfileStack.Screen name="Learn" component={LearnScreen} />
+      <ProfileStack.Screen name="Learn" component={withSuspense(LearnScreen)} />
       <ProfileStack.Screen name="ArticleDetail">
-        {({ route, navigation }: any) => (
-          <ArticleDetailScreen
-            articleId={route.params.articleId}
-            onBack={() => navigation.goBack()}
-            onSeeAll={() => navigation.navigate('Learn')}
-          />
+        {({ route, navigation }: NativeStackScreenProps<ProfileStackParamList, 'ArticleDetail'>) => (
+          <Suspense fallback={<LazyFallback />}>
+            <ArticleDetailScreen
+              articleId={route.params.articleId}
+              onBack={() => navigation.goBack()}
+              onSeeAll={() => navigation.navigate('Learn')}
+            />
+          </Suspense>
         )}
       </ProfileStack.Screen>
-      <ProfileStack.Screen name="Coaching" component={CoachingScreen} />
-      <ProfileStack.Screen name="Community" component={CommunityScreen} />
-      <ProfileStack.Screen name="FounderStory" component={FounderStoryScreen} />
+      <ProfileStack.Screen name="Coaching" component={withSuspense(CoachingScreen)} />
+      <ProfileStack.Screen name="Community" component={withSuspense(CommunityScreen)} />
+      <ProfileStack.Screen name="Feed" component={withSuspense(FeedScreen)} />
+      <ProfileStack.Screen name="Leaderboard" component={withSuspense(LeaderboardScreen)} />
+      <ProfileStack.Screen name="FounderStory" component={withSuspense(FounderStoryScreen)} />
 
-      <ProfileStack.Screen name="ProgressPhotos" component={ProgressPhotosScreen} />
-      <ProfileStack.Screen name="Measurements" component={MeasurementsScreen} />
-      <ProfileStack.Screen name="MealPlan" component={MealPlanScreen} />
-      <ProfileStack.Screen name="ShoppingList" component={ShoppingListView} />
-      <ProfileStack.Screen name="PrepSunday" component={PrepSundayFlow} />
-      <ProfileStack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
-      <ProfileStack.Screen name="DataExport" component={DataExportScreen} />
+      <ProfileStack.Screen name="ProgressPhotos" component={withSuspense(ProgressPhotosScreen)} />
+      <ProfileStack.Screen name="Measurements" component={withSuspense(MeasurementsScreen)} />
+      <ProfileStack.Screen name="MealPlan" component={withSuspense(MealPlanScreen)} />
+      <ProfileStack.Screen name="ShoppingList" component={withSuspense(ShoppingListView)} />
+      <ProfileStack.Screen name="PrepSunday" component={withSuspense(PrepSundayFlow)} />
+      <ProfileStack.Screen name="NotificationSettings" component={withSuspense(NotificationSettingsScreen)} />
+      <ProfileStack.Screen name="DataExport" component={withSuspense(DataExportScreen)} />
+      <ProfileStack.Screen name="PRHistory" component={withSuspense(PRHistoryScreen)} />
+      <ProfileStack.Screen name="YearInReview" component={withSuspense(YearInReviewScreen)} />
+      <ProfileStack.Screen name="ImportData" component={withSuspense(ImportDataScreen)} />
     </ProfileStack.Navigator>
     </ErrorBoundary>
   );

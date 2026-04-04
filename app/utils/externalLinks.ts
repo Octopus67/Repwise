@@ -9,3 +9,14 @@ export const openTelegramLink = () => {
     Linking.openURL(TELEGRAM_URL);
   }
 };
+
+// Deferred: Replace with actual Calendly link before launch
+export const COACHING_BOOKING_URL = 'https://calendly.com/repwise-coaching';
+
+export const openCoachingBooking = () => {
+  if (Platform.OS === 'web') {
+    window.open(COACHING_BOOKING_URL, '_blank');
+  } else {
+    Linking.openURL(COACHING_BOOKING_URL);
+  }
+};

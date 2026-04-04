@@ -4,7 +4,7 @@ import { spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import {
-  computeWeeklySummary,
+  computeWeeklyNutritionSummary,
   NutritionEntry,
 } from '../../utils/weeklySummary';
 
@@ -14,10 +14,10 @@ interface WeeklySummaryCardProps {
   timeRangeDays?: number; // Number of days in selected range
 }
 
-export function WeeklySummaryCard({ entries, targetCalories, timeRangeDays = 7 }: WeeklySummaryCardProps) {
+export const WeeklySummaryCard = React.memo(function WeeklySummaryCard({ entries, targetCalories, timeRangeDays = 7 }: WeeklySummaryCardProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
-  const summary = computeWeeklySummary(entries, targetCalories);
+  const summary = computeWeeklyNutritionSummary(entries, targetCalories);
 
   // Insufficient data
   if (summary.daysLogged < 2) {
@@ -75,7 +75,7 @@ export function WeeklySummaryCard({ entries, targetCalories, timeRangeDays = 7 }
       )}
     </Card>
   );
-}
+});
 
 function StatBlock({ label, value, unit }: { label: string; value: string; unit: string }) {
   const c = useThemeColors();

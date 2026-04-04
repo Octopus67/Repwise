@@ -1,4 +1,4 @@
-const OVERFLOW_COLOR = '#6B8FBF';
+import { getThemeColors } from '../hooks/useThemeColors';
 
 export interface RingFill {
   percentage: number;
@@ -29,7 +29,7 @@ export function computeRingFill(
   }
 
   if (value > target) {
-    return { percentage: 100, fillColor: OVERFLOW_COLOR, isOvershoot: true, isMissing: false };
+    return { percentage: 100, fillColor: getThemeColors().semantic.overTarget, isOvershoot: true, isMissing: false };
   }
 
   return {

@@ -2,12 +2,9 @@
  * Filter trend data points by a time range relative to today.
  */
 
-type TimeRange = '7d' | '14d' | '30d' | '90d';
+import type { TimeRange, TrendPoint } from '../types/analytics';
 
-interface TrendPoint {
-  date: string;
-  value: number;
-}
+export type { TimeRange, TrendPoint };
 
 const RANGE_DAYS: Record<TimeRange, number> = {
   '7d': 7,

@@ -7,14 +7,15 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
   Platform,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { radius, spacing, typography } from '../../theme/tokens';
-import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../../components/common/Card';
 import { FilterPill } from '../../components/common/FilterPill';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -23,18 +24,10 @@ import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { ProfileStackParamList } from '../../navigation/BottomTabNavigator';
 import { Icon, IconName } from '../../components/common/Icon';
 import api from '../../services/api';
+import type { AxiosError } from 'axios';
+import { getApiErrorMessage } from '../../utils/errors';
 import { stripMarkdown } from '../../utils/textHelpers';
-
-interface Article {
-  id: string;
-  title: string;
-  module_name?: string;
-  content_markdown?: string;
-  tags: string[];
-  is_premium: boolean;
-  estimated_read_time_min: number;
-  published_at: string;
-}
+import type { Article } from '../../types/common';
 
 const CATEGORIES = ['All', '★ Favorites', 'Hypertrophy', 'Nutrition', 'Programming', 'Recovery', 'Recomp', 'Supplements'];
 
@@ -112,6 +105,7 @@ function AnimatedArticleCard({
   onToggleFavorite: () => void;
 }) {
   const c = useThemeColors();
+  const styles = getThemedStyles(c);
   const animatedStyle = useStaggeredEntrance(index, 40);
   // Reverse-map full module name to short category key for color/icon lookup
   const MODULE_TO_CATEGORY: Record<string, string> = Object.fromEntries(
@@ -125,52 +119,52 @@ function AnimatedArticleCard({
   return (
     <Animated.View style={animatedStyle}>
       <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
-        <Card style={getStyles().articleCard}>
+        <Card style={styles.articleCard}>
           {/* Colored header strip */}
-          <View style={[getStyles().gradientStrip, { backgroundColor: categoryColor }]} />
+          <View style={[styles.gradientStrip, { backgroundColor: categoryColor }]} />
 
-          <View style={getStyles().articleHeader}>
-            <View style={getStyles().articleMeta}>
+          <View style={styles.articleHeader}>
+            <View style={styles.articleMeta}>
               {item.module_name && (
-                <View style={[getStyles().categoryPillContainer, { backgroundColor: categoryColor + '18' }]}>
+                <View style={[styles.categoryPillContainer, { backgroundColor: categoryColor + '18' }]}>
                   {categoryIcon && (
                     <Icon name={categoryIcon} size={12} color={categoryColor} />
                   )}
-                  <Text style={[getStyles().categoryPillText, { color: categoryColor }]}>
+                  <Text style={[styles.categoryPillText, { color: categoryColor }]}>
                     {item.module_name}
                   </Text>
                 </View>
               )}
-              <View style={[getStyles().readTimePill, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}>
-                <Text style={[getStyles().readTimeIcon, { color: c.text.muted }]}>◷</Text>
-                <Text style={[getStyles().readTimeText, { color: c.text.secondary }]}>{item.estimated_read_time_min} min</Text>
+              <View style={[styles.readTimePill, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}>
+                <Text style={[styles.readTimeIcon, { color: c.text.muted }]}>◷</Text>
+                <Text style={[styles.readTimeText, { color: c.text.secondary }]}>{item.estimated_read_time_min} min</Text>
               </View>
             </View>
             {item.is_premium && (
-              <View style={[getStyles().lockBadge, { backgroundColor: c.premium.goldSubtle }]}>
+              <View style={[styles.lockBadge, { backgroundColor: c.premium.goldSubtle }]}>
                 <Icon name="lock" size={14} />
               </View>
             )}
           </View>
 
-          <Text style={[getStyles().articleTitle, { color: c.text.primary }]}>{item.title}</Text>
+          <Text style={[styles.articleTitle, { color: c.text.primary }]}>{item.title}</Text>
 
           {preview ? (
-            <Text style={[getStyles().articlePreview, { color: c.text.secondary }]} numberOfLines={2}>
+            <Text style={[styles.articlePreview, { color: c.text.secondary }]} numberOfLines={2}>
               {preview}
             </Text>
           ) : null}
 
-          <View style={getStyles().articleFooter}>
-            <View style={getStyles().tags}>
+          <View style={styles.articleFooter}>
+            <View style={styles.tags}>
               {item.tags?.slice(0, 3).map((tag) => (
-                <Text key={tag} style={[getStyles().tag, { color: c.text.muted, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}>{tag}</Text>
+                <Text key={tag} style={[styles.tag, { color: c.text.muted, backgroundColor: c.bg.surfaceRaised, borderColor: c.border.subtle }]}>{tag}</Text>
               ))}
             </View>
-            <View style={getStyles().footerRight}>
-              <Text style={[getStyles().readIndicator, { color: c.accent.primary }]}>Read →</Text>
+            <View style={styles.footerRight}>
+              <Text style={[styles.readIndicator, { color: c.accent.primary }]}>Read →</Text>
               <TouchableOpacity onPress={onToggleFavorite} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={[getStyles().favIcon, isFavorite && getStyles().favActive]}>
+                <Text style={[styles.favIcon, isFavorite && styles.favActive]}>
                   {isFavorite ? <Icon name="star" /> : <Icon name="star-outline" />}
                 </Text>
               </TouchableOpacity>
@@ -185,27 +179,37 @@ function AnimatedArticleCard({
 export function LearnScreen() {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
-  const navigation = useNavigation<StackNavigationProp<ProfileStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
   const [articles, setArticles] = useState<Article[]>([]);
   const [category, setCategory] = useState('All');
   const [refreshing, setRefreshing] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadArticles = useCallback(async () => {
     try {
       setError(null);
-      const params: Record<string, string> = { limit: '50', status: 'published' };
-      if (category !== 'All' && category !== '★ Favorites') {
-        params.category = CATEGORY_TO_MODULE[category] ?? category;
+      setLoading(true);
+      if (category === '★ Favorites') {
+        // Fetch favorites directly from API instead of filtering local list
+        const { data } = await api.get('content/favorites');
+        setArticles(data.items ?? []);
+      } else {
+        const params: Record<string, string> = { limit: '50', status: 'published' };
+        if (category !== 'All') {
+          params.category = CATEGORY_TO_MODULE[category] ?? category;
+        }
+        if (searchQuery.trim()) params.q = searchQuery.trim();
+        const { data } = await api.get('content/articles', { params });
+        setArticles(data.items ?? []);
       }
-      if (searchQuery.trim()) params.q = searchQuery.trim();
-      const { data } = await api.get('content/articles', { params });
-      setArticles(data.items ?? []);
     } catch {
       setError('Unable to load articles. Check your connection.');
+    } finally {
+      setLoading(false);
     }
   }, [category, searchQuery]);
 
@@ -213,8 +217,8 @@ export function LearnScreen() {
     try {
       const { data } = await api.get('content/favorites');
       setFavorites(new Set((data.items ?? []).map((a: Article) => a.id)));
-    } catch (err: any) {
-      console.warn('Load favorites failed:', err?.response?.status);
+    } catch (err: unknown) {
+      console.warn('Load favorites failed:', (err as AxiosError)?.response?.status);
     }
   }, []);
 
@@ -240,9 +244,7 @@ export function LearnScreen() {
     };
   }, [category, searchQuery, loadArticles]);
 
-  const displayArticles = category === '★ Favorites'
-    ? articles.filter((a) => favorites.has(a.id))
-    : articles;
+  const displayArticles = articles;
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -253,13 +255,11 @@ export function LearnScreen() {
   const toggleFavorite = async (articleId: string) => {
     const isFav = favorites.has(articleId);
     // Optimistic update
-    const newFavorites = new Set(favorites);
-    if (isFav) {
-      newFavorites.delete(articleId);
-    } else {
-      newFavorites.add(articleId);
-    }
-    setFavorites(newFavorites);
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (isFav) { next.delete(articleId); } else { next.add(articleId); }
+      return next;
+    });
     
     try {
       if (isFav) {
@@ -267,10 +267,14 @@ export function LearnScreen() {
       } else {
         await api.post(`content/articles/${articleId}/favorite`);
       }
-    } catch (err: any) {
-      console.warn('Favorite toggle failed:', err?.response?.status, err?.response?.data?.message);
+    } catch (err: unknown) {
+      console.warn('Favorite toggle failed:', (err as AxiosError)?.response?.status, getApiErrorMessage(err, 'Favorite toggle failed'));
       // Revert on error - restore original state
-      setFavorites(favorites);
+      setFavorites((prev) => {
+        const reverted = new Set(prev);
+        if (isFav) { reverted.add(articleId); } else { reverted.delete(articleId); }
+        return reverted;
+      });
     }
   };
 
@@ -329,6 +333,11 @@ export function LearnScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.accent.primary} />
         }
         ListEmptyComponent={
+          loading ? (
+            <View style={{ paddingVertical: spacing[12], alignItems: 'center' }}>
+              <ActivityIndicator size="large" color={c.accent.primary} />
+            </View>
+          ) : (
           <View testID="learn-empty-state">
           <EmptyState
             icon={<Icon name="book" />}
@@ -347,14 +356,12 @@ export function LearnScreen() {
             </View>
           </EmptyState>
           </View>
+          )
         }
       />
     </SafeAreaView>
   );
 }
-
-/** Lazy styles for module-level helpers */
-function getStyles() { return getThemedStyles(getThemeColors()); }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: c.bg.base, paddingTop: Platform.OS === 'web' ? spacing[4] : 0 },

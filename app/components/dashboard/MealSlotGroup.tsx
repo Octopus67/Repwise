@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
@@ -10,12 +10,15 @@ interface MealSlotGroupProps {
   onAddToSlot: (slotName: MealSlotName) => void;
 }
 
-export function MealSlotGroup({ slot, onAddToSlot }: MealSlotGroupProps) {
+export const MealSlotGroup = React.memo(function MealSlotGroup({ slot, onAddToSlot }: MealSlotGroupProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(slot.entries.length > 0);
   const hasEntries = slot.entries.length > 0;
-  const sorted = hasEntries ? sortEntriesChronologically(slot.entries) : [];
+  const sorted = useMemo(
+    () => (hasEntries ? sortEntriesChronologically(slot.entries) : []),
+    [slot.entries, hasEntries],
+  );
 
   return (
     <View style={styles.container}>
@@ -68,7 +71,7 @@ export function MealSlotGroup({ slot, onAddToSlot }: MealSlotGroupProps) {
       </TouchableOpacity>
     </View>
   );
-}
+});
 
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({

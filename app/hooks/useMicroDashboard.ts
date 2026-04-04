@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
+import { getApiErrorMessage } from '../utils/errors';
 
 export interface NutrientSummary {
   key: string;
@@ -50,8 +51,8 @@ export function useMicroDashboard(startDate: string, endDate: string, sex: strin
         params: { start_date: startDate, end_date: endDate, sex },
       });
       return res.data;
-    } catch (err: any) {
-      throw err?.response?.data?.detail ?? 'Failed to load micronutrient data';
+    } catch (err: unknown) {
+      throw getApiErrorMessage(err, 'Failed to load micronutrient data');
     }
   }, [startDate, endDate, sex]);
 
@@ -59,7 +60,7 @@ export function useMicroDashboard(startDate: string, endDate: string, sex: strin
     let cancelled = false;
     fetchData()
       .then((d) => { if (!cancelled) setData(d); })
-      .catch((e) => { if (!cancelled) setError(String(e)); })
+      .catch((e: unknown) => { if (!cancelled) setError(String(e)); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [fetchData]);

@@ -33,8 +33,11 @@ export function getRestDurationV2(
  * Get timer ring color based on remaining seconds.
  * green (>10s), yellow (5-10s), red (≤5s)
  */
-export function getTimerColor(remainingSeconds: number): string {
+export function getTimerRingColor(remainingSeconds: number): string {
   if (remainingSeconds > 10) return 'green';
   if (remainingSeconds > 5) return 'yellow';
   return 'red';
 }
+
+/** @deprecated Use getTimerRingColor instead. */
+export const getTimerColor = getTimerRingColor;

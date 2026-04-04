@@ -26,7 +26,7 @@ const getCONFIDENCE_COLORS = (c: ThemeColors): Record<string, string> => ({
   low: c.text.muted,
 });
 
-export const OverloadBadge: React.FC<OverloadBadgeProps> = ({
+export const OverloadBadge = React.memo<OverloadBadgeProps>(({
   suggestion,
   unitSystem,
   onApply,
@@ -53,7 +53,7 @@ export const OverloadBadge: React.FC<OverloadBadgeProps> = ({
       </Text>
     </TouchableOpacity>
   );
-};
+});
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {

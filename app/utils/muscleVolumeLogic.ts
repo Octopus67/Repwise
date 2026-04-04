@@ -7,16 +7,15 @@
 import type { WNSLandmarks } from '../types/volume';
 import { getThemeColors, type ThemeColors } from '../hooks/useThemeColors';
 
-const STATUS_COLORS: Record<string, string> = {
-  below_mev: '#6B7280',
-  optimal: '#22C55E',
-  approaching_mrv: '#EAB308',
-  above_mrv: '#EF4444',
-};
-
 /** Map volume status to hex color. */
-export function getStatusColor(status: string): string {
-  return STATUS_COLORS[status] ?? '#6B7280';
+export function getVolumeStatusColor(status: string, c: ThemeColors = getThemeColors()): string {
+  const STATUS_COLORS: Record<string, string> = {
+    below_mev: c.chart.neutral,
+    optimal: c.semantic.positive,
+    approaching_mrv: c.semantic.warning,
+    above_mrv: c.semantic.negative,
+  };
+  return STATUS_COLORS[status] ?? c.chart.neutral;
 }
 
 /** Format frequency display string. */
@@ -59,8 +58,8 @@ export function formatWeekRange(weekStart: string): string {
   return `${fmt(start)} – ${fmt(end)}`;
 }
 
-/** Status label for display. */
-export function getStatusLabel(status: string): string {
+/** Volume status label for display. */
+export function getVolumeStatusLabel(status: string): string {
   const labels: Record<string, string> = {
     below_mev: 'Below MEV',
     optimal: 'Optimal',
@@ -95,3 +94,8 @@ export function getWNSHeatMapColor(hu: number, landmarks: WNSLandmarks, c: Theme
   if (hu <= landmarks.mrv) return c.heatmap.nearMrv;
   return c.heatmap.aboveMrv;
 }
+
+/** @deprecated Use getVolumeStatusColor instead. */
+export const getStatusColor = getVolumeStatusColor;
+/** @deprecated Use getVolumeStatusLabel instead. */
+export const getStatusLabel = getVolumeStatusLabel;

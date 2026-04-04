@@ -19,7 +19,10 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  withTiming,
+  runOnJS,
 } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { ActiveSet, SetType } from '../../types/training';
 import type { UnitSystem } from '../../utils/unitConversion';
 import { SetTypeSelector } from './SetTypeSelector';
@@ -47,11 +50,12 @@ export interface SetRowPremiumProps {
   onWeightStep: (direction: 'up' | 'down') => void;
   onSetTypeChange?: (setType: SetType) => void;
   onOpenPlateCalculator?: (weightKg: number) => void;
+  onRemoveSet?: () => void;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
+export const SetRowPremium = React.memo<SetRowPremiumProps>(({
   set,
   setIndex,
   previousSet,
@@ -64,6 +68,7 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
   onWeightStep,
   onSetTypeChange,
   onOpenPlateCalculator,
+  onRemoveSet,
 }) => {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
@@ -77,6 +82,36 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
 
   const checkAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: checkScale.value }],
+  }));
+
+  // ── Swipe-to-delete ────────────────────────────────────────────────
+  const DELETE_THRESHOLD = -80;
+  const translateX = useSharedValue(0);
+
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-5, 5])
+    .onUpdate((e) => {
+      if (e.translationX < 0) {
+        translateX.value = Math.max(e.translationX, -120);
+      }
+    })
+    .onEnd(() => {
+      if (translateX.value < DELETE_THRESHOLD && onRemoveSet) {
+        translateX.value = withTiming(-300, { duration: 200 }, () => {
+          runOnJS(onRemoveSet)();
+        });
+      } else {
+        translateX.value = withSpring(0, springs.snappy);
+      }
+    });
+
+  const swipeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const deleteRevealStyle = useAnimatedStyle(() => ({
+    opacity: translateX.value < -20 ? withTiming(1, { duration: 150 }) : withTiming(0, { duration: 150 }),
   }));
 
   // RPE/RIR picker modal state
@@ -150,13 +185,21 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
     : null;
 
   return (
-    <View
-      style={[
-        styles.row,
-        isCompleted ? styles.rowCompleted : styles.rowUncompleted,
-      ]}
-      accessibilityRole="none"
-    >
+    <View style={styles.swipeContainer}>
+      {/* Delete reveal behind the row */}
+      <Animated.View style={[styles.deleteReveal, deleteRevealStyle]}>
+        <Text style={styles.deleteRevealText}>Delete</Text>
+      </Animated.View>
+
+      <GestureDetector gesture={onRemoveSet ? panGesture : Gesture.Pan()}>
+        <Animated.View
+          style={[
+            styles.row,
+            isCompleted ? styles.rowCompleted : styles.rowUncompleted,
+            swipeStyle,
+          ]}
+          accessibilityRole="none"
+        >
       {/* Set number */}
       <Text style={styles.setNumber}>{setIndex + 1}</Text>
 
@@ -313,20 +356,43 @@ export const SetRowPremium: React.FC<SetRowPremiumProps> = ({
           <Text style={[styles.checkText, isCompleted && styles.checkTextCompleted]}>✓</Text>
         </TouchableOpacity>
       </Animated.View>
+      </Animated.View>
+      </GestureDetector>
     </View>
   );
-};
+});
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
+  swipeContainer: {
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: radius.sm,
+    marginBottom: spacing[1],
+  },
+  deleteReveal: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 80,
+    backgroundColor: c.semantic.negative ?? '#FF3B30',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: radius.sm,
+  },
+  deleteRevealText: {
+    color: '#fff',
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.bold,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing[2],
     paddingHorizontal: spacing[2],
     borderRadius: radius.sm,
-    marginBottom: spacing[1],
     gap: spacing[1],
   },
   rowCompleted: {

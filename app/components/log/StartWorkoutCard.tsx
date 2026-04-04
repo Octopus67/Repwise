@@ -13,7 +13,7 @@ import type { WorkoutTemplateResponse } from '../../types/training';
 
 interface StartWorkoutCardProps {
   userTemplates: WorkoutTemplateResponse[];
-  staticTemplates: Array<{ id: string; name: string; description: string; exercises: any[] }>;
+  staticTemplates: Array<{ id: string; name: string; description: string | null; exercises: WorkoutTemplateResponse['exercises'] }>;
   onStartEmpty: () => void;
   onStartTemplate: (templateId: string) => void;
 }

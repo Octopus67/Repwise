@@ -42,7 +42,7 @@ describe('Property 19: Source-based badge rendering', () => {
       fc.property(
         fc.constantFrom('community' as FoodSource, 'custom' as FoodSource),
         (source) => {
-          expect(getSourceBadgeColor(source)).toBe('#9CA3AF');
+          expect(getSourceBadgeColor(source)).toBe('#7B8DA1');
         },
       ),
     );
@@ -52,7 +52,7 @@ describe('Property 19: Source-based badge rendering', () => {
     fc.assert(
       fc.property(sourceArb, (source) => {
         const color = getSourceBadgeColor(source);
-        expect(['#22C55E', '#9CA3AF']).toContain(color);
+        expect(['#22C55E', '#7B8DA1']).toContain(color);
       }),
     );
   });

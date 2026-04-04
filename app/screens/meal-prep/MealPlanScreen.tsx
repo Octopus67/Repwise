@@ -10,23 +10,21 @@ import {
 import { typography, spacing } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../../components/common/Card';
-import { computeDaySummary, computeWeeklySummary } from '../../utils/mealPrepLogic';
+import api from '../../services/api';
+import { extractApiError } from '../../utils/extractApiError';
+import type { ProfileScreenProps } from '../../types/navigation';
+import { computeDaySummary, computeWeeklyMacroTotal } from '../../utils/mealPrepLogic';
 import type { MacroSummary, MealAssignment } from '../../utils/mealPrepLogic';
+import type { DayPlan } from '../../types/common';
 
 const DAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-interface DayPlan {
-  day_index: number;
-  assignments: MealAssignment[];
-  unfilled_slots: string[];
-}
 
 interface GeneratedPlan {
   days: DayPlan[];
   weekly_macro_summary: MacroSummary;
 }
 
-export function MealPlanScreen({ navigation }: any) {
+export function MealPlanScreen({ navigation }: ProfileScreenProps<'MealPlan'>) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
@@ -38,16 +36,10 @@ export function MealPlanScreen({ navigation }: any) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/v1/meal-plans/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ num_days: 5 }),
-      });
-      if (!res.ok) throw new Error('Failed to generate plan');
-      const data = await res.json();
+      const { data } = await api.post('meal-plans/generate', { num_days: 5 });
       setPlan(data);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(extractApiError(e, 'Failed to generate meal plan'));
     } finally {
       setLoading(false);
     }
@@ -58,25 +50,20 @@ export function MealPlanScreen({ navigation }: any) {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch('/api/v1/meal-plans/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: `Meal Plan ${new Date().toLocaleDateString()}`,
-          start_date: new Date().toISOString().split('T')[0],
-          days: plan.days,
-        }),
+      await api.post('meal-plans/save', {
+        name: `Meal Plan ${new Date().toLocaleDateString()}`,
+        start_date: new Date().toISOString().split('T')[0],
+        days: plan.days,
       });
-      if (!res.ok) throw new Error('Failed to save plan');
-    } catch (e: any) {
-      setError(e.message ?? 'Failed to save plan');
+    } catch (e: unknown) {
+      setError(extractApiError(e, 'Failed to save meal plan'));
     } finally {
       setSaving(false);
     }
   }, [plan]);
 
   const daySummaries = plan?.days.map((d) => computeDaySummary(d.assignments)) ?? [];
-  const weeklySummary = daySummaries.length > 0 ? computeWeeklySummary(daySummaries) : null;
+  const weeklySummary = daySummaries.length > 0 ? computeWeeklyMacroTotal(daySummaries) : null;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]}>
@@ -152,7 +139,7 @@ export function MealPlanScreen({ navigation }: any) {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.btnSecondary, { backgroundColor: c.bg.surface }]}
-              onPress={() => navigation?.navigate?.('ShoppingList')}
+              onPress={() => navigation.navigate('ShoppingList', { planId: 'current' })}
             >
               <Text style={[styles.btnText, { color: c.text.primary }]}>Shopping List</Text>
             </TouchableOpacity>

@@ -56,7 +56,7 @@ export function OnboardingTrialPrompt({
           <Icon name="star" size={48} color={c.premium.gold} />
         </View>
 
-        <Text style={styles.title}>Try Premium Free for 7 Days</Text>
+        <Text style={styles.title}>Try Premium Free for 14 Days</Text>
         <Text style={styles.subtitle}>{personalCopy}</Text>
         <Text style={styles.noCc}>No credit card required.</Text>
 

@@ -19,9 +19,11 @@ import { getPasswordStrength } from '../../utils/passwordStrength';
 import api from '../../services/api';
 import Animated from 'react-native-reanimated';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
+import { createRateLimiter } from '../../utils/rateLimiter';
 
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
+const resetLimiter = createRateLimiter(5, 60000);
 
 interface ResetPasswordScreenProps {
   email: string;
@@ -65,6 +67,10 @@ export function ResetPasswordScreen({ email, onResetSuccess, onBack }: ResetPass
 
   const handleSubmit = useCallback(async () => {
     setError('');
+    if (!resetLimiter.canAttempt()) {
+      setError(`Too many attempts. Try again in ${Math.ceil(resetLimiter.remainingMs() / 1000)}s`);
+      return;
+    }
     if (code.length < CODE_LENGTH) {
       setError('Please enter the 6-digit code');
       return;
@@ -78,6 +84,7 @@ export function ResetPasswordScreen({ email, onResetSuccess, onBack }: ResetPass
       return;
     }
     setLoading(true);
+    resetLimiter.recordAttempt();
     try {
       await api.post('auth/reset-password', { email, code, new_password: password });
       onResetSuccess();
@@ -164,7 +171,7 @@ export function ResetPasswordScreen({ email, onResetSuccess, onBack }: ResetPass
           </TouchableOpacity>
 
           {/* New password */}
-          <View style={{ position: 'relative' }}>
+          <View style={styles.inputWrapper}>
             <TextInput
               testID="reset-password-input"
               ref={passwordRef}
@@ -181,7 +188,7 @@ export function ResetPasswordScreen({ email, onResetSuccess, onBack }: ResetPass
             />
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
-              style={{ position: 'absolute', right: spacing[3], top: spacing[3], minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+              style={styles.eyeToggle}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
               accessibilityRole="button"
@@ -193,7 +200,7 @@ export function ResetPasswordScreen({ email, onResetSuccess, onBack }: ResetPass
           <PasswordStrengthMeter result={strengthResult} password={password} />
 
           {/* Confirm password */}
-          <View style={{ position: 'relative' }}>
+          <View style={styles.inputWrapper}>
             <TextInput
               testID="reset-confirm-password-input"
               ref={confirmRef}
@@ -210,7 +217,7 @@ export function ResetPasswordScreen({ email, onResetSuccess, onBack }: ResetPass
             />
             <TouchableOpacity
               onPress={() => setShowConfirm(!showConfirm)}
-              style={{ position: 'absolute', right: spacing[3], top: spacing[3], minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+              style={styles.eyeToggle}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               accessibilityLabel={showConfirm ? 'Hide password confirmation' : 'Show password confirmation'}
               accessibilityRole="button"
@@ -257,6 +264,8 @@ export function ResetPasswordScreen({ email, onResetSuccess, onBack }: ResetPass
 
 const getThemedStyles = (c: ReturnType<typeof getThemeColors>) => StyleSheet.create({
   container: { flex: 1 },
+  inputWrapper: { position: 'relative' as const },
+  eyeToggle: { position: 'absolute' as const, right: spacing[3], top: spacing[3], minWidth: 44, minHeight: 44, alignItems: 'center' as const, justifyContent: 'center' as const },
   scroll: { flexGrow: 1, justifyContent: 'center', padding: spacing[6] },
   title: {
     fontSize: typography.size['2xl'],

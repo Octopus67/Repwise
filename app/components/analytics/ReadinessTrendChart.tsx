@@ -8,14 +8,10 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { Icon } from '../../components/common/Icon';
 import { getReadinessColor } from '../../utils/readinessScoreLogic';
 import api from '../../services/api';
+import type { TrendPoint } from '../../types/analytics';
 
 interface Props {
   timeRange: string;
-}
-
-interface TrendPoint {
-  date: string;
-  value: number;
 }
 
 export function ReadinessTrendChart({ timeRange }: Props) {
@@ -32,13 +28,13 @@ export function ReadinessTrendChart({ timeRange }: Props) {
     api.get('readiness/history', { params: { start_date: start, end_date: end } })
       .then(({ data: res }) => {
         const items = (res.items ?? [])
-          .filter((i: any) => i.score !== null)
-          .map((i: any) => ({ date: i.score_date, value: i.score }))
+          .filter((i: { score: number | null }) => i.score !== null)
+          .map((i: { score_date: string; score: number }) => ({ date: i.score_date, value: i.score }))
           .reverse();
         setData(items);
       })
-      .catch((err) => {
-        console.warn('[ReadinessTrendChart] Failed to load history:', err);
+      .catch((err: unknown) => {
+        console.warn('[ReadinessTrendChart] Failed to load history:', String(err));
         setData([]);
       })
       .finally(() => setIsLoading(false));

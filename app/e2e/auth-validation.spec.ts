@@ -34,38 +34,34 @@ test.describe('Auth Validation & Forgot Password', () => {
     expect(errorText?.toLowerCase()).toContain('email');
   });
 
-  test('shows ToS checkbox on register screen', async ({ page }) => {
+  test('register button disabled when fields empty, enabled when filled', async ({ page }) => {
     // Navigate to register screen
     const registerLink = page.locator('[data-testid="login-register-link"]');
     await expect(registerLink).toBeVisible({ timeout: 10000 });
     await registerLink.click();
     await page.waitForTimeout(1000);
 
-    // Verify ToS checkbox text is visible
-    const tosText = page.getByText(/I agree to the Terms of Service/i);
-    await expect(tosText).toBeVisible({ timeout: 5000 });
-  });
-
-  test('register button disabled without ToS', async ({ page }) => {
-    // Navigate to register screen
-    const registerLink = page.locator('[data-testid="login-register-link"]');
-    await expect(registerLink).toBeVisible({ timeout: 10000 });
-    await registerLink.click();
-    await page.waitForTimeout(1000);
-
-    // The register button should be disabled before checking ToS
     const registerButton = page.locator('[data-testid="register-submit-button"]');
     await expect(registerButton).toBeVisible({ timeout: 5000 });
 
-    // Check that the button is disabled (opacity or disabled attribute)
-    const isDisabled = await registerButton.isDisabled().catch(() => false);
-    const opacity = await registerButton.evaluate((el) => {
-      const style = window.getComputedStyle(el);
-      return parseFloat(style.opacity);
+    // Button should be disabled initially (no fields filled)
+    const isDisabledBefore = await registerButton.isDisabled().catch(() => false);
+    const opacityBefore = await registerButton.evaluate((el) => {
+      return parseFloat(window.getComputedStyle(el).opacity);
     }).catch(() => 1);
+    expect(isDisabledBefore || opacityBefore < 1).toBeTruthy();
 
-    // Button should be disabled or have reduced opacity
-    expect(isDisabled || opacity < 1).toBeTruthy();
+    // Fill email and password
+    await page.locator('[data-testid="register-email-input"]').fill('test@example.com');
+    await page.locator('[data-testid="register-password-input"]').fill('StrongPass123!');
+    await page.waitForTimeout(500);
+
+    // Button should now be enabled
+    const isDisabledAfter = await registerButton.isDisabled().catch(() => false);
+    const opacityAfter = await registerButton.evaluate((el) => {
+      return parseFloat(window.getComputedStyle(el).opacity);
+    }).catch(() => 1);
+    expect(!isDisabledAfter && opacityAfter >= 1).toBeTruthy();
   });
 
   test('forgot password screen loads', async ({ page }) => {

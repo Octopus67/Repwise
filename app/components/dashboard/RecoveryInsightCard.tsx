@@ -3,12 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { getReadinessColor } from '../../utils/readinessScoreLogic';
-
-interface RecoveryFactor {
-  name: string;
-  value: number;
-  source: string;
-}
+import type { RecoveryFactor } from '../../types/common';
 
 interface Props {
   score: number;

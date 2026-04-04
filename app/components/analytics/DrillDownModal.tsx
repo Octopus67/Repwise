@@ -3,9 +3,27 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity
 import { ModalContainer } from '../common/ModalContainer';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
-import { getStatusColor, getStatusLabel } from '../../utils/muscleVolumeLogic';
+import { getVolumeStatusColor, getVolumeStatusLabel } from '../../utils/muscleVolumeLogic';
 import { HUExplainerSheet } from '../education/HUExplainerSheet';
 import api from '../../services/api';
+
+/** Volume data passed from HeatMapCard — may be legacy MuscleGroupVolume or WNS-enriched */
+interface VolumeEntry {
+  muscle_group: string;
+  effective_sets: number;
+  frequency: number;
+  volume_status: string;
+  mev: number;
+  mav: number;
+  mrv: number;
+  hypertrophy_units?: number;
+  gross_stimulus?: number;
+  atrophy_effect?: number;
+  net_stimulus?: number;
+  status?: string;
+  landmarks?: { mv: number; mev: number; mav_low: number; mav_high: number; mrv: number };
+  exercises?: Array<{ exercise_name: string; coefficient?: number; sets_count?: number; stimulating_reps_total?: number; contribution_hu?: number }>;
+}
 
 interface SetDetail {
   weight_kg: number;
@@ -49,7 +67,7 @@ interface DrillDownModalProps {
   muscleGroup: string | null;
   weekStart: string;
   onClose: () => void;
-  wnsVolumes?: any[];  // WNS muscle volume data from HeatMapCard
+  wnsVolumes?: VolumeEntry[];  // WNS muscle volume data from HeatMapCard
 }
 
 export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVolumes }: DrillDownModalProps) {
@@ -70,7 +88,7 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
 
     // If WNS data is available from parent, use it directly for the summary
     const wnsMatch = wnsVolumes?.find(
-      (v: any) => v.muscle_group === muscleGroup
+      (v) => v.muscle_group === muscleGroup
     );
 
     setLoading(true);
@@ -98,7 +116,7 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
       })
       .catch(() => {
         setError('Failed to load detailed muscle data');
-        setData(wnsMatch ?? null);
+        setData(wnsMatch ? { ...wnsMatch, exercises: [] } as DetailData : null);
       })
       .finally(() => setLoading(false));
   }, [visible, muscleGroup, weekStart, wnsVolumes]);
@@ -123,8 +141,8 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
           <>
             {/* Summary */}
             <View style={styles.summaryRow}>
-              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(data.status ?? data.volume_status) }]}>
-                <Text style={styles.statusText}>{getStatusLabel(data.status ?? data.volume_status)}</Text>
+              <View style={[styles.statusBadge, { backgroundColor: getVolumeStatusColor(data.status ?? data.volume_status) }]}>
+                <Text style={styles.statusText}>{getVolumeStatusLabel(data.status ?? data.volume_status)}</Text>
               </View>
               <Text style={[styles.setsText, { color: c.text.primary }]}>
                 {data.hypertrophy_units != null

@@ -64,7 +64,8 @@ export function MeasurementsScreen() {
 
       setMeasurements(items);
       setPhotos(storedPhotos ? JSON.parse(storedPhotos) : []);
-    } catch {
+    } catch (err) {
+      console.warn('[Measurements] load failed:', String(err));
       Alert.alert('Error', 'Failed to load data');
     } finally {
       setLoading(false);
@@ -94,7 +95,8 @@ export function MeasurementsScreen() {
       await api.post('body-measurements', payload);
       await loadData();
       Alert.alert('Saved', 'Measurement recorded successfully.');
-    } catch {
+    } catch (err) {
+      console.warn('[Measurements] save failed:', String(err));
       Alert.alert('Error', 'Failed to save measurement');
     } finally {
       setSaving(false);

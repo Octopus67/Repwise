@@ -7,7 +7,7 @@
  * silently fails or falls back to window.confirm (OK/Cancel only).
  */
 
-import { Platform, Alert } from 'react-native';
+import { Platform, Alert, type AlertButton as RNAlertButton } from 'react-native';
 
 export interface AlertButton {
   text: string;
@@ -28,7 +28,7 @@ export function showAlert(
   buttons?: AlertButton[],
 ): void {
   if (Platform.OS !== 'web') {
-    Alert.alert(title, message, buttons as any);
+    Alert.alert(title, message, buttons as RNAlertButton[]);
     return;
   }
 

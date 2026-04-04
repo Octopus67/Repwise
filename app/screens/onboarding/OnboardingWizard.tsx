@@ -1,7 +1,8 @@
-import { useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Platform } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
-import { spacing, typography, radius, motion } from '../../theme/tokens';
+// DEFERRED: Food DNA step (step 9) is skipped for v1 launch.
+import React, { useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { useStepTransition } from '../../hooks/useStepTransition';
 import { useHaptics } from '../../hooks/useHaptics';
@@ -15,13 +16,13 @@ import { BodyMeasurementsStep } from './steps/BodyMeasurementsStep';
 import { BodyCompositionStep } from './steps/BodyCompositionStep';
 import { LifestyleStep } from './steps/LifestyleStep';
 import { TDEERevealStep } from './steps/TDEERevealStep';
-import { SmartTrainingStep } from './steps/SmartTrainingStep';
 import { GoalStep } from './steps/GoalStep';
 import { DietStyleStep } from './steps/DietStyleStep';
 import { FoodDNAStep } from './steps/FoodDNAStep';
 import { SummaryStep } from './steps/SummaryStep';
 
-import { ONBOARDING_STEPS, TOTAL_STEPS } from './stepConstants';
+import { ONBOARDING_STEPS, TOTAL_STEPS, DISPLAY_TOTAL_STEPS } from './stepConstants';
+import { OnboardingProgress } from '../../components/onboarding/OnboardingProgress';
 
 interface Props {
   onComplete: () => void;
@@ -34,30 +35,28 @@ export function OnboardingWizard({ onComplete }: Props) {
   const setStep = useOnboardingStore((s) => s.setStep);
   const reset = useOnboardingStore((s) => s.reset);
 
-  // Progress bar animation
-  const progress = useSharedValue(currentStep / TOTAL_STEPS);
   const stepTransitionStyle = useStepTransition(currentStep);
   const { impact } = useHaptics();
-  useEffect(() => {
-    progress.value = withTiming(currentStep / TOTAL_STEPS, { duration: motion.duration.slow, easing: Easing.out(Easing.ease) });
-  }, [currentStep, progress]);
-
-
-  const progressStyle = useAnimatedStyle(() => ({
-    width: `${progress.value * 100}%`,
-  }));
 
   const goNext = useCallback(() => {
     if (currentStep < TOTAL_STEPS) {
       impact('light');
-      setStep(currentStep + 1);
+      // Skip FOOD_DNA (step 9) — go straight from DIET_STYLE to SUMMARY
+      const next = currentStep === ONBOARDING_STEPS.DIET_STYLE
+        ? ONBOARDING_STEPS.SUMMARY
+        : currentStep + 1;
+      setStep(next);
     }
   }, [currentStep, setStep, impact]);
 
   const goBack = useCallback(() => {
     if (currentStep <= 1) return;
     impact('light');
-    setStep(currentStep - 1);
+    // Skip FOOD_DNA (step 9) when going back from SUMMARY
+    const prev = currentStep === ONBOARDING_STEPS.SUMMARY
+      ? ONBOARDING_STEPS.DIET_STYLE
+      : currentStep - 1;
+    setStep(prev);
   }, [currentStep, setStep, impact]);
 
   const handleComplete = useCallback(() => {
@@ -69,6 +68,11 @@ export function OnboardingWizard({ onComplete }: Props) {
     setStep(step);
   }, [setStep]);
 
+  // Map internal step index to display number (FOOD_DNA skipped)
+  const displayStep = currentStep > ONBOARDING_STEPS.DIET_STYLE
+    ? currentStep - 1
+    : currentStep;
+
   const renderStep = () => {
     switch (currentStep) {
       case ONBOARDING_STEPS.INTENT: return <IntentStep onNext={goNext} />;
@@ -77,7 +81,6 @@ export function OnboardingWizard({ onComplete }: Props) {
       case ONBOARDING_STEPS.BODY_COMPOSITION: return <BodyCompositionStep onNext={goNext} onBack={goBack} onSkip={goNext} />;
       case ONBOARDING_STEPS.LIFESTYLE: return <LifestyleStep onNext={goNext} onBack={goBack} />;
       case ONBOARDING_STEPS.TDEE_REVEAL: return <TDEERevealStep onNext={goNext} onBack={goBack} />;
-      case ONBOARDING_STEPS.SMART_TRAINING: return <SmartTrainingStep onNext={goNext} onBack={goBack} />;
       case ONBOARDING_STEPS.GOAL: return <GoalStep onNext={goNext} onBack={goBack} />;
       case ONBOARDING_STEPS.DIET_STYLE: return <DietStyleStep onNext={goNext} onBack={goBack} />;
       case ONBOARDING_STEPS.FOOD_DNA: return <FoodDNAStep onNext={goNext} onBack={goBack} onSkip={goNext} />;
@@ -111,13 +114,8 @@ export function OnboardingWizard({ onComplete }: Props) {
           </View>
         )}
       >
-        {/* Progress bar */}
-        <View style={styles.progressContainer}>
-          <View style={[styles.progressTrack, { backgroundColor: c.border.subtle }]}>
-            <Animated.View style={[styles.progressFill, progressStyle]} />
-          </View>
-          <Text style={[styles.stepCounter, { color: c.text.muted }]}>Step {currentStep} of {TOTAL_STEPS}</Text>
-        </View>
+        {/* Progress indicator */}
+        <OnboardingProgress current={displayStep} total={DISPLAY_TOTAL_STEPS} />
 
         {/* Back button (hidden on step 1) */}
         {currentStep > 1 && (
@@ -139,28 +137,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: c.bg.base,
-  },
-  progressContainer: {
-    paddingHorizontal: spacing[6],
-    paddingTop: spacing[4],
-    paddingBottom: spacing[2],
-  },
-  progressTrack: {
-    height: 3,
-    backgroundColor: c.border.subtle,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: c.accent.primary,
-    borderRadius: 2,
-  },
-  stepCounter: {
-    color: c.text.muted,
-    fontSize: typography.size.xs,
-    textAlign: 'right',
-    marginTop: spacing[1],
   },
   backButton: {
     paddingHorizontal: spacing[6],

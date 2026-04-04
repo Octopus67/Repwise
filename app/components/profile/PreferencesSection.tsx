@@ -3,6 +3,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  Switch,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
@@ -15,7 +16,7 @@ import { CoachingModeSelector, type CoachingMode } from '../coaching/CoachingMod
 import { useStore, type UserProfile } from '../../store';
 import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
 import { useThemeStore } from '../../store/useThemeStore';
-import { TIMEZONE_OPTIONS, REGION_OPTIONS, CURRENCY_OPTIONS } from '../../constants/pickerOptions';
+import { TIMEZONE_OPTIONS } from '../../constants/pickerOptions';
 import api from '../../services/api';
 
 // ─── SegmentedControl (inline) ───────────────────────────────────────────────
@@ -82,6 +83,8 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
   const store = useStore();
   const showRpeRirTooltip = useWorkoutPreferencesStore((s) => s.showRpeRirTooltip);
   const dismissRpeRirTooltip = useWorkoutPreferencesStore((s) => s.dismissRpeRirTooltip);
+  const simpleMode = useWorkoutPreferencesStore((s) => s.simpleMode);
+  const toggleSimpleMode = useWorkoutPreferencesStore((s) => s.toggleSimpleMode);
   const themeMode = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
   const [savingUnit, setSavingUnit] = useState(false);
@@ -99,8 +102,8 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
           const mapped = mapProfileResponse(data);
           store.setProfile(mapped);
         })
-        .catch(() => {
-          // Silent fail — user can set manually
+        .catch((err: unknown) => {
+          console.warn('[Preferences] timezone persist failed:', String(err));
         });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -138,36 +141,6 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
         store.setProfile(mapped);
       } catch {
         throw new Error("Couldn't save timezone.");
-      }
-    },
-    [store],
-  );
-
-  // ── Region change ──
-  const handleRegionSave = useCallback(
-    async (newValue: string) => {
-      setError(null);
-      try {
-        const { data } = await api.put('users/profile', { region: newValue });
-        const mapped = mapProfileResponse(data);
-        store.setProfile(mapped);
-      } catch {
-        throw new Error("Couldn't save region.");
-      }
-    },
-    [store],
-  );
-
-  // ── Currency change ──
-  const handleCurrencySave = useCallback(
-    async (newValue: string) => {
-      setError(null);
-      try {
-        const { data } = await api.put('users/profile', { preferred_currency: newValue });
-        const mapped = mapProfileResponse(data);
-        store.setProfile(mapped);
-      } catch {
-        throw new Error("Couldn't save currency.");
       }
     },
     [store],
@@ -239,6 +212,23 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
         </View>
       </View>
 
+      {/* Simple Mode */}
+      <View style={[styles.row, { borderBottomColor: c.border.subtle }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.rowLabel, { color: c.text.muted }]}>Simple Mode</Text>
+          <Text style={{ color: c.text.muted, fontSize: typography.size.xs, marginTop: 2 }}>
+            Show traffic lights instead of numbers
+          </Text>
+        </View>
+        <Switch
+          value={simpleMode}
+          onValueChange={toggleSimpleMode}
+          trackColor={{ false: c.border.default, true: c.accent.primaryMuted }}
+          thumbColor={simpleMode ? c.accent.primary : c.text.muted}
+          accessibilityLabel="Toggle simple mode"
+        />
+      </View>
+
       {/* 2. Timezone */}
       <PickerField
         label="Timezone"
@@ -247,23 +237,7 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
         onSelect={handleTimezoneSave}
       />
 
-      {/* 3. Region */}
-      <PickerField
-        label="Region"
-        value={profile.region ?? ''}
-        options={REGION_OPTIONS}
-        onSelect={handleRegionSave}
-      />
-
-      {/* 4. Currency */}
-      <PickerField
-        label="Currency"
-        value={profile.preferredCurrency ?? ''}
-        options={CURRENCY_OPTIONS}
-        onSelect={handleCurrencySave}
-      />
-
-      {/* 5. Coaching Mode */}
+      {/* 3. Coaching Mode */}
       <View style={styles.coachingContainer}>
         {savingCoaching && (
           <View style={[styles.coachingOverlay, { backgroundColor: c.bg.overlay }]}>

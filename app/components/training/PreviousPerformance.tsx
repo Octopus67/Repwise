@@ -41,7 +41,8 @@ export function PreviousPerformance({ exerciseName }: PreviousPerformanceProps) 
       .then((res) => {
         if (!cancelled) setData(res.data ?? null);
       })
-      .catch(() => {
+      .catch((err: unknown) => {
+        console.warn('[PreviousPerformance] fetch failed:', String(err));
         if (!cancelled) setData(null);
       })
       .finally(() => {
@@ -84,13 +85,16 @@ export function PreviousPerformance({ exerciseName }: PreviousPerformanceProps) 
  * Pure formatting function for previous performance display.
  * Exported for property-based testing.
  */
-export function formatPreviousPerformance(
+export function formatPreviousPerformanceLabel(
   weightKg: number,
   reps: number,
   unitSystem: 'metric' | 'imperial',
 ): string {
   return `Last time: ${formatWeight(weightKg, unitSystem)} × ${reps}`;
 }
+
+/** @deprecated Use formatPreviousPerformanceLabel instead. */
+export const formatPreviousPerformance = formatPreviousPerformanceLabel;
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: {

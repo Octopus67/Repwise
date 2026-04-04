@@ -12,19 +12,11 @@ import {
 } from 'react-native';
 import { Icon } from '../../components/common/Icon';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
-import * as SecureStore from 'expo-secure-store';
-
-async function secureSet(key: string, value: string) {
-  if (Platform.OS === 'web') {
-    localStorage.setItem(key, value);
-  } else {
-    await SecureStore.setItemAsync(key, value);
-  }
-}
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Button } from '../../components/common/Button';
 import api from '../../services/api';
+import { LEGAL_URLS } from '../../constants/urls';
 import { useStore } from '../../store';
 import { isValidEmail, trimEmail } from '../../utils/validation';
 import { getPasswordStrength } from '../../utils/passwordStrength';
@@ -33,16 +25,8 @@ import { PasswordStrengthMeter } from '../../components/auth/PasswordStrengthMet
 import Animated from 'react-native-reanimated';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { SocialLoginButtons } from '../../components/auth/SocialLoginButtons';
-
-/** Decode the user ID from a JWT access token. */
-function parseJwtSub(token: string): string {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.sub ?? '';
-  } catch {
-    return '';
-  }
-}
+import { secureSet, TOKEN_KEYS } from '../../utils/secureStorage';
+import { parseJwtSub } from '../../utils/jwtUtils';
 
 interface RegisterScreenProps {
   onNavigateLogin: () => void;
@@ -54,15 +38,11 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
   const styles = getThemedStyles(c);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [tosAccepted, setTosAccepted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const passwordRef = useRef<TextInput>(null);
-  const confirmRef = useRef<TextInput>(null);
   const setAuth = useStore((s) => s.setAuth);
   const titleAnim = useStaggeredEntrance(0, 80);
   const subtitleAnim = useStaggeredEntrance(1, 80);
@@ -84,28 +64,32 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
       setError('All fields are required');
       return;
     }
-    if (!tosAccepted) {
-      setError('Please accept the Terms of Service');
-      return;
-    }
     if (!strengthResult.isValid) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      const missing: string[] = [];
+      if (!strengthResult.validation.minLength) missing.push('at least 8 characters');
+      if (!strengthResult.validation.hasUppercase) missing.push('an uppercase letter');
+      if (!strengthResult.validation.hasLowercase) missing.push('a lowercase letter');
+      if (!strengthResult.validation.hasDigit) missing.push('a number');
+      setError(missing.length > 0 ? `Password needs ${missing.join(', ')}.` : 'Password is too weak. Try a more unique combination.');
       return;
     }
 
     setLoading(true);
     try {
       const { data } = await api.post('auth/register', { email: cleanEmail, password });
-      // Don't set auth until email is verified — just store tokens for post-verification
       if (data.access_token && data.refresh_token) {
-        await secureSet('rw_access_token', data.access_token);
-        await secureSet('rw_refresh_token', data.refresh_token);
+        await secureSet(TOKEN_KEYS.access, data.access_token);
+        await secureSet(TOKEN_KEYS.refresh, data.refresh_token);
+        // Log user in immediately — email verification is deferrable
+        setAuth(
+          { id: parseJwtSub(data.access_token), email: cleanEmail, role: 'user', emailVerified: false },
+          { accessToken: data.access_token, refreshToken: data.refresh_token, expiresIn: data.expires_in },
+        );
+        useStore.getState().setNeedsOnboarding(true);
+      } else {
+        // Email already exists — generic message shown by backend
+        onRegisterSuccess(cleanEmail);
       }
-      onRegisterSuccess(cleanEmail);
     } catch (err: unknown) {
       const msg = extractApiError(err, 'Registration failed');
       setError(msg);
@@ -115,11 +99,11 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
   };
 
   const handleSocialSuccess = async (tokens: { access_token: string; refresh_token: string; expires_in: number }) => {
-    await secureSet('rw_access_token', tokens.access_token);
-    await secureSet('rw_refresh_token', tokens.refresh_token);
+    await secureSet(TOKEN_KEYS.access, tokens.access_token);
+    await secureSet(TOKEN_KEYS.refresh, tokens.refresh_token);
     // OAuth users are pre-verified — set auth immediately with onboarding flag
     setAuth(
-      { id: parseJwtSub(tokens.access_token), email: '', role: 'user' },
+      { id: parseJwtSub(tokens.access_token), email: '', role: 'user', emailVerified: true },
       { accessToken: tokens.access_token, refreshToken: tokens.refresh_token, expiresIn: tokens.expires_in },
     );
     useStore.getState().setNeedsOnboarding(true);
@@ -158,7 +142,7 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
           accessibilityHint="Enter your email to create an account"
         />
         {emailError ? <Text style={[styles.emailError, { color: c.semantic.negative }]}>{emailError}</Text> : null}
-        <View style={{ position: 'relative' }}>
+        <View style={styles.inputWrapper}>
           <TextInput
             testID="register-password-input"
             style={[styles.input, { paddingRight: spacing[10] }]}
@@ -168,14 +152,14 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
             value={password}
             onChangeText={setPassword}
             ref={passwordRef}
-            returnKeyType="next"
-            onSubmitEditing={() => confirmRef.current?.focus()}
+            returnKeyType="done"
+            onSubmitEditing={handleRegister}
             accessibilityLabel="Password"
             accessibilityHint="Create a password with at least 8 characters"
           />
           <TouchableOpacity
             onPress={() => setShowPassword(!showPassword)}
-            style={{ position: 'absolute', right: spacing[3], top: spacing[3], minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+            style={styles.eyeToggle}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
             accessibilityRole="button"
@@ -186,50 +170,17 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
 
         <PasswordStrengthMeter result={strengthResult} password={password} />
 
-        <View style={{ position: 'relative' }}>
-          <TextInput
-            testID="register-confirm-password-input"
-            style={[styles.input, { paddingRight: spacing[10] }]}
-            placeholder="Confirm Password"
-            placeholderTextColor={c.text.muted}
-            secureTextEntry={!showConfirm}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            ref={confirmRef}
-            returnKeyType="done"
-            onSubmitEditing={handleRegister}
-            accessibilityLabel="Confirm password"
-            accessibilityHint="Re-enter your password to confirm"
-          />
-          <TouchableOpacity
-            onPress={() => setShowConfirm(!showConfirm)}
-            style={{ position: 'absolute', right: spacing[3], top: spacing[3], minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            accessibilityLabel={showConfirm ? 'Hide password confirmation' : 'Show password confirmation'}
-            accessibilityRole="button"
-          >
-            <Icon name={showConfirm ? 'eye-off' : 'eye'} size={20} color={c.text.muted} />
-          </TouchableOpacity>
-        </View>
-        {confirmPassword.length > 0 && password !== confirmPassword && (
-          <Text style={[styles.emailError, { color: c.semantic.negative }]}>Passwords do not match</Text>
-        )}
         </Animated.View>
 
         <Animated.View style={buttonAnim}>
-        <TouchableOpacity testID="register-tos-checkbox" onPress={() => setTosAccepted(!tosAccepted)} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing[3], gap: spacing[2], minHeight: 44 }} accessibilityRole="checkbox" accessibilityState={{ checked: tosAccepted }} accessibilityLabel="Accept Terms of Service and Privacy Policy">
-          <View style={{ width: 22, height: 22, borderRadius: 4, borderWidth: 1.5, borderColor: tosAccepted ? c.accent.primary : c.border.default, backgroundColor: tosAccepted ? c.accent.primary : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
-            {tosAccepted && <Text style={{ color: c.text.primary, fontSize: typography.size.base }}>✓</Text>}
-          </View>
-          <Text style={{ color: c.text.secondary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm, flex: 1 }}>
-            I agree to the{' '}
-            <Text style={{ color: c.accent.primary, textDecorationLine: 'underline' }} onPress={() => Linking.openURL('https://www.termsfeed.com/blog/sample-terms-of-service-template/')} accessibilityRole="link">Terms of Service</Text>
-            {' '}and{' '}
-            <Text style={{ color: c.accent.primary, textDecorationLine: 'underline' }} onPress={() => Linking.openURL('https://www.termsfeed.com/blog/sample-privacy-policy-template/')} accessibilityRole="link">Privacy Policy</Text>
-          </Text>
-        </TouchableOpacity>
+        <Text style={[styles.legalText, { color: c.text.muted }]}>
+          By registering, you agree to our{' '}
+          <Text style={[styles.legalLink, { color: c.accent.primary }]} onPress={() => Linking.openURL(LEGAL_URLS.terms)} accessibilityRole="link">Terms of Service</Text>
+          {' '}and{' '}
+          <Text style={[styles.legalLink, { color: c.accent.primary }]} onPress={() => Linking.openURL(LEGAL_URLS.privacy)} accessibilityRole="link">Privacy Policy</Text>
+        </Text>
 
-        <Button testID="register-submit-button" title="Register" onPress={handleRegister} loading={loading} disabled={!tosAccepted || loading} style={styles.btn} />
+        <Button testID="register-submit-button" title="Register" onPress={handleRegister} loading={loading} disabled={loading} style={styles.btn} />
         </Animated.View>
 
         <Animated.View style={linkAnim}>
@@ -246,6 +197,10 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: c.bg.base },
+  inputWrapper: { position: 'relative' as const },
+  eyeToggle: { position: 'absolute' as const, right: spacing[3], top: spacing[3], minWidth: 44, minHeight: 44, alignItems: 'center' as const, justifyContent: 'center' as const },
+  legalText: { fontSize: typography.size.xs, textAlign: 'center' as const, marginBottom: spacing[3], lineHeight: typography.lineHeight.sm },
+  legalLink: { textDecorationLine: 'underline' as const },
   scroll: {
     flexGrow: 1,
     justifyContent: 'center',

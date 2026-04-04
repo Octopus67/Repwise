@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card } from '../common/Card';
 import { Icon } from '../common/Icon';
 import { spacing, typography, radius } from '../../theme/tokens';
-import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import type { TrainingSessionResponse } from '../../types/training';
 
 interface TodayWorkoutCardProps {
@@ -29,16 +29,16 @@ function TodayWorkoutCardComponent({
   // Show resume banner if workout is active
   if (isWorkoutActive) {
     return (
-      <Card variant="flat" style={getStyles().card}>
-        <TouchableOpacity onPress={onResume} activeOpacity={0.7} style={getStyles().resumeBanner} accessibilityLabel={`Resume workout with ${activeExerciseCount} exercises`} accessibilityRole="button">
-          <View style={getStyles().resumeContent}>
+      <Card variant="flat" style={styles.card}>
+        <TouchableOpacity onPress={onResume} activeOpacity={0.7} style={styles.resumeBanner} accessibilityLabel={`Resume workout with ${activeExerciseCount} exercises`} accessibilityRole="button">
+          <View style={styles.resumeContent}>
             <Icon name="dumbbell" size={20} color={c.accent.primary} />
-            <View style={getStyles().resumeText}>
-              <Text style={getStyles().resumeTitle}>Workout in progress</Text>
-              <Text style={getStyles().resumeSubtitle}>{activeExerciseCount} exercises</Text>
+            <View style={styles.resumeText}>
+              <Text style={styles.resumeTitle}>Workout in progress</Text>
+              <Text style={styles.resumeSubtitle}>{activeExerciseCount} exercises</Text>
             </View>
           </View>
-          <Text style={getStyles().resumeButton}>Resume</Text>
+          <Text style={styles.resumeButton}>Resume</Text>
         </TouchableOpacity>
       </Card>
     );
@@ -47,10 +47,10 @@ function TodayWorkoutCardComponent({
   // Show today's completed workouts
   if (sessions.length > 0) {
     return (
-      <Card variant="flat" style={getStyles().card}>
-        <View style={getStyles().header}>
+      <Card variant="flat" style={styles.card}>
+        <View style={styles.header}>
           <Icon name="dumbbell" size={16} color={c.accent.primary} />
-          <Text style={getStyles().title}>Today's Training</Text>
+          <Text style={styles.title}>Today's Training</Text>
         </View>
         
         {sessions.map((session, index) => {
@@ -71,32 +71,32 @@ function TodayWorkoutCardComponent({
               activeOpacity={0.7}
               accessibilityLabel={`View workout details${duration ? `, ${duration} minutes` : ''}`}
               accessibilityRole="button"
-              style={[getStyles().sessionContainer, index > 0 && getStyles().sessionBorder]}
+              style={[styles.sessionContainer, index > 0 && styles.sessionBorder]}
             >
-              <View style={getStyles().sessionHeader}>
-                <Text style={getStyles().sessionName} numberOfLines={1} ellipsizeMode="tail">
+              <View style={styles.sessionHeader}>
+                <Text style={styles.sessionName} numberOfLines={1} ellipsizeMode="tail">
                   Workout {duration ? `· ${duration} min` : ''}
                 </Text>
               </View>
               
-              <View style={getStyles().exerciseList}>
+              <View style={styles.exerciseList}>
                 {exercises.slice(0, 4).map((exercise, i) => {
                   const firstSet = exercise.sets?.[0];
                   return (
-                    <Text key={i} style={getStyles().exerciseText} numberOfLines={1} ellipsizeMode="tail">
+                    <Text key={i} style={styles.exerciseText} numberOfLines={1} ellipsizeMode="tail">
                       {exercise.exercise_name} · {exercise.sets?.length || 0}×
                       {firstSet ? `${firstSet.weight_kg}kg × ${firstSet.reps}` : ''}
                     </Text>
                   );
                 })}
                 {exercises.length > 4 && (
-                  <Text style={getStyles().moreText}>+{exercises.length - 4} more</Text>
+                  <Text style={styles.moreText}>+{exercises.length - 4} more</Text>
                 )}
               </View>
               
-              <View style={getStyles().sessionStats}>
-                <Text style={getStyles().statText}>{totalSets} sets</Text>
-                <Text style={getStyles().statText}>{Math.round(totalVolume)}kg volume</Text>
+              <View style={styles.sessionStats}>
+                <Text style={styles.statText}>{totalSets} sets</Text>
+                <Text style={styles.statText}>{Math.round(totalVolume)}kg volume</Text>
               </View>
             </TouchableOpacity>
           );
@@ -107,21 +107,18 @@ function TodayWorkoutCardComponent({
 
   // Empty state - no workouts today
   return (
-    <Card variant="flat" style={getStyles().card}>
-      <View style={getStyles().header}>
-        <Icon name="dumbbell" size={16} color={getThemeColors().text.muted} />
-        <Text style={getStyles().title}>Today's Training</Text>
+    <Card variant="flat" style={styles.card}>
+      <View style={styles.header}>
+        <Icon name="dumbbell" size={16} color={c.text.muted} />
+        <Text style={styles.title}>Today's Training</Text>
       </View>
-      <Text style={getStyles().emptyText}>No workout yet today</Text>
-      <TouchableOpacity onPress={onStartWorkout} style={getStyles().startButton} activeOpacity={0.7} accessibilityLabel="Start a new workout" accessibilityRole="button">
-        <Text style={getStyles().startButtonText}>Start Workout</Text>
+      <Text style={styles.emptyText}>No workout yet today</Text>
+      <TouchableOpacity onPress={onStartWorkout} style={styles.startButton} activeOpacity={0.7} accessibilityLabel="Start a new workout" accessibilityRole="button">
+        <Text style={styles.startButtonText}>Start Workout</Text>
       </TouchableOpacity>
     </Card>
   );
 }
-
-/** Lazy styles for module-level helpers */
-function getStyles() { return getThemedStyles(getThemeColors()); }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   card: {
@@ -239,8 +236,11 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
 export const TodayWorkoutCard = React.memo(TodayWorkoutCardComponent, (prevProps, nextProps) => {
   return (
     prevProps.sessions.length === nextProps.sessions.length &&
-    prevProps.sessions[0]?.id === nextProps.sessions[0]?.id &&
+    prevProps.sessions.every((s, i) => s.id === nextProps.sessions[i]?.id) &&
     prevProps.isWorkoutActive === nextProps.isWorkoutActive &&
-    prevProps.activeExerciseCount === nextProps.activeExerciseCount
+    prevProps.activeExerciseCount === nextProps.activeExerciseCount &&
+    prevProps.onPress === nextProps.onPress &&
+    prevProps.onResume === nextProps.onResume &&
+    prevProps.onStartWorkout === nextProps.onStartWorkout
   );
 });

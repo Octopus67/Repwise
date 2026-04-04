@@ -29,11 +29,13 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  targets?: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
+  consumed?: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function MealBuilder({ visible, onClose, onSuccess }: Props) {
+export function MealBuilder({ visible, onClose, onSuccess, targets, consumed }: Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const selectedDate = useStore((s) => s.selectedDate);
@@ -133,11 +135,6 @@ export function MealBuilder({ visible, onClose, onSuccess }: Props) {
   };
 
   // ── Food search callback ─────────────────────────────────────────────────
-  const handleFoodSearchSuccess = () => {
-    // The AddNutritionModal logged a single entry — we intercept and add to builder instead
-    // For now, close the search modal. The user adds items via the search.
-    setShowFoodSearch(false);
-  };
 
   const renderItem = useCallback(
     ({ item }: { item: MealBuilderItem }) => (
@@ -185,6 +182,16 @@ export function MealBuilder({ visible, onClose, onSuccess }: Props) {
           placeholder="Meal name"
           placeholderTextColor={c.text.muted}
         />
+
+        {/* Remaining Budget */}
+        {targets && consumed && (
+          <View style={styles.budgetRow}>
+            <Text style={[styles.budgetLabel, { color: c.text.muted }]}>Remaining today:</Text>
+            <Text style={[styles.budgetValue, { color: c.text.secondary }]}>
+              {Math.round(targets.calories - consumed.calories)} cal · {Math.round(targets.protein_g - consumed.protein_g)}g P
+            </Text>
+          </View>
+        )}
 
         {/* Running Totals Bar */}
         <View style={[styles.totalsBar, { backgroundColor: c.bg.surfaceRaised }]}>
@@ -260,7 +267,8 @@ export function MealBuilder({ visible, onClose, onSuccess }: Props) {
       <AddNutritionModal
         visible={showFoodSearch}
         onClose={() => setShowFoodSearch(false)}
-        onSuccess={handleFoodSearchSuccess}
+        onSuccess={() => setShowFoodSearch(false)}
+        onAddItem={handleAddItem}
       />
     </>
   );
@@ -279,6 +287,20 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     marginBottom: spacing[3],
     borderWidth: 1,
     borderColor: c.border.default,
+  },
+  budgetRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[2],
+    marginBottom: spacing[2],
+  },
+  budgetLabel: {
+    fontSize: typography.size.xs,
+  },
+  budgetValue: {
+    fontSize: typography.size.xs,
+    fontVariant: ['tabular-nums'],
   },
   totalsBar: {
     flexDirection: 'row',

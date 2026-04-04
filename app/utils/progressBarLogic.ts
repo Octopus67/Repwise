@@ -1,4 +1,4 @@
-const SEMANTIC_WARNING = '#F59E0B';
+import { getThemeColors } from '../hooks/useThemeColors';
 
 export interface BarFill {
   percentage: number;
@@ -20,7 +20,7 @@ export function computeBarFill(
 ): BarFill {
   const percentage = target > 0 ? Math.min(Math.round((value / target) * 100), 100) : 0;
   const fillWidth = percentage + '%';
-  const fillColor = value > target ? SEMANTIC_WARNING : color;
+  const fillColor = value > target ? getThemeColors().semantic.warning : color;
   const label = percentage + '%';
 
   return { percentage, fillWidth, fillColor, label };

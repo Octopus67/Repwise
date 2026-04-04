@@ -4,14 +4,8 @@
  * Pure function — no React Native imports.
  */
 
-export interface NutritionEntry {
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-  entry_date: string;
-  micro_nutrients?: Record<string, number> | null;
-}
+import { NutritionEntry } from '../types/nutrition';
+export type { NutritionEntry };
 
 export interface WeeklySummary {
   avgCalories: number;
@@ -30,7 +24,7 @@ export interface WeeklySummary {
  * Averages are computed from days WITH data only (not divided by 7).
  * Best/worst adherence days are based on absolute deviation from targetCalories.
  */
-export function computeWeeklySummary(
+export function computeWeeklyNutritionSummary(
   entries: NutritionEntry[],
   targetCalories: number,
 ): WeeklySummary {
@@ -120,3 +114,6 @@ export function computeWeeklySummary(
     daysLogged,
   };
 }
+
+/** @deprecated Use computeWeeklyNutritionSummary instead. */
+export const computeWeeklySummary = computeWeeklyNutritionSummary;

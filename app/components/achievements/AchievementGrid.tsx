@@ -36,7 +36,7 @@ export function groupAchievementsByCategory(
   for (const item of items) {
     const cat = item.definition.category;
     if (!map.has(cat)) map.set(cat, []);
-    map.get(cat)!.push(item);
+    map.get(cat)?.push(item);
   }
   return Array.from(map.entries()).map(([category, data]) => ({
     category,

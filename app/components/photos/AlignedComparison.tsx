@@ -59,22 +59,22 @@ export function AlignedComparison({
       let rightAlign = rightPhoto.alignment_data;
 
       // Compute alignment for photos missing it
-      const leftUri = pathMap[leftPhoto.id];
-      const rightUri = pathMap[rightPhoto.id];
+      const leftUri = pathMap[leftPhoto.id] || leftPhoto.image_url;
+      const rightUri = pathMap[rightPhoto.id] || rightPhoto.image_url;
 
       if (!leftAlign && leftUri) {
         leftAlign = await computeAlignment(leftUri);
         // PATCH to backend for caching
         try {
           await api.patch(`progress-photos/${leftPhoto.id}`, { alignment_data: leftAlign });
-        } catch { /* non-critical */ }
+        } catch (err) { console.warn('[AlignedComparison] left alignment cache failed:', String(err)); }
       }
 
       if (!rightAlign && rightUri) {
         rightAlign = await computeAlignment(rightUri);
         try {
           await api.patch(`progress-photos/${rightPhoto.id}`, { alignment_data: rightAlign });
-        } catch { /* non-critical */ }
+        } catch (err) { console.warn('[AlignedComparison] right alignment cache failed:', String(err)); }
       }
 
       // Compute transforms if both alignments available
@@ -91,8 +91,8 @@ export function AlignedComparison({
     }
   };
 
-  const leftUri = pathMap[leftPhoto.id];
-  const rightUri = pathMap[rightPhoto.id];
+  const leftUri = pathMap[leftPhoto.id] || leftPhoto.image_url;
+  const rightUri = pathMap[rightPhoto.id] || rightPhoto.image_url;
   const leftInfo = formatPhotoInfo(leftPhoto);
   const rightInfo = formatPhotoInfo(rightPhoto);
 
@@ -121,7 +121,7 @@ export function AlignedComparison({
 }
 
 interface ComparisonSideProps {
-  uri: string | undefined;
+  uri: string | null | undefined;
   info: { dateLabel: string; weightLabel: string | null };
   transform: ImageTransform;
 }

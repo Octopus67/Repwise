@@ -1,23 +1,16 @@
-import { useState, useRef, useCallback } from 'react';
-import api from '../services/api';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useStore } from '../store';
 import { useFeatureFlag } from './useFeatureFlag';
-import { useHealthData } from './useHealthData';
 import { useDailyTargets } from './useDailyTargets';
 import { useHaptics } from './useHaptics';
-
-function isAborted(signal?: AbortSignal): boolean {
-  return signal?.aborted === true;
-}
+import { useDashboardQueries } from './queries/useDashboardQueries';
+import type { TrainingSessionResponse } from '../types/training';
+import type { RecoveryFactor } from '../types/common';
 
 const DATE_DEBOUNCE_MS = 300;
 
-export interface Article {
-  id: string;
-  title: string;
-  module_name: string;
-  estimated_read_time_min: number;
-}
+export type { Article } from '../types/common';
+import type { Article } from '../types/common';
 
 export interface VolumeSummary {
   optimal: number;
@@ -37,13 +30,51 @@ export interface NutritionEntryRaw {
   micro_nutrients?: { water_ml?: number; fibre_g?: number } | null;
 }
 
+export interface Challenge {
+  id: string;
+  challenge_type: string;
+  title: string;
+  description: string;
+  target_value: number;
+  current_value: number;
+  completed: boolean;
+}
+
+export interface FatigueSuggestion {
+  muscle_group: string;
+  fatigue_score: number;
+  top_regressed_exercise: string;
+  decline_pct: number;
+  decline_sessions: number;
+  message: string;
+  suggestion?: string;
+  severity?: string;
+}
+
+export interface RecompMetrics {
+  waist_trend: { slope_per_week: number; direction: string; data_points: number } | null;
+  arm_trend: { slope_per_week: number; direction: string; data_points: number } | null;
+  chest_trend: { slope_per_week: number; direction: string; data_points: number } | null;
+  weight_trend: { slope_per_week: number; direction: string; data_points: number } | null;
+  recomp_score: number | null;
+  has_sufficient_data: boolean;
+}
+
+export interface Nudge {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  action: string;
+}
+
 export interface DashboardData {
   calories: { value: number; target: number };
   protein: { value: number; target: number };
   carbs: { value: number; target: number };
   totalFat: number;
   nutritionEntries: NutritionEntryRaw[];
-  trainingSessions: any[];
+  trainingSessions: TrainingSessionResponse[];
   workoutsCompleted: number;
   streak: number;
   articles: Article[];
@@ -52,12 +83,14 @@ export interface DashboardData {
   loggedDates: Set<string>;
   weightHistory: { date: string; value: number }[];
   milestoneMessage: string | null;
-  fatigueSuggestions: any[];
+  fatigueSuggestions: FatigueSuggestion[];
   readinessScore: number | null;
-  readinessFactors: any[];
-  recompMetrics: any;
-  nudges: any[];
+  readinessFactors: RecoveryFactor[];
+  recompMetrics: RecompMetrics | null;
+  nudges: Nudge[];
   volumeSummary: VolumeSummary | null;
+  trainedDates: Set<string>;
+  challenges: Challenge[];
 }
 
 const INITIAL_DATA: DashboardData = {
@@ -81,6 +114,8 @@ const INITIAL_DATA: DashboardData = {
   recompMetrics: null,
   nudges: [],
   volumeSummary: null,
+  trainedDates: new Set(),
+  challenges: [],
 };
 
 export function useDashboardData() {
@@ -89,18 +124,13 @@ export function useDashboardData() {
   const setSelectedDate = useStore((s) => s.setSelectedDate);
   const setAdaptiveTargets = useStore((s) => s.setAdaptiveTargets);
   const { impact } = useHaptics();
-  const healthData = useHealthData();
-  const healthDataRef = useRef(healthData);
-  healthDataRef.current = healthData;
 
   const [data, setData] = useState<DashboardData>(INITIAL_DATA);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [dateLoading, setDateLoading] = useState(false);
 
   const dateDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const dateAbortRef = useRef<AbortController | null>(null);
 
   const {
     effectiveTargets: syncTargets,
@@ -108,185 +138,148 @@ export function useDashboardData() {
 
   const { enabled: volumeFlagEnabled } = useFeatureFlag('volume_landmarks');
 
-  const loadDashboardData = useCallback(async (dateToLoad?: string, signal?: AbortSignal) => {
-    try {
-      const targetDate = dateToLoad ?? selectedDate;
-      setError(null);
+  // ── TanStack Query integration ─────────────────────────────────────────
+  const { results, Q, isLoading: queryLoading, isError: queryError, isFetching, refetch: invalidateAll } = useDashboardQueries(selectedDate);
 
-      const [nutritionRes, adaptiveRes, trainingRes, articlesRes, bwRes, streakRes] = await Promise.allSettled([
-        api.get('nutrition/entries', { params: { start_date: targetDate, end_date: targetDate }, signal }),
-        api.get('adaptive/snapshots', { params: { limit: 1 }, signal }),
-        api.get('training/sessions', { params: { start_date: targetDate, end_date: targetDate, limit: 10 }, signal }),
-        api.get('content/articles', { params: { limit: 5, status: 'published' }, signal }),
-        api.get('users/bodyweight/history', { params: { limit: 90 }, signal }),
-        api.get('achievements/streak', { signal }),
-      ]);
+  // Derive DashboardData from query results whenever they change
+  useEffect(() => {
+    // Don't update while initial load is in progress
+    if (queryLoading) return;
 
-      const updates: Partial<DashboardData> = {};
+    const updates: Partial<DashboardData> = {};
 
-      // Nutrition
-      if (nutritionRes.status === 'fulfilled') {
-        const entries: NutritionEntryRaw[] = nutritionRes.value.data.items ?? [];
-        updates.nutritionEntries = entries;
-        const totals = entries.reduce(
-          (acc, e: any) => ({
-            cal: acc.cal + (e.calories ?? 0),
-            pro: acc.pro + (e.protein_g ?? 0),
-            carb: acc.carb + (e.carbs_g ?? 0),
-            fat: acc.fat + (e.fat_g ?? 0),
-          }),
-          { cal: 0, pro: 0, carb: 0, fat: 0 },
-        );
-        updates.totalFat = Math.round(totals.fat);
-        updates.nutritionLogged = entries.length > 0;
-        const dates = new Set<string>();
-        entries.forEach((e) => { if (e.entry_date) dates.add(e.entry_date); });
-        updates.loggedDates = dates;
-        // calories/protein/carbs values set below after adaptive
-        updates.calories = { value: Math.round(totals.cal), target: 2400 };
-        updates.protein = { value: Math.round(totals.pro), target: 180 };
-        updates.carbs = { value: Math.round(totals.carb), target: 250 };
-      }
-
-      // Adaptive targets
-      if (adaptiveRes.status === 'fulfilled') {
-        const snap = adaptiveRes.value.data.items?.[0];
-        if (snap) {
-          if (updates.calories) updates.calories.target = Math.round(snap.target_calories);
-          else updates.calories = { value: 0, target: Math.round(snap.target_calories) };
-          if (updates.protein) updates.protein.target = Math.round(snap.target_protein_g);
-          else updates.protein = { value: 0, target: Math.round(snap.target_protein_g) };
-          if (snap?.target_carbs_g) {
-            if (updates.carbs) updates.carbs.target = Math.round(snap.target_carbs_g);
-            else updates.carbs = { value: 0, target: Math.round(snap.target_carbs_g) };
-          }
-          setAdaptiveTargets({
-            calories: Math.round(snap.target_calories),
-            protein_g: Math.round(snap.target_protein_g),
-            carbs_g: Math.round(snap?.target_carbs_g ?? 250),
-            fat_g: Math.round(snap?.target_fat_g ?? 65),
-          });
-        }
-      }
-
-      // Training
-      if (trainingRes.status === 'fulfilled') {
-        const sessions = trainingRes.value.data.items ?? [];
-        updates.workoutsCompleted = sessions.length;
-        updates.trainingLogged = sessions.length > 0;
-        updates.trainingSessions = sessions;
-      }
-
-      // Articles
-      if (articlesRes.status === 'fulfilled') {
-        updates.articles = articlesRes.value.data.items ?? [];
-      }
-
-      // Bodyweight
-      if (bwRes.status === 'fulfilled') {
-        const logs = bwRes.value.data.items ?? [];
-        updates.weightHistory = logs.map((l: any) => ({ date: l.recorded_date, value: l.weight_kg }));
-      }
-
-      // Streak
-      if (streakRes.status === 'fulfilled' && streakRes.value.data?.current_streak != null) {
-        updates.streak = streakRes.value.data.current_streak;
-      } else {
-        updates.streak = 0;
-      }
-
-      // Fire-and-forget: milestone
-      if (isAborted(signal)) return;
-      try {
-        const { data: stdData } = await api.get('training/analytics/strength-standards', { signal });
-        updates.milestoneMessage = stdData.milestones?.length > 0 ? stdData.milestones[0].message : null;
-      } catch { updates.milestoneMessage = null; }
-
-      // Fire-and-forget: weekly check-in
-      if (isAborted(signal)) return;
-      try {
-        const checkinRes = await api.post('adaptive/weekly-checkin', {}, { signal });
-        store.setWeeklyCheckin(checkinRes.data);
-      } catch { /* non-critical */ }
-
-      // Fire-and-forget: fatigue
-      if (isAborted(signal)) return;
-      try {
-        const fatigueRes = await api.get('training/fatigue', { signal });
-        updates.fatigueSuggestions = fatigueRes.data.suggestions ?? [];
-      } catch { updates.fatigueSuggestions = []; }
-
-      // Fire-and-forget: readiness
-      if (isAborted(signal)) return;
-      try {
-        const readinessRes = await api.post('readiness/score', {
-          hrv_ms: healthDataRef.current.hrv_ms,
-          resting_hr_bpm: healthDataRef.current.resting_hr_bpm,
-          sleep_duration_hours: healthDataRef.current.sleep_duration_hours,
-        }, { signal });
-        updates.readinessScore = readinessRes.data.score;
-        updates.readinessFactors = readinessRes.data.factors ?? [];
-      } catch {
-        updates.readinessScore = null;
-        updates.readinessFactors = [];
-      }
-
-      // Fire-and-forget: recomp
-      if (isAborted(signal)) return;
-      try {
-        if (store.goals?.goalType === 'recomposition') {
-          const recompRes = await api.get('recomp/metrics', { signal });
-          updates.recompMetrics = recompRes.data;
-        } else {
-          updates.recompMetrics = null;
-        }
-      } catch { updates.recompMetrics = null; }
-
-      // Fire-and-forget: nudges
-      if (isAborted(signal)) return;
-      try {
-        const nudgesRes = await api.get('adaptive/nudges', { signal });
-        updates.nudges = nudgesRes.data ?? [];
-      } catch { updates.nudges = []; }
-
-      // Fire-and-forget: volume
-      if (isAborted(signal)) return;
-      try {
-        const volRes = await api.get('training/analytics/muscle-volume', { signal });
-        const groups = volRes.data.muscle_groups ?? volRes.data ?? [];
-        const optimal = groups.filter((g: any) => g.status === 'optimal').length;
-        const approachingMrv = groups.filter((g: any) => g.status === 'approaching_mrv').length;
-        updates.volumeSummary = groups.length > 0 ? { optimal, approachingMrv, total: groups.length } : null;
-      } catch { updates.volumeSummary = null; }
-
-      setData((prev) => ({ ...prev, ...updates }));
-    } catch {
-      setError('Unable to load dashboard data. Check your connection.');
-    } finally {
-      setIsLoading(false);
-      setRefreshing(false);
-      setDateLoading(false);
+    // Nutrition
+    const nutritionData = results[Q.NUTRITION].data as NutritionEntryRaw[] | undefined;
+    if (nutritionData) {
+      const entries = nutritionData;
+      updates.nutritionEntries = entries;
+      const totals = entries.reduce(
+        (acc, e) => ({
+          cal: acc.cal + (e.calories ?? 0),
+          pro: acc.pro + (e.protein_g ?? 0),
+          carb: acc.carb + (e.carbs_g ?? 0),
+          fat: acc.fat + (e.fat_g ?? 0),
+        }),
+        { cal: 0, pro: 0, carb: 0, fat: 0 },
+      );
+      updates.totalFat = Math.round(totals.fat);
+      updates.nutritionLogged = entries.length > 0;
+      const dates = new Set<string>();
+      entries.forEach((e) => { if (e.entry_date) dates.add(e.entry_date); });
+      updates.loggedDates = dates;
+      updates.calories = { value: Math.round(totals.cal), target: 2400 };
+      updates.protein = { value: Math.round(totals.pro), target: 180 };
+      updates.carbs = { value: Math.round(totals.carb), target: 250 };
     }
-  }, [selectedDate, store, setAdaptiveTargets]);
+
+    // Adaptive targets
+    const snap = results[Q.ADAPTIVE].data as Record<string, number> | null | undefined;
+    if (snap) {
+      if (updates.calories) updates.calories.target = Math.round(snap.target_calories);
+      else updates.calories = { value: 0, target: Math.round(snap.target_calories) };
+      if (updates.protein) updates.protein.target = Math.round(snap.target_protein_g);
+      else updates.protein = { value: 0, target: Math.round(snap.target_protein_g) };
+      if (snap.target_carbs_g) {
+        if (updates.carbs) updates.carbs.target = Math.round(snap.target_carbs_g);
+        else updates.carbs = { value: 0, target: Math.round(snap.target_carbs_g) };
+      }
+      setAdaptiveTargets({
+        calories: Math.round(snap.target_calories),
+        protein_g: Math.round(snap.target_protein_g),
+        carbs_g: Math.round(snap.target_carbs_g ?? 250),
+        fat_g: Math.round(snap.target_fat_g ?? 65),
+      });
+    }
+
+    // Training
+    const sessions = results[Q.TRAINING].data as TrainingSessionResponse[] | undefined;
+    if (sessions) {
+      updates.workoutsCompleted = sessions.length;
+      updates.trainingLogged = sessions.length > 0;
+      updates.trainingSessions = sessions;
+    }
+
+    // Week training
+    const weekSessions = results[Q.WEEK_TRAINING].data as Array<{ session_date?: string }> | undefined;
+    if (weekSessions) {
+      const dates = new Set<string>();
+      weekSessions.forEach((s) => { if (s.session_date) dates.add(s.session_date); });
+      updates.trainedDates = dates;
+    }
+
+    // Articles
+    const articles = results[Q.ARTICLES].data as Article[] | undefined;
+    if (articles) updates.articles = articles;
+
+    // Bodyweight
+    const bwLogs = results[Q.BODYWEIGHT].data as Array<{ recorded_date: string; weight_kg: number }> | undefined;
+    if (bwLogs) {
+      updates.weightHistory = bwLogs.map((l) => ({ date: l.recorded_date, value: l.weight_kg }));
+    }
+
+    // Streak
+    const streak = results[Q.STREAK].data as number | undefined;
+    updates.streak = streak ?? 0;
+
+    // Milestones
+    const milestoneData = results[Q.MILESTONES].data as { milestones?: Array<{ message: string }> } | undefined;
+    updates.milestoneMessage = milestoneData?.milestones?.length ? milestoneData.milestones[0].message : null;
+
+    // Weekly checkin
+    const checkinData = results[Q.WEEKLY_CHECKIN].data;
+    if (checkinData) store.setWeeklyCheckin(checkinData);
+
+    // Fatigue
+    updates.fatigueSuggestions = (results[Q.FATIGUE].data as FatigueSuggestion[] | undefined) ?? [];
+
+    // Recomp
+    updates.recompMetrics = (results[Q.RECOMP].data as RecompMetrics | undefined) ?? null;
+
+    // Nudges
+    updates.nudges = (results[Q.NUDGES].data as Nudge[] | undefined) ?? [];
+
+    // Volume
+    updates.volumeSummary = (results[Q.VOLUME].data as VolumeSummary | undefined) ?? null;
+
+    // Challenges
+    updates.challenges = (results[Q.CHALLENGES].data as Challenge[] | undefined) ?? [];
+
+    setData((prev) => ({ ...prev, ...updates }));
+    setDateLoading(false);
+  }, [results, queryLoading, Q, setAdaptiveTargets, store]);
+
+  // Sync query errors to local error state
+  useEffect(() => {
+    if (queryError) setError('Unable to load dashboard data. Check your connection.');
+    else setError(null);
+  }, [queryError]);
+
+  // Legacy loadDashboardData — now just invalidates queries
+  const loadDashboardData = useCallback((_dateToLoad?: string, _signal?: AbortSignal) => {
+    invalidateAll();
+  }, [invalidateAll]);
 
   const handleDateSelect = useCallback((date: string) => {
     setSelectedDate(date);
     setDateLoading(true);
     impact('light');
+    // Debounce rapid date changes
     if (dateDebounceRef.current) clearTimeout(dateDebounceRef.current);
-    if (dateAbortRef.current) dateAbortRef.current.abort();
-    const ac = new AbortController();
-    dateAbortRef.current = ac;
     dateDebounceRef.current = setTimeout(() => {
-      loadDashboardData(date, ac.signal);
+      // Query will auto-refetch when selectedDate changes
+      setDateLoading(false);
     }, DATE_DEBOUNCE_MS);
-  }, [loadDashboardData, setSelectedDate, impact]);
+  }, [setSelectedDate, impact]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadDashboardData(selectedDate);
+    invalidateAll();
+    // Wait a tick for queries to start refetching, then clear refreshing when done
+    setTimeout(() => setRefreshing(false), 1000);
     impact('light');
-  }, [loadDashboardData, selectedDate, impact]);
+  }, [invalidateAll, impact]);
+
+  const isLoading = queryLoading;
 
   const targets = syncTargets
     ? {

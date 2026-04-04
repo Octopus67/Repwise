@@ -1,12 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
-
-interface MacroTargets {
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-}
+import { getApiErrorMessage } from '../utils/errors';
+import type { MacroTargets } from '../types/nutrition';
 
 interface DailyTargetsData {
   date: string;
@@ -47,8 +42,8 @@ export function useDailyTargets(selectedDate: string): UseDailyTargetsResult {
         params: { date: selectedDate },
       });
       setData(res.data);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail ?? 'Failed to load daily targets');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Failed to load daily targets'));
       setData(null);
     } finally {
       setIsLoading(false);
@@ -61,7 +56,7 @@ export function useDailyTargets(selectedDate: string): UseDailyTargetsResult {
 
   return {
     data,
-    effectiveTargets: data?.baseline ?? null, // Use baseline instead of effective (flat targets)
+    effectiveTargets: data?.effective ?? null,
     dayClassification: data?.day_classification ?? null,
     explanation: data?.explanation ?? null,
     isOverride: data?.override != null,

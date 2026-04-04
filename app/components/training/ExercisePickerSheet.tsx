@@ -20,7 +20,8 @@ interface ExercisePickerSheetProps {
 
 type ListItem =
   | { type: 'header'; label: string }
-  | { type: 'exercise'; name: string };
+  | { type: 'exercise'; name: string }
+  | { type: 'custom' };
 
 export function ExercisePickerSheet({
   visible,
@@ -82,10 +83,28 @@ export function ExercisePickerSheet({
 
   filtered.forEach((name) => listData.push({ type: 'exercise', name }));
 
+  // Show "Add custom" option when searching with no exact match
+  if (query && !filtered.some((e) => e.toLowerCase() === query)) {
+    listData.push({ type: 'custom' });
+  }
+
   const renderItem = useCallback(
     ({ item }: { item: ListItem }) => {
       if (item.type === 'header') {
         return <Text style={[styles.sectionTitle, { color: c.text.muted }]}>{item.label}</Text>;
+      }
+      if (item.type === 'custom') {
+        return (
+          <TouchableOpacity
+            style={[styles.exerciseItem, styles.customItem, { borderBottomColor: c.border.subtle }]}
+            onPress={() => handleSelect(search.trim())}
+            accessibilityLabel={`Add custom exercise: ${search.trim()}`}
+            accessibilityRole="button"
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.customLabel, { color: c.accent.primary }]}>+ Add "{search.trim()}"</Text>
+          </TouchableOpacity>
+        );
       }
       return (
         <TouchableOpacity
@@ -104,7 +123,11 @@ export function ExercisePickerSheet({
 
   const keyExtractor = useCallback(
     (item: ListItem, index: number) =>
-      item.type === 'header' ? `header-${item.label}` : `${item.name}-${index}`,
+      item.type === 'header'
+        ? `header-${item.label}`
+        : item.type === 'custom'
+          ? `custom-${index}`
+          : `${item.name}-${index}`,
     [],
   );
 
@@ -198,5 +221,15 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     fontSize: typography.size.sm,
     textAlign: 'center',
     marginTop: spacing[8],
+  },
+  customItem: {
+    backgroundColor: c.bg.surfaceRaised,
+    borderRadius: radius.sm,
+    marginTop: spacing[2],
+  },
+  customLabel: {
+    color: c.accent.primary,
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
   },
 });

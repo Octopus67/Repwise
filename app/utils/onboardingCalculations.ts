@@ -1,10 +1,20 @@
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type Sex = 'male' | 'female' | 'other';
-export type ActivityLevel = 'sedentary' | 'lightly_active' | 'moderately_active' | 'highly_active' | 'very_highly_active';
-export type GoalType = 'lose_fat' | 'build_muscle' | 'maintain' | 'eat_healthier' | 'recomposition';
-export type DietStyle = 'balanced' | 'high_protein' | 'low_carb' | 'keto';
-export type ExerciseType = 'strength' | 'cardio' | 'sports' | 'yoga' | 'walking';
+export type {
+  OnboardingSex as Sex,
+  OnboardingActivityLevel as ActivityLevel,
+  OnboardingGoalType as GoalType,
+  DietStyle,
+  ExerciseType,
+} from '../types/onboarding';
+
+import type {
+  OnboardingSex as Sex,
+  OnboardingActivityLevel as ActivityLevel,
+  OnboardingGoalType as GoalType,
+  DietStyle,
+  ExerciseType,
+} from '../types/onboarding';
 
 export interface TDEEBreakdown {
   bmr: number;

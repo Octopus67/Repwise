@@ -2,21 +2,30 @@ import { create } from 'zustand';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Types matching the calculation engine
-export type Sex = 'male' | 'female';
-export type ActivityLevel = 'sedentary' | 'lightly_active' | 'moderately_active' | 'highly_active' | 'very_highly_active';
-export type GoalType = 'lose_fat' | 'build_muscle' | 'maintain' | 'eat_healthier' | 'recomposition';
-export type DietStyle = 'balanced' | 'high_protein' | 'low_carb' | 'keto';
-export type ExerciseType = 'strength' | 'cardio' | 'sports' | 'yoga' | 'walking';
+// Types — re-exported from canonical source for consumer convenience
+export type {
+  OnboardingSex as Sex,
+  OnboardingActivityLevel as ActivityLevel,
+  OnboardingGoalType as GoalType,
+  DietStyle,
+  ExerciseType,
+} from '../types/onboarding';
+import type {
+  OnboardingSex as Sex,
+  OnboardingActivityLevel as ActivityLevel,
+  OnboardingGoalType as GoalType,
+  DietStyle,
+  ExerciseType,
+} from '../types/onboarding';
 
 export interface OnboardingWizardState {
-  currentStep: number;  // 1-9
+  currentStep: number;  // 1-10
 
   // Screen 1: Intent
   goalType: GoalType | null;
 
   // Screen 2: Body Basics
-  sex: Sex;
+  sex: Sex | null;
   birthYear: number | null;
   birthMonth: number | null;
   heightCm: number;
@@ -57,6 +66,9 @@ export interface OnboardingWizardState {
   manualCarbs: number | null;
   manualFat: number | null;
   fastTrackCompleted: boolean;
+
+  // Hydration flag
+  _hydrated: boolean;
 }
 
 interface OnboardingWizardActions {
@@ -69,7 +81,7 @@ interface OnboardingWizardActions {
 const INITIAL_STATE: OnboardingWizardState = {
   currentStep: 1,
   goalType: null,
-  sex: null as any, // Force explicit selection
+  sex: null,
   birthYear: null,
   birthMonth: null,
   heightCm: 170,
@@ -96,6 +108,7 @@ const INITIAL_STATE: OnboardingWizardState = {
   manualCarbs: null,
   manualFat: null,
   fastTrackCompleted: false,
+  _hydrated: false,
 };
 
 const STORAGE_KEY = 'rw_onboarding_wizard_v3';
@@ -110,7 +123,7 @@ async function saveState(state: OnboardingWizardState) {
     } else {
       await AsyncStorage.setItem(STORAGE_KEY, json);
     }
-  } catch {}
+  } catch (err) { console.warn('[Onboarding] saveState failed:', String(err)); }
 }
 
 async function loadState(): Promise<Partial<OnboardingWizardState> | null> {
@@ -129,7 +142,8 @@ async function loadState(): Promise<Partial<OnboardingWizardState> | null> {
     // Version mismatch: clear stale state
     await clearState();
     return null;
-  } catch {
+  } catch (err) {
+    console.warn('[Onboarding] loadState failed:', String(err));
     return null;
   }
 }
@@ -141,7 +155,9 @@ async function clearState() {
     } else {
       await AsyncStorage.removeItem(STORAGE_KEY);
     }
-  } catch {}
+  } catch (err: unknown) {
+    console.warn('[Onboarding] Failed to clear persisted state:', String(err));
+  }
 }
 
 export const useOnboardingStore = create<OnboardingWizardState & OnboardingWizardActions>((set, get) => {
@@ -151,7 +167,9 @@ export const useOnboardingStore = create<OnboardingWizardState & OnboardingWizar
   // Try to restore persisted state asynchronously
   loadState().then((saved) => {
     if (saved) {
-      set({ ...INITIAL_STATE, ...saved });
+      set({ ...INITIAL_STATE, ...saved, _hydrated: true });
+    } else {
+      set({ _hydrated: true });
     }
   });
 
@@ -164,7 +182,7 @@ export const useOnboardingStore = create<OnboardingWizardState & OnboardingWizar
     },
 
     updateField: (key, value) => {
-      set({ [key]: value } as any);
+      set({ [key]: value } as Partial<OnboardingWizardState>);
       const newState = { ...get(), [key]: value };
       saveState(newState);
     },

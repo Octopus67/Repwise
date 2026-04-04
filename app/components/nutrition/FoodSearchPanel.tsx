@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ActivityIndicator, ScrollView, Platform,
+  ActivityIndicator, ScrollView, FlatList, Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,23 +10,10 @@ import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThem
 import { SourceBadge } from './SourceBadge';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 import { resolveScannerMode } from '../../utils/barcodeUtils';
+import { searchCachedFoods, cacheFoodItems } from '../../services/offlineFoodCache';
+import { onlineManager } from '@tanstack/react-query';
 import api from '../../services/api';
-
-interface FoodItem {
-  id: string;
-  name: string;
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-  serving_size: number;
-  serving_unit: string;
-  micro_nutrients?: Record<string, any> | null;
-  source?: 'usda' | 'verified' | 'community' | 'custom';
-  is_recipe?: boolean;
-  total_servings?: number | null;
-  frequency?: number;
-}
+import type { FoodItem } from '../../types/nutrition';
 
 interface Props {
   onFoodSelected: (item: FoodItem) => void;
@@ -36,6 +23,12 @@ interface Props {
 
 const SCAN_HISTORY_KEY = 'barcode_scan_history';
 const MAX_SCAN_HISTORY = 5;
+const SCAN_HISTORY_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+interface ScanHistoryEntry {
+  item: FoodItem;
+  timestamp: number;
+}
 
 export function FoodSearchPanel({ onFoodSelected, onBarcodePress, onManualBarcodeResult }: Props) {
   const c = useThemeColors();
@@ -59,12 +52,36 @@ export function FoodSearchPanel({ onFoodSelected, onBarcodePress, onManualBarcod
   // Task 3.2: Barcode scan history
   const [scanHistory, setScanHistory] = useState<FoodItem[]>([]);
 
+  // F9: Favorites
+  const [favorites, setFavorites] = useState<FoodItem[]>([]);
+
   useEffect(() => {
     AsyncStorage.getItem(SCAN_HISTORY_KEY).then((raw) => {
       if (raw && mountedRef.current) { 
-        try { setScanHistory(JSON.parse(raw)); } catch {} 
+        try {
+          const parsed: ScanHistoryEntry[] = JSON.parse(raw);
+          const now = Date.now();
+          const valid = parsed
+            .filter((e) => now - e.timestamp < SCAN_HISTORY_TTL_MS)
+            .map((e) => e.item);
+          setScanHistory(valid);
+        } catch {
+          // Intentional: malformed scan history is non-critical, reset to empty array
+        }
       }
     });
+    // F9: Fetch favorites on mount
+    api.get('food/favorites').then((res) => {
+      if (mountedRef.current) {
+        const items = res.data ?? [];
+        const seen = new Set<string>();
+        setFavorites(items.filter((f: FoodItem) => {
+          if (seen.has(f.id)) return false;
+          seen.add(f.id);
+          return true;
+        }));
+      }
+    }).catch((err: unknown) => { console.warn('[FoodSearch] favorites load failed:', String(err)); });
     return () => { 
       mountedRef.current = false;
       if (debounceRef.current) clearTimeout(debounceRef.current); 
@@ -74,9 +91,21 @@ export function FoodSearchPanel({ onFoodSelected, onBarcodePress, onManualBarcod
   const addToScanHistory = useCallback(async (item: FoodItem) => {
     setScanHistory((prev) => {
       const updated = [item, ...prev.filter((h) => h.id !== item.id)].slice(0, MAX_SCAN_HISTORY);
-      AsyncStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(updated)).catch(() => {});
+      const entries: ScanHistoryEntry[] = updated.map((i) => ({ item: i, timestamp: Date.now() }));
+      AsyncStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(entries)).catch((err: unknown) => { console.warn('[FoodSearch] scan history save failed:', String(err)); });
       return updated;
     });
+  }, []);
+
+  // F9: Toggle favorite
+  const toggleFavorite = useCallback(async (item: FoodItem) => {
+    try {
+      const res = await api.post(`food/favorites/${item.id}/toggle`);
+      const isFav: boolean = res.data?.is_favorite;
+      setFavorites((prev) =>
+        isFav ? [item, ...prev.filter((f) => f.id !== item.id)] : prev.filter((f) => f.id !== item.id)
+      );
+    } catch (err: unknown) { console.warn('[FoodSearch] toggle favorite failed:', String(err)); }
   }, []);
 
   const handleSearchChange = useCallback((text: string) => {
@@ -91,6 +120,16 @@ export function FoodSearchPanel({ onFoodSelected, onBarcodePress, onManualBarcod
     }
     setSearchLoading(true);
     debounceRef.current = setTimeout(async () => {
+      // Offline fallback: search cached foods
+      if (!onlineManager.isOnline()) {
+        const cached = searchCachedFoods(text.trim());
+        if (mountedRef.current) {
+          setSearchResults(cached);
+          setSearchEmpty(cached.length === 0);
+          setSearchLoading(false);
+        }
+        return;
+      }
       try {
         const res = await api.get('food/search', { params: { q: text.trim(), limit: 50 } });
         const items = res.data?.items ?? res.data ?? [];
@@ -99,12 +138,20 @@ export function FoodSearchPanel({ onFoodSelected, onBarcodePress, onManualBarcod
           setSearchResults(safeItems);
           setSearchEmpty(safeItems.length === 0);
           setSearchError('');
+          if (safeItems.length > 0) cacheFoodItems(safeItems);
         }
       } catch {
+        // Fallback to cache on network error
+        const cached = searchCachedFoods(text.trim());
         if (mountedRef.current) {
-          setSearchError('Search failed. You can still enter macros manually.');
-          setSearchResults([]);
-          setSearchEmpty(false);
+          if (cached.length > 0) {
+            setSearchResults(cached);
+            setSearchEmpty(false);
+          } else {
+            setSearchError('Search failed. You can still enter macros manually.');
+            setSearchResults([]);
+            setSearchEmpty(false);
+          }
         }
       } finally {
         if (mountedRef.current) {
@@ -144,7 +191,7 @@ export function FoodSearchPanel({ onFoodSelected, onBarcodePress, onManualBarcod
   };
 
   const handleBarcodeButton = () => {
-    const mode = resolveScannerMode(Platform.OS as any, cameraFlagEnabled);
+    const mode = resolveScannerMode(Platform.OS, cameraFlagEnabled);
     if (mode === 'camera') {
       onBarcodePress();
     } else {
@@ -161,6 +208,21 @@ export function FoodSearchPanel({ onFoodSelected, onBarcodePress, onManualBarcod
   return (
     <View style={styles.searchSection}>
       <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>Search Food</Text>
+
+      {/* F9: Favorite chips */}
+      {favorites.length > 0 && searchResults.length === 0 && !searchQuery && (
+        <View style={styles.historyRow}>
+          <Text style={[styles.historyLabel, { color: c.text.muted }]}>⭐ Favorites:</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {favorites.map((item) => (
+              <TouchableOpacity key={item.id} style={[styles.historyChip, { backgroundColor: c.accent.primaryMuted, borderColor: c.accent.primary }]}
+                onPress={() => handleFoodSelect(item)} activeOpacity={0.7}>
+                <Text style={[styles.historyChipText, { color: c.accent.primary }]} numberOfLines={1}>{item.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       {/* Task 3.2: Scan history chips */}
       {scanHistory.length > 0 && searchResults.length === 0 && !searchQuery && (
@@ -198,8 +260,8 @@ export function FoodSearchPanel({ onFoodSelected, onBarcodePress, onManualBarcod
       </View>
 
       {showManualBarcode && (
-        <View style={{ marginTop: spacing[2] }}>
-          <View style={{ flexDirection: 'row', gap: spacing[1] }}>
+        <View style={styles.manualBarcodeContainer}>
+          <View style={styles.manualBarcodeRow}>
             <TextInput
               style={[styles.input, { flex: 1, borderColor: c.accent.primary }]}
               placeholder="Enter barcode (8-14 digits)"
@@ -229,33 +291,49 @@ export function FoodSearchPanel({ onFoodSelected, onBarcodePress, onManualBarcod
       )}
 
       {searchLoading && <ActivityIndicator color={c.accent.primary} style={styles.searchSpinner} />}
+      {!onlineManager.isOnline() && searchQuery.trim().length >= 2 && (
+        <View style={styles.offlineBanner} accessibilityRole="alert">
+          <Text style={styles.offlineBannerText}>Offline — showing saved foods only</Text>
+        </View>
+      )}
       {searchError ? <Text style={[styles.errorText, { color: c.semantic.warning }]}>{searchError}</Text> : null}
 
       {searchResults.length > 0 && (
-        <ScrollView style={[styles.resultsList, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]} nestedScrollEnabled keyboardShouldPersistTaps="handled">
-          {searchResults.slice(0, 50).map((item) => (
-            <TouchableOpacity key={item.id} style={[styles.resultItem, { borderBottomColor: c.border.subtle }]}
-              onPress={() => handleFoodSelect(item)} activeOpacity={0.7}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={[styles.resultName, { color: c.text.primary }]} numberOfLines={1}>{item.name}</Text>
-                <SourceBadge source={item.source || 'community'} />
-                {/* Task 3.3: Frequency badge */}
-                {(item.frequency ?? 0) > 0 && (
-                  <View style={[styles.freqBadge, { backgroundColor: c.accent.primaryMuted }]}>
-                    <Text style={[styles.freqBadgeText, { color: c.accent.primary }]}>⭐ Frequent</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={[styles.resultMeta, { color: c.text.muted }]}>
-                {Math.round(item.calories)} kcal · {item.protein_g}g protein
-                {item.serving_size ? ` · ${item.serving_size}${item.serving_unit}` : ''}
-              </Text>
-            </TouchableOpacity>
-          ))}
-          {searchResults.length > 50 && (
-            <Text style={[styles.truncationText, { color: c.text.muted }]}>Showing 50 of {searchResults.length} results. Refine your search for more.</Text>
+        <FlatList
+          data={searchResults.slice(0, 50)}
+          keyExtractor={(item) => item.id}
+          style={[styles.resultsList, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
+          nestedScrollEnabled
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item }) => (
+            <View style={[styles.resultItem, { borderBottomColor: c.border.subtle, flexDirection: 'row' }]}>
+              <TouchableOpacity onPress={() => handleFoodSelect(item)} activeOpacity={0.7} style={styles.resultItemTouchable}>
+                <View style={styles.resultItemNameRow}>
+                  <Text style={[styles.resultName, { color: c.text.primary }]} numberOfLines={1}>{item.name}</Text>
+                  <SourceBadge source={item.source || 'community'} />
+                  {(item.frequency ?? 0) > 0 && (
+                    <View style={[styles.freqBadge, { backgroundColor: c.accent.primaryMuted }]}>
+                      <Text style={[styles.freqBadgeText, { color: c.accent.primary }]}>⭐ Frequent</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={[styles.resultMeta, { color: c.text.muted }]}>
+                  {Math.round(item.calories)} kcal · {item.protein_g}g protein
+                  {item.serving_size ? ` · ${item.serving_size}${item.serving_unit}` : ''}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => toggleFavorite(item)} hitSlop={8}
+                style={styles.favoriteToggle}
+                accessibilityLabel={favorites.some((f) => f.id === item.id) ? 'Remove from favorites' : 'Add to favorites'}
+                accessibilityRole="button">
+                <Ionicons name={favorites.some((f) => f.id === item.id) ? 'heart' : 'heart-outline'} size={18} color={c.accent.primary} />
+              </TouchableOpacity>
+            </View>
           )}
-        </ScrollView>
+          ListFooterComponent={searchResults.length > 50 ? (
+            <Text style={[styles.truncationText, { color: c.text.muted }]}>Showing 50 of {searchResults.length} results. Refine your search for more.</Text>
+          ) : null}
+        />
       )}
 
       {searchEmpty && !searchLoading && (
@@ -267,6 +345,11 @@ export function FoodSearchPanel({ onFoodSelected, onBarcodePress, onManualBarcod
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   searchSection: { marginBottom: spacing[3], zIndex: 10, position: 'relative' as const },
+  manualBarcodeContainer: { marginTop: spacing[2] },
+  manualBarcodeRow: { flexDirection: 'row' as const, gap: spacing[1] },
+  resultItemTouchable: { flex: 1 },
+  resultItemNameRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 6 },
+  favoriteToggle: { paddingLeft: 12, justifyContent: 'center' as const },
   sectionLabel: { color: c.text.secondary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm, fontWeight: typography.weight.medium, marginBottom: spacing[1] },
   searchRow: { flexDirection: 'row', alignItems: 'center' },
   searchInput: { flex: 1 },
@@ -289,4 +372,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   // Task 3.3: Frequency badge styles
   freqBadge: { borderRadius: radius.full, paddingVertical: 1, paddingHorizontal: spacing[1] },
   freqBadgeText: { fontSize: typography.size.xs, fontWeight: typography.weight.medium },
+  offlineBanner: { backgroundColor: c.semantic.warning + '20', borderRadius: radius.sm, padding: spacing[2], marginTop: spacing[1] },
+  offlineBannerText: { color: c.semantic.warning, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm, textAlign: 'center' as const },
 });

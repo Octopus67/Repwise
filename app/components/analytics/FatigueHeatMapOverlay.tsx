@@ -3,15 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { getFatigueColor, getFatigueLabel } from '../../utils/fatigueColorMapping';
-
-interface FatigueScore {
-  muscle_group: string;
-  score: number;
-  regression_component: number;
-  volume_component: number;
-  frequency_component: number;
-  nutrition_component: number;
-}
+import type { FatigueScore } from '../../types/analytics';
 
 interface Props {
   scores: FatigueScore[];

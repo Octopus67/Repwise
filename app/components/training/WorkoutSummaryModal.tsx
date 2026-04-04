@@ -13,6 +13,7 @@ import { ModalContainer } from '../common/ModalContainer';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { getVolumeStatus, type VolumeLandmarks, type VolumeStatus } from '../../utils/wnsRecommendations';
+import { formatMuscle } from '../../utils/formatting';
 
 export interface WorkoutSummaryModalProps {
   visible: boolean;
@@ -40,13 +41,6 @@ function useVolumeStatusColors(): Record<VolumeStatus, string> {
     approaching_mrv: c.semantic.caution,
     above_mrv: c.semantic.negative,
   };
-}
-
-function formatMuscle(muscle: string): string {
-  return muscle
-    .split('_')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
 }
 
 export function WorkoutSummaryModal({

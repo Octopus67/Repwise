@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Sentry from '@sentry/react-native';
 import { spacing, typography } from '../../theme/tokens';
 import { Button } from './Button';
 import { getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
@@ -30,6 +31,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     console.error('ErrorBoundary caught:', error.message);
     console.error('Stack:', error.stack);
     console.error('Component stack:', errorInfo.componentStack);
+    Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } } });
     this.props.onError?.(error, errorInfo);
   }
 
@@ -50,9 +52,18 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <Text style={styles.title}>Repwise</Text>
             <Text style={styles.subtitle}>Something went wrong</Text>
             <Text style={styles.errorMessage}>{this.state.error.message}</Text>
+            <Text style={styles.recoveryHint}>Your workout data may be recoverable.</Text>
             <Button
-              title="Restart"
+              title="Try Again"
               onPress={this.handleRetry}
+              style={styles.button}
+            />
+            <Button
+              title="Report Bug"
+              variant="secondary"
+              onPress={() => Linking.openURL(
+                `mailto:support@repwise.app?subject=Bug Report&body=Error: ${encodeURIComponent(this.state.error?.message ?? 'Unknown')}`
+              )}
               style={styles.button}
             />
           </View>
@@ -91,9 +102,17 @@ const getStyles = (c: ThemeColors) => StyleSheet.create({
     color: c.semantic.negative,
     fontSize: typography.size.sm,
     textAlign: 'center',
+    marginBottom: spacing[4],
+  },
+  recoveryHint: {
+    color: c.text.secondary,
+    fontSize: typography.size.sm,
+    textAlign: 'center',
     marginBottom: spacing[6],
+    fontStyle: 'italic',
   },
   button: {
     minWidth: 160,
+    marginBottom: spacing[3],
   },
 });

@@ -6,17 +6,18 @@ import { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Card } from '../common/Card';
 import { VolumeBar } from './VolumeBar';
-import { VolumeTrendChart, type TrendPoint } from './VolumeTrendChart';
+import { VolumeTrendChart } from './VolumeTrendChart';
 import { LandmarkExplainer, type LandmarkKey } from './LandmarkExplainer';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import type { WNSLandmarks } from '../../types/volume';
+import type { VolumeTrendPoint } from '../../types/analytics';
 
 export interface VolumeLandmarksCardProps {
   muscleGroup: string;
   currentVolume: number;
   landmarks: WNSLandmarks;
-  trend: TrendPoint[];
+  trend: VolumeTrendPoint[];
   status: 'below_mev' | 'optimal' | 'approaching_mrv' | 'above_mrv';
 }
 

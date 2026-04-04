@@ -25,7 +25,7 @@ export function shouldShowDuration(
  * Calculate total working volume from a session response.
  * Excludes warm-up sets. Volume = sum of (weight_in_user_unit × reps).
  */
-export function calculateWorkingVolume(
+export function calculateSessionVolume(
   exercises: TrainingSessionResponse['exercises'],
   unitSystem: UnitSystem,
 ): number {
@@ -89,3 +89,6 @@ export function calculateDurationSeconds(
   );
   return diff > 0 ? diff : null;
 }
+
+/** @deprecated Use calculateSessionVolume instead. */
+export const calculateWorkingVolume = calculateSessionVolume;

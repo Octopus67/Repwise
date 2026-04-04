@@ -1,4 +1,5 @@
-import { useRef, useCallback } from 'react';
+import { useCallback } from 'react';
+import { Platform } from 'react-native';
 import Svg, { Path, G } from 'react-native-svg';
 import Animated, { useSharedValue, withTiming, withSequence, useAnimatedProps } from 'react-native-reanimated';
 import { AnatomicalRegion, BodyOutline, VIEWBOX } from './anatomicalPaths';
@@ -6,16 +7,9 @@ import { getHeatMapColor } from '../../utils/muscleVolumeLogic';
 import { colors } from '../../theme/tokens';
 import { useThemeColors, getThemeColors } from '../../hooks/useThemeColors';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
+import type { MuscleGroupVolume } from '../../types/analytics';
 
-interface MuscleGroupVolume {
-  muscle_group: string;
-  effective_sets: number;
-  frequency: number;
-  volume_status: string;
-  mev: number;
-  mav: number;
-  mrv: number;
-}
+const isWeb = Platform.OS === 'web';
 
 interface BodySilhouetteProps {
   view: 'front' | 'back';
@@ -25,22 +19,29 @@ interface BodySilhouetteProps {
   onRegionPress: (muscleGroup: string) => void;
 }
 
-const AnimatedPath = Animated.createAnimatedComponent(Path);
+const AnimatedPath = isWeb ? Path : Animated.createAnimatedComponent(Path);
 
-/** Individual region with its own shared value for press animation */
-function AnimatedRegion({
-  region,
-  color,
-  baseOpacity,
-  onPress,
-  reduceMotion,
-}: {
+interface RegionProps {
   region: AnatomicalRegion;
   color: string;
   baseOpacity: number;
   onPress: (id: string) => void;
   reduceMotion: boolean;
-}) {
+}
+
+/** Web: plain SVG, no Reanimated hooks */
+function WebRegion({ region, color, baseOpacity, onPress }: RegionProps) {
+  const handlePress = useCallback(() => onPress(region.id), [onPress, region.id]);
+  return (
+    <>
+      <Path d={region.path} fill={color} opacity={baseOpacity} />
+      <Path d={region.path} fill="transparent" onPress={handlePress} />
+    </>
+  );
+}
+
+/** Native: animated opacity on press */
+function NativeRegion({ region, color, baseOpacity, onPress, reduceMotion }: RegionProps) {
   const opacity = useSharedValue(baseOpacity);
 
   const animatedProps = useAnimatedProps(() => ({
@@ -73,6 +74,8 @@ function AnimatedRegion({
   );
 }
 
+const RegionComponent = isWeb ? WebRegion : NativeRegion;
+
 export function BodySilhouette({ view, regions, outline, volumeMap, onRegionPress }: BodySilhouetteProps) {
   const c = useThemeColors();
   const reduceMotion = useReduceMotion();
@@ -97,7 +100,7 @@ export function BodySilhouette({ view, regions, outline, volumeMap, onRegionPres
             vol?.mrv ?? 0,
           );
           return (
-            <AnimatedRegion
+            <RegionComponent
               key={region.id}
               region={region}
               color={color}

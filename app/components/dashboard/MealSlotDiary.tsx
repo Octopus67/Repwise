@@ -5,7 +5,6 @@ import { spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import {
   groupEntriesBySlot,
-  computeSlotTotals,
   NutritionEntry,
   MealSlotName,
 } from '../../utils/mealSlotLogic';
@@ -26,7 +25,15 @@ export function MealSlotDiary({ entries, onAddToSlot }: MealSlotDiaryProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const slots = groupEntriesBySlot(entries);
-  const dailyTotals = computeSlotTotals(entries);
+  const dailyTotals = slots.reduce(
+    (acc, slot) => ({
+      calories: acc.calories + slot.totals.calories,
+      protein_g: acc.protein_g + slot.totals.protein_g,
+      carbs_g: acc.carbs_g + slot.totals.carbs_g,
+      fat_g: acc.fat_g + slot.totals.fat_g,
+    }),
+    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
+  );
 
   return (
     <View style={styles.container}>

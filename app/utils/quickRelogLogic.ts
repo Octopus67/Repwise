@@ -7,17 +7,10 @@
  */
 
 import type { NutritionEntry } from '../utils/mealSlotLogic';
+import { MealFavorite } from '../types/nutrition';
+export type { MealFavorite };
 
 export interface QuickRelogItem {
-  name: string;
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-}
-
-export interface MealFavorite {
-  id: string;
   name: string;
   calories: number;
   protein_g: number;

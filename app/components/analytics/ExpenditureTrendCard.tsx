@@ -93,7 +93,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     fontSize: typography.size['3xl'],
     fontWeight: typography.weight.bold,
     color: c.text.primary,
-    fontVariant: typography.numeric.fontVariant as any,
+    fontVariant: [...typography.numeric.fontVariant],
     letterSpacing: letterSpacing.tighter,
     lineHeight: typography.lineHeight['3xl'],
   },

@@ -17,7 +17,7 @@ interface QuickActionButtonProps {
   accessibilityRole?: string;
 }
 
-export function QuickActionButton({
+export const QuickActionButton = React.memo(function QuickActionButton({
   icon,
   label,
   accentColor,
@@ -50,7 +50,7 @@ export function QuickActionButton({
       </TouchableOpacity>
     </Animated.View>
   );
-}
+});
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   card: {

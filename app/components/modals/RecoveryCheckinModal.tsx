@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { spacing, typography, radius } from '../../theme/tokens';
-import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { ModalContainer } from '../common/ModalContainer';
 import api from '../../services/api';
+import type { AxiosError } from 'axios';
+import { getApiErrorMessage } from '../../utils/errors';
+import { useStore } from '../../store';
 
 interface Props {
   visible: boolean;
@@ -23,23 +27,24 @@ function Stepper({ label, value, onChange, labels }: {
   labels: string[];
 }) {
   const c = useThemeColors();
+  const styles = getThemedStyles(c);
   return (
-    <View style={getStyles().stepperContainer}>
-      <Text style={[getStyles().stepperLabel, { color: c.text.secondary }]}>{label}</Text>
-      <View style={getStyles().stepperRow}>
+    <View style={styles.stepperContainer}>
+      <Text style={[styles.stepperLabel, { color: c.text.secondary }]}>{label}</Text>
+      <View style={styles.stepperRow}>
         {[1, 2, 3, 4, 5].map((v) => (
           <TouchableOpacity
             key={v}
-            style={[getStyles().stepperBtn, value === v && getStyles().stepperBtnActive]}
+            style={[styles.stepperBtn, value === v && styles.stepperBtnActive]}
             onPress={() => onChange(v)}
           >
-            <Text style={[getStyles().stepperBtnText, value === v && getStyles().stepperBtnTextActive]}>
+            <Text style={[styles.stepperBtnText, value === v && styles.stepperBtnTextActive]}>
               {v}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
-      <Text style={[getStyles().stepperHint, { color: c.text.muted }]}>{labels[value - 1]}</Text>
+      <Text style={[styles.stepperHint, { color: c.text.muted }]}>{labels[value - 1]}</Text>
     </View>
   );
 }
@@ -47,6 +52,7 @@ function Stepper({ label, value, onChange, labels }: {
 export function RecoveryCheckinModal({ visible, onClose, onSuccess }: Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const selectedDate = useStore((s) => s.selectedDate);
   const [soreness, setSoreness] = useState(1);
   const [stress, setStress] = useState(1);
   const [sleepQuality, setSleepQuality] = useState(3);
@@ -64,59 +70,45 @@ export function RecoveryCheckinModal({ visible, onClose, onSuccess }: Props) {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
       await api.post('readiness/checkin', {
         soreness,
         stress,
         sleep_quality: sleepQuality,
-        checkin_date: today,
+        checkin_date: selectedDate,
       });
       onSuccess();
       onClose();
-    } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Failed to save check-in. Please try again.';
-      console.warn('Recovery checkin failed:', err?.response?.status, msg);
+    } catch (err: unknown) {
+      const msg = getApiErrorMessage(err, 'Failed to save check-in. Please try again.');
+      console.warn('Recovery checkin failed:', (err as AxiosError)?.response?.status, msg);
       // Show error to user via Alert if available
       try {
         const { Alert } = require('react-native');
         Alert.alert('Error', msg);
-      } catch {}
+      } catch (err) { console.warn('[RecoveryCheckin] Alert unavailable:', String(err)); }
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={[getStyles().overlay, { backgroundColor: c.bg.overlay }]}>
-        <View style={[getStyles().sheet, { backgroundColor: c.bg.surface }]}>
-          <View style={getStyles().header}>
-            <Text style={[getStyles().title, { color: c.text.primary }]}>Recovery Check-in</Text>
-            <TouchableOpacity onPress={onClose} hitSlop={8} style={getStyles().closeBtn}>
-              <Text style={[getStyles().closeBtnText, { color: c.text.secondary }]}>✕</Text>
-            </TouchableOpacity>
-          </View>
+    <ModalContainer visible={visible} onClose={onClose} title="Recovery Check-in" testID="recovery-checkin-modal">
           <Stepper label="Soreness" value={soreness} onChange={setSoreness} labels={LABELS.soreness} />
           <Stepper label="Stress" value={stress} onChange={setStress} labels={LABELS.stress} />
           <Stepper label="Sleep Quality" value={sleepQuality} onChange={setSleepQuality} labels={LABELS.sleep_quality} />
-          <TouchableOpacity style={[getStyles().submitBtn, submitting && getStyles().submitBtnDisabled]} onPress={handleSubmit} disabled={submitting}>
+          <TouchableOpacity style={[styles.submitBtn, submitting && styles.submitBtnDisabled]} onPress={handleSubmit} disabled={submitting}>
             {submitting ? (
               <ActivityIndicator color={c.text.inverse} />
             ) : (
-              <Text style={[getStyles().submitText, { color: c.text.inverse }]}>Submit</Text>
+              <Text style={[styles.submitText, { color: c.text.inverse }]}>Submit</Text>
             )}
           </TouchableOpacity>
-          <TouchableOpacity style={getStyles().cancelBtn} onPress={onClose}>
-            <Text style={[getStyles().cancelText, { color: c.text.muted }]}>Skip</Text>
+          <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
+            <Text style={[styles.cancelText, { color: c.text.muted }]}>Skip</Text>
           </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
+    </ModalContainer>
   );
 }
-
-/** Lazy styles for module-level helpers */
-function getStyles() { return getThemedStyles(getThemeColors()); }
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   overlay: {

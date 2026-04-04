@@ -9,7 +9,7 @@
  */
 
 // PostHog client placeholder — will be set after SDK init
-let posthog: any = null;
+let posthog: { capture: (event: string, properties?: Record<string, unknown>) => void } | null = null;
 
 export function initAnalytics(apiKey: string | undefined, host = 'https://app.posthog.com') {
   if (!apiKey) return;
@@ -18,15 +18,15 @@ export function initAnalytics(apiKey: string | undefined, host = 'https://app.po
     const PostHog = require('posthog-react-native');
     posthog = new PostHog.PostHog(apiKey, { host });
   } catch {
-    // SDK not installed — analytics disabled
+    // Intentional: fire-and-forget — SDK not installed means analytics disabled
   }
 }
 
-function capture(event: string, properties?: Record<string, unknown>) {
+export function capture(event: string, properties?: Record<string, unknown>) {
   try {
     posthog?.capture(event, properties);
   } catch {
-    // fire-and-forget
+    // Intentional: fire-and-forget — analytics must never crash the app
   }
 }
 

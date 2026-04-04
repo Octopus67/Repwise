@@ -17,12 +17,10 @@ import { useOnboardingStore, computeAge } from '../../store/onboardingSlice';
 import { Icon } from '../../components/common/Icon';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
 import api from '../../services/api';
+import { formatDateISO } from '../../utils/formatting';
+import type { AnalyticsScreenProps } from '../../types/navigation';
 
-interface NutritionEntry {
-  meal_name: string;
-  food_name?: string;
-  micro_nutrients: Record<string, number> | null;
-}
+type NutritionEntry = import('../../types/nutrition').NutritionEntry & { meal_name: string };
 
 interface ContributingFood {
   foodName: string;
@@ -35,10 +33,6 @@ const getCOLOR_MAP = (c: ThemeColors) => ({
   yellow: c.semantic.warning,
   red: c.semantic.negative,
 } as const);
-
-function formatDate(d: Date): string {
-  return d.toISOString().split('T')[0];
-}
 
 function computeNutrientContributions(
   entries: NutritionEntry[],
@@ -142,14 +136,14 @@ function NutrientRow({
   );
 }
 
-export function NutritionReportScreen({ navigation }: { navigation?: any }) {
+export function NutritionReportScreen({ navigation }: { navigation?: AnalyticsScreenProps<'NutritionReport'>['navigation'] }) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const store = useStore();
   const birthYear = useOnboardingStore((s) => s.birthYear);
   const birthMonth = useOnboardingStore((s) => s.birthMonth);
   const sex = useOnboardingStore((s) => s.sex);
-  const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
+  const [selectedDate, setSelectedDate] = useState(formatDateISO(new Date()));
   const [entries, setEntries] = useState<NutritionEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -185,7 +179,7 @@ export function NutritionReportScreen({ navigation }: { navigation?: any }) {
         }
       }
       setDailyTotals(totals);
-    } catch (err) {
+    } catch (err: unknown) {
       setError('Failed to load nutrition data. Pull down to retry.');
       setEntries([]);
       setDailyTotals({});
@@ -201,7 +195,7 @@ export function NutritionReportScreen({ navigation }: { navigation?: any }) {
   const changeDate = (delta: number) => {
     const d = new Date(selectedDate + 'T12:00:00');
     d.setDate(d.getDate() + delta);
-    setSelectedDate(formatDate(d));
+    setSelectedDate(formatDateISO(d));
   };
 
   function formatDisplayDate(isoDate: string): string {
@@ -209,7 +203,7 @@ export function NutritionReportScreen({ navigation }: { navigation?: any }) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
-  const todayStr = formatDate(new Date());
+  const todayStr = formatDateISO(new Date());
   const canGoForward = selectedDate < todayStr;
 
   const hasAnyData = Object.keys(dailyTotals).length > 0;
@@ -269,7 +263,7 @@ export function NutritionReportScreen({ navigation }: { navigation?: any }) {
             <Icon name="warning" /> RDA values use defaults (age 30, male). Set your profile for accurate values.
           </Text>
           <TouchableOpacity
-            onPress={() => navigation?.navigate?.('Profile')}
+            onPress={() => navigation?.getParent()?.navigate('Profile')}
             activeOpacity={0.7}
           >
             <Text style={[getStyles().rdaWarningLink, { color: c.semantic.warning }]}>Set Profile →</Text>

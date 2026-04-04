@@ -21,9 +21,9 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ScrollView,
   StyleSheet,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { showAlert } from '../../utils/crossPlatformAlert';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -32,12 +32,11 @@ import { useActiveWorkoutStore } from '../../store/activeWorkoutSlice';
 import { useStore } from '../../store';
 import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
 import api from '../../services/api';
+import type { AxiosError } from 'axios';
 import { spacing, typography, radius, shadows, letterSpacing as ls } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 
 // Phase 4 components
-import { VolumePills } from '../../components/training/VolumePills';
-import { ExerciseCardPremium } from '../../components/training/ExerciseCardPremium';
 import { FloatingRestTimerBar } from '../../components/training/FloatingRestTimerBar';
 import { StickyFinishBar } from '../../components/training/StickyFinishBar';
 import { FinishConfirmationSheet } from '../../components/training/FinishConfirmationSheet';
@@ -45,9 +44,13 @@ import { ExercisePickerSheet } from '../../components/training/ExercisePickerShe
 import { PRCelebration } from '../../components/training/PRCelebration';
 import { RPEEducationSheet } from '../../components/training/RPEEducationSheet';
 import { PlateCalculatorSheet } from '../../components/training/PlateCalculatorSheet';
-import { HUFloatingPill } from '../../components/training/HUFloatingPill';
 import { HUExplainerModal } from '../../components/training/HUExplainerModal';
 import { WorkoutSummaryModal } from '../../components/training/WorkoutSummaryModal';
+import { ActiveWorkoutBody } from './ActiveWorkoutBody';
+
+// Extracted hooks
+import { useWorkoutSave } from '../../hooks/useWorkoutSave';
+import { useWorkoutData } from '../../hooks/useWorkoutData';
 
 // Utilities
 import { formatDuration } from '../../utils/durationFormat';
@@ -55,30 +58,17 @@ import { computeWorkoutSummary } from '../../utils/workoutSummary';
 import { stepWeight } from '../../utils/weightStepper';
 import { aggregateVolume } from '../../utils/volumeAggregator';
 import { hasUnsavedData } from '../../utils/setCompletionLogic';
-import { getRestDuration } from '../../utils/getRestDuration';
-import { shouldStartRestTimer } from '../../utils/supersetLogic';
-import { activeExercisesToPayload } from '../../utils/sessionEditConversion';
 import { sessionResponseToActiveExercises } from '../../utils/sessionEditConversion';
 import { templateToActiveExercises } from '../../utils/templateConversion';
 import { calculateExerciseStimulus, calculateSessionStimulus } from '../../utils/wnsCalculator';
-import { generateRecommendations, getVolumeStatus, type VolumeLandmarks, type VolumeStatus } from '../../utils/wnsRecommendations';
+import { generateRecommendations } from '../../utils/wnsRecommendations';
 // Types
-import type { PreviousPerformanceData, PersonalRecordResponse } from '../../types/training';
-import type { WorkoutSummaryResult } from '../../utils/workoutSummary';
-
-import Animated from 'react-native-reanimated';
-import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
-
-// ─── Staggered entrance wrapper ──────────────────────────────────────────────
-
-function ExerciseCardWrapper({ children, index }: { children: React.ReactNode; index: number }) {
-  const entranceStyle = useStaggeredEntrance(index, 60);
-  return <Animated.View style={entranceStyle}>{children}</Animated.View>;
-}
+import type { WorkoutTemplateResponse } from '../../types/training';
+import type { DashboardScreenProps } from '../../types/navigation';
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
-export function ActiveWorkoutScreen({ route, navigation }: any) {
+export function ActiveWorkoutScreen({ route, navigation }: DashboardScreenProps<'ActiveWorkout'>) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const { mode, sessionId, templateId, sessionDate } = route.params ?? {};
@@ -94,17 +84,10 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   const dismissRpeRirTooltip = useWorkoutPreferencesStore((s) => s.dismissRpeRirTooltip);
 
   // ── Local UI state ──
-  const [saving, setSaving] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [exercisePickerVisible, setExercisePickerVisible] = useState(false);
-  const [finishSheetVisible, setFinishSheetVisible] = useState(false);
-  const [prCelebrationVisible, setPrCelebrationVisible] = useState(false);
-  const [prData, setPrData] = useState<PersonalRecordResponse[]>([]);
   const [overflowMenuVisible, setOverflowMenuVisible] = useState(false);
   const [rpeEducationVisible, setRpeEducationVisible] = useState(false);
-  const [exerciseList, setExerciseList] = useState<string[]>([]);
-  const [recentExercises, setRecentExercises] = useState<string[]>([]);
-  const [muscleGroupMap, setMuscleGroupMap] = useState<Record<string, string>>({});
   const [huExplainerVisible, setHuExplainerVisible] = useState(false);
   const [huExplainerExercise, setHuExplainerExercise] = useState<string | undefined>();
   const [huExplainerHU, setHuExplainerHU] = useState<number | undefined>();
@@ -113,9 +96,54 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   const [plateCalcWeightKg, setPlateCalcWeightKg] = useState(0);
   const [summaryHU, setSummaryHU] = useState<Record<string, number>>({});
   const [summaryRecs, setSummaryRecs] = useState<string[]>([]);
+  const [initializing, setInitializing] = useState(true);
   const initialized = useRef(false);
   const isNavigatingAway = useRef(false);
-  const summaryDataRef = useRef<any>(null); // Store navigation params for PR celebration
+
+  // ── Extracted hooks ──
+
+  const { exerciseList, recentExercises, muscleGroupMap } = useWorkoutData({ store });
+
+  // ── HU computation (recalculates on every set change) ──
+
+  const sessionHU = React.useMemo(() => {
+    const exerciseData = store.exercises
+      .filter((ex) => !ex.skipped)
+      .map((ex) => ({
+        exerciseName: ex.exerciseName,
+        sets: ex.sets
+          .filter((s) => s.completed && s.setType !== 'warm-up')
+          .map((s) => ({
+            reps: parseInt(s.reps, 10) || 0,
+            rpe: s.rpe ? parseFloat(s.rpe) : null,
+            intensityPct: null as number | null,
+          })),
+      }));
+    return calculateSessionStimulus(exerciseData, muscleGroupMap);
+  }, [store.exercises, muscleGroupMap]);
+
+  const sessionHURef = useRef(sessionHU);
+  sessionHURef.current = sessionHU;
+
+  const {
+    saving,
+    prData,
+    prCelebrationVisible,
+    finishSheetVisible,
+    setFinishSheetVisible,
+    handleFinishTap,
+    handleConfirmFinish,
+    handleSaveAsTemplate,
+    handlePrDismiss,
+  } = useWorkoutSave({
+    store,
+    navigation,
+    unitSystem,
+    elapsedSeconds,
+    muscleGroupMap,
+    sessionHURef,
+    isNavigatingAway,
+  });
 
   // ── Duration timer (Req 9.1, 9.2) ──
 
@@ -123,7 +151,8 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
     if (!store.startedAt) return;
     const tick = () => {
       const start = new Date(store.startedAt).getTime();
-      setElapsedSeconds(Math.floor((Date.now() - start) / 1000));
+      if (isNaN(start)) return;
+      setElapsedSeconds(Math.max(0, Math.floor((Date.now() - start) / 1000)));
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -139,25 +168,41 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
     (async () => {
       try {
         if (mode === 'edit' && sessionId) {
-          const { data } = await api.get(`training/sessions/${sessionId}`);
-          const exercises = sessionResponseToActiveExercises(data, unitSystem);
-          store.startWorkout({ mode: 'edit', editSessionId: sessionId, templateExercises: exercises, sessionDate: data.session_date });
+          try {
+            const { data } = await api.get(`training/sessions/${sessionId}`);
+            const exercises = sessionResponseToActiveExercises(data, unitSystem);
+            store.startWorkout({ mode: 'edit', editSessionId: sessionId, templateExercises: exercises, sessionDate: data.session_date });
+          } catch (err: unknown) {
+            if ((err as AxiosError)?.response?.status === 404) {
+              showAlert('Session Not Found', 'This workout session no longer exists. It may have been deleted.', [
+                { text: 'Go Back', onPress: () => navigation.goBack() },
+              ]);
+              return;
+            }
+            throw err;
+          }
         } else if (mode === 'template' && templateId) {
           try {
             const { data } = await api.get('training/user-templates');
-            const tmpl = data.find?.((t: any) => t.id === templateId);
+            const templates: WorkoutTemplateResponse[] = data ?? [];
+            const userMap = new Map(templates.map((t) => [String(t.id), t]));
+            const tmpl = userMap.get(String(templateId));
             if (tmpl) {
               store.startWorkout({ mode: 'new', templateExercises: templateToActiveExercises(tmpl, unitSystem), sessionDate: sessionDate || undefined });
             } else {
               const { data: sys } = await api.get('training/templates');
-              const sysTmpl = sys.find?.((t: any) => t.id === templateId);
+              const sysTemplates: WorkoutTemplateResponse[] = sys ?? [];
+              const sysMap = new Map(sysTemplates.map((t) => [String(t.id), t]));
+              const sysTmpl = sysMap.get(String(templateId));
               if (sysTmpl) {
                 store.startWorkout({ mode: 'new', templateExercises: templateToActiveExercises(sysTmpl, unitSystem), sessionDate: sessionDate || undefined });
               } else {
+                showAlert('Template Not Found', 'The selected template could not be loaded. Starting a blank workout.');
                 store.startWorkout({ mode: 'new', sessionDate: sessionDate || undefined });
               }
             }
           } catch {
+            showAlert('Template Load Failed', 'Could not load the template. Starting a blank workout.');
             store.startWorkout({ mode: 'new', sessionDate: sessionDate || undefined });
           }
         } else if (mode === 'copy-last') {
@@ -169,9 +214,11 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
               exercises.forEach(ex => ex.sets.forEach(s => { s.completed = false; s.completedAt = null; }));
               store.startWorkout({ mode: 'new', templateExercises: exercises, sessionDate: sessionDate || undefined });
             } else {
+              showAlert('No Previous Workout', 'No previous session found to copy. Starting a blank workout.');
               store.startWorkout({ mode: 'new', sessionDate: sessionDate || undefined });
             }
           } catch {
+            showAlert('Copy Failed', 'Could not load your last workout. Starting a blank workout.');
             store.startWorkout({ mode: 'new', sessionDate: sessionDate || undefined });
           }
         } else if (!store.isActive) {
@@ -181,103 +228,41 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
         if (!store.isActive) {
           store.startWorkout({ mode: 'new', sessionDate: sessionDate || undefined });
         }
+      } finally {
+        setInitializing(false);
       }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Fetch batch data on mount: previous performance, overload, volume, exercises ──
+  // ── Back navigation guard (Android back button + iOS swipe) ──
+
+  const hasActive = hasUnsavedData(store.exercises);
 
   useEffect(() => {
-    const names = store.exercises.map((e) => e.exerciseName).filter(Boolean);
-    if (names.length === 0) return;
-
-    // Batch previous performance
-    const uncachedPrev = names.filter((n) => !(n.toLowerCase() in store.previousPerformance));
-    if (uncachedPrev.length > 0) {
-      api.post('training/previous-performance/batch', { exercise_names: uncachedPrev.slice(0, 20) })
-        .then(({ data }) => {
-          if (!data.results) return;
-          const mapped: Record<string, PreviousPerformanceData | null> = {};
-          for (const [key, val] of Object.entries(data.results)) {
-            if (val) {
-              const v = val as any;
-              mapped[key.toLowerCase()] = {
-                exerciseName: v.exercise_name,
-                sessionDate: v.session_date,
-                sets: v.sets.map((s: any) => ({ weightKg: s.weight_kg, reps: s.reps, rpe: s.rpe })),
-              };
-            } else {
-              mapped[key.toLowerCase()] = null;
-            }
-          }
-          store.setPreviousPerformance(mapped);
-        })
-        .catch(() => {});
-    }
-
-    // Batch overload suggestions
-    api.post('training/exercises/batch-overload-suggestions', { exercise_names: names.slice(0, 20) })
-      .then(({ data }) => {
-        if (data.suggestions) store.setOverloadSuggestions(data.suggestions);
-      })
-      .catch(() => {});
-
-    // Weekly volume
-    const monday = getWeekMonday();
-    api.get('training/analytics/muscle-volume', { params: { week_start: monday } })
-      .then(({ data }) => {
-        if (Array.isArray(data)) store.setWeeklyVolumeData(data);
-      })
-      .catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.exercises.length]);
-
-  // ── Fetch exercise list + muscle group map for picker and volume ──
+    navigation.setOptions({ gestureEnabled: !hasActive });
+  }, [hasActive, navigation]);
 
   useEffect(() => {
-    api.get('training/exercises')
-      .then(({ data }) => {
-        if (!Array.isArray(data)) return;
-        setExerciseList(data.map((e: any) => e.name).filter(Boolean));
-        const map: Record<string, string> = {};
-        for (const ex of data) {
-          if (ex.name && ex.muscle_group) map[ex.name] = ex.muscle_group;
-        }
-        setMuscleGroupMap(map);
-      })
-      .catch(() => {});
-
-    // Recent exercises
-    api.get('training/sessions', { params: { limit: 5 } })
-      .then(({ data }) => {
-        const sessions = data.items ?? data ?? [];
-        const names = new Set<string>();
-        for (const s of sessions) {
-          for (const ex of s.exercises ?? []) {
-            if (ex.exercise_name) names.add(ex.exercise_name);
-          }
-        }
-        setRecentExercises(Array.from(names).slice(0, 10));
-      })
-      .catch(() => {});
-  }, []);
-
-  // ── Back navigation guard ──
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
-      // Skip guard when we intentionally navigated away (discard / finish)
+    const unsubscribe = navigation.addListener('beforeRemove', (e: { preventDefault: () => void; data: { action: { type: string } } }) => {
       if (isNavigatingAway.current) return;
       if (!hasUnsavedData(store.exercises)) return;
       e.preventDefault();
       showAlert('Unsaved Workout', 'You have unsaved data. What would you like to do?', [
-        { text: 'Keep Workout', style: 'cancel' },
-        { text: 'Discard', style: 'destructive', onPress: () => { store.discardWorkout(); navigation.dispatch(e.data.action); } },
+        { text: 'Continue Workout', style: 'cancel' },
+        {
+          text: 'Save & Exit',
+          onPress: () => handleConfirmFinish(),
+        },
+        {
+          text: 'Discard',
+          style: 'destructive',
+          onPress: () => { store.discardWorkout(); navigation.dispatch(e.data.action); },
+        },
       ]);
     });
     return unsubscribe;
-  }, [navigation, store.exercises]);
+  }, [navigation, store.exercises, handleConfirmFinish]);
 
   // ── Handle exercise swap from picker navigation ──
 
@@ -354,7 +339,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
     // Predictive fallback: use previous performance best weight
     const prevKey = exercise.exerciseName.toLowerCase();
     const prevPerf = store.previousPerformance[prevKey];
-    const prevBest = prevPerf?.sets?.reduce((max: number, s: any) => Math.max(max, s.weightKg || 0), 0) || 0;
+    const prevBest = prevPerf?.sets?.reduce((max: number, s: { weightKg?: number }) => Math.max(max, s.weightKg || 0), 0) || 0;
 
     if (workingWeight <= 0 && prevBest <= 0) {
       showAlert('Enter a working weight first.');
@@ -366,109 +351,6 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
       ? generateWarmUpSets(workingWeight)
       : generateWarmUpSets(undefined, { previousBestWeight: prevBest });
     store.insertWarmUpSets(exerciseLocalId, sets);
-  }, [store]);
-
-  const handleFinishTap = useCallback(() => {
-    if (saving) return;
-    const completedSets = store.exercises.flatMap((e) => e.sets).filter((s) => s.completed);
-    if (completedSets.length === 0) {
-      showAlert('No Completed Sets', 'Complete at least one set to save.');
-      return;
-    }
-    setFinishSheetVisible(true);
-  }, [store, saving]);
-
-  const handleConfirmFinish = useCallback(async () => {
-    setSaving(true);
-    try {
-      const payload = store.finishWorkout(unitSystem);
-
-      let response: any;
-      if (store.mode === 'edit' && store.editSessionId) {
-        response = await api.put(`training/sessions/${store.editSessionId}`, payload);
-      } else {
-        response = await api.post('training/sessions', payload);
-      }
-
-      setFinishSheetVisible(false);
-
-      // Prepare exercise breakdown data
-      const exerciseBreakdown = store.exercises
-        .filter(ex => !ex.skipped)
-        .map(ex => {
-          const completedSets = ex.sets.filter(s => s.completed && s.setType !== 'warm-up');
-          let bestSet = null;
-          
-          if (completedSets.length > 0) {
-            // Find best set by volume (weight × reps)
-            bestSet = completedSets.reduce((best, current) => {
-              const currentVolume = (parseFloat(current.weight) || 0) * (parseInt(current.reps, 10) || 0);
-              const bestVolume = (parseFloat(best.weight) || 0) * (parseInt(best.reps, 10) || 0);
-              return currentVolume > bestVolume ? current : best;
-            });
-          }
-
-          return {
-            exerciseName: ex.exerciseName,
-            setsCompleted: completedSets.length,
-            bestSet: bestSet ? { weight: bestSet.weight, reps: bestSet.reps } : null,
-          };
-        });
-
-      // Check for personal records
-      const prs: PersonalRecordResponse[] = response.data?.personal_records ?? [];
-      
-      // Compute summary inside callback (fresh values)
-      const currentSummary = computeWorkoutSummary(store.exercises);
-      const finalRecs = generateRecommendations(sessionHURef.current, {});
-
-      const navigateToSummary = () => {
-        store.discardWorkout();
-        isNavigatingAway.current = true;
-        navigation.navigate('WorkoutSummary', {
-          summary: currentSummary,
-          duration: elapsedSeconds,
-          personalRecords: prs,
-          exerciseBreakdown,
-          huByMuscle: sessionHURef.current,
-          recommendations: finalRecs,
-        });
-      };
-
-      // Show PR celebration before navigating, or navigate immediately
-      if (prs.length > 0) {
-        // Store navigation data in ref for PR celebration onDismiss
-        summaryDataRef.current = {
-          summary: currentSummary,
-          duration: elapsedSeconds,
-          personalRecords: prs,
-          exerciseBreakdown,
-          huByMuscle: sessionHURef.current,
-          recommendations: finalRecs,
-        };
-        setPrData(prs);
-        setPrCelebrationVisible(true);
-        // Navigation will be triggered by PRCelebration onDismiss callback
-      } else {
-        navigateToSummary();
-      }
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Could not save workout. Please try again.';
-      showAlert('Save Failed', errorMessage);
-    } finally {
-      setSaving(false);
-    }
-  }, [store, navigation, unitSystem, elapsedSeconds, muscleGroupMap]);
-
-  const handleSaveAsTemplate = useCallback(async () => {
-    const payload = store.finishWorkout(unitSystem);
-    const templateName = `Workout - ${store.sessionDate || new Date().toLocaleDateString('en-CA')}`;
-    try {
-      await api.post('training/user-templates', { name: templateName, exercises: payload.exercises });
-      showAlert('Template Saved', `"${templateName}" saved.`);
-    } catch {
-      showAlert('Error', 'Could not save template.');
-    }
   }, [store]);
 
   const handleRestTimerComplete = useCallback(() => {
@@ -503,27 +385,6 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
     ? new Date(store.sessionDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
     : 'Today';
 
-  // ── HU computation (recalculates on every set change) ──
-
-  const sessionHU = React.useMemo(() => {
-    const exerciseData = store.exercises
-      .filter((ex) => !ex.skipped)
-      .map((ex) => ({
-        exerciseName: ex.exerciseName,
-        sets: ex.sets
-          .filter((s) => s.completed && s.setType !== 'warm-up')
-          .map((s) => ({
-            reps: parseInt(s.reps, 10) || 0,
-            rpe: s.rpe ? parseFloat(s.rpe) : null,
-            intensityPct: null as number | null,
-          })),
-      }));
-    return calculateSessionStimulus(exerciseData, muscleGroupMap);
-  }, [store.exercises, muscleGroupMap]);
-
-  const sessionHURef = useRef(sessionHU);
-  sessionHURef.current = sessionHU;
-
   const exerciseHUMap = React.useMemo(() => {
     const map: Record<string, number> = {};
     for (const ex of store.exercises) {
@@ -543,6 +404,17 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   }, [store.exercises]);
 
   // ── Render ──
+
+  if (initializing) {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
+        <View style={styles.loadingCenter}>
+          <ActivityIndicator size="large" color={c.accent.primary} />
+          <Text style={[styles.loadingText, { color: c.text.secondary }]}>Loading workout…</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
@@ -593,119 +465,35 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
       )}
 
       {/* Body */}
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Volume pills */}
-        <VolumePills muscleVolumes={volumeData} />
-
-        {/* HU floating pill */}
-        <HUFloatingPill
-          huByMuscle={sessionHU}
-          onPress={() => {
-            setSummaryHU(sessionHU);
-            setSummaryRecs(generateRecommendations(sessionHU, {}));
-            setWorkoutSummaryVisible(true);
-          }}
-        />
-
-        {/* Exercise cards */}
-        {store.exercises.map((exercise, idx) => {
-          const prevKey = exercise.exerciseName.toLowerCase();
-          const prevPerf = store.previousPerformance[prevKey] ?? null;
-          const overload = store.overloadSuggestions[exercise.exerciseName] ?? null;
-
-          return (
-            <ExerciseCardWrapper key={exercise.localId} index={idx}>
-              <ExerciseCardPremium
-              exercise={exercise}
-              previousPerformance={prevPerf}
-              overloadSuggestion={overload}
-              unitSystem={unitSystem}
-              showRpeRir={showRpeRir}
-              rpeMode={rpeMode}
-              currentHU={exerciseHUMap[exercise.localId]}
-              onSwap={() => handleSwapExercise(exercise.localId)}
-              onSkip={() => store.toggleExerciseSkip(exercise.localId)}
-              onGenerateWarmUp={(sets) => {
-                if (sets?.length) {
-                  store.insertWarmUpSets(exercise.localId, sets);
-                } else {
-                  handleGenerateWarmUp(exercise.localId);
-                }
-              }}
-              onRemove={() => store.removeExercise(exercise.localId)}
-              onAddSet={() => store.addSet(exercise.localId)}
-              onRemoveSet={(setLocalId) => store.removeSet(exercise.localId, setLocalId)}
-              onReorder={(direction) => {
-                const newIdx = direction === 'up' ? idx - 1 : idx + 1;
-                store.reorderExercises(idx, newIdx);
-              }}
-              isFirst={idx === 0}
-              isLast={idx === store.exercises.length - 1}
-              onUpdateSetField={(setLocalId, field, value) =>
-                store.updateSetField(exercise.localId, setLocalId, field, value)
-              }
-              onToggleSetCompleted={(setLocalId) => {
-                const result = store.toggleSetCompleted(exercise.localId, setLocalId);
-                if (result.validationError) {
-                  showAlert('Missing Fields', result.validationError);
-                }
-                if (result.completed) {
-                  const currentSet = exercise.sets.find((s) => s.localId === setLocalId);
-                  const normalSets = exercise.sets.filter((s) => s.setType === 'normal');
-                  const isLastNormalSet = normalSets[normalSets.length - 1]?.localId === setLocalId;
-                  
-                  // Skip timer for warm-up and drop-set (no rest by definition)
-                  const shouldSkip = currentSet?.setType === 'warm-up' || currentSet?.setType === 'drop-set';
-                  
-                  // Check if this exercise is mid-superset (should not rest)
-                  const canStartTimer = shouldStartRestTimer(store.supersetGroups, exercise.localId);
-                  
-                  if (!isLastNormalSet && !shouldSkip && canStartTimer) {
-                    const duration = getRestDuration(exercise.exerciseName, profile?.preferences?.rest_timer);
-                    store.startRestTimer(exercise.exerciseName, duration);
-                  }
-                }
-              }}
-              onCopyPreviousToSet={(setLocalId) =>
-                store.copyPreviousToSet(exercise.localId, setLocalId)
-              }
-              onWeightStep={(setLocalId, direction) =>
-                handleWeightStep(exercise.localId, setLocalId, direction)
-              }
-              onUpdateSetType={(setLocalId, setType) =>
-                store.updateSetType(exercise.localId, setLocalId, setType)
-              }
-              onApplyOverload={() => handleApplyOverload(exercise.localId)}
-              onSetExerciseNotes={(localId, notes) => store.setExerciseNotes(localId, notes)}
-              onShowRpeEducation={() => setRpeEducationVisible(true)}
-              onShowHUExplainer={() => {
-                setHuExplainerExercise(exercise.exerciseName);
-                setHuExplainerHU(exerciseHUMap[exercise.localId]);
-                setHuExplainerVisible(true);
-              }}
-              onOpenPlateCalculator={handleOpenPlateCalculator}
-              />
-            </ExerciseCardWrapper>
-          );
-        })}
-
-        {/* Add Exercise button */}
-        <TouchableOpacity
-          style={[styles.addExerciseBtn, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
-          onPress={() => setExercisePickerVisible(true)}
-          accessibilityLabel="Add exercise"
-          accessibilityRole="button"
-        >
-          <Text style={[styles.addExerciseText, { color: c.accent.primary }]}>+ Add Exercise</Text>
-        </TouchableOpacity>
-
-        {/* Bottom spacer for sticky bars */}
-        <View style={{ height: 140 }} />
-      </ScrollView>
+      <ActiveWorkoutBody
+        c={c}
+        store={store}
+        unitSystem={unitSystem}
+        rpeMode={rpeMode}
+        showRpeRir={showRpeRir}
+        muscleGroupMap={muscleGroupMap}
+        volumeData={volumeData}
+        sessionHU={sessionHU}
+        exerciseHUMap={exerciseHUMap}
+        onHUPillPress={() => {
+          setSummaryHU(sessionHU);
+          setSummaryRecs(generateRecommendations(sessionHU, {}));
+          setWorkoutSummaryVisible(true);
+        }}
+        onSwapExercise={handleSwapExercise}
+        onGenerateWarmUp={handleGenerateWarmUp}
+        onWeightStep={handleWeightStep}
+        onApplyOverload={handleApplyOverload}
+        onOpenExercisePicker={() => setExercisePickerVisible(true)}
+        onShowRpeEducation={() => setRpeEducationVisible(true)}
+        onShowHUExplainer={(name, hu) => {
+          setHuExplainerExercise(name);
+          setHuExplainerHU(hu);
+          setHuExplainerVisible(true);
+        }}
+        onOpenPlateCalculator={handleOpenPlateCalculator}
+        profile={profile}
+      />
 
       {/* Bottom overlay stack */}
       <FloatingRestTimerBar
@@ -753,16 +541,7 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
       <PRCelebration
         prs={prData}
         visible={prCelebrationVisible}
-        onDismiss={() => {
-          setPrCelebrationVisible(false);
-          // Navigate using stored params from ref
-          if (summaryDataRef.current) {
-            store.discardWorkout();
-            isNavigatingAway.current = true;
-            navigation.navigate('WorkoutSummary', summaryDataRef.current);
-            summaryDataRef.current = null;
-          }
-        }}
+        onDismiss={handlePrDismiss}
       />
 
       {/* HU Explainer modal */}
@@ -800,21 +579,12 @@ export function ActiveWorkoutScreen({ route, navigation }: any) {
   );
 }
 
-// ─── Helper ──────────────────────────────────────────────────────────────────
-
-function getWeekMonday(): string {
-  const now = new Date();
-  const day = now.getDay();
-  const diff = day === 0 ? 6 : day - 1;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - diff);
-  return monday.toISOString().split('T')[0];
-}
-
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: c.bg.base },
+  loadingCenter: { flex: 1, justifyContent: 'center' as const, alignItems: 'center' as const },
+  loadingText: { marginTop: spacing[3], fontSize: typography.size.sm },
 
   topBar: {
     flexDirection: 'row',
@@ -881,25 +651,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   overflowMenuItemText: {
     color: c.text.primary,
     fontSize: typography.size.base,
-    fontWeight: typography.weight.medium,
-  },
-
-  scroll: { flex: 1 },
-  scrollContent: { padding: spacing[4], paddingBottom: spacing[4] },
-
-  addExerciseBtn: {
-    backgroundColor: c.bg.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: c.border.default,
-    borderStyle: 'dashed',
-    paddingVertical: spacing[4],
-    alignItems: 'center',
-    marginBottom: spacing[4],
-  },
-  addExerciseText: {
-    color: c.accent.primary,
-    fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
   },
 });

@@ -1,7 +1,4 @@
-/**
- * Readiness score color and label utilities.
- * Pure functions — no side effects.
- */
+import { getThemeColors, type ThemeColors } from '../hooks/useThemeColors';
 
 /** Safely clamp a score to [0, 100], returning 0 for NaN/undefined. */
 export function clampScore(score: number | null | undefined): number {
@@ -9,11 +6,11 @@ export function clampScore(score: number | null | undefined): number {
   return Math.max(0, Math.min(Math.round(score), 100));
 }
 
-export function getReadinessColor(score: number | null | undefined): string {
+export function getReadinessColor(score: number | null | undefined, c: ThemeColors = getThemeColors()): string {
   const s = clampScore(score);
-  if (s >= 70) return '#4CAF50';
-  if (s >= 40) return '#FFC107';
-  return '#F44336';
+  if (s >= 70) return c.semantic.positive;
+  if (s >= 40) return c.semantic.warning;
+  return c.semantic.negative;
 }
 
 export function getReadinessLabel(score: number | null | undefined): string {

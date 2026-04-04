@@ -67,6 +67,7 @@ export function LifestyleStep({ onNext }: Props) {
   // Live TDEE activity component
   const age = computeAge(birthYear, birthMonth);
   const { dailyActivity, perSession } = useMemo(() => {
+    if (!sex) return { dailyActivity: 0, perSession: 0 };
     const bmr = computeBMR(weightKg, heightCm, age, sex, bodyFatPct ?? undefined);
     if (bmr <= 0) return { dailyActivity: 0, perSession: 0 };
     const neat = computeNEAT(bmr, activityLevel, weightKg);
@@ -171,7 +172,12 @@ export function LifestyleStep({ onNext }: Props) {
 
       {/* Next button */}
       {onNext && (
-        <Button title="Next" onPress={onNext} style={styles.nextBtn} />
+        <Button
+          title="Next"
+          onPress={onNext}
+          disabled={exerciseSessionsPerWeek > 0 && exerciseTypes.length === 0}
+          style={styles.nextBtn}
+        />
       )}
     </ScrollView>
   );

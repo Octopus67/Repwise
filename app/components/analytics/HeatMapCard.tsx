@@ -8,20 +8,7 @@ import { BodyHeatMap } from './BodyHeatMap';
 import { DrillDownModal } from './DrillDownModal';
 import { getWeekStart, formatFrequency } from '../../utils/muscleVolumeLogic';
 import api from '../../services/api';
-
-interface MuscleGroupVolume {
-  muscle_group: string;
-  effective_sets: number;
-  frequency: number;
-  volume_status: string;
-  mev: number;
-  mav: number;
-  mrv: number;
-  // WNS fields (present when engine='wns')
-  hypertrophy_units?: number;
-  gross_stimulus?: number;
-  atrophy_effect?: number;
-}
+import type { MuscleGroupVolume } from '../../types/analytics';
 
 export function HeatMapCard() {
   const c = useThemeColors();

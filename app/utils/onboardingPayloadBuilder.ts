@@ -1,16 +1,18 @@
 import { computeAge } from '../store/onboardingSlice';
 import type { OnboardingWizardState } from '../store/onboardingSlice';
+import type { GoalType, ActivityLevel, Sex } from '../types/onboarding';
+import { mapGoalTypeToBackend, mapActivityLevelToBackend } from '../types/onboarding';
 
 export interface OnboardingCompletePayload {
   age_years: number;
-  sex: 'male' | 'female';
+  sex: Sex;
   weight_kg: number;
   height_cm: number;
   body_fat_pct: number | null;
-  activity_level: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
+  activity_level: ActivityLevel;
   exercise_sessions_per_week: number;
   exercise_types: string[];
-  goal_type: 'cutting' | 'maintaining' | 'bulking' | 'recomposition';
+  goal_type: GoalType;
   goal_rate_per_week: number;
   diet_style: 'balanced' | 'high_protein' | 'low_carb' | 'keto';
   protein_per_kg: number;
@@ -20,39 +22,12 @@ export interface OnboardingCompletePayload {
   meal_frequency: number;
 }
 
-type FrontendGoalType = 'lose_fat' | 'build_muscle' | 'maintain' | 'eat_healthier' | 'recomposition';
-type BackendGoalType = 'cutting' | 'maintaining' | 'bulking' | 'recomposition';
-type FrontendActivityLevel = 'sedentary' | 'lightly_active' | 'moderately_active' | 'highly_active' | 'very_highly_active';
-type BackendActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
-
-export function mapGoalTypeToBackend(frontend: FrontendGoalType): BackendGoalType {
-  const map: Record<FrontendGoalType, BackendGoalType> = {
-    'lose_fat': 'cutting',
-    'build_muscle': 'bulking',
-    'maintain': 'maintaining',
-    'eat_healthier': 'maintaining',
-    'recomposition': 'recomposition',
-  };
-  return map[frontend] || 'maintaining';
-}
-
-export function mapActivityLevelToBackend(frontend: FrontendActivityLevel): BackendActivityLevel {
-  const map: Record<FrontendActivityLevel, BackendActivityLevel> = {
-    'sedentary': 'sedentary',
-    'lightly_active': 'light',
-    'moderately_active': 'moderate',
-    'highly_active': 'very_active',
-    'very_highly_active': 'very_active',
-  };
-  return map[frontend] || 'moderate';
-}
-
 export function buildOnboardingPayload(store: OnboardingWizardState): OnboardingCompletePayload {
   const age_years = computeAge(store.birthYear, store.birthMonth);
 
   return {
     age_years,
-    sex: store.sex,
+    sex: store.sex ?? 'male',
     weight_kg: store.weightKg,
     height_cm: store.heightCm,
     body_fat_pct: store.bodyFatSkipped ? null : store.bodyFatPct,

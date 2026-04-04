@@ -110,7 +110,7 @@ export function ProgressPhotoGrid({ photos, onPhotosChange, loading }: ProgressP
         style: 'destructive',
         onPress: async () => {
           try {
-            await deleteAsync(photo.uri, { idempotent: true }).catch(() => {});
+            await deleteAsync(photo.uri, { idempotent: true }).catch(() => {}); // Intentional: photo delete best-effort
             const updated = photos.filter((p) => p.id !== photo.id);
             onPhotosChange(updated);
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));

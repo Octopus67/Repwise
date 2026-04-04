@@ -9,16 +9,16 @@
  */
 
 import { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import Animated, { useSharedValue, useAnimatedProps, withTiming } from 'react-native-reanimated';
-import { getTimerColor } from '../../utils/restDurationV2';
+import { getTimerRingColor } from '../../utils/restDurationV2';
 import { formatRestTimer } from '../../utils/durationFormat';
 import { colors, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors } from '../../hooks/useThemeColors';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 
-export { getTimerColor };
+export { getTimerRingColor };
 
 // ─── Default geometry (backward compat) ──────────────────────────────────────
 
@@ -40,7 +40,8 @@ export interface RestTimerRingProps {
 
 // ─── Animated SVG circle ─────────────────────────────────────────────────────
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const isWeb = Platform.OS === 'web';
+const AnimatedCircle = isWeb ? Circle : Animated.createAnimatedComponent(Circle);
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -78,7 +79,7 @@ export function RestTimerRing({
     strokeDashoffset: animatedOffset.value,
   }));
 
-  const colorName = getTimerColor(remainingSeconds);
+  const colorName = getTimerRingColor(remainingSeconds);
   const ringColor =
     colorName === 'green'
       ? c.semantic.positive
@@ -99,18 +100,35 @@ export function RestTimerRing({
           fill="none"
         />
         {/* Progress arc */}
-        <AnimatedCircle
-          cx={center}
-          cy={center}
-          r={r}
-          stroke={ringColor}
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeDasharray={circumference}
-          animatedProps={animatedProps}
-          strokeLinecap="round"
-          transform={`rotate(-90 ${center} ${center})`}
-        />
+        {isWeb ? (
+          <Circle
+            cx={center}
+            cy={center}
+            r={r}
+            stroke={ringColor}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeDasharray={circumference}
+            strokeDashoffset={durationSeconds > 0
+              ? circumference * Math.min(1, Math.max(0, 1 - remainingSeconds / durationSeconds))
+              : 0}
+            strokeLinecap="round"
+            transform={`rotate(-90 ${center} ${center})`}
+          />
+        ) : (
+          <AnimatedCircle
+            cx={center}
+            cy={center}
+            r={r}
+            stroke={ringColor}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeDasharray={circumference}
+            animatedProps={animatedProps}
+            strokeLinecap="round"
+            transform={`rotate(-90 ${center} ${center})`}
+          />
+        )}
       </Svg>
 
       {/* Center text — hidden in compact mode (time shown externally) */}

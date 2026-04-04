@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Alert,
-  FlatList, Image, ActivityIndicator,
+  FlatList, Image, ActivityIndicator, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -17,6 +17,7 @@ import { saveImageToGallery } from '../../services/sharing';
 import { radius, spacing, typography, shadows } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import api from '../../services/api';
+import { uploadProgressPhoto } from '../../services/photoUpload';
 
 const PHOTO_DIR = `${documentDirectory ?? ''}progress_photos/`;
 const STORAGE_KEY = 'progress_photo_paths';
@@ -26,6 +27,7 @@ interface PhotoEntry {
   id: string;
   capture_date: string;
   created_at: string;
+  image_url?: string | null;
 }
 
 export function ProgressPhotosScreen() {
@@ -37,9 +39,7 @@ export function ProgressPhotosScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { loadData(); }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [res, stored] = await Promise.all([
@@ -53,7 +53,17 @@ export function ProgressPhotosScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  if (Platform.OS === 'web') {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Progress photos are not available on web. Use the mobile app.</Text>
+      </View>
+    );
+  }
 
   const saveLocally = async (uri: string): Promise<string> => {
     const dir = await getInfoAsync(PHOTO_DIR);
@@ -86,7 +96,17 @@ export function ProgressPhotosScreen() {
     try {
       const localUri = await saveLocally(result.assets[0].uri);
       const today = new Date().toISOString().split('T')[0];
-      const { data } = await api.post('progress-photos', { capture_date: today });
+
+      let r2Key: string | undefined;
+      try {
+        const filename = `${Date.now()}.jpg`;
+        const uploadResult = await uploadProgressPhoto(result.assets[0].uri, filename);
+        r2Key = uploadResult.r2Key;
+      } catch (err: unknown) {
+        console.warn('R2 upload failed, photo saved locally only:', String(err));
+      }
+
+      const { data } = await api.post('progress-photos', { capture_date: today, r2_key: r2Key });
       const updated = { ...pathMap, [data.id]: localUri };
       setPathMap(updated);
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
@@ -107,7 +127,7 @@ export function ProgressPhotosScreen() {
             await api.delete(`progress-photos/${photo.id}`);
             const local = pathMap[photo.id];
             if (local) {
-              await deleteAsync(local, { idempotent: true }).catch(() => {});
+              await deleteAsync(local, { idempotent: true }).catch(() => {}); // Intentional: photo delete best-effort
               const updated = { ...pathMap };
               delete updated[photo.id];
               setPathMap(updated);
@@ -144,7 +164,7 @@ export function ProgressPhotosScreen() {
   };
 
   const renderPhoto = ({ item }: { item: PhotoEntry }) => {
-    const uri = pathMap[item.id];
+    const uri = pathMap[item.id] || item.image_url;
     return (
       <TouchableOpacity style={[styles.photoCard, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]} onLongPress={() => handleDelete(item)} activeOpacity={0.8}>
         {uri ? (

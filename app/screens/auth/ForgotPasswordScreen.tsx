@@ -54,7 +54,7 @@ export function ForgotPasswordScreen({ onNavigateBack, onNavigateResetPassword }
       } else {
         setSubmitted(true);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(extractApiError(err, 'Something went wrong. Please try again.'));
     } finally {
       setLoading(false);
@@ -96,7 +96,7 @@ export function ForgotPasswordScreen({ onNavigateBack, onNavigateResetPassword }
           <Text style={[styles.title, { color: c.text.primary }]}>Reset Password</Text>
         </Animated.View>
         <Animated.View style={subtitleAnim}>
-          <Text style={[styles.subtitle, { color: c.text.secondary }]}>Enter your email and we'll send a reset link.</Text>
+          <Text style={[styles.subtitle, { color: c.text.secondary }]}>No worries — enter your email and we'll send a link to reset your password.</Text>
         </Animated.View>
 
         <Animated.View style={formAnim}>

@@ -29,16 +29,16 @@ export interface CustomExerciseFormData {
   notes: string;
 }
 
-export interface ValidationResult {
-  valid: boolean;
-  errors: Record<string, string>;
-}
+export type { ValidationResult } from '../types/common';
+import type { ValidationResult } from '../types/common';
 
 export function validateCustomExerciseForm(data: CustomExerciseFormData): ValidationResult {
   const errors: Record<string, string> = {};
 
   if (!data.name.trim()) {
     errors.name = 'Exercise name is required.';
+  } else if (data.name.trim().length < 2) {
+    errors.name = 'Name must be at least 2 characters.';
   } else if (data.name.trim().length > 200) {
     errors.name = 'Name must be 200 characters or fewer.';
   }

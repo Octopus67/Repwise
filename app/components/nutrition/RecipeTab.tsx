@@ -6,18 +6,7 @@ import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { scaleMacros } from '../../utils/macroScaling';
 import api from '../../services/api';
-
-interface FoodItem {
-  id: string;
-  name: string;
-  calories: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-  serving_size: number;
-  serving_unit: string;
-  total_servings?: number | null;
-}
+import type { FoodItem } from '../../types/nutrition';
 
 interface Props {
   selectedDate: string;
@@ -49,7 +38,7 @@ export function RecipeTab({ selectedDate, onSuccess, onDayTotalsUpdate }: Props)
   const handleLogRecipe = async () => {
     if (!selectedRecipe) return;
     const servings = parseFloat(recipeServings);
-    if (isNaN(servings) || servings <= 0) { Alert.alert('Invalid servings', 'Please enter a positive number.'); return; }
+    if (isNaN(servings) || servings <= 0 || servings > 99) { Alert.alert('Invalid servings', 'Please enter a number between 0.1 and 99.'); return; }
     setLoggingRecipe(true);
     try {
       const scaled = scaleMacros(selectedRecipe, servings);
@@ -65,7 +54,7 @@ export function RecipeTab({ selectedDate, onSuccess, onDayTotalsUpdate }: Props)
       setSelectedRecipe(null); setRecipeServings('1');
       onSuccess();
       Alert.alert('Logged', `${selectedRecipe.name} (${servings} serving${servings !== 1 ? 's' : ''}) logged.`);
-    } catch { Alert.alert('Error', 'Failed to log recipe.'); }
+    } catch (err) { console.warn('[RecipeTab] log failed:', String(err)); Alert.alert('Error', 'Failed to log recipe.'); }
     finally { setLoggingRecipe(false); }
   };
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
+import { getApiErrorMessage } from '../utils/errors';
 import type { WNSWeeklyResponse } from '../types/volume';
 
 interface UseWNSVolumeResult {
@@ -28,8 +29,8 @@ export function useWNSVolume(weekStart: string, refreshKey?: string | number): U
         params: { week_start: weekStart },
       });
       setData(res.data);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail ?? 'Failed to load volume data');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Failed to load volume data'));
       setData(null);
     } finally {
       setLoading(false);

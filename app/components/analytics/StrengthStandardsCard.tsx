@@ -3,16 +3,8 @@ import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
 import { Icon } from '../common/Icon';
-
-interface Classification {
-  exercise_name: string;
-  e1rm_kg: number;
-  bodyweight_kg: number;
-  bodyweight_ratio: number;
-  level: string;
-  next_level: string | null;
-  next_level_threshold_kg: number | null;
-}
+import type { Classification } from '../../types/analytics';
+import { formatExerciseName } from '../../utils/formatting';
 
 interface StrengthStandardsCardProps {
   classifications: Classification[];
@@ -25,10 +17,6 @@ const getLEVEL_COLORS = (c: ThemeColors): Record<string, string> => ({
   advanced: c.accent.primary,
   elite: c.premium.gold,
 });
-
-function formatExerciseName(name: string): string {
-  return name.split(' ').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
-}
 
 function LevelBadge({ level }: { level: string }) {
   const c = useThemeColors();

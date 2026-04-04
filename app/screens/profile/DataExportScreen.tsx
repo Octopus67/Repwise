@@ -18,6 +18,7 @@ import { Button } from '../../components/common/Button';
 import { SectionHeader } from '../../components/common/SectionHeader';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
 import api, { API_BASE_URL } from '../../services/api';
+import { getApiErrorMessage } from '../../utils/errors';
 
 type ExportFormat = 'json' | 'csv' | 'pdf';
 type ExportStatus = 'pending' | 'processing' | 'completed' | 'failed';
@@ -53,7 +54,7 @@ export function DataExportScreen() {
 
   const fetchHistory = useCallback(async () => {
     try {
-      const res = await api.get('/api/v1/export/history');
+      const res = await api.get('export/history');
       setHistory(res.data);
     } catch {
       // silent
@@ -85,11 +86,10 @@ export function DataExportScreen() {
     setRequesting(true);
     setError(null);
     try {
-      await api.post('/api/v1/export/request', { format: selectedFormat });
+      await api.post('export/request', { format: selectedFormat });
       await fetchHistory();
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.message || 'Failed to request export. Try again later.';
+    } catch (err: unknown) {
+      const msg = getApiErrorMessage(err, 'Failed to request export. Try again later.');
       setError(msg);
     } finally {
       setRequesting(false);
@@ -101,7 +101,7 @@ export function DataExportScreen() {
       const url = `${API_BASE_URL}/api/v1/export/download/${exportId}`;
       if (Platform.OS === 'web') {
         // For web, open authenticated URL via blob
-        const res = await api.get(`/api/v1/export/download/${exportId}`, { responseType: 'blob' });
+        const res = await api.get(`export/download/${exportId}`, { responseType: 'blob' });
         const blobUrl = URL.createObjectURL(res.data);
         window.open(blobUrl, '_blank');
       } else {
@@ -134,7 +134,7 @@ export function DataExportScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await api.delete(`/api/v1/export/${exportId}`);
+              await api.delete(`export/${exportId}`);
               await fetchHistory();
             } catch {
               Alert.alert('Error', 'Could not delete export.');

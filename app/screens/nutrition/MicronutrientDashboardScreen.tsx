@@ -22,8 +22,8 @@ import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { useMicroDashboard, NutrientSummary, DeficiencyAlert } from '../../hooks/useMicroDashboard';
 import {
-  getStatusColor,
-  getStatusLabel,
+  getNutrientStatusColor,
+  getNutrientStatusLabel,
   getScoreColor,
   getScoreLabel,
   formatNutrientValue,
@@ -33,9 +33,9 @@ import { getWeekStart, formatWeekRange, getAdjacentWeek, isCurrentOrFutureWeek }
 
 function NutrientRow({ nutrient }: { nutrient: NutrientSummary }) {
   const c = useThemeColors();
-  const hasData = nutrient.status !== 'no_data' && (nutrient as any).has_data !== false;
+  const hasData = nutrient.status !== 'no_data' && nutrient.has_data !== false;
   const barWidth = hasData ? clampPct(nutrient.rda_pct) : 0;
-  const barColor = hasData ? getStatusColor(nutrient.status) : '#6B7280';
+  const barColor = hasData ? getNutrientStatusColor(nutrient.status) : '#6B7280';
 
   return (
     <View style={getStyles().nutrientRow}>

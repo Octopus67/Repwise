@@ -3,11 +3,13 @@
  * All functions clamp inputs to [0, 100] and guard against NaN/undefined.
  */
 
-export function getFatigueColor(score: number): string {
+import { getThemeColors, type ThemeColors } from '../hooks/useThemeColors';
+
+export function getFatigueColor(score: number, c: ThemeColors = getThemeColors()): string {
   const s = clampScore(score);
-  if (s <= 30) return '#4CAF50';
-  if (s <= 60) return '#FFC107';
-  return '#F44336';
+  if (s <= 30) return c.semantic.positive;
+  if (s <= 60) return c.semantic.warning;
+  return c.semantic.negative;
 }
 
 export function getFatigueLabel(score: number): string {

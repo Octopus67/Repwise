@@ -176,9 +176,9 @@ describe('Macro Split — diet style variations', () => {
     expect(ratio).toBeLessThan(3.5);
   });
 
-  test('low_carb split has more fat than carbs', () => {
+  test('low_carb split has more fat calories than carb calories', () => {
     const result = computeMacroSplit(budget, weightKg, proteinPerKg, 'low_carb');
-    expect(result.fatG).toBeGreaterThan(result.carbsG);
+    expect(result.fatKcal).toBeGreaterThan(result.carbsKcal);
   });
 
   test('fat floor is enforced for very high protein budget', () => {
