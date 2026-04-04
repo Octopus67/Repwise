@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from typing import Optional
 
-_DATA_FILE = Path(__file__).resolve().parent.parent.parent.parent / "data" / "exercises.json"
+_DATA_FILE = Path(__file__).resolve().parent / "exercises_data.json"
 
 
 def _load_exercises() -> list[dict]:
