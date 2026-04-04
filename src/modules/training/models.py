@@ -34,7 +34,7 @@ class TrainingSession(SoftDeleteMixin, AuditLogMixin, Base):
 
     __tablename__ = "training_sessions"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True, nullable=False)
     session_date: Mapped[date] = mapped_column(Date, index=True, nullable=False)
     exercises: Mapped[list[dict[str, Any]]] = mapped_column(
         JSONB,
@@ -74,7 +74,7 @@ class WorkoutTemplate(SoftDeleteMixin, AuditLogMixin, Base):
 
     __tablename__ = "workout_templates"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     name: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[Optional[str]] = mapped_column(nullable=True)
     exercises: Mapped[list[dict[str, Any]]] = mapped_column(
@@ -112,7 +112,7 @@ class CustomExercise(SoftDeleteMixin, Base):
 
     __tablename__ = "custom_exercises"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     muscle_group: Mapped[str] = mapped_column(String(50), nullable=False)
     secondary_muscles: Mapped[list] = mapped_column(
@@ -144,7 +144,7 @@ class PersonalRecord(Base):
 
     __tablename__ = "personal_records"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     exercise_name: Mapped[str] = mapped_column(String(200), nullable=False)
     pr_type: Mapped[str] = mapped_column(String(20), nullable=False, default="weight")
     reps: Mapped[int] = mapped_column(Integer, nullable=False)

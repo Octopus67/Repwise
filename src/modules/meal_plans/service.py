@@ -240,7 +240,7 @@ class MealPlanService:
 
     async def delete_plan(self, user_id: uuid.UUID, plan_id: uuid.UUID) -> None:
         plan = await self.get_plan(user_id, plan_id)
-        plan.deleted_at = datetime.now(timezone.utc)
+        plan.deleted_at = datetime.utcnow()
         await self.db.flush()
 
     # ------------------------------------------------------------------

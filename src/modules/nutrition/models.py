@@ -6,7 +6,7 @@ from typing import Optional
 import uuid
 from datetime import date
 
-from sqlalchemy import Date, Float, Index, String, text
+from sqlalchemy import Date, Float, ForeignKey, Index, String, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -25,7 +25,7 @@ class NutritionEntry(Base, SoftDeleteMixin, AuditLogMixin):
 
     __tablename__ = "nutrition_entries"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
     meal_name: Mapped[str] = mapped_column(String(255))
     food_name: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     calories: Mapped[float] = mapped_column(Float)

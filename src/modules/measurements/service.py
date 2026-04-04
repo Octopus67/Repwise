@@ -96,7 +96,7 @@ class MeasurementService:
     async def get_trend(self, user_id: uuid.UUID, days: int = 90) -> list[TrendPoint]:
         from datetime import timedelta, timezone
 
-        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        cutoff = datetime.utcnow() - timedelta(days=days)
         stmt = (
             select(BodyMeasurement)
             .where(

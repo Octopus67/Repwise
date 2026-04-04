@@ -243,7 +243,7 @@ class CoachingService:
         validate_session_transition(session.status, CoachingSessionStatus.COMPLETED)
         session.status = CoachingSessionStatus.COMPLETED
         session.notes = data.notes
-        session.completed_at = datetime.now(timezone.utc)
+        session.completed_at = datetime.utcnow()
 
         await CoachingSession.write_audit(
             self.session,

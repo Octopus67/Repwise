@@ -26,7 +26,7 @@ class AdaptiveSnapshot(Base):
 
     __tablename__ = "adaptive_snapshots"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True, nullable=False)
     target_calories: Mapped[float] = mapped_column(Float, nullable=False)
     target_protein_g: Mapped[float] = mapped_column(Float, nullable=False)
     target_carbs_g: Mapped[float] = mapped_column(Float, nullable=False)

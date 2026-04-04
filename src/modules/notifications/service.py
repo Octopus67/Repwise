@@ -54,7 +54,7 @@ class NotificationService:
             existing.user_id = user_id
             existing.platform = data.platform
             existing.is_active = True
-            existing.last_used_at = datetime.now(timezone.utc)
+            existing.last_used_at = datetime.utcnow()
             await self.session.flush()
             return existing
 
@@ -63,7 +63,7 @@ class NotificationService:
             platform=data.platform,
             token=data.token,
             is_active=True,
-            last_used_at=datetime.now(timezone.utc),
+            last_used_at=datetime.utcnow(),
         )
         self.session.add(device)
         await self.session.flush()
@@ -153,7 +153,7 @@ class NotificationService:
         self, user_id: uuid.UUID, notification_ids: list[uuid.UUID],
     ) -> int:
         """Mark notifications as read. Returns count of updated rows."""
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
         stmt = (
             update(NotificationLog)
             .where(

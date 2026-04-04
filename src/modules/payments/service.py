@@ -237,8 +237,10 @@ class PaymentService:
     async def _process_webhook_event(self, event: WebhookEvent) -> None:
         """Update subscription status based on webhook event type."""
         # Try to find existing subscription by provider_subscription_id
+        # Audit fix #6: exclude soft-deleted subscriptions to prevent reactivation
         stmt = select(Subscription).where(
-            Subscription.provider_subscription_id == event.provider_subscription_id
+            Subscription.provider_subscription_id == event.provider_subscription_id,
+            Subscription.deleted_at.is_(None),
         )
         result = await self.session.execute(stmt)
         subscription = result.scalar_one_or_none()

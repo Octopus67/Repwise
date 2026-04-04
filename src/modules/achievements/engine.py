@@ -479,7 +479,7 @@ class AchievementEngine:
         ua = UserAchievement(
             user_id=user_id,
             achievement_id=achievement_id,
-            unlocked_at=datetime.now(timezone.utc),
+            unlocked_at=datetime.utcnow(),
             trigger_data=trigger_data,
         )
         try:

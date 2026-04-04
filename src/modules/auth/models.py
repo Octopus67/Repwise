@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Index, String, text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -85,7 +85,7 @@ class PasswordResetCode(Base):
 
     __tablename__ = "password_reset_codes"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(nullable=False, index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     code_hash: Mapped[str] = mapped_column(String(128), nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
@@ -111,7 +111,7 @@ class EmailVerificationCode(Base):
 
     __tablename__ = "email_verification_codes"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(nullable=False, index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     code_hash: Mapped[str] = mapped_column(String(128), nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

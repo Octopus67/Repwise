@@ -3,7 +3,7 @@
 import uuid
 from datetime import date
 
-from sqlalchemy import Date, Integer, Float, Index, UniqueConstraint, text
+from sqlalchemy import Date, Integer, Float, ForeignKey, Index, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -16,7 +16,7 @@ class RecoveryCheckin(Base):
 
     __tablename__ = "recovery_checkins"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True, nullable=False)
     soreness: Mapped[int] = mapped_column(Integer, nullable=False)
     stress: Mapped[int] = mapped_column(Integer, nullable=False)
     sleep_quality: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -32,7 +32,7 @@ class ReadinessScore(Base):
 
     __tablename__ = "readiness_scores"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(index=True, nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True, nullable=False)
     score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     score_date: Mapped[date] = mapped_column(Date, nullable=False)
     hrv_ms: Mapped[Optional[float]] = mapped_column(Float, nullable=True)

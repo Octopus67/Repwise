@@ -345,7 +345,7 @@ class AuthService:
 
         code = generate_otp()
         code_hash = bcrypt.hashpw(code.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-        expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+        expires_at = datetime.utcnow() + timedelta(minutes=10)
 
         # Invalidate all existing unused reset codes for this user
         await self.session.execute(
@@ -377,7 +377,7 @@ class AuthService:
             bcrypt.checkpw(b"dummy", DUMMY_HASH.encode("utf-8"))
             return False
 
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
         stmt = (
             select(PasswordResetCode)
             .where(
@@ -394,7 +394,7 @@ class AuthService:
             if bcrypt.checkpw(code.encode("utf-8"), rc.code_hash.encode("utf-8")):
                 rc.used = True
                 user.hashed_password = _hash_password(new_password)
-                user.password_changed_at = datetime.now(timezone.utc)
+                user.password_changed_at = datetime.utcnow()
                 await self.session.flush()
                 log_account_event(user_id=str(user.id), action="password_reset", ip=ip)
                 return True
@@ -411,7 +411,7 @@ class AuthService:
 
         code = generate_otp()
         code_hash = bcrypt.hashpw(code.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-        expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+        expires_at = datetime.utcnow() + timedelta(minutes=10)
 
         # Invalidate all existing unused verification codes for this user
         await self.session.execute(
@@ -432,7 +432,7 @@ class AuthService:
 
     async def verify_email(self, user_id: uuid.UUID, code: str) -> bool:
         """Verify the OTP code and mark the user's email as verified."""
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
         stmt = (
             select(EmailVerificationCode)
             .where(
@@ -457,7 +457,7 @@ class AuthService:
 
     async def resend_verification_code(self, user: User) -> None:
         """Resend verification code with rate limiting (max 3 per 15 min)."""
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
         window_start = now - timedelta(minutes=15)
 
         stmt = select(EmailVerificationCode).where(
@@ -520,7 +520,7 @@ def _verify_password(plain: str, hashed: Optional[str]) -> bool:
 
 def _generate_tokens(user_id: uuid.UUID) -> AuthTokens:
     """Create an access + refresh JWT pair."""
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
     access_exp = now + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
     refresh_exp = now + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
 

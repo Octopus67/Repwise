@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import func
+from sqlalchemy import DateTime, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -22,10 +22,12 @@ class Base(DeclarativeBase):
         server_default=func.gen_random_uuid(),
     )
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),  # Audit fix #3: timezone-aware timestamps
         server_default=func.now(),
         default=None,
     )
     updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),  # Audit fix #3: timezone-aware timestamps
         server_default=func.now(),
         onupdate=func.now(),
         default=None,

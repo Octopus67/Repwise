@@ -127,9 +127,11 @@ class ArticleFavorite(Base):
 
     __tablename__ = "article_favorites"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(nullable=False, index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     article_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("content_articles.id"), nullable=False, index=True
+        ForeignKey("content_articles.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     __table_args__ = (

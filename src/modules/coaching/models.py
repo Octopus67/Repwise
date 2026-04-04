@@ -27,7 +27,7 @@ class CoachProfile(Base, AuditLogMixin):
     __tablename__ = "coach_profiles"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id"), unique=True, index=True,
+        ForeignKey("users.id", ondelete="CASCADE"), unique=True, index=True,
     )
     bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     specializations: Mapped[Optional[dict[str, Any]]] = mapped_column(
@@ -45,7 +45,7 @@ class CoachingRequest(Base, AuditLogMixin):
     __tablename__ = "coaching_requests"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id"), index=True,
+        ForeignKey("users.id", ondelete="CASCADE"), index=True,
     )
     status: Mapped[str] = mapped_column(String(20), default="pending")
     goals: Mapped[str] = mapped_column(Text)
@@ -75,10 +75,10 @@ class CoachingSession(Base, AuditLogMixin):
     __tablename__ = "coaching_sessions"
 
     request_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("coaching_requests.id"), unique=True,
+        ForeignKey("coaching_requests.id", ondelete="CASCADE"), unique=True,
     )
     coach_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("coach_profiles.id"), index=True,
+        ForeignKey("coach_profiles.id", ondelete="CASCADE"), index=True,
     )
     status: Mapped[str] = mapped_column(String(20), default="scheduled")
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

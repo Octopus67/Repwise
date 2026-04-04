@@ -13,6 +13,8 @@ import uuid
 from datetime import date, timedelta
 
 from sqlalchemy import func, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -191,36 +193,35 @@ class UserService:
         # Validate bodyweight bounds
         if data.weight_kg < 20 or data.weight_kg > 500:
             raise ValidationError("Bodyweight must be between 20kg and 500kg")
-            
-        # Check for existing entry on the same date
-        stmt = select(BodyweightLog).where(
-            BodyweightLog.user_id == user_id,
-            BodyweightLog.recorded_date == data.recorded_date,
-        )
-        result = await self.db.execute(stmt)
-        existing = result.scalar_one_or_none()
 
-        if existing:
-            existing.weight_kg = data.weight_kg
-            await self.db.flush()
-            await self.db.refresh(existing)
-            
-            # Auto-recalculate targets if weight has changed significantly
-            await self._maybe_auto_recalculate(user_id)
-            
-            return BodyweightLogResponse.model_validate(existing)
+        # Audit fix #5: atomic upsert via INSERT ... ON CONFLICT DO UPDATE
+        # Prevents race condition when two concurrent requests upsert the same date
+        dialect_name = self.db.bind.dialect.name if self.db.bind else "postgresql"
+        insert_fn = sqlite_insert if dialect_name == "sqlite" else pg_insert
 
-        log = BodyweightLog(
+        stmt = insert_fn(BodyweightLog).values(
             user_id=user_id,
             weight_kg=data.weight_kg,
             recorded_date=data.recorded_date,
         )
-        self.db.add(log)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["user_id", "recorded_date"],
+            set_={"weight_kg": stmt.excluded.weight_kg, "updated_at": func.now()},
+        )
+        await self.db.execute(stmt)
         await self.db.flush()
-        
+
+        # Re-fetch the row to return it
+        fetch_stmt = select(BodyweightLog).where(
+            BodyweightLog.user_id == user_id,
+            BodyweightLog.recorded_date == data.recorded_date,
+        )
+        result = await self.db.execute(fetch_stmt)
+        log = result.scalar_one()
+
         # Auto-recalculate targets if weight has changed significantly
         await self._maybe_auto_recalculate(user_id)
-        
+
         return BodyweightLogResponse.model_validate(log)
 
     async def get_bodyweight_history(

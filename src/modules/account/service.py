@@ -46,7 +46,7 @@ class AccountService:
         if user.deleted_at is not None:
             raise UnprocessableError("Account is already deactivated")
 
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
         user.deleted_at = now
 
         # Cancel active subscription (Requirement 22.4)
@@ -90,7 +90,7 @@ class AccountService:
             raise UnprocessableError("Account is not deactivated")
 
         # Check grace period
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
         deadline = user.deleted_at + timedelta(days=GRACE_PERIOD_DAYS)
         if now > deadline:
             raise UnprocessableError(
@@ -124,7 +124,7 @@ class AccountService:
         Returns the number of accounts permanently deleted.
         Per-item isolation: one failed delete does not block others.
         """
-        cutoff = datetime.now(timezone.utc) - timedelta(days=GRACE_PERIOD_DAYS)
+        cutoff = datetime.utcnow() - timedelta(days=GRACE_PERIOD_DAYS)
 
         stmt = select(User).where(
             User.deleted_at.isnot(None),

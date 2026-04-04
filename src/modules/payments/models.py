@@ -6,7 +6,7 @@ from typing import Optional
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, Index, String, text
+from sqlalchemy import DateTime, Float, ForeignKey, Index, String, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -26,7 +26,7 @@ class Subscription(Base, SoftDeleteMixin):
 
     __tablename__ = "subscriptions"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
     provider_name: Mapped[str] = mapped_column(String(50))
     provider_subscription_id: Mapped[Optional[str]] = mapped_column(
         String(255), nullable=True
@@ -61,7 +61,7 @@ class PaymentTransaction(Base):
     __tablename__ = "payment_transactions"
 
     subscription_id: Mapped[uuid.UUID] = mapped_column(index=True)
-    user_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
     provider_name: Mapped[str] = mapped_column(String(50))
     provider_transaction_id: Mapped[Optional[str]] = mapped_column(
         String(255), nullable=True

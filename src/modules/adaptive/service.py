@@ -33,7 +33,7 @@ class AdaptiveService:
         from datetime import timedelta
         from src.modules.measurements.models import BodyMeasurement
 
-        cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+        cutoff = datetime.utcnow() - timedelta(days=30)
         stmt = (
             select(BodyMeasurement)
             .where(
@@ -187,7 +187,7 @@ class AdaptiveService:
             )
 
         reasons: list[str] = []
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
 
         # Trigger 3: staleness
         days_since = (now - last_snapshot.created_at.replace(tzinfo=timezone.utc)).days

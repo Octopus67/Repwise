@@ -19,7 +19,7 @@ class ShareEvent(Base):
     session_id = Column(UUID(as_uuid=True), ForeignKey("training_sessions.id", ondelete="SET NULL"), nullable=True, index=True)
     share_type = Column(String(32), nullable=False, default="workout")  # workout | achievement
     platform = Column(String(32), nullable=True)  # instagram | twitter | generic
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.utcnow(), nullable=False)
 
 
 class Referral(Base):
@@ -29,4 +29,4 @@ class Referral(Base):
     referrer_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     visitor_ip = Column(String(45), nullable=True)
     user_agent = Column(Text, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.utcnow(), nullable=False)

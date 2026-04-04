@@ -6,7 +6,7 @@ from typing import Optional
 import uuid
 from datetime import date
 
-from sqlalchemy import Boolean, Date, Float, Index, String, text
+from sqlalchemy import Boolean, Date, Float, ForeignKey, Index, String, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -24,7 +24,7 @@ class HealthReport(Base, SoftDeleteMixin, AuditLogMixin):
 
     __tablename__ = "health_reports"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
     report_date: Mapped[date] = mapped_column(Date, nullable=False)
     markers: Mapped[Optional[dict]] = mapped_column(
         JSONB, nullable=True, server_default=text("'{}'::jsonb")

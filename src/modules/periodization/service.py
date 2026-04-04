@@ -130,7 +130,7 @@ class PeriodizationService:
         """Soft-delete a training block."""
         logger.info("Soft-deleting training block %s for user %s", block_id, user_id)
         block = await self._get_or_404(user_id, block_id)
-        block.deleted_at = datetime.now(timezone.utc)
+        block.deleted_at = datetime.utcnow()
 
         await TrainingBlock.write_audit(
             self.session,

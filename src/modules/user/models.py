@@ -6,7 +6,7 @@ Tables: UserProfiles, UserMetrics, BodyweightLogs, UserGoals.
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Date, Float, ForeignKey, Index, String, func
+from sqlalchemy import Date, Float, ForeignKey, Index, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -85,6 +85,8 @@ class BodyweightLog(Base):
 
     __table_args__ = (
         Index("ix_bodyweight_logs_user_date", "user_id", recorded_date.desc()),
+        # Audit fix #5: prevent race condition on concurrent upserts for same user+date
+        UniqueConstraint("user_id", "recorded_date", name="uq_bodyweight_user_date"),
     )
 
 

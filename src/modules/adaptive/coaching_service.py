@@ -271,7 +271,7 @@ class CoachingService:
         snapshot = snapshot_result.scalar_one_or_none()
         
         suggestion.status = "accepted"
-        suggestion.resolved_at = datetime.now(timezone.utc)
+        suggestion.resolved_at = datetime.utcnow()
         
         # APPLY the suggested targets by creating a new snapshot
         new_snapshot = AdaptiveSnapshot(
@@ -309,7 +309,7 @@ class CoachingService:
         suggestion.modified_protein_g = modifications.protein_g
         suggestion.modified_carbs_g = modifications.carbs_g
         suggestion.modified_fat_g = modifications.fat_g
-        suggestion.resolved_at = datetime.now(timezone.utc)
+        suggestion.resolved_at = datetime.utcnow()
         
         # Apply modified targets by creating a new snapshot
         new_snapshot = AdaptiveSnapshot(
@@ -331,7 +331,7 @@ class CoachingService:
         """Set status='dismissed'. No target changes."""
         suggestion = await self._get_suggestion(user_id, suggestion_id)
         suggestion.status = "dismissed"
-        suggestion.resolved_at = datetime.now(timezone.utc)
+        suggestion.resolved_at = datetime.utcnow()
         await self.db.flush()
 
     async def get_pending_suggestions(
@@ -340,7 +340,7 @@ class CoachingService:
         """Return all pending suggestions for a user, excluding those older than 14 days."""
         from datetime import datetime, timezone, timedelta
         
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=14)
+        cutoff_date = datetime.utcnow() - timedelta(days=14)
         
         stmt = (
             select(CoachingSuggestion)
@@ -363,7 +363,7 @@ class CoachingService:
         """Return body_fat_pct from the latest measurement within 30 days."""
         from src.modules.measurements.models import BodyMeasurement
 
-        cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+        cutoff = datetime.utcnow() - timedelta(days=30)
         stmt = (
             select(BodyMeasurement)
             .where(
@@ -387,7 +387,7 @@ class CoachingService:
         """
         from src.modules.measurements.models import BodyMeasurement
 
-        cutoff = datetime.now(timezone.utc) - timedelta(weeks=4)
+        cutoff = datetime.utcnow() - timedelta(weeks=4)
         stmt = (
             select(BodyMeasurement)
             .where(
@@ -458,7 +458,7 @@ class CoachingService:
         return result.scalar_one_or_none()
 
     async def _get_today_snapshot(self, user_id: uuid.UUID) -> Optional[AdaptiveSnapshot]:
-        today_start = datetime.now(timezone.utc).replace(
+        today_start = datetime.utcnow().replace(
             hour=0, minute=0, second=0, microsecond=0,
         )
         stmt = (

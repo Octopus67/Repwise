@@ -24,7 +24,7 @@ class UserAchievement(SoftDeleteMixin, AuditLogMixin, Base):
 
     __tablename__ = "user_achievements"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     achievement_id: Mapped[str] = mapped_column(String(100), nullable=False)
     unlocked_at: Mapped[datetime] = mapped_column(nullable=False)
     trigger_data: Mapped[Optional[dict[str, Any]]] = mapped_column(
@@ -46,7 +46,7 @@ class AchievementProgress(Base):
 
     __tablename__ = "achievement_progress"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     progress_type: Mapped[str] = mapped_column(String(50), nullable=False)
     current_value: Mapped[float] = mapped_column(Float, nullable=False, default=0)
     metadata_: Mapped[Optional[dict[str, Any]]] = mapped_column(

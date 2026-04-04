@@ -93,7 +93,7 @@ class FoodDatabaseService:
                 f.food_item_id: f for f in freq_result.scalars().all()
             }
 
-            now = datetime.now(timezone.utc)
+            now = datetime.utcnow()
             frequency_weight = 0.3
             recency_weight = 0.1
 
@@ -825,7 +825,7 @@ class FoodDatabaseService:
         if recipe.created_by != user_id:
             raise ForbiddenError("Only the recipe owner can delete this recipe")
 
-        recipe.deleted_at = datetime.now(timezone.utc)
+        recipe.deleted_at = datetime.utcnow()
         await self.db.flush()
 
     # ------------------------------------------------------------------
