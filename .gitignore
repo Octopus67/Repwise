@@ -12,7 +12,8 @@ dist/
 
 # Environment
 .env
-.env.local
+.env.*
+!.env.example
 
 # IDE
 .DS_Store
@@ -40,3 +41,26 @@ dev.db
 # Downloaded exercise images (run scripts/download_exercise_images.py to fetch)
 static/exercises/
 api_test_results.txt
+
+# Credential files
+*.pem
+*.key
+*.p12
+*.jks
+# Dev artifacts
+exports/
+dev.db.bak
+.yolo-sisyphus/
+.kiro/logs/
+.kiro/memory/
+.kiro/vector-db/
+.kiro/AGENT-STATUS.md
+.kiro/FINAL-AGENT-STATUS.md
+.kiro/IMPLEMENTATION-COMPLETE.md
+.kiro/PHASE-1-FOUNDATION.md
+.kiro/PHASE-1-STATUS.md
+.kiro/YOLO-AGENT-COMPLETE.md
+.kiro/README-REPWISE-DEV-AGENT.md
+.kiro/REPWISE-DEV-AGENT-MASTER-PLAN.md
+.kiro/YOLO-REPWISE-DEV-GUIDE.md
+uv.lock
