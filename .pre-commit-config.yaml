@@ -1,0 +1,42 @@
+# Pre-commit hooks for Repwise
+# Install: cd /path/to/HOS && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Python linting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.0
+    hooks:
+      - id: ruff
+        args: [--select, "E,F", --ignore, "E501,E402", --exclude, "src/database/migrations/"]
+        types: [python]
+
+  # Python formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.0
+    hooks:
+      - id: ruff-format
+        types: [python]
+
+  # Prevent committing secrets
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: '(\.lock|\.env\.example|package-lock\.json|uv\.lock)$'
+
+  # General file hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '(\.md|\.snap)$'
+      - id: end-of-file-fixer
+        exclude: '(\.snap)$'
+      - id: check-yaml
+      - id: check-json
+        exclude: 'node_modules'
+      - id: check-merge-conflict
+      - id: no-commit-to-branch
+        args: ['--branch', 'main']
