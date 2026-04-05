@@ -41,7 +41,7 @@ class TestSettings:
         assert s.JWT_REFRESH_TOKEN_EXPIRE_DAYS == 7
         assert s.JWT_ALGORITHM == "HS256"
         assert s.LOGIN_RATE_LIMIT_THRESHOLD == 5
-        assert s.CORS_ORIGINS == ["http://localhost:8081", "http://localhost:19006"]
+        assert s.CORS_ORIGINS == '["http://localhost:8081","http://localhost:19006"]'
 
     def test_database_url_default(self):
         assert settings.DATABASE_URL  # non-empty connection string

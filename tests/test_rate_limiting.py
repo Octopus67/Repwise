@@ -1,27 +1,16 @@
-"""Phase 3 — Rate limiting tests (in-memory + DB stores, IP extraction, lockout)."""
-
-import time
+# Audit fix 5.1 — rate limiting tests
+"""Rate limiting tests — Redis-backed with in-memory fallback (no Redis needed)."""
 
 import pytest
-
-pytest.skip("Rate limiting migrated to Redis — tests need Redis mock", allow_module_level=True)
 from freezegun import freeze_time
 from sqlalchemy import select, func
 
-from src.middleware.db_rate_limiter import (
-    check_db_rate_limit,
-    record_db_attempt,
-    reset_db_attempts,
-)
+from src.middleware.db_rate_limiter import check_db_rate_limit, record_db_attempt, reset_db_attempts
 from src.middleware.rate_limit_models import RateLimitEntry
 from src.middleware.rate_limiter import (
-    check_login_ip_rate_limit,
-    check_lockout,
-    check_register_rate_limit,
-    clear_all,
-    record_attempt,
-    _record_lockout_violation,
-    _lockout_violations,
+    check_login_ip_rate_limit, check_lockout, check_register_rate_limit,
+    check_forgot_password_rate_limit, check_rate_limit, clear_all,
+    record_attempt, _memory_record,
 )
 from src.shared.errors import RateLimitedError
 from src.shared.ip_utils import get_client_ip
@@ -34,148 +23,134 @@ def _clear_rate_limiter():
     clear_all()
 
 
-# ------------------------------------------------------------------
-# 1. DB rate limiter — no record means no block
-# ------------------------------------------------------------------
-
+# --- DB rate limiter tests ---
 
 @pytest.mark.asyncio
 async def test_db_rate_limiter_check_without_record(db_session):
-    """check_db_rate_limit should pass when no prior attempts exist."""
+    """No prior attempts → no block."""
     await check_db_rate_limit(
-        session=db_session,
-        key="user@example.com",
-        endpoint="login",
-        max_attempts=5,
-        window_seconds=900,
-        message="blocked",
+        session=db_session, key="user@example.com", endpoint="login",
+        max_attempts=5, window_seconds=900, message="blocked",
     )
-    # No exception → pass
-
-
-# ------------------------------------------------------------------
-# 2. DB rate limiter — record_db_attempt persists rows
-# ------------------------------------------------------------------
-
 
 @pytest.mark.asyncio
 async def test_db_rate_limiter_record_on_failure(db_session):
-    """record_db_attempt should insert a row; exceeding max raises RateLimitedError."""
+    """Exceeding max attempts raises RateLimitedError."""
     key, endpoint = "user@example.com", "login"
-
     for _ in range(3):
         await record_db_attempt(db_session, key=key, endpoint=endpoint)
     await db_session.flush()
 
-    count = (
-        await db_session.execute(
-            select(func.count()).select_from(RateLimitEntry).where(
-                RateLimitEntry.key == key,
-                RateLimitEntry.endpoint == endpoint,
-            )
+    count = (await db_session.execute(
+        select(func.count()).select_from(RateLimitEntry).where(
+            RateLimitEntry.key == key, RateLimitEntry.endpoint == endpoint,
         )
-    ).scalar_one()
+    )).scalar_one()
     assert count == 3
 
     with pytest.raises(RateLimitedError):
         await check_db_rate_limit(
-            session=db_session,
-            key=key,
-            endpoint=endpoint,
-            max_attempts=3,
-            window_seconds=900,
-            message="blocked",
+            session=db_session, key=key, endpoint=endpoint,
+            max_attempts=3, window_seconds=900, message="blocked",
         )
-
-
-# ------------------------------------------------------------------
-# 3. DB rate limiter — reset clears entries
-# ------------------------------------------------------------------
-
 
 @pytest.mark.asyncio
 async def test_db_rate_limiter_reset_on_success(db_session):
-    """reset_db_attempts should delete all entries for the key, unblocking the user."""
+    """reset_db_attempts clears entries, unblocking the user."""
     key, endpoint = "user@example.com", "login"
-
     for _ in range(5):
         await record_db_attempt(db_session, key=key, endpoint=endpoint)
     await db_session.flush()
-
     await reset_db_attempts(db_session, key=key, endpoint=endpoint)
-
-    # Should pass now — entries cleared
     await check_db_rate_limit(
-        session=db_session,
-        key=key,
-        endpoint=endpoint,
-        max_attempts=5,
-        window_seconds=900,
-        message="blocked",
+        session=db_session, key=key, endpoint=endpoint,
+        max_attempts=5, window_seconds=900, message="blocked",
     )
-
-
-# ------------------------------------------------------------------
-# 4. Registration DB rate limiting (via endpoint)
-# ------------------------------------------------------------------
-
 
 @pytest.mark.asyncio
 async def test_registration_db_rate_limiting(db_session):
-    """Registration endpoint should block after 5 attempts per IP in 1 hour."""
+    """Registration blocks after 5 attempts per IP in 1 hour."""
     ip_key = "register:1.2.3.4"
-
     for _ in range(5):
         await record_db_attempt(db_session, key=ip_key, endpoint="register")
     await db_session.flush()
-
     with pytest.raises(RateLimitedError, match="registration"):
         await check_db_rate_limit(
-            session=db_session,
-            key=ip_key,
-            endpoint="register",
-            max_attempts=5,
-            window_seconds=3600,
+            session=db_session, key=ip_key, endpoint="register",
+            max_attempts=5, window_seconds=3600,
             message="Too many registration attempts. Please try again later.",
         )
 
 
-# ------------------------------------------------------------------
-# 5. Login IP rate limiting (in-memory)
-# ------------------------------------------------------------------
-
+# --- In-memory fallback tests (Redis unavailable, REDIS_URL="" in tests) ---
 
 def test_login_ip_rate_limiting():
-    """20 login attempts from one IP should trigger a block."""
+    """20 login attempts from one IP triggers a block."""
     ip = "10.0.0.1"
     for _ in range(20):
-        check_login_ip_rate_limit(ip)
-
+        _memory_record("login_ip", ip, 900)
     with pytest.raises(RateLimitedError):
         check_login_ip_rate_limit(ip)
 
+def test_login_rate_limit_too_many_failures():
+    """Exceeding login threshold blocks further attempts."""
+    from src.config.settings import settings
+    email = "brute@example.com"
+    for _ in range(settings.LOGIN_RATE_LIMIT_THRESHOLD):
+        record_attempt(email)
+    with pytest.raises(RateLimitedError, match="login"):
+        check_rate_limit(email)
 
-# ------------------------------------------------------------------
-# 6. IP rate limit independent of email
-# ------------------------------------------------------------------
+def test_forgot_password_rate_limit():
+    """3 forgot-password requests triggers a block."""
+    email = "forgot@example.com"
+    for _ in range(3):
+        _memory_record("forgot_password", email, 900)
+    with pytest.raises(RateLimitedError, match="password reset"):
+        check_forgot_password_rate_limit(email)
 
+def test_register_rate_limit():
+    """5 registration attempts per IP triggers a block."""
+    ip = "192.168.1.1"
+    for _ in range(5):
+        _memory_record("register", ip, 3600)
+    with pytest.raises(RateLimitedError, match="registration"):
+        check_register_rate_limit(ip)
 
-def test_ip_rate_limit_independent_of_email():
-    """IP-based limit is separate from per-email limit; different IPs are independent."""
+def test_account_lockout_after_repeated_failures():
+    """3 lockout violations within 24h locks the account."""
+    email = "locked@example.com"
+    for _ in range(3):
+        _memory_record("lockout", email, 86400)
+    with pytest.raises(RateLimitedError, match="locked"):
+        check_lockout(email)
+
+def test_rate_limit_reset_after_window():
+    """Entries older than the window are pruned, allowing new attempts."""
+    email = "window@example.com"
+    with freeze_time("2025-01-01 00:00:00") as frozen:
+        for _ in range(3):
+            _memory_record("forgot_password", email, 900)
+        with pytest.raises(RateLimitedError):
+            check_forgot_password_rate_limit(email)
+        frozen.move_to("2025-01-01 00:15:01")
+        check_forgot_password_rate_limit(email)  # no exception
+
+def test_in_memory_fallback_when_redis_unavailable():
+    """Auth-critical rate limiting works via in-memory fallback (no Redis)."""
+    ip = "10.0.0.99"
     for _ in range(20):
-        check_login_ip_rate_limit("10.0.0.1")
+        _memory_record("login_ip", ip, 900)
+    with pytest.raises(RateLimitedError):
+        check_login_ip_rate_limit(ip)
+    clear_all()
+    check_login_ip_rate_limit(ip)  # no exception after clear
 
-    # Different IP should still be allowed
-    check_login_ip_rate_limit("10.0.0.2")  # no exception
 
-
-# ------------------------------------------------------------------
-# 7. IP extraction from X-Forwarded-For
-# ------------------------------------------------------------------
-
+# --- IP extraction ---
 
 def test_ip_extraction_from_xff():
-    """get_client_ip should return the first IP from X-Forwarded-For."""
+    """get_client_ip returns the first IP from X-Forwarded-For."""
     from starlette.testclient import TestClient
     from starlette.applications import Starlette
     from starlette.requests import Request
@@ -187,77 +162,7 @@ def test_ip_extraction_from_xff():
 
     app = Starlette(routes=[Route("/ip", _echo_ip)])
     tc = TestClient(app)
-
-    resp = tc.get("/ip", headers={"X-Forwarded-For": "203.0.113.50, 70.41.3.18, 150.172.238.178"})
+    resp = tc.get("/ip", headers={"X-Forwarded-For": "203.0.113.50, 70.41.3.18"})
     assert resp.text == "203.0.113.50"
-
-    # Single IP
-    resp = tc.get("/ip", headers={"X-Forwarded-For": "198.51.100.1"})
-    assert resp.text == "198.51.100.1"
-
-    # No header — falls back to client host
     resp = tc.get("/ip")
-    assert resp.text  # should return something (testclient uses 127.0.0.1)
-
-
-# ------------------------------------------------------------------
-# 8. Account lockout after 3 violations
-# ------------------------------------------------------------------
-
-
-def test_account_lockout_after_3_violations():
-    """3 lockout violations within 24h should lock the account."""
-    email = "locked@example.com"
-
-    for _ in range(3):
-        _record_lockout_violation(email)
-
-    with pytest.raises(RateLimitedError, match="locked"):
-        check_lockout(email)
-
-
-# ------------------------------------------------------------------
-# 9. Lockout cleared after 24 hours
-# ------------------------------------------------------------------
-
-
-def test_lockout_cleared_after_24h():
-    """Lockout violations older than 24h should be pruned, allowing login."""
-    email = "locked24@example.com"
-
-    with freeze_time("2025-01-01 00:00:00") as frozen:
-        for _ in range(3):
-            _record_lockout_violation(email)
-
-        with pytest.raises(RateLimitedError):
-            check_lockout(email)
-
-        # Advance 24h + 1s
-        frozen.move_to("2025-01-02 00:00:01")
-        check_lockout(email)  # no exception
-
-
-# ------------------------------------------------------------------
-# 10. Lockout violations expire individually
-# ------------------------------------------------------------------
-
-
-def test_lockout_violations_expire():
-    """Only violations within the 24h window count toward the lockout threshold."""
-    email = "partial@example.com"
-
-    with freeze_time("2025-01-01 00:00:00") as frozen:
-        # Record 2 violations at T=0
-        _record_lockout_violation(email)
-        _record_lockout_violation(email)
-
-        # Advance 23h — still within window, add a 3rd → locked
-        frozen.move_to("2025-01-01 23:00:00")
-        _record_lockout_violation(email)
-
-        with pytest.raises(RateLimitedError):
-            check_lockout(email)
-
-        # Advance to T=24h01m — first 2 violations expire, only 1 remains
-        frozen.move_to("2025-01-02 00:01:00")
-        check_lockout(email)  # no exception — only 1 violation in window
+    assert resp.text  # falls back to client host

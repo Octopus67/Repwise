@@ -12,23 +12,23 @@ DB_URL = "sqlite+aiosqlite:///test.db"
 def test_weak_jwt_secret_raises_when_debug_false():
     """A JWT_SECRET shorter than 32 chars raises ValueError when DEBUG=False."""
     with pytest.raises(ValidationError, match="JWT_SECRET"):
-        Settings(JWT_SECRET="short", DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS=["https://app.repwise.app"], ALLOWED_HOSTS=["api.repwise.app"])
+        Settings(JWT_SECRET="short", DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS="https://app.repwise.app", ALLOWED_HOSTS="api.repwise.app")
 
 
 def test_default_jwt_secret_raises_when_debug_false():
     """The default 'change-me-in-production' raises ValueError when DEBUG=False."""
     with pytest.raises(ValidationError, match="JWT_SECRET"):
-        Settings(JWT_SECRET="change-me-in-production", DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS=["https://app.repwise.app"], ALLOWED_HOSTS=["api.repwise.app"])
+        Settings(JWT_SECRET="change-me-in-production", DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS="https://app.repwise.app", ALLOWED_HOSTS="api.repwise.app")
 
 
 def test_valid_jwt_secret_succeeds_when_debug_false():
     """A 64-char hex secret succeeds when DEBUG=False."""
     secret = "a" * 64
-    s = Settings(JWT_SECRET=secret, DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS=["https://app.repwise.app"], ALLOWED_HOSTS=["api.repwise.app"])
+    s = Settings(JWT_SECRET=secret, DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS="https://app.repwise.app", ALLOWED_HOSTS="api.repwise.app")
     assert s.JWT_SECRET == secret
 
 
 def test_weak_secret_succeeds_when_debug_true():
-    """A weak secret is allowed when DEBUG=True (dev mode bypass)."""
-    s = Settings(JWT_SECRET="weak", DEBUG=True, DATABASE_URL=DB_URL)
+    """A weak secret is allowed when ENVIRONMENT=development (dev mode bypass)."""
+    s = Settings(JWT_SECRET="weak", DEBUG=True, ENVIRONMENT="development", DATABASE_URL=DB_URL)
     assert s.JWT_SECRET == "weak"
