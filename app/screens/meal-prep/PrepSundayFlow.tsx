@@ -60,7 +60,7 @@ export function PrepSundayFlow({ navigation }: ProfileScreenProps<'PrepSunday'>)
     try {
       await api.post('meal-plans/save', {
         name: `Prep Sunday ${new Date().toLocaleDateString()}`,
-        start_date: new Date().toISOString().split('T')[0],
+        start_date: getLocalDateString(),
         days: dayPlans,
       });
       setStep('confirm');
@@ -80,7 +80,7 @@ export function PrepSundayFlow({ navigation }: ProfileScreenProps<'PrepSunday'>)
 
       {loading && <ActivityIndicator size="large" color={c.accent.primary} />}
       {error && (
-        <TouchableOpacity onPress={() => setError(null)} style={[styles.errorRow, { backgroundColor: c.bg.surface }]}>
+        <TouchableOpacity onPress={() => setError(null)} style={[styles.errorRow, { backgroundColor: c.bg.surface }]} accessibilityLabel="Dismiss error" accessibilityRole="button">{/* Audit fix 7.10 */}
           <Text style={[styles.error, { color: c.semantic.negative }]}>{error}</Text>
           <Text style={[styles.errorDismiss, { color: c.semantic.negative }]}>✕</Text>
         </TouchableOpacity>
@@ -90,12 +90,12 @@ export function PrepSundayFlow({ navigation }: ProfileScreenProps<'PrepSunday'>)
         <View>
           <Text style={[styles.stepLabel, { color: c.text.primary }]}>Step 1: Select Days</Text>
           {ALL_DAYS.map((day, idx) => (
-            <TouchableOpacity key={day} style={styles.dayRow} onPress={() => toggleDay(idx)}>
+            <TouchableOpacity key={day} style={styles.dayRow} onPress={() => toggleDay(idx)} accessibilityLabel={`Toggle ${day}`} accessibilityRole="button">{/* Audit fix 7.10 */}
               <View style={[styles.checkbox, selectedDays.includes(idx) && styles.checked]} />
               <Text style={[styles.dayText, { color: c.text.primary }]}>{day}</Text>
             </TouchableOpacity>
           ))}
-          <TouchableOpacity style={[styles.nextBtn, { backgroundColor: c.accent.primary }]} onPress={() => setStep('slots')}>
+          <TouchableOpacity style={[styles.nextBtn, { backgroundColor: c.accent.primary }]} onPress={() => setStep('slots')} accessibilityLabel="Next step" accessibilityRole="button">{/* Audit fix 7.10 */}
             <Text style={[styles.btnText, { color: c.text.primary }]}>Next</Text>
           </TouchableOpacity>
         </View>
@@ -108,13 +108,15 @@ export function PrepSundayFlow({ navigation }: ProfileScreenProps<'PrepSunday'>)
             <Text key={s} style={[styles.slotItem, { color: c.text.secondary }]}>• {s}</Text>
           ))}
           <View style={styles.navRow}>
-            <TouchableOpacity style={[styles.backBtn, { backgroundColor: c.bg.surface }]} onPress={() => setStep('days')}>
+            <TouchableOpacity style={[styles.backBtn, { backgroundColor: c.bg.surface }]} onPress={() => setStep('days')} accessibilityLabel="Go back" accessibilityRole="button">{/* Audit fix 7.10 */}
               <Text style={[styles.btnText, { color: c.text.primary }]}>Back</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.nextBtn, loading && styles.btnDisabled]}
               onPress={handleGenerate}
               disabled={loading}
+              accessibilityLabel="Auto-fill meals" // Audit fix 7.10
+              accessibilityRole="button" // Audit fix 7.10
             >
               <Text style={[styles.btnText, { color: c.text.primary }]}>Auto-Fill</Text>
             </TouchableOpacity>
@@ -139,13 +141,15 @@ export function PrepSundayFlow({ navigation }: ProfileScreenProps<'PrepSunday'>)
             </View>
           ))}
           <View style={styles.navRow}>
-            <TouchableOpacity style={[styles.backBtn, { backgroundColor: c.bg.surface }]} onPress={() => setStep('slots')}>
+            <TouchableOpacity style={[styles.backBtn, { backgroundColor: c.bg.surface }]} onPress={() => setStep('slots')} accessibilityLabel="Go back" accessibilityRole="button">{/* Audit fix 7.10 */}
               <Text style={[styles.btnText, { color: c.text.primary }]}>Back</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.nextBtn, loading && styles.btnDisabled]}
               onPress={handleSave}
               disabled={loading}
+              accessibilityLabel="Save plan" // Audit fix 7.10
+              accessibilityRole="button" // Audit fix 7.10
             >
               <Text style={[styles.btnText, { color: c.text.primary }]}>Save Plan</Text>
             </TouchableOpacity>
@@ -159,6 +163,8 @@ export function PrepSundayFlow({ navigation }: ProfileScreenProps<'PrepSunday'>)
           <TouchableOpacity
             style={[styles.nextBtn, { backgroundColor: c.accent.primary }]}
             onPress={() => navigation?.navigate?.('MealPlan')}
+            accessibilityLabel="View plan" // Audit fix 7.10
+            accessibilityRole="button" // Audit fix 7.10
           >
             <Text style={[styles.btnText, { color: c.text.primary }]}>View Plan</Text>
           </TouchableOpacity>

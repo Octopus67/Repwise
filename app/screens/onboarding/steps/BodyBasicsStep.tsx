@@ -55,12 +55,15 @@ function VerticalPicker({ data, selectedValue, onValueChange }: VerticalPickerPr
   const containerH = ITEM_H * VISIBLE_COUNT;
 
   // Scroll to selected item on mount
+  // Audit fix 10.14 — store timeout ref and clear on unmount
+  const timeoutRef = useRef<NodeJS.Timeout>();
   useEffect(() => {
     const idx = data.findIndex((d) => d.value === selectedValue);
     if (idx >= 0 && scrollRef.current) {
       const offset = idx * ITEM_H;
-      setTimeout(() => scrollRef.current?.scrollTo({ y: offset, animated: false }), 50);
+      timeoutRef.current = setTimeout(() => scrollRef.current?.scrollTo({ y: offset, animated: false }), 50);
     }
+    return () => { clearTimeout(timeoutRef.current); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleTap = useCallback(

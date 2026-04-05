@@ -1,4 +1,4 @@
-import { zxcvbn } from '@zxcvbn-ts/core';
+// Audit fix 7.5 — lazy-load zxcvbn
 
 export type StrengthLevel = 'weak' | 'fair' | 'good' | 'strong';
 
@@ -16,7 +16,7 @@ export interface PasswordStrengthResult {
   isValid: boolean;
 }
 
-export function getPasswordStrength(password: string): PasswordStrengthResult {
+export async function getPasswordStrength(password: string): Promise<PasswordStrengthResult> {
   const validation: PasswordValidation = {
     minLength: password.length >= 8,
     hasUppercase: /[A-Z]/.test(password),
@@ -28,6 +28,7 @@ export function getPasswordStrength(password: string): PasswordStrengthResult {
     return { score: 0, level: 'weak', validation, isValid: false };
   }
 
+  const { zxcvbn } = await import('@zxcvbn-ts/core');
   const { score } = zxcvbn(password);
 
   let level: StrengthLevel;

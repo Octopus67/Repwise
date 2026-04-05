@@ -105,7 +105,7 @@ export function LogsScreen() {
   const changeDate = (delta: number) => {
     const d = new Date(selectedDate + 'T12:00:00');
     d.setDate(d.getDate() + delta);
-    setSelectedDate(d.toISOString().split('T')[0]);
+    setSelectedDate(getLocalDateString(d));
   };
 
   const formatDisplayDate = (iso: string) =>
@@ -155,8 +155,8 @@ export function LogsScreen() {
     // Compute 14-day window for Quick Re-log
     const fourteenDaysAgo = new Date();
     fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-    const recentStart = fourteenDaysAgo.toISOString().split('T')[0];
-    const today = new Date().toISOString().split('T')[0];
+    const recentStart = getLocalDateString(fourteenDaysAgo);
+    const today = getLocalDateString();
 
     setError(null);
 
@@ -304,6 +304,8 @@ export function LogsScreen() {
                 <TouchableOpacity
                   activeOpacity={0.7}
                   onPress={() => navigation.push('SessionDetail', { sessionId: session.id })}
+                  accessibilityLabel="View session detail" // Audit fix 7.10
+                  accessibilityRole="button" // Audit fix 7.10
                 >
                   <Card style={styles.entryCard}>
                     <View style={styles.entryHeader}>
@@ -372,6 +374,8 @@ export function LogsScreen() {
                 navigation.push('ActiveWorkout', { mode: 'template' });
               }}
               activeOpacity={0.7}
+              accessibilityLabel="Browse all templates" // Audit fix 7.10
+              accessibilityRole="button" // Audit fix 7.10
             >
               <Text style={[styles.browseLinkText, { color: c.accent.primary }]}>Browse all templates →</Text>
             </TouchableOpacity>
@@ -395,6 +399,8 @@ export function LogsScreen() {
           style={[styles.tab, tab === 'nutrition' && styles.tabActive]}
           onPress={() => { impact('light'); setTab('nutrition'); }}
           testID="logs-nutrition-tab"
+          accessibilityLabel="Nutrition tab" // Audit fix 7.10
+          accessibilityRole="button" // Audit fix 7.10
         >
           <Text style={[styles.tabText, tab === 'nutrition' && styles.tabTextActive]}>Nutrition</Text>
         </TouchableOpacity>
@@ -402,17 +408,19 @@ export function LogsScreen() {
           style={[styles.tab, tab === 'training' && styles.tabActive]}
           onPress={() => { impact('light'); setTab('training'); }}
           testID="logs-training-tab"
+          accessibilityLabel="Training tab" // Audit fix 7.10
+          accessibilityRole="button" // Audit fix 7.10
         >
           <Text style={[styles.tabText, tab === 'training' && styles.tabTextActive]}>Training</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.dateNav}>
-        <TouchableOpacity onPress={() => changeDate(-1)}>
+        <TouchableOpacity onPress={() => changeDate(-1)} accessibilityLabel="Previous day" accessibilityRole="button">{/* Audit fix 7.10 */}
           <Text style={[styles.dateArrow, { color: c.accent.primary }]}>‹</Text>
         </TouchableOpacity>
         <Text style={[styles.dateText, { color: c.text.primary }]}>{formatDisplayDate(selectedDate)}</Text>
-        <TouchableOpacity onPress={() => changeDate(1)}>
+        <TouchableOpacity onPress={() => changeDate(1)} accessibilityLabel="Next day" accessibilityRole="button">{/* Audit fix 7.10 */}
           <Text style={[styles.dateArrow, { color: c.accent.primary }]}>›</Text>
         </TouchableOpacity>
       </View>
@@ -434,6 +442,7 @@ export function LogsScreen() {
         <ScrollView
           style={styles.list}
           contentContainerStyle={styles.listContent}
+          removeClippedSubviews={true}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.accent.primary} />}
         >
           {/* 1. Quick Re-log row at top */}
@@ -493,6 +502,8 @@ export function LogsScreen() {
                 style={[styles.slotAddButton, { borderTopColor: c.border.subtle }]}
                 onPress={() => handleAddToSlot(slot.name)}
                 activeOpacity={0.7}
+                accessibilityLabel={`Add to ${slot.name}`} // Audit fix 7.10
+                accessibilityRole="button" // Audit fix 7.10
               >
                 <Text style={[styles.slotAddText, { color: c.accent.primary }]}>+ Add to {slot.name}</Text>
               </TouchableOpacity>
@@ -515,6 +526,8 @@ export function LogsScreen() {
                       setShowNutritionModal(true);
                     }}
                     activeOpacity={0.7}
+                    accessibilityLabel={`Log ${fav.name}`} // Audit fix 7.10
+                    accessibilityRole="button" // Audit fix 7.10
                   >
                     <View style={styles.flexOne}>
                       <Text style={[styles.favoriteName, { color: c.text.primary }]}>{fav.name}</Text>
@@ -582,6 +595,8 @@ export function LogsScreen() {
           activeOpacity={0.8}
           onPress={openAddModal}
           testID="logs-add-button"
+          accessibilityLabel="Add entry" // Audit fix 7.10
+          accessibilityRole="button" // Audit fix 7.10
         >
           <Text style={[styles.fabText, { color: c.text.primary }]}>+</Text>
         </TouchableOpacity>

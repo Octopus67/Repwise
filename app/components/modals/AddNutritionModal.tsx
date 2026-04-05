@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react'; // Audit fix 7.6
 import {
   View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, Platform, Modal,
 } from 'react-native';
@@ -11,7 +11,8 @@ import api from '../../services/api';
 import { serializeMicroNutrients, MICRO_FIELDS } from '../../utils/microNutrientSerializer';
 import { ServingOption, buildServingOptions, scaleToServing } from '../../utils/servingOptions';
 import { scaleMacros } from '../../utils/macroScaling';
-import { BarcodeScanner } from '../nutrition/BarcodeScanner';
+// Audit fix 7.6 — lazy-load camera module
+const BarcodeScanner = React.lazy(() => import('../nutrition/BarcodeScanner').then(m => ({ default: m.BarcodeScanner })));
 import { RecipeBuilderScreen } from '../../screens/nutrition/RecipeBuilderScreen';
 import { Icon } from '../common/Icon';
 import { useStore } from '../../store';
@@ -433,7 +434,9 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
 
     {Platform.OS !== 'web' && (
       <Modal visible={showBarcodeScanner} animationType="slide" presentationStyle="fullScreen" onRequestClose={() => setShowBarcodeScanner(false)}>
-        <BarcodeScanner onFoodSelected={handleBarcodeFoodSelected} onClose={() => setShowBarcodeScanner(false)} />
+        <Suspense fallback={<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" /></View>}>
+          <BarcodeScanner onFoodSelected={handleBarcodeFoodSelected} onClose={() => setShowBarcodeScanner(false)} />
+        </Suspense>
       </Modal>
     )}</>
   );

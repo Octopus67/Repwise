@@ -17,6 +17,7 @@ export function ReactionButton({ eventId, count, reacted }: ReactionButtonProps)
   const qc = useQueryClient();
 
   const mutation = useMutation({
+    mutationKey: ['reaction', eventId], // Audit fix 4.4 — offline persistence
     mutationFn: ({ wasReacted }: { wasReacted: boolean }) =>
       wasReacted
         ? api.delete(`social/feed/${eventId}/reactions`)

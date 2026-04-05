@@ -8,6 +8,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { secureDelete, TOKEN_KEYS } from '../../utils/secureStorage';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Audit fix 7.7 — typed navigation
+import type { ProfileStackParamList } from '../../types/navigation'; // Audit fix 7.7 — typed navigation
 import Animated from 'react-native-reanimated';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
@@ -41,7 +43,7 @@ export function ProfileScreen() {
   const styles = getThemedStyles(c);
   const store = useStore();
   const premium = isPremium(store);
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>(); // Audit fix 7.7 — typed navigation
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

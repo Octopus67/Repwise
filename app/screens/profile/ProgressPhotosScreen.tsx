@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { documentDirectory, getInfoAsync, makeDirectoryAsync, copyAsync, deleteAsync } from 'expo-file-system/legacy';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { secureSet, secureGet } from '../../utils/secureStorage'; // Audit fix 6.10 — encrypted photo metadata
 import { saveImageToGallery } from '../../services/sharing';
 import { radius, spacing, typography, shadows } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
@@ -44,7 +44,7 @@ export function ProgressPhotosScreen() {
     try {
       const [res, stored] = await Promise.all([
         api.get('progress-photos?limit=100'),
-        AsyncStorage.getItem(STORAGE_KEY),
+        secureGet(STORAGE_KEY), // Audit fix 6.10 — encrypted photo metadata
       ]);
       setPhotos(res.data?.items ?? []);
       setPathMap(stored ? JSON.parse(stored) : {});
@@ -95,7 +95,7 @@ export function ProgressPhotosScreen() {
     setSaving(true);
     try {
       const localUri = await saveLocally(result.assets[0].uri);
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalDateString();
 
       let r2Key: string | undefined;
       try {
@@ -109,7 +109,7 @@ export function ProgressPhotosScreen() {
       const { data } = await api.post('progress-photos', { capture_date: today, r2_key: r2Key });
       const updated = { ...pathMap, [data.id]: localUri };
       setPathMap(updated);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      await secureSet(STORAGE_KEY, JSON.stringify(updated)); // Audit fix 6.10 — encrypted photo metadata
       await loadData();
     } catch {
       Alert.alert('Error', 'Failed to save photo');
@@ -131,7 +131,7 @@ export function ProgressPhotosScreen() {
               const updated = { ...pathMap };
               delete updated[photo.id];
               setPathMap(updated);
-              await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+              await secureSet(STORAGE_KEY, JSON.stringify(updated)); // Audit fix 6.10 — encrypted photo metadata
             }
             await loadData();
           } catch {

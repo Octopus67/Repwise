@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react'; // Audit fix 7.3
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, letterSpacing } from '../../theme/tokens';
@@ -20,6 +20,8 @@ import { Icon } from '../../components/common/Icon';
 import api from '../../services/api';
 import { getErrorMessage } from '../../utils/errors';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Audit fix 7.7
+import type { AnalyticsStackParamList } from '../../navigation/BottomTabNavigator'; // Audit fix 7.7
 import { useHaptics } from '../../hooks/useHaptics';
 import { PeriodizationCalendar } from '../../components/periodization/PeriodizationCalendar';
 import { TrainingTabContent } from './TrainingTabContent';
@@ -74,7 +76,7 @@ export function AnalyticsScreen() {
   const store = useStore();
   const premium = isPremium(store);
   const unitSystem = store.unitSystem;
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NativeStackNavigationProp<AnalyticsStackParamList>>(); // Audit fix 7.7
   const route = useRoute<any>();
   const { impact } = useHaptics();
 
@@ -108,11 +110,11 @@ export function AnalyticsScreen() {
     setError(null);
     setIsLoading(true);
     try {
-      const end = new Date().toISOString().split('T')[0];
+      const end = getLocalDateString();
       const days = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }[timeRange];
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
-      const start = startDate.toISOString().split('T')[0];
+      const start = getLocalDateString(startDate);
 
       const [bwRes, nutritionRes, adaptiveRes] = await Promise.allSettled([
         api.get('users/bodyweight/history', { params: { limit: days }, signal }),
@@ -170,62 +172,62 @@ export function AnalyticsScreen() {
     }
   }, [premium, timeRange]);
 
-  const loadVolumeTrend = useCallback(async () => {
+  const loadVolumeTrend = useCallback(async (signal?: AbortSignal) => {
     try {
-      const end = new Date().toISOString().split('T')[0];
+      const end = getLocalDateString();
       const days = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }[timeRange];
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
-      const start = startDate.toISOString().split('T')[0];
+      const start = getLocalDateString(startDate);
       const { data } = await api.get('training/analytics/volume-trend', {
-        params: { start_date: start, end_date: end },
+        params: { start_date: start, end_date: end }, signal,
       });
       const items = data.items ?? data ?? [];
       setVolumeTrend(items.map((p: { date: string; total_volume: number }) => ({ date: p.date, value: p.total_volume })));
     } catch (e: unknown) { console.warn('[Analytics] volume trend fetch failed:', getErrorMessage(e)); }
   }, [timeRange]);
 
-  const loadStrengthProgression = useCallback(async () => {
+  const loadStrengthProgression = useCallback(async (signal?: AbortSignal) => {
     try {
-      const end = new Date().toISOString().split('T')[0];
+      const end = getLocalDateString();
       const days = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }[timeRange];
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
-      const start = startDate.toISOString().split('T')[0];
+      const start = getLocalDateString(startDate);
       const { data } = await api.get('training/analytics/strength-progression', {
-        params: { exercise_name: selectedExercise, start_date: start, end_date: end },
+        params: { exercise_name: selectedExercise, start_date: start, end_date: end }, signal,
       });
       const items = data.items ?? data ?? [];
       setStrengthData(items.map((p: { date: string; best_weight_kg: number }) => ({ date: p.date, value: p.best_weight_kg })));
     } catch (e: unknown) { console.warn('[Analytics] strength progression fetch failed:', getErrorMessage(e)); }
   }, [selectedExercise, timeRange]);
 
-  const loadE1RMTrend = useCallback(async () => {
+  const loadE1RMTrend = useCallback(async (signal?: AbortSignal) => {
     try {
-      const end = new Date().toISOString().split('T')[0];
+      const end = getLocalDateString();
       const days = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }[timeRange];
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
-      const start = startDate.toISOString().split('T')[0];
+      const start = getLocalDateString(startDate);
       const { data } = await api.get('training/analytics/e1rm-history', {
-        params: { exercise_name: selectedE1RMExercise, start_date: start, end_date: end },
+        params: { exercise_name: selectedE1RMExercise, start_date: start, end_date: end }, signal,
       });
       const items = Array.isArray(data) ? data : data.items ?? [];
       setE1rmTrend(items.map((p: { date: string; e1rm_kg: number }) => ({ date: p.date, value: p.e1rm_kg })));
     } catch (e: unknown) { console.warn('[Analytics] e1rm trend fetch failed:', getErrorMessage(e)); }
   }, [selectedE1RMExercise, timeRange]);
 
-  const loadStrengthStandards = useCallback(async () => {
+  const loadStrengthStandards = useCallback(async (signal?: AbortSignal) => {
     try {
-      const { data } = await api.get('training/analytics/strength-standards');
+      const { data } = await api.get('training/analytics/strength-standards', { signal });
       setStrengthStandards(data);
     } catch (e: unknown) { console.warn('[Analytics] strength standards fetch failed:', getErrorMessage(e)); }
   }, []);
 
-  const loadVolumeLandmarks = useCallback(async () => {
+  const loadVolumeLandmarks = useCallback(async (signal?: AbortSignal) => {
     setVolumeLoading(true);
     try {
-      const { data } = await api.get('training/analytics/muscle-volume');
+      const { data } = await api.get('training/analytics/muscle-volume', { signal });
       const groups: WNSMuscleVolume[] = data.muscle_groups ?? data ?? [];
       groups.sort((a, b) => (b.hypertrophy_units ?? 0) - (a.hypertrophy_units ?? 0));
       setVolumeLandmarks(groups);
@@ -240,37 +242,49 @@ export function AnalyticsScreen() {
   }, [loadAnalytics]);
 
   useEffect(() => {
-    loadVolumeTrend();
+    const controller = new AbortController(); // Audit fix 7.3
+    loadVolumeTrend(controller.signal);
+    return () => controller.abort();
   }, [loadVolumeTrend]);
 
   useEffect(() => {
-    loadStrengthProgression();
+    const controller = new AbortController(); // Audit fix 7.3
+    loadStrengthProgression(controller.signal);
+    return () => controller.abort();
   }, [loadStrengthProgression]);
 
   useEffect(() => {
-    loadE1RMTrend();
+    const controller = new AbortController(); // Audit fix 7.3
+    loadE1RMTrend(controller.signal);
+    return () => controller.abort();
   }, [loadE1RMTrend]);
 
   useEffect(() => {
-    loadStrengthStandards();
+    const controller = new AbortController(); // Audit fix 7.3
+    loadStrengthStandards(controller.signal);
+    return () => controller.abort();
   }, [loadStrengthStandards]);
 
   useEffect(() => {
-    if (selectedTab === 'volume') loadVolumeLandmarks();
+    const controller = new AbortController(); // Audit fix 7.3
+    if (selectedTab === 'volume') loadVolumeLandmarks(controller.signal);
+    return () => controller.abort();
   }, [selectedTab, loadVolumeLandmarks]);
 
-  const filteredWeight = filterByTimeRange(weightTrend, timeRange);
-  const filteredCalories = filterByTimeRange(calorieTrend, timeRange);
-  const filteredProtein = filterByTimeRange(proteinTrend, timeRange);
+  // Audit fix 7.3 — memoize expensive computations
+  const filteredWeight = useMemo(() => filterByTimeRange(weightTrend, timeRange), [weightTrend, timeRange]);
+  const filteredCalories = useMemo(() => filterByTimeRange(calorieTrend, timeRange), [calorieTrend, timeRange]);
+  const filteredProtein = useMemo(() => filterByTimeRange(proteinTrend, timeRange), [proteinTrend, timeRange]);
 
   // Compute EMA trend line for bodyweight chart
-  const weightEMA = computeEMA(filteredWeight);
+  const weightEMA = useMemo(() => computeEMA(filteredWeight), [filteredWeight]);
 
   // Compute caloriesByDate record for ExpenditureTrendCard
-  const caloriesByDate: Record<string, number> = {};
-  calorieTrend.forEach((p) => {
-    caloriesByDate[p.date] = p.value;
-  });
+  const caloriesByDate = useMemo(() => {
+    const result: Record<string, number> = {};
+    calorieTrend.forEach((p) => { result[p.date] = p.value; });
+    return result;
+  }, [calorieTrend]);
 
   const weightSuffix = unitSystem === 'metric' ? ' kg' : ' lbs';
 

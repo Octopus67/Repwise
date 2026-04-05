@@ -40,6 +40,7 @@ export function ImportDataScreen() {
   const [preview, setPreview] = useState<PreviewData | null>(null);
 
   const previewMut = useMutation({
+    mutationKey: ['import', 'upload'], // Audit fix 4.4 — offline persistence
     mutationFn: async () => {
       if (!file?.uri) throw new Error('No file selected');
       const form = new FormData();
@@ -53,6 +54,7 @@ export function ImportDataScreen() {
   });
 
   const executeMut = useMutation({
+    mutationKey: ['import', 'process'], // Audit fix 4.4 — offline persistence
     mutationFn: async () => {
       if (!file?.uri) throw new Error('No file');
       capture('import_started', { source });

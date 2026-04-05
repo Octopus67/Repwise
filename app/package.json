@@ -14,7 +14,8 @@
     "e2e:ui": "playwright test --ui",
     "generate:openapi": "cd .. && .venv/bin/python scripts/export-openapi.py",
     "generate:types": "npx openapi-typescript types/api/openapi.json -o types/api/generated.ts",
-    "generate": "npm run generate:openapi && npm run generate:types"
+    "generate": "npm run generate:openapi && npm run generate:types",
+    "size": "echo 'TODO: Configure size-limit for bundle budget (Audit fix 10.18)'"
   },
   "dependencies": {
     "@expo/metro-runtime": "~55.0.6",

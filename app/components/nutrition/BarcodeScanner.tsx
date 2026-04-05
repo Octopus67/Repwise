@@ -88,7 +88,7 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
           <Text style={styles.messageText}>
             Barcode scanning is only available on mobile devices.
           </Text>
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+          <TouchableOpacity style={styles.closeBtn} onPress={onClose} accessibilityLabel="Close scanner" accessibilityRole="button">{/* Audit fix 7.10 */}
             <Text style={styles.closeBtnText}>Close</Text>
           </TouchableOpacity>
         </View>
@@ -155,10 +155,12 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
           <TouchableOpacity
             style={styles.primaryBtn}
             onPress={() => Linking.openSettings()}
+            accessibilityLabel="Open settings" // Audit fix 7.10
+            accessibilityRole="button" // Audit fix 7.10
           >
             <Text style={styles.primaryBtnText}>Open Settings</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+          <TouchableOpacity style={styles.closeBtn} onPress={onClose} accessibilityLabel="Cancel" accessibilityRole="button">{/* Audit fix 7.10 */}
             <Text style={styles.closeBtnText}>Cancel</Text>
           </TouchableOpacity>
         </View>
@@ -220,14 +222,16 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
               onChangeText={setMultiplier}
               keyboardType="numeric"
               selectTextOnFocus
+              accessibilityLabel="Serving count" // Audit fix 7.10
+              accessibilityRole="text" // Audit fix 7.10
             />
           </View>
 
           <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose} accessibilityLabel="Cancel" accessibilityRole="button">{/* Audit fix 7.10 */}
               <Text style={styles.closeBtnText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.primaryBtn} onPress={handleConfirm}>
+            <TouchableOpacity style={styles.primaryBtn} onPress={handleConfirm} accessibilityLabel="Add food" accessibilityRole="button">{/* Audit fix 7.10 */}
               <Text style={styles.primaryBtnText}>Add</Text>
             </TouchableOpacity>
           </View>
@@ -254,10 +258,12 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
               setState('scanning');
               setError('');
             }}
+            accessibilityLabel="Scan again" // Audit fix 7.10
+            accessibilityRole="button" // Audit fix 7.10
           >
             <Text style={styles.primaryBtnText}>Scan Again</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+          <TouchableOpacity style={styles.closeBtn} onPress={onClose} accessibilityLabel="Search manually" accessibilityRole="button">{/* Audit fix 7.10 */}
             <Text style={styles.closeBtnText}>Search Manually</Text>
           </TouchableOpacity>
         </View>
@@ -293,7 +299,7 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
           <Text style={styles.instructionText}>
             Point camera at barcode
           </Text>
-          <TouchableOpacity style={styles.cancelScanBtn} onPress={onClose}>
+          <TouchableOpacity style={styles.cancelScanBtn} onPress={onClose} accessibilityLabel="Cancel scan" accessibilityRole="button">{/* Audit fix 7.10 */}
             <Text style={styles.cancelScanBtnText}>Cancel</Text>
           </TouchableOpacity>
         </View>

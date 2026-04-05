@@ -37,7 +37,7 @@ const CIRCUMFERENCE_FIELDS = [
 ];
 
 function todayISO(): string {
-  return new Date().toISOString().split('T')[0];
+  return getLocalDateString();
 }
 
 export function MeasurementInput({ onSubmit, loading, onOpenNavyCalc, bodyFatPctFromCalc }: MeasurementInputProps) {

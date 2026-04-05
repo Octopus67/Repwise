@@ -45,7 +45,7 @@ export function PeriodizationCalendar() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
   const rows = buildWeekRows(blocks, sessionDates, today);
   const showDeloadBanner = needsDeloadSuggestion(blocks);
 

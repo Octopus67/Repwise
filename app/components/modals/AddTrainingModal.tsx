@@ -362,6 +362,8 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
           onPress={() => setTemplatesOpen((o) => !o)}
           activeOpacity={0.7}
           testID="training-template-toggle"
+          accessibilityLabel="Toggle templates" // Audit fix 7.10
+          accessibilityRole="button" // Audit fix 7.10
         >
           <Text style={[styles.sectionToggleText, { color: c.accent.primary }]}>
             {templatesOpen ? '▾ Templates' : '▸ Templates'}
@@ -380,6 +382,8 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
                   disabled={copyLoading}
                   activeOpacity={0.7}
                   testID="training-copy-last"
+                  accessibilityLabel="Copy last workout" // Audit fix 7.10
+                  accessibilityRole="button" // Audit fix 7.10
                 >
                   {copyLoading ? (
                     <ActivityIndicator size="small" color={c.text.primary} />
@@ -394,6 +398,8 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
                     style={[styles.templateCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}
                     onPress={() => loadFromTemplate(tpl)}
                     activeOpacity={0.7}
+                    accessibilityLabel={`Load ${tpl.name} template`} // Audit fix 7.10
+                    accessibilityRole="button" // Audit fix 7.10
                   >
                     <Text style={[styles.templateName, { color: c.text.primary }]}>{tpl.name}</Text>
                     <Text style={[styles.templateDesc, { color: c.text.secondary }]}>{tpl.description}</Text>
@@ -418,6 +424,8 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
             onFocus={() => setExerciseSearchFocused(true)}
             onBlur={() => setExerciseSearchFocused(false)}
             testID="training-exercise-search"
+            accessibilityLabel="Search exercises" // Audit fix 7.10
+            accessibilityRole="search" // Audit fix 7.10
           />
           {exerciseSearchResults.length > 0 && (
             <View style={[styles.exerciseSearchDropdown, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
@@ -427,6 +435,8 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
                   style={[styles.exerciseSearchResult, { borderBottomColor: c.border.default }]}
                   onPress={() => handleSearchSelect(result.name)}
                   activeOpacity={0.7}
+                  accessibilityLabel={`Select ${result.name}`} // Audit fix 7.10
+                  accessibilityRole="button" // Audit fix 7.10
                 >
                   <Text style={[styles.exerciseSearchResultText, { color: c.text.primary }]}>{result.name}</Text>
                 </TouchableOpacity>
@@ -455,6 +465,8 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
                   });
                 }}
                 activeOpacity={0.7}
+                accessibilityLabel={ex.name || "Choose exercise"} // Audit fix 7.10
+                accessibilityRole="button" // Audit fix 7.10
               >
                 <Text
                   style={[
@@ -466,7 +478,7 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
                   {ex.name || 'Tap to choose exercise'}
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => removeExercise(ex.id)}>
+              <TouchableOpacity onPress={() => removeExercise(ex.id)} accessibilityLabel="Remove exercise" accessibilityRole="button">{/* Audit fix 7.10 */}
                 <Text style={[styles.removeBtn, { color: c.semantic.negative }]}><Icon name="close" size={16} /></Text>
               </TouchableOpacity>
             </View>
@@ -496,6 +508,8 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
                   keyboardType="numeric"
                   placeholder="0"
                   placeholderTextColor={c.text.muted}
+                  accessibilityLabel={`Set ${sIdx + 1} reps`} // Audit fix 7.10
+                  accessibilityRole="text" // Audit fix 7.10
                 />
                 <TextInput
                   style={[styles.setInput, { color: c.text.primary, backgroundColor: c.bg.surface, borderColor: c.border.default }]}
@@ -504,6 +518,8 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
                   keyboardType="numeric"
                   placeholder="0"
                   placeholderTextColor={c.text.muted}
+                  accessibilityLabel={`Set ${sIdx + 1} weight`} // Audit fix 7.10
+                  accessibilityRole="text" // Audit fix 7.10
                 />
                 <TextInput
                   style={[styles.setInput, { color: c.text.primary, backgroundColor: c.bg.surface, borderColor: c.border.default }]}
@@ -512,20 +528,22 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
                   keyboardType="numeric"
                   placeholder="—"
                   placeholderTextColor={c.text.muted}
+                  accessibilityLabel={`Set ${sIdx + 1} RPE`} // Audit fix 7.10
+                  accessibilityRole="text" // Audit fix 7.10
                 />
-                <TouchableOpacity onPress={() => removeSet(ex.id, s.id)} style={{ width: 28, alignItems: 'center' }}>
+                <TouchableOpacity onPress={() => removeSet(ex.id, s.id)} style={{ width: 28, alignItems: 'center' }} accessibilityLabel="Remove set" accessibilityRole="button">{/* Audit fix 7.10 */}
                   <Text style={[styles.removeSetBtn, { color: c.text.muted }]}><Icon name="close" size={16} /></Text>
                 </TouchableOpacity>
               </View>
             ))}
 
-            <TouchableOpacity style={styles.addSetBtn} onPress={() => addSet(ex.id)} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.addSetBtn} onPress={() => addSet(ex.id)} activeOpacity={0.7} accessibilityLabel="Add set" accessibilityRole="button">{/* Audit fix 7.10 */}
               <Text style={[styles.addSetText, { color: c.accent.primary }]}>+ Add Set</Text>
             </TouchableOpacity>
           </View>
         ))}
 
-        <TouchableOpacity style={[styles.addExerciseBtn, { backgroundColor: c.accent.primaryMuted }]} onPress={addExercise} activeOpacity={0.7}>
+        <TouchableOpacity style={[styles.addExerciseBtn, { backgroundColor: c.accent.primaryMuted }]} onPress={addExercise} activeOpacity={0.7} accessibilityLabel="Add exercise" accessibilityRole="button">{/* Audit fix 7.10 */}
           <Text style={[styles.addExerciseText, { color: c.accent.primary }]}>+ Add Exercise</Text>
         </TouchableOpacity>
 
@@ -539,6 +557,8 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
             placeholder="e.g. Felt strong today"
             placeholderTextColor={c.text.muted}
             multiline
+            accessibilityLabel="Session notes" // Audit fix 7.10
+            accessibilityRole="text" // Audit fix 7.10
           />
         </View>
       </ScrollView>
@@ -550,6 +570,8 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
         disabled={loading}
         activeOpacity={0.7}
         testID="training-submit-button"
+        accessibilityLabel="Save session" // Audit fix 7.10
+        accessibilityRole="button" // Audit fix 7.10
       >
         {loading ? (
           <ActivityIndicator color={c.text.primary} />

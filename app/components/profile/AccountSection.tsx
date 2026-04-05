@@ -17,6 +17,13 @@ import { Button } from '../common/Button';
 import { useStore } from '../../store';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 import api from '../../services/api';
+import { queryClient } from '../../services/queryClient';
+import { mmkv } from '../../services/mmkvStorage';
+import { useActiveWorkoutStore } from '../../store/activeWorkoutSlice';
+import { useTooltipStore } from '../../store/tooltipStore';
+import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
+import { useOnboardingStore } from '../../store/onboardingSlice';
+import { useThemeStore } from '../../store/useThemeStore'; // Audit fix 1.1
 import { LEGAL_URLS } from '../../constants/urls';
 
 interface AccountSectionProps {
@@ -48,6 +55,26 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
       // Clear local auth state — await onLogout (secureClear) before clearing Zustand
       await onLogout();
       store.clearAuth();
+
+      // ── Cross-user data leak prevention (Audit Task 1.1) ──────────────
+      // Every persisted store and cache MUST be wiped on logout so the next
+      // user who logs in does not see stale data from the previous session.
+      // Clear all caches and stores — each wrapped individually so one failure doesn't block others
+
+      // 1. TanStack Query in-memory cache (server state)
+      try { queryClient.clear(); } catch (e) { console.warn('Failed to clear query cache:', e); }
+      // 2. MMKV-persisted query cache (survives app restart)
+      try { mmkv.clearAll(); } catch (e) { console.warn('Failed to clear MMKV:', e); }
+      // 3. Active workout (persisted to AsyncStorage for crash recovery)
+      try { useActiveWorkoutStore.getState().discardWorkout(); } catch (e) { console.warn('Failed to clear workout store:', e); }
+      // 4. Tooltip dismissals (persisted via zustand/persist)
+      try { useTooltipStore.persist.clearStorage(); } catch (e) { console.warn('Failed to clear tooltip store:', e); }
+      // 5. Workout preferences (persisted via zustand/persist)
+      try { useWorkoutPreferencesStore.persist.clearStorage(); } catch (e) { console.warn('Failed to clear workout preferences:', e); }
+      // 6. Onboarding wizard (persisted to AsyncStorage)
+      try { useOnboardingStore.getState().reset(); } catch (e) { console.warn('Failed to clear onboarding store:', e); }
+      // 7. Theme preference (persisted to AsyncStorage) — Audit fix 1.1
+      try { useThemeStore.persist.clearStorage(); } catch (e) { console.warn('Failed to clear theme store:', e); }
     }
   }, [store, onLogout]);
 

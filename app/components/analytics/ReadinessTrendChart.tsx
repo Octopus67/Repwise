@@ -22,8 +22,8 @@ export function ReadinessTrendChart({ timeRange }: Props) {
   useEffect(() => {
     setIsLoading(true);
     const days = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 }[timeRange] ?? 30;
-    const end = new Date().toISOString().split('T')[0];
-    const start = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+    const end = getLocalDateString();
+    const start = getLocalDateString(new Date(Date.now() - days * 86400000));
 
     api.get('readiness/history', { params: { start_date: start, end_date: end } })
       .then(({ data: res }) => {

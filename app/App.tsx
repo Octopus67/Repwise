@@ -31,6 +31,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { queryClient } from './services/queryClient';
 import { mmkvPersister } from './services/mmkvStorage';
 import { setupNetworkManager } from './services/networkManager';
+import linking from './navigation/linking'; // Audit fix 4.2 — deep linking configuration
 
 if (process.env.EXPO_PUBLIC_SENTRY_DSN) {
   Sentry.init({
@@ -341,7 +342,7 @@ export default function App() {
           persistOptions={{ persister: mmkvPersister }}
           onSuccess={() => { queryClient.resumePausedMutations().then(() => {}); }}
         >
-          <NavigationContainer ref={navigationRef} theme={navTheme}>
+          <NavigationContainer ref={navigationRef} theme={navTheme} linking={linking}>
             <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
             <ErrorBoundary onError={(error, errorInfo) => {
               console.error('[ErrorBoundary:Root]', error.message);

@@ -58,7 +58,7 @@ export function useWorkoutSave({
       const optimisticSession = {
         id: `temp_${Date.now()}`,
         user_id: '',
-        session_date: new Date().toISOString().split('T')[0],
+        session_date: getLocalDateString(),
         duration_minutes: 0,
         exercises: params.payload.exercises || [],
         metadata: {},

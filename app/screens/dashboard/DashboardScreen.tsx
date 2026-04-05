@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react'; // Audit fix 7.2 — memoization
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -133,23 +133,23 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
   const smA = anim(7, 60);
   const fA = anim(8, 60);
 
-  const bannerStyle = [s.banner, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }];
-  const emaSeries = computeEMA(data.weightHistory);
+  const bannerStyle = useMemo(() => [s.banner, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }], [s.banner, c.bg.surface, c.border.subtle]); // Audit fix 7.2
+  const emaSeries = useMemo(() => computeEMA(data.weightHistory), [data.weightHistory]); // Audit fix 7.2
   const unitSys = store.unitSystem;
   const unit = unitSys === 'metric' ? 'kg' : 'lbs';
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = useMemo(() => getLocalDateString(), []); // Audit fix 7.2
   const isToday = selectedDate === today;
   const showRestDay = !isLoading && data.trainingSessions.length === 0 && (!isToday || new Date().getHours() >= 14);
 
-  const handleCheckinAccept = async (id: string) => { try { await api.post(`adaptive/suggestions/${id}/accept`); store.setWeeklyCheckin(null); loadDashboardData(selectedDate); } catch (err: unknown) { Alert.alert('Error', 'Could not update. Please try again.'); } };
-  const handleCheckinModify = async (id: string, t: MacroTargets) => { try { await api.post(`adaptive/suggestions/${id}/modify`, t); store.setWeeklyCheckin(null); loadDashboardData(selectedDate); } catch (err: unknown) { Alert.alert('Error', 'Could not update. Please try again.'); } };
-  const handleCheckinDismiss = async (id: string) => { try { await api.post(`adaptive/suggestions/${id}/dismiss`); store.setWeeklyCheckin(null); } catch (err: unknown) { Alert.alert('Error', 'Could not update. Please try again.'); } };
+  const handleCheckinAccept = useCallback(async (id: string) => { try { await api.post(`adaptive/suggestions/${id}/accept`); store.setWeeklyCheckin(null); loadDashboardData(selectedDate); } catch (err: unknown) { Alert.alert('Error', 'Could not update. Please try again.'); } }, [store, loadDashboardData, selectedDate]); // Audit fix 7.2
+  const handleCheckinModify = useCallback(async (id: string, t: MacroTargets) => { try { await api.post(`adaptive/suggestions/${id}/modify`, t); store.setWeeklyCheckin(null); loadDashboardData(selectedDate); } catch (err: unknown) { Alert.alert('Error', 'Could not update. Please try again.'); } }, [store, loadDashboardData, selectedDate]); // Audit fix 7.2
+  const handleCheckinDismiss = useCallback(async (id: string) => { try { await api.post(`adaptive/suggestions/${id}/dismiss`); store.setWeeklyCheckin(null); } catch (err: unknown) { Alert.alert('Error', 'Could not update. Please try again.'); } }, [store]); // Audit fix 7.2
 
-  const dismissTrialModal = () => {
+  const dismissTrialModal = useCallback(() => {
     setShowTrialExpiration(false);
     AsyncStorage.setItem(TRIAL_MODAL_DISMISS_KEY, Date.now().toString());
-  };
+  }, []); // Audit fix 7.2
 
   // ── Weight trend render ────────────────────────────────────────────────
   const renderWeightTrend = () => {

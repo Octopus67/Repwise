@@ -1,4 +1,5 @@
 {
+  "_comment_sentry": "Audit fix 10.13 — Configure Sentry allowed domains in Sentry dashboard (Settings > Security > Allowed Domains) to restrict DSN usage to app origins only",
   "cli": { "version": ">= 13.0.0" },
   "build": {
     "development": {

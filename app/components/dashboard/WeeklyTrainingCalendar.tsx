@@ -15,7 +15,7 @@ export function WeeklyTrainingCalendar({ selectedDate, trainedDates, onDateSelec
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const weekDates = getWeekDates(selectedDate);
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
 
   return (
     <View style={styles.container}>

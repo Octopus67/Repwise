@@ -91,7 +91,7 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState & ActiveWorkoutAc
       // ── Lifecycle ────────────────────────────────────────────────────────
 
       startWorkout: (params) => {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getLocalDateString();
         set({
           workoutId: generateId(),
           mode: params.mode,

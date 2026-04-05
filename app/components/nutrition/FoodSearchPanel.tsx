@@ -4,6 +4,7 @@ import {
   ActivityIndicator, ScrollView, FlatList, Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { secureSet, secureGet } from '../../utils/secureStorage'; // Audit fix 10.15 — encrypted barcode history
 import { Ionicons } from '@expo/vector-icons';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
@@ -56,7 +57,7 @@ export function FoodSearchPanel({ onFoodSelected, onBarcodePress, onManualBarcod
   const [favorites, setFavorites] = useState<FoodItem[]>([]);
 
   useEffect(() => {
-    AsyncStorage.getItem(SCAN_HISTORY_KEY).then((raw) => {
+    secureGet(SCAN_HISTORY_KEY).then((raw) => {
       if (raw && mountedRef.current) { 
         try {
           const parsed: ScanHistoryEntry[] = JSON.parse(raw);
@@ -92,7 +93,7 @@ export function FoodSearchPanel({ onFoodSelected, onBarcodePress, onManualBarcod
     setScanHistory((prev) => {
       const updated = [item, ...prev.filter((h) => h.id !== item.id)].slice(0, MAX_SCAN_HISTORY);
       const entries: ScanHistoryEntry[] = updated.map((i) => ({ item: i, timestamp: Date.now() }));
-      AsyncStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(entries)).catch((err: unknown) => { console.warn('[FoodSearch] scan history save failed:', String(err)); });
+      secureSet(SCAN_HISTORY_KEY, JSON.stringify(entries)).catch((err: unknown) => { console.warn('[FoodSearch] scan history save failed:', String(err)); });
       return updated;
     });
   }, []);

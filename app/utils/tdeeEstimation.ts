@@ -79,7 +79,7 @@ export function computeTDEEEstimate(
   const weightChangeKg = emaEnd - emaStart;
 
   // Average daily calories within the window
-  const cutoffStr = cutoffDate.toISOString().split('T')[0];
+  const cutoffStr = getLocalDateString(cutoffDate);
   const windowCalorieDays = calorieDays.filter((d) => d >= cutoffStr);
   if (windowCalorieDays.length < MIN_DATA_DAYS) return null;
 

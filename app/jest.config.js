@@ -14,4 +14,13 @@ module.exports = {
     'react-native-mmkv': '<rootDir>/__mocks__/react-native-mmkv.ts',
     '@react-native-community/netinfo': '<rootDir>/__mocks__/@react-native-community/netinfo.ts',
   },
+  // Phase 3.3: Frontend coverage enforcement
+  collectCoverage: true,
+  coverageThreshold: {
+    global: {
+      branches: 70,
+      functions: 70,
+      lines: 80,
+    },
+  },
 };

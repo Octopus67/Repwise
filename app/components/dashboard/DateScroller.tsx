@@ -31,12 +31,12 @@ export function DateScroller({ selectedDate, onDateSelect, loggedDates }: DateSc
     (offset: number): string => {
       const d = new Date(selectedDate + 'T12:00:00');
       d.setDate(d.getDate() + offset * 7);
-      return d.toISOString().split('T')[0];
+      return getLocalDateString(d);
     },
     [selectedDate],
   );
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString();
 
   // Generate 3 weeks: previous, current, next for smooth swiping
   const weeks = [-1, 0, 1].map((rel) => {

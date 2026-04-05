@@ -51,8 +51,8 @@ export function ExerciseHistoryScreen({ route, navigation }: ExerciseHistoryScre
     setLoading(true);
     setError(null);
     try {
-      const end = new Date().toISOString().split('T')[0];
-      const start = new Date(Date.now() - RANGE_DAYS[timeRange] * 86400000).toISOString().split('T')[0];
+      const end = getLocalDateString();
+      const start = getLocalDateString(new Date(Date.now() - RANGE_DAYS[timeRange] * 86400000));
       const encoded = encodeURIComponent(exerciseName);
 
       const [e1rmRes, strengthRes] = await Promise.allSettled([

@@ -89,7 +89,7 @@ export function ProgressPhotoGrid({ photos, onPhotosChange, loading }: ProgressP
       const newPhoto: PhotoItem = {
         id: name,
         uri: dest,
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalDateString(),
       };
 
       const updated = [newPhoto, ...photos];

@@ -117,6 +117,8 @@ function BodyStatsStep({
           keyboardType="decimal-pad"
           placeholder={unitSystem === 'imperial' ? 'e.g. 176' : 'e.g. 80'}
           placeholderTextColor={c.text.muted}
+          accessibilityLabel="Enter weight" // Audit fix 7.10
+          accessibilityRole="text" // Audit fix 7.10
         />
         {fieldErrors.weight && (
           <Text style={fieldStyles.errorText}>{fieldErrors.weight}</Text>
@@ -139,6 +141,8 @@ function BodyStatsStep({
               keyboardType="number-pad"
               placeholder="ft"
               placeholderTextColor={c.text.muted}
+              accessibilityLabel="Height feet" // Audit fix 7.10
+              accessibilityRole="text" // Audit fix 7.10
             />
             <Text style={fieldStyles.heightSep}>′</Text>
             <TextInput
@@ -152,6 +156,8 @@ function BodyStatsStep({
               keyboardType="number-pad"
               placeholder="in"
               placeholderTextColor={c.text.muted}
+              accessibilityLabel="Height inches" // Audit fix 7.10
+              accessibilityRole="text" // Audit fix 7.10
             />
             <Text style={fieldStyles.heightSep}>″</Text>
           </View>
@@ -171,6 +177,8 @@ function BodyStatsStep({
             keyboardType="number-pad"
             placeholder="e.g. 180"
             placeholderTextColor={c.text.muted}
+            accessibilityLabel="Height centimeters" // Audit fix 7.10
+            accessibilityRole="text" // Audit fix 7.10
           />
           {fieldErrors.heightCm && (
             <Text style={fieldStyles.errorText}>{fieldErrors.heightCm}</Text>
@@ -188,6 +196,8 @@ function BodyStatsStep({
           keyboardType="decimal-pad"
           placeholder="optional"
           placeholderTextColor={c.text.muted}
+          accessibilityLabel="Body fat percent" // Audit fix 7.10
+          accessibilityRole="text" // Audit fix 7.10
         />
         {fieldErrors.bodyFatPct && (
           <Text style={fieldStyles.errorText}>{fieldErrors.bodyFatPct}</Text>
@@ -207,6 +217,8 @@ function BodyStatsStep({
               ]}
               onPress={() => onDraftChange({ activityLevel: level.value })}
               activeOpacity={0.7}
+              accessibilityLabel={`Activity ${level.label}`} // Audit fix 7.10
+              accessibilityRole="button" // Audit fix 7.10
             >
               <Text
                 style={[
@@ -259,6 +271,8 @@ function GoalsStep({
               ]}
               onPress={() => onDraftChange({ goalType: type.value })}
               activeOpacity={0.7}
+              accessibilityLabel={`Goal ${type.label}`} // Audit fix 7.10
+              accessibilityRole="button" // Audit fix 7.10
             >
               <Text
                 style={[
@@ -284,6 +298,8 @@ function GoalsStep({
             keyboardType="decimal-pad"
             placeholder="optional"
             placeholderTextColor={getThemeColors().text.muted}
+            accessibilityLabel="Target weight" // Audit fix 7.10
+            accessibilityRole="text" // Audit fix 7.10
           />
           {fieldErrors.targetWeight && (
             <Text style={fieldStyles.errorText}>{fieldErrors.targetWeight}</Text>
@@ -302,6 +318,8 @@ function GoalsStep({
             keyboardType="decimal-pad"
             placeholder="optional"
             placeholderTextColor={getThemeColors().text.muted}
+            accessibilityLabel="Goal rate" // Audit fix 7.10
+            accessibilityRole="text" // Audit fix 7.10
           />
           {fieldErrors.goalRate && (
             <Text style={fieldStyles.errorText}>{fieldErrors.goalRate}</Text>
@@ -447,7 +465,7 @@ export function PlanEditFlow({
 
       {/* Error message */}
       {error && (
-        <TouchableOpacity onPress={() => setError(null)} activeOpacity={0.7}>
+        <TouchableOpacity onPress={() => setError(null)} activeOpacity={0.7} accessibilityLabel="Dismiss error" accessibilityRole="button">{/* Audit fix 7.10 */}
           <Text style={flowStyles.error}>{error} (tap to dismiss)</Text>
         </TouchableOpacity>
       )}
@@ -460,6 +478,8 @@ export function PlanEditFlow({
               style={flowStyles.primaryBtn}
               onPress={handleNext}
               activeOpacity={0.7}
+              accessibilityLabel="Next step" // Audit fix 7.10
+              accessibilityRole="button" // Audit fix 7.10
             >
               <Text style={flowStyles.primaryBtnText}>Next</Text>
             </TouchableOpacity>
@@ -467,6 +487,8 @@ export function PlanEditFlow({
               style={flowStyles.cancelBtn}
               onPress={onCancel}
               activeOpacity={0.7}
+              accessibilityLabel="Cancel editing" // Audit fix 7.10
+              accessibilityRole="button" // Audit fix 7.10
             >
               <Text style={flowStyles.cancelBtnText}>Cancel</Text>
             </TouchableOpacity>
@@ -478,6 +500,8 @@ export function PlanEditFlow({
               onPress={handleSave}
               disabled={saving}
               activeOpacity={0.7}
+              accessibilityLabel="Save changes" // Audit fix 7.10
+              accessibilityRole="button" // Audit fix 7.10
             >
               {saving ? (
                 <ActivityIndicator color={c.text.primary} size="small" />
@@ -490,6 +514,8 @@ export function PlanEditFlow({
               onPress={handleBack}
               disabled={saving}
               activeOpacity={0.7}
+              accessibilityLabel="Go back" // Audit fix 7.10
+              accessibilityRole="button" // Audit fix 7.10
             >
               <Text style={flowStyles.secondaryBtnText}>Back</Text>
             </TouchableOpacity>
@@ -498,6 +524,8 @@ export function PlanEditFlow({
               onPress={onCancel}
               disabled={saving}
               activeOpacity={0.7}
+              accessibilityLabel="Cancel editing" // Audit fix 7.10
+              accessibilityRole="button" // Audit fix 7.10
             >
               <Text style={flowStyles.cancelBtnText}>Cancel</Text>
             </TouchableOpacity>

@@ -117,7 +117,7 @@ export function WeeklyReportScreen({ navigation }: AnalyticsScreenProps<'WeeklyR
     const dayOfWeek = jan4.getUTCDay() || 7;
     const monday = new Date(jan4);
     monday.setUTCDate(jan4.getUTCDate() - dayOfWeek + 1 + (week - 1) * 7);
-    return monday.toISOString().slice(0, 10);
+    return getLocalDateString(monday);
   }, [year, week]);
 
   const { data: volumeData, isWNS } = useWNSVolume(weekStart, goals?.goalType);

@@ -45,7 +45,7 @@ export function BlockCreationModal({ visible, onClose, onSaved, block }: BlockCr
     } else {
       setName('');
       setPhaseType('accumulation');
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalDateString();
       setStartDate(today);
       setEndDate(today);
       setNutritionPhase(null);

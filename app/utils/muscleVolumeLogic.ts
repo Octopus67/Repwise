@@ -45,7 +45,7 @@ export function isCurrentOrFutureWeek(weekStart: string): boolean {
 export function getAdjacentWeek(weekStart: string, direction: 'prev' | 'next'): string {
   const d = new Date(weekStart + 'T00:00:00');
   d.setDate(d.getDate() + (direction === 'next' ? 7 : -7));
-  return d.toISOString().split('T')[0];
+  return getLocalDateString(d);
 }
 
 /** Format a week range for display (e.g., "Jan 15 – Jan 21"). */

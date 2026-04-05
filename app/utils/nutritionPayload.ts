@@ -10,7 +10,7 @@ export function buildNutritionPayload(
   notes: string,
 ) {
   return {
-    entry_date: new Date().toISOString().split('T')[0],
+    entry_date: getLocalDateString(),
     meal_name: notes.trim() || 'Quick entry',
     calories,
     protein_g: protein,

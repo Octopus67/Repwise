@@ -42,7 +42,13 @@ export function SimpleModeDiscoveryModal({ visible, onClose }: Props) {
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent statusBarTranslucent>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      statusBarTranslucent
+      onRequestClose={onClose} // Audit fix 4.3 — Android back button
+    >
       <View style={[s.overlay, { backgroundColor: 'rgba(0,0,0,0.85)' }]}>
         <View style={[s.card, { backgroundColor: c.bg.surface }]}>
           <Text style={[s.title, { color: c.text.primary }]}>Smart Workout Feedback</Text>

@@ -52,7 +52,7 @@ export function MealPlanScreen({ navigation }: ProfileScreenProps<'MealPlan'>) {
     try {
       await api.post('meal-plans/save', {
         name: `Meal Plan ${new Date().toLocaleDateString()}`,
-        start_date: new Date().toISOString().split('T')[0],
+        start_date: getLocalDateString(),
         days: plan.days,
       });
     } catch (e: unknown) {

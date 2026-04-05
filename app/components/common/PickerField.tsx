@@ -52,7 +52,12 @@ export function PickerField({ label, value, options, onSelect }: PickerFieldProp
         </View>
       </TouchableOpacity>
 
-      <Modal visible={visible} animationType="slide" transparent>
+      <Modal
+        visible={visible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setVisible(false)} // Audit fix 4.3 — Android back button
+      >
         <View style={styles.overlay}>
           <View style={styles.sheet}>
             <View style={styles.header}>

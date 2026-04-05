@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Audit fix 7.7
+import type { ProfileStackParamList } from '../../navigation/BottomTabNavigator'; // Audit fix 7.7
 import { radius, spacing, typography, opacityScale } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../common/Card';
@@ -98,7 +100,7 @@ export function BodyStatsSection({ metrics, unitSystem }: BodyStatsSectionProps)
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const editStyles = getEditStyles(c);
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>(); // Audit fix 7.7
 
   const { recalculate } = useRecalculate();
 

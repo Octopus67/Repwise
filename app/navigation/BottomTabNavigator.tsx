@@ -113,6 +113,7 @@ export type AnalyticsStackParamList = {
   WeeklyReport: undefined;
   MonthlyReport: undefined;
   ExerciseHistory: { exerciseName: string };
+  HUExplainer: undefined; // Audit fix 7.7 — typed navigation
 };
 
 export type ProfileStackParamList = {
@@ -134,6 +135,7 @@ export type ProfileStackParamList = {
   PRHistory: undefined;
   YearInReview: undefined;
   ImportData: undefined;
+  MetricsHistory: undefined; // Audit fix 7.7 — typed navigation
 };
 
 export type BottomTabParamList = {

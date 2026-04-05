@@ -23,7 +23,7 @@ function getWeekMonday(): string {
   const diff = day === 0 ? 6 : day - 1;
   const monday = new Date(now);
   monday.setDate(now.getDate() - diff);
-  return monday.toISOString().split('T')[0];
+  return getLocalDateString(monday);
 }
 
 interface UseWorkoutDataParams {

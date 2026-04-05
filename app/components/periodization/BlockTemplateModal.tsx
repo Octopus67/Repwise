@@ -38,7 +38,7 @@ export function BlockTemplateModal({ visible, onClose, onApplied }: BlockTemplat
     if (visible) {
       setError(null);
       setSelectedId(null);
-      setStartDate(new Date().toISOString().split('T')[0]);
+      setStartDate(getLocalDateString());
       setLoadingTemplates(true);
       api.get('periodization/templates')
         .then(({ data }) => setTemplates(data))

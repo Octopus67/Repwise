@@ -202,7 +202,7 @@ export const useStore = create<AppStore>((set) => ({
   rpeMode: 'rpe',
 
   // Date navigation state
-  selectedDate: new Date().toISOString().split('T')[0],
+  selectedDate: getLocalDateString(),
 
   // Adaptive targets state
   adaptiveTargets: null,

@@ -29,7 +29,7 @@ export function LeaderboardScreen() {
       const day = now.getDay();
       const monday = new Date(now);
       monday.setDate(now.getDate() - ((day + 6) % 7));
-      const periodStart = monday.toISOString().split('T')[0];
+      const periodStart = getLocalDateString(monday);
       const { data } = await api.get<{ entries: LeaderboardEntry[] }>(
         `social/leaderboard/${boardType}`,
         { params: { period_start: periodStart } },

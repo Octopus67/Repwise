@@ -28,7 +28,7 @@ export function getWeekDates(referenceDate: string): string[] {
   for (let i = 0; i < 7; i++) {
     const day = new Date(monday);
     day.setDate(monday.getDate() + i);
-    dates.push(day.toISOString().split('T')[0]);
+    dates.push(getLocalDateString(day));
   }
   return dates;
 }
