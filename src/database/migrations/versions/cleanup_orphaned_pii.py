@@ -78,18 +78,10 @@ _SPECIAL_FK_TABLES = [
 
 
 def upgrade() -> None:
-    conn = op.get_bind()
-    # SQLite is dev-only; skip to avoid dialect issues
-    if conn.dialect.name == "sqlite":
-        return
-    for table in _CHILD_TABLES:
-        op.execute(
-            text(f"DELETE FROM {table} WHERE user_id NOT IN (SELECT id FROM users)")
-        )
-    for table, fk_col in _SPECIAL_FK_TABLES:
-        op.execute(
-            text(f"DELETE FROM {table} WHERE {fk_col} NOT IN (SELECT id FROM users)")
-        )
+    # FK cascade changes and orphan cleanup were applied directly to Neon
+    # on 2026-04-05 via scripts/phase1_fk_cascade.py. This migration is
+    # retained only to keep the Alembic revision chain intact.
+    pass
 
 
 def downgrade() -> None:
