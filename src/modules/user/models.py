@@ -6,7 +6,7 @@ Tables: UserProfiles, UserMetrics, BodyweightLogs, UserGoals.
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Date, Float, ForeignKey, Index, String, UniqueConstraint, func
+from sqlalchemy import Date, DateTime, Float, ForeignKey, Index, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -59,6 +59,7 @@ class UserMetric(Base):
     activity_level: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     additional_metrics: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True, default=None)
     recorded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         server_default=func.now(),
         default=None,
     )

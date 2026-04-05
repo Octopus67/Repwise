@@ -181,5 +181,5 @@ class FatigueService:
                 for sg in suggestions
             ],
             lookback_days=lookback_days,
-            analyzed_at=datetime.utcnow(),
+            analyzed_at=datetime.now(timezone.utc),
         )

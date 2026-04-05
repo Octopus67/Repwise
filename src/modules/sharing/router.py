@@ -45,7 +45,7 @@ async def get_shared_workout(
     if ref:
         try:
             referrer_id = uuid.UUID(ref)
-            visitor_ip = request.client.host if request and request.client else None
+            visitor_ip = request.client.host if request and request.client else None  # Audit fix 10.2
             user_agent = request.headers.get("user-agent") if request else None
             await service.track_referral(referrer_id, visitor_ip, user_agent)
         except ValueError:
@@ -61,6 +61,9 @@ async def get_shared_workout(
     if workout["pr_count"] > 0:
         description += f" · 🏆 {workout['pr_count']} PR{'s' if workout['pr_count'] > 1 else ''}"
 
+    # Audit fix 6.7 — HTML escape in OG meta tags
+    safe_title = html_mod.escape(title, quote=True)
+    safe_description = html_mod.escape(description, quote=True)
     og_url = html_mod.escape(str(request.url)) if request else ""
     og_image = "https://repwise.app/og-workout.png"
 
@@ -74,15 +77,15 @@ async def get_shared_workout(
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{title}</title>
-    <meta property="og:title" content="{title}">
-    <meta property="og:description" content="{description}">
+    <title>{safe_title}</title>
+    <meta property="og:title" content="{safe_title}">
+    <meta property="og:description" content="{safe_description}">
     <meta property="og:image" content="{og_image}">
     <meta property="og:url" content="{og_url}">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{title}">
-    <meta name="twitter:description" content="{description}">
+    <meta name="twitter:title" content="{safe_title}">
+    <meta name="twitter:description" content="{safe_description}">
     <meta name="twitter:image" content="{og_image}">
     <style>
         body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0A0E13; color: #F1F5F9; max-width: 600px; margin: 0 auto; padding: 24px; }}

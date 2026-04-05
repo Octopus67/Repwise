@@ -6,7 +6,9 @@ import uuid
 from datetime import date, datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from src.shared.sanitize import strip_html
 
 
 class FollowResponse(BaseModel):
@@ -31,6 +33,12 @@ class FeedEventResponse(BaseModel):
 
 class ReactionCreate(BaseModel):
     emoji: str = Field(default="💪", max_length=10)
+
+    # Audit fix 2.4 — HTML sanitization
+    @field_validator("emoji")
+    @classmethod
+    def sanitize_emoji(cls, v: str) -> str:
+        return strip_html(v)
 
 
 class ReactionResponse(BaseModel):

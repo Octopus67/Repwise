@@ -6,7 +6,7 @@ from typing import Optional
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Float, ForeignKey, Index, String, Text, text
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -52,7 +52,7 @@ class FoodItem(SoftDeleteMixin, Base):
 
     # Owner tracking for user-created recipes
     created_by: Mapped[Optional[uuid.UUID]] = mapped_column(
-        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True,  # Audit fix 8.1
     )
 
     # Relationship to recipe ingredients (only populated when is_recipe=True)
@@ -124,7 +124,7 @@ class UserFoodFrequency(Base):
         ForeignKey("food_items.id", ondelete="CASCADE"), nullable=False
     )
     log_count: Mapped[int] = mapped_column(default=0, server_default=text("0"))
-    last_logged_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    last_logged_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     is_favorite: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
 
     __table_args__ = (
@@ -155,9 +155,11 @@ class BarcodeCache(Base):
     # Override Base timestamps with plain Python defaults (no server_default
     # needed for a cache table — keeps SQLite happy without patching).
     created_at: Mapped[datetime] = mapped_column(
-        default=lambda: datetime.utcnow()
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc)
     )
     updated_at: Mapped[datetime] = mapped_column(
-        default=lambda: datetime.utcnow(),
-        onupdate=lambda: datetime.utcnow(),
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
     )

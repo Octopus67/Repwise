@@ -6,12 +6,14 @@ from typing import List, Optional
 import uuid
 from datetime import date
 
-from fastapi import APIRouter, Depends, Query, Path, Response
+from fastapi import APIRouter, Depends, Query, Path, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
 from src.middleware.authenticate import get_current_user, get_current_user_optional
+from src.middleware.rate_limiter import check_ip_endpoint_rate_limit
 from src.modules.auth.models import User
+from src.shared.ip_utils import get_client_ip
 from src.modules.training.exercises import (
     get_all_exercises,
     get_muscle_groups,
@@ -56,12 +58,14 @@ async def list_muscle_groups() -> List[str]:
 
 @router.get("/exercises/search")
 async def search_exercises_endpoint(
+    request: Request,  # Audit fix 10.4 — IP-based rate limit: 60 req/min
     q: str = Query(default="", max_length=200),
     muscle_group: Optional[str] = Query(default=None, max_length=100),
     equipment: Optional[str] = Query(default=None, max_length=100),
     category: Optional[str] = Query(default=None, max_length=100),
 ) -> List[dict]:
     """Search exercises by name with optional muscle group, equipment, and category filters."""
+    check_ip_endpoint_rate_limit(get_client_ip(request), "exercise_search", 60, 60)  # Audit fix 10.4
     return search_exercises(query=q, muscle_group=muscle_group, equipment=equipment, category=category)
 
 

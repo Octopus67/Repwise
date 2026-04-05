@@ -15,6 +15,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # Audit fix 8.7 — GIN indexes are PostgreSQL-only; skip on SQLite
+    if op.get_bind().dialect.name == "sqlite":
+        return
     # GIN indexes for JSONB query performance
     op.create_index(
         "ix_training_sessions_exercises_gin",
@@ -50,6 +53,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # Audit fix 8.7 — GIN indexes are PostgreSQL-only; skip on SQLite
+    if op.get_bind().dialect.name == "sqlite":
+        return
     op.drop_index("ix_token_blacklist_expires", table_name="token_blacklist")
     op.drop_index("ix_content_articles_tags_gin", table_name="content_articles")
     op.drop_index("ix_user_profiles_preferences_gin", table_name="user_profiles")

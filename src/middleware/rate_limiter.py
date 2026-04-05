@@ -22,6 +22,9 @@ logger = logging.getLogger("security")
 # ---------------------------------------------------------------------------
 _mem_lock = threading.Lock()
 _mem_store: dict[str, list[float]] = {}
+# Audit fix 6.2 — bounded in-memory store
+_MEM_STORE_MAX_KEYS = 10_000
+_mem_check_counter = 0
 
 # Categories that MUST be rate-limited even without Redis (auth-critical)
 _AUTH_CRITICAL_CATEGORIES = frozenset({
@@ -55,15 +58,28 @@ def _memory_sliding_window_check(
 
 def _memory_record(category: str, identifier: str, window_seconds: int) -> None:
     """Record an attempt in the in-memory fallback store."""
+    global _mem_check_counter
     key = f"rl:{category}:{identifier}"
     now = time.time()
     cutoff = now - window_seconds
 
     with _mem_lock:
+        # Audit fix 6.2 — periodic cleanup of expired timestamps
+        _mem_check_counter += 1
+        if _mem_check_counter % 1000 == 0:
+            expired_keys = [k for k, v in _mem_store.items() if not v or v[-1] < cutoff]
+            for k in expired_keys:
+                del _mem_store[k]
+
         entries = _mem_store.get(key, [])
         entries = [t for t in entries if t > cutoff]
         entries.append(now)
         _mem_store[key] = entries
+
+        # Audit fix 6.2 — evict oldest entries when store exceeds max size
+        if len(_mem_store) > _MEM_STORE_MAX_KEYS:
+            oldest_key = min(_mem_store, key=lambda k: _mem_store[k][0] if _mem_store[k] else 0)
+            del _mem_store[oldest_key]
 
 
 def _memory_clear(category: str, identifier: str) -> None:
@@ -224,6 +240,18 @@ def check_user_endpoint_rate_limit(
         f"user:{endpoint}", user_id, max_attempts, window_seconds,
         "Too many requests to this endpoint. Please try again later.",
     )
+
+
+# Audit fix 10.4 — IP-based rate limit for public endpoints
+def check_ip_endpoint_rate_limit(
+    ip: str, endpoint: str, max_attempts: int, window_seconds: int
+) -> None:
+    """Rate limit a specific endpoint per IP address, and record the attempt."""
+    _redis_sliding_window_check(
+        f"ip:{endpoint}", ip, max_attempts, window_seconds,
+        "Too many requests. Please try again later.",
+    )
+    _redis_record(f"ip:{endpoint}", ip, window_seconds)
 
 
 def clear_all() -> None:

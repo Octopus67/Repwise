@@ -157,7 +157,7 @@ class PushNotificationService:
             title=title,
             body=body,
             data=data,
-            sent_at=datetime.utcnow(),
+            sent_at=datetime.now(timezone.utc),
         )
         self.db.add(log)
         await self.db.flush()

@@ -141,7 +141,7 @@ class ProgressPhotoService:
     ) -> None:
         """Soft-delete a progress photo."""
         photo = await self.get_photo(user_id, photo_id)
-        photo.deleted_at = datetime.utcnow()
+        photo.deleted_at = datetime.now(timezone.utc)
         await self.session.flush()
         logger.info("Soft-deleted photo %s for user %s", photo_id, user_id)
 

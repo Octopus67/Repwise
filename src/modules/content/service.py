@@ -220,7 +220,7 @@ class ContentService:
         """
         article = await self._get_article_or_raise(article_id)
         article.status = ContentStatus.PUBLISHED
-        article.published_at = datetime.utcnow()
+        article.published_at = datetime.now(timezone.utc)
 
         if admin_user_id:
             await ContentArticle.write_audit(

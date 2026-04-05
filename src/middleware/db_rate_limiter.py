@@ -19,7 +19,7 @@ async def check_db_rate_limit(
     message: str,
 ) -> None:
     """Check and record a rate-limited action in the database."""
-    cutoff = datetime.utcnow() - timedelta(seconds=window_seconds)
+    cutoff = datetime.now(timezone.utc) - timedelta(seconds=window_seconds)
 
     count = (
         await session.execute(
@@ -56,7 +56,7 @@ async def reset_db_attempts(session: AsyncSession, key: str, endpoint: str) -> N
 
 async def cleanup_expired_entries(session: AsyncSession, max_age_seconds: int = 3600) -> int:
     """Purge rate limit entries older than max_age_seconds. Returns count deleted."""
-    cutoff = datetime.utcnow() - timedelta(seconds=max_age_seconds)
+    cutoff = datetime.now(timezone.utc) - timedelta(seconds=max_age_seconds)
     result = await session.execute(
         delete(RateLimitEntry).where(RateLimitEntry.created_at < cutoff)
     )

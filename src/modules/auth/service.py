@@ -116,7 +116,6 @@ class AuthService:
             access_token=tokens.access_token,
             refresh_token=tokens.refresh_token,
             expires_in=tokens.expires_in,
-            email_verified=user.email_verified,
         )
 
     async def login_oauth(self, provider: str, token: str, ip: str = "", data: Optional["OAuthCallbackRequest"] = None) -> AuthTokens:
@@ -154,12 +153,13 @@ class AuthService:
                     audience=settings.APPLE_CLIENT_ID,
                     issuer=APPLE_ISSUER,
                 )
-                # Verify nonce if provided (optional for backward compat)
-                if data and getattr(data, 'nonce', None):
-                    expected_nonce = hashlib.sha256(data.nonce.encode('utf-8')).hexdigest()
-                    token_nonce = decoded.get("nonce")
-                    if not token_nonce or token_nonce != expected_nonce:
-                        raise UnauthorizedError("Invalid nonce")
+                # Audit fix 2.2 — Apple nonce mandatory
+                if not data or not getattr(data, 'nonce', None):
+                    raise UnauthorizedError("Nonce is required for Apple Sign-In")
+                expected_nonce = hashlib.sha256(data.nonce.encode('utf-8')).hexdigest()
+                token_nonce = decoded.get("nonce")
+                if not token_nonce or token_nonce != expected_nonce:
+                    raise UnauthorizedError("Invalid nonce")
                 provider_user_id = decoded["sub"]
                 email = decoded.get("email", f"{decoded['sub']}@privaterelay.appleid.com")
             except UnauthorizedError:
@@ -345,7 +345,7 @@ class AuthService:
 
         code = generate_otp()
         code_hash = bcrypt.hashpw(code.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-        expires_at = datetime.utcnow() + timedelta(minutes=10)
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
 
         # Invalidate all existing unused reset codes for this user
         await self.session.execute(
@@ -377,7 +377,7 @@ class AuthService:
             bcrypt.checkpw(b"dummy", DUMMY_HASH.encode("utf-8"))
             return False
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         stmt = (
             select(PasswordResetCode)
             .where(
@@ -394,7 +394,7 @@ class AuthService:
             if bcrypt.checkpw(code.encode("utf-8"), rc.code_hash.encode("utf-8")):
                 rc.used = True
                 user.hashed_password = _hash_password(new_password)
-                user.password_changed_at = datetime.utcnow()
+                user.password_changed_at = datetime.now(timezone.utc)
                 await self.session.flush()
                 log_account_event(user_id=str(user.id), action="password_reset", ip=ip)
                 return True
@@ -411,7 +411,7 @@ class AuthService:
 
         code = generate_otp()
         code_hash = bcrypt.hashpw(code.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-        expires_at = datetime.utcnow() + timedelta(minutes=10)
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
 
         # Invalidate all existing unused verification codes for this user
         await self.session.execute(
@@ -432,7 +432,7 @@ class AuthService:
 
     async def verify_email(self, user_id: uuid.UUID, code: str) -> bool:
         """Verify the OTP code and mark the user's email as verified."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         stmt = (
             select(EmailVerificationCode)
             .where(
@@ -457,7 +457,7 @@ class AuthService:
 
     async def resend_verification_code(self, user: User) -> None:
         """Resend verification code with rate limiting (max 3 per 15 min)."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         window_start = now - timedelta(minutes=15)
 
         stmt = select(EmailVerificationCode).where(
@@ -520,7 +520,7 @@ def _verify_password(plain: str, hashed: Optional[str]) -> bool:
 
 def _generate_tokens(user_id: uuid.UUID) -> AuthTokens:
     """Create an access + refresh JWT pair."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     access_exp = now + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
     refresh_exp = now + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
 

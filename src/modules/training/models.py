@@ -47,8 +47,8 @@ class TrainingSession(SoftDeleteMixin, AuditLogMixin, Base):
         nullable=True,
         server_default=text("'{}'::jsonb"),
     )
-    start_time: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    end_time: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    start_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    end_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     __table_args__ = (
         Index(
@@ -100,6 +100,8 @@ class WorkoutTemplate(SoftDeleteMixin, AuditLogMixin, Base):
             "user_id",
             "sort_order",
         ),
+        # Audit fix 8.4 — partial index for active (non-deleted) templates
+        Index("ix_workout_templates_active", "user_id", postgresql_where=text("deleted_at IS NULL")),
     )
 
 

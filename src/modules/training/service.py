@@ -284,7 +284,7 @@ class TrainingService:
     ) -> None:
         """Soft-delete a training session (Requirement 6.4)."""
         training = await self._get_or_404(user_id, session_id)
-        training.deleted_at = datetime.utcnow()
+        training.deleted_at = datetime.now(timezone.utc)
 
         await TrainingSession.write_audit(
             self.session,

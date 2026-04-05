@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     # App
     APP_NAME: str = "Repwise"
     DEBUG: bool = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
+    # Audit fix 6.11 — docs independent of DEBUG
+    ENABLE_DOCS: bool = os.getenv("ENABLE_DOCS", "false").lower() in ("true", "1", "yes")
     CORS_ORIGINS: str = '["http://localhost:8081","http://localhost:19006"]'
 
     # Trusted hosts
@@ -41,6 +43,9 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://localhost:5432/hypertrophy_os"
+
+    # Audit fix 6.8 — JWT validation independent of DEBUG
+    ENVIRONMENT: str = "production"
 
     # JWT
     JWT_SECRET: str = "change-me-in-production"
@@ -60,9 +65,7 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str = ""
     APPLE_CLIENT_ID: str = ""  # Bundle ID, e.g. com.octopuslabs.repwise
 
-    # Payment providers
-    STRIPE_WEBHOOK_SECRET: str = "whsec_test_secret"
-    RAZORPAY_WEBHOOK_SECRET: str = "rzp_test_secret"
+    # Audit fix 9.6 — removed stale payment provider settings
 
     # USDA FoodData Central
     USDA_API_KEY: str = "DEMO_KEY"
@@ -94,11 +97,16 @@ class Settings(BaseSettings):
     REVENUECAT_WEBHOOK_AUTH_KEY: str = ""
     REVENUECAT_API_URL: str = "https://api.revenuecat.com/v1"
 
+    # Audit fix 10.11 — CAPTCHA gate for registration (requires external service)
+    # TODO: Integrate with reCAPTCHA/hCaptcha provider
+    REQUIRE_CAPTCHA: bool = False
+
     @field_validator("JWT_SECRET")
     @classmethod
     def validate_jwt_secret(cls, v: str, info: ValidationInfo) -> str:
-        debug = info.data.get("DEBUG", False)
-        if not debug and (len(v) < 32 or v == "change-me-in-production"):
+        # Audit fix 6.8 — JWT validation independent of DEBUG
+        env = info.data.get("ENVIRONMENT", "production")
+        if env != "development" and (len(v) < 32 or v == "change-me-in-production"):
             raise ValueError(
                 "JWT_SECRET must be at least 32 characters and not the default value in production"
             )

@@ -8,6 +8,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
+from src.shared.sanitize import strip_html  # Audit fix 2.4 — HTML sanitization
 from src.shared.validators import validate_json_size
 
 
@@ -17,10 +18,17 @@ class CoachingRequestCreate(BaseModel):
     goals: str = Field(..., min_length=1, max_length=2000)
     progress_data: Optional[dict[str, Any]] = None
 
+    # Audit fix 2.4 — HTML sanitization
+    @field_validator('goals', mode='before')
+    @classmethod
+    def sanitize_text(cls, v: str) -> str:
+        return strip_html(v) if isinstance(v, str) else v
+
     @field_validator("progress_data")
     @classmethod
     def validate_progress_data_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
-        return validate_json_size(v)
+        # Audit fix 6.9 — JSONB validation
+        return validate_json_size(v, expected_type=dict)
 
 
 class CoachingRequestResponse(BaseModel):
@@ -34,6 +42,12 @@ class CoachingRequestResponse(BaseModel):
     document_urls: Optional[list[str]] = None
     created_at: datetime
     updated_at: datetime
+
+    # Audit fix 6.9 — JSONB validation
+    @field_validator("document_urls")
+    @classmethod
+    def validate_document_urls(cls, v: list[str] | None) -> list[str] | None:
+        return validate_json_size(v, expected_type=list)
 
     model_config = {"from_attributes": True}
 
@@ -59,6 +73,12 @@ class CoachingSessionResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    # Audit fix 6.9 — JSONB validation
+    @field_validator("document_urls")
+    @classmethod
+    def validate_document_urls(cls, v: list[str] | None) -> list[str] | None:
+        return validate_json_size(v, expected_type=list)
+
     model_config = {"from_attributes": True}
 
 
@@ -66,6 +86,12 @@ class SessionCompleteRequest(BaseModel):
     """Payload for completing a coaching session."""
 
     notes: Optional[str] = Field(default=None, max_length=5000)
+
+    # Audit fix 2.4 — HTML sanitization
+    @field_validator('notes', mode='before')
+    @classmethod
+    def sanitize_text(cls, v: str) -> str:
+        return strip_html(v) if isinstance(v, str) else v
 
 
 class DocumentUploadRequest(BaseModel):
@@ -79,6 +105,12 @@ class CoachProfileCreate(BaseModel):
 
     bio: Optional[str] = Field(default=None, max_length=2000)
     specializations: Optional[list[str]] = Field(default=None, max_length=20)
+
+    # Audit fix 2.4 — HTML sanitization
+    @field_validator('bio', mode='before')
+    @classmethod
+    def sanitize_text(cls, v: str) -> str:
+        return strip_html(v) if isinstance(v, str) else v
 
     @field_validator("specializations")
     @classmethod

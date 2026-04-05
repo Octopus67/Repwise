@@ -11,6 +11,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        # Audit fix 6.6 — CSP header
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'none'; style-src 'unsafe-inline'; img-src 'self' https:; frame-ancestors 'none'"
         if not request.url.path.startswith("/api/v1/health"):
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response

@@ -8,6 +8,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from src.shared.sanitize import strip_html  # Audit fix 2.4 — HTML sanitization
 from src.shared.validators import validate_json_size
 from src.shared.types import ActivityLevel, GoalType
 
@@ -26,6 +27,12 @@ class UserProfileUpdate(BaseModel):
     region: Optional[str] = Field(None, max_length=10)
     preferences: Optional[dict[str, Any]] = None
     coaching_mode: Optional[str] = Field(None, pattern=r"^(coached|collaborative|manual)$")
+
+    # Audit fix 2.4 — HTML sanitization
+    @field_validator('display_name', mode='before')
+    @classmethod
+    def sanitize_text(cls, v: str) -> str:
+        return strip_html(v) if isinstance(v, str) else v
 
     @field_validator("preferences")
     @classmethod

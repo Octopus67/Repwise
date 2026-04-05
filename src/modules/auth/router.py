@@ -1,8 +1,9 @@
 """Auth routes — registration, login, OAuth, token refresh, and logout."""
 
+import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Request, Body, Path
+from fastapi import APIRouter, Depends, Request, Body, Path, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
@@ -37,10 +38,37 @@ from src.modules.auth.schemas import (
     VerifyEmailRequest,
 )
 from src.modules.auth.service import AuthService
+from src.modules.auth.oauth_state import generate_state, validate_state  # Audit fix 2.3
 from src.shared.errors import UnauthorizedError, ValidationError
 from src.shared.ip_utils import get_client_ip
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
+
+
+# Audit fix 2.5 — set httpOnly cookies for web clients
+def _is_web_client(request: Request) -> bool:
+    """Detect browser/web clients via platform header or Sec-Fetch-Mode."""
+    return (
+        request.headers.get("X-Platform", "").lower() == "web"
+        or request.headers.get("Sec-Fetch-Mode") is not None
+    )
+
+
+def _set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
+    """Set httpOnly cookies for web clients."""
+    response.set_cookie(
+        key="access_token", value=access_token,
+        httponly=True, secure=True, samesite="lax",
+        max_age=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )
+    response.set_cookie(
+        key="refresh_token", value=refresh_token,
+        httponly=True, secure=True, samesite="lax",
+        max_age=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS * 86400,
+        path="/api/v1/auth/refresh",
+    )
 
 VERIFY_MAX_ATTEMPTS = 5
 VERIFY_WINDOW_SECONDS = 900  # 15 minutes
@@ -77,6 +105,9 @@ async def register(
     """
     ip = get_client_ip(request)
     check_register_rate_limit(ip)
+    # Audit fix 10.11 — CAPTCHA gate
+    if settings.REQUIRE_CAPTCHA and not data.captcha_token:
+        raise ValidationError("CAPTCHA required")
     await check_db_rate_limit(
         session=db, key=f"register:{ip}", endpoint="register",
         max_attempts=5, window_seconds=3600,
@@ -101,6 +132,7 @@ async def register(
 async def login(
     request: Request,
     data: LoginRequest,
+    response: Response,
     db: AsyncSession = Depends(get_db),
     service: AuthService = Depends(_get_auth_service),
 ) -> LoginResponse:
@@ -123,7 +155,17 @@ async def login(
     # Successful login — clear rate limit counters
     reset_attempts(data.email)
     await reset_db_attempts(db, key=f"login:{data.email}", endpoint="login")
+    # Audit fix 2.5 — set httpOnly cookies for web clients
+    if _is_web_client(request) and result.access_token and result.refresh_token:
+        _set_auth_cookies(response, result.access_token, result.refresh_token)
     return result
+
+
+# Audit fix 2.3 — OAuth state CSRF protection
+@router.get("/oauth/state")
+async def get_oauth_state() -> dict:
+    """Generate a one-time-use state token for OAuth CSRF protection (web flow)."""
+    return {"state": generate_state()}
 
 
 @router.post("/oauth/{provider}", response_model=AuthTokensResponse)
@@ -135,23 +177,35 @@ async def oauth_login(
 ) -> AuthTokensResponse:
     """Authenticate via OAuth provider (google, apple, etc.)."""
     check_oauth_rate_limit(get_client_ip(request))
+    # Audit fix 2.3 — validate state if provided (web flow), allow without for mobile
+    if data.state is not None:
+        if not validate_state(data.state):
+            raise ValidationError("Invalid or expired OAuth state parameter")
+    else:
+        logger.info("OAuth request without state parameter (mobile flow) from %s", get_client_ip(request))
     tokens = await service.login_oauth(provider=provider, token=data.token, ip=get_client_ip(request), data=data)
     return tokens
 
 
 @router.post("/refresh", response_model=AuthTokensResponse)
 async def refresh(
+    request: Request,
     data: RefreshTokenRequest,
+    response: Response,
     service: AuthService = Depends(_get_auth_service),
 ) -> AuthTokensResponse:
     """Obtain a new access token using a valid refresh token."""
     tokens = await service.refresh_token(refresh_token=data.refresh_token)
+    # Audit fix 2.5 — set httpOnly cookies for web clients
+    if _is_web_client(request):
+        _set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
     return tokens
 
 
 @router.post("/logout", status_code=204, response_model=None)
 async def logout(
     request: Request,
+    response: Response,
     refresh_token: Optional[str] = Body(None, embed=True),
     user: User = Depends(get_current_user),
     service: AuthService = Depends(_get_auth_service),
@@ -160,6 +214,9 @@ async def logout(
     from src.middleware.authenticate import _extract_bearer_token
     access_token = _extract_bearer_token(request)
     await service.logout(access_token, refresh_token, ip=get_client_ip(request))
+    # Audit fix 2.5 — clear httpOnly cookies on logout
+    response.delete_cookie("access_token")
+    response.delete_cookie("refresh_token", path="/api/v1/auth/refresh")
 
 
 @router.get("/me", response_model=CurrentUserResponse)
@@ -251,5 +308,7 @@ async def resend_verification_by_email(
 
     Always returns 200 to prevent email enumeration.
     """
+    # Audit fix 2.1 — rate limit email resend
+    check_forgot_password_rate_limit(data.email)
     await service.resend_verification_code_by_email(data.email)
     return {"message": "If an unverified account exists, a verification code has been sent"}

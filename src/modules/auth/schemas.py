@@ -18,6 +18,7 @@ class RegisterRequest(BaseModel):
 
     email: EmailStr
     password: str = Field(min_length=8, max_length=128, description="Minimum 8 characters")
+    captcha_token: Optional[str] = None  # Audit fix 10.11
 
     @field_validator("email")
     @classmethod
@@ -35,6 +36,9 @@ class RegisterRequest(BaseModel):
             raise ValueError("Password must contain at least one lowercase letter")
         if not re.search(r'[0-9]', v):
             raise ValueError("Password must contain at least one digit")
+        # Audit fix 10.7 — require at least one special character
+        if not re.search(r'[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>/?`~]', v):
+            raise ValueError("Password must contain at least one special character")
         return v
 
 
@@ -56,8 +60,9 @@ class OAuthCallbackRequest(BaseModel):
     provider: str = Field(default="", description="OAuth provider name (google, apple)")
     token: Optional[str] = Field(default=None, description="OAuth access/id token from provider")
     identity_token: Optional[str] = Field(default=None, description="Apple identity token (alias for token)")
-    nonce: Optional[str] = Field(default=None, description="Nonce for Apple Sign-In replay protection")
+    nonce: Optional[str] = Field(default=None, description="Nonce for Apple Sign-In replay protection")  # Audit fix 2.2 — Apple nonce mandatory (Optional kept for Google compat)
     full_name: Optional[str] = Field(default=None, description="Display name from Apple first sign-in")
+    state: Optional[str] = Field(default=None, description="OAuth state for CSRF protection (web flow)")  # Audit fix 2.3
 
     @model_validator(mode="after")
     def resolve_token(self) -> "OAuthCallbackRequest":
@@ -79,9 +84,9 @@ class AuthTokensResponse(BaseModel):
 
 
 class LoginResponse(AuthTokensResponse):
-    """Login response — includes email verification status."""
-
-    email_verified: bool
+    """Login response — tokens only."""
+    # Audit fix 10.12 — prevent email enumeration
+    pass
 
 
 class RegisterResponse(BaseModel):
@@ -143,6 +148,9 @@ class ResetPasswordRequest(BaseModel):
             raise ValueError("Password must contain at least one lowercase letter")
         if not re.search(r'[0-9]', v):
             raise ValueError("Password must contain at least one digit")
+        # Audit fix 10.7 — require at least one special character
+        if not re.search(r'[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>/?`~]', v):
+            raise ValueError("Password must contain at least one special character")
         return v
 
 

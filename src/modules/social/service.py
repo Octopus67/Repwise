@@ -92,10 +92,13 @@ class SocialService:
         limit: int = 20,
     ) -> list[FeedEvent]:
         """Fan-out-on-read feed: join follows → feed_events with composite cursor."""
-        # Get IDs of users this person follows
-        following_sub = select(Follow.following_id).where(Follow.follower_id == user_id)
-
-        stmt = select(FeedEvent).where(FeedEvent.user_id.in_(following_sub)).options(selectinload(FeedEvent.reactions))
+        # Audit fix 4.5 — JOIN instead of IN subquery for feed
+        stmt = (
+            select(FeedEvent)
+            .join(Follow, FeedEvent.user_id == Follow.following_id)
+            .where(Follow.follower_id == user_id)
+            .options(selectinload(FeedEvent.reactions))
+        )
 
         if cursor_time and cursor_id:
             stmt = stmt.where(

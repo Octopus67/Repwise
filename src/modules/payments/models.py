@@ -6,7 +6,7 @@ from typing import Optional
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, ForeignKey, Index, String, text
+from sqlalchemy import DateTime, Float, ForeignKey, Index, String, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -47,6 +47,13 @@ class Subscription(Base, SoftDeleteMixin):
 
     __table_args__ = (
         Index("ix_subscriptions_user_status", "user_id", "status"),
+        # Audit fix 8.2 — prevent duplicate subscriptions per provider
+        UniqueConstraint("user_id", "provider_subscription_id", name="uq_subscription_user_provider"),
+        # Audit fix 8.8 — only one active/trialing subscription per user
+        Index(
+            "uq_active_subscription", "user_id", unique=True,
+            postgresql_where=text("status IN ('active', 'trialing') AND deleted_at IS NULL"),
+        ),
     )
 
 
@@ -73,6 +80,11 @@ class PaymentTransaction(Base):
     metadata_: Mapped[Optional[dict]] = mapped_column(
         "metadata",
         JSONB, nullable=True, server_default=text("'{}'::jsonb"),
+    )
+
+    # Audit fix 8.5 — composite index for user transaction history queries
+    __table_args__ = (
+        Index("ix_payment_transactions_user_created", "user_id", "created_at"),
     )
 
 

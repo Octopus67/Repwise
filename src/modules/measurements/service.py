@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,6 +36,7 @@ class MeasurementService:
         stmt = select(BodyMeasurement).where(
             BodyMeasurement.id == measurement_id,
             BodyMeasurement.user_id == user_id,
+            BodyMeasurement.deleted_at.is_(None),  # Audit fix 8.6
         )
         result = await self.session.execute(stmt)
         measurement = result.scalar_one_or_none()
@@ -46,7 +47,10 @@ class MeasurementService:
     async def get_latest(self, user_id: uuid.UUID) -> BodyMeasurement:
         stmt = (
             select(BodyMeasurement)
-            .where(BodyMeasurement.user_id == user_id)
+            .where(
+                BodyMeasurement.user_id == user_id,
+                BodyMeasurement.deleted_at.is_(None),  # Audit fix 8.6
+            )
             .order_by(BodyMeasurement.measured_at.desc())
             .limit(1)
         )
@@ -57,7 +61,10 @@ class MeasurementService:
         return measurement
 
     async def list(self, user_id: uuid.UUID, pagination: PaginationParams) -> PaginatedResult:
-        base = select(BodyMeasurement).where(BodyMeasurement.user_id == user_id)
+        base = select(BodyMeasurement).where(
+            BodyMeasurement.user_id == user_id,
+            BodyMeasurement.deleted_at.is_(None),  # Audit fix 8.6
+        )
 
         count_stmt = select(func.count()).select_from(base.subquery())
         total_count = (await self.session.execute(count_stmt)).scalar_one()
@@ -90,18 +97,19 @@ class MeasurementService:
 
     async def delete(self, user_id: uuid.UUID, measurement_id: uuid.UUID) -> None:
         measurement = await self.get(user_id, measurement_id)
-        await self.session.delete(measurement)
+        measurement.deleted_at = datetime.now(timezone.utc)  # Audit fix 8.6 — soft delete
         await self.session.flush()
 
     async def get_trend(self, user_id: uuid.UUID, days: int = 90) -> list[TrendPoint]:
         from datetime import timedelta, timezone
 
-        cutoff = datetime.utcnow() - timedelta(days=days)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         stmt = (
             select(BodyMeasurement)
             .where(
                 BodyMeasurement.user_id == user_id,
                 BodyMeasurement.measured_at >= cutoff,
+                BodyMeasurement.deleted_at.is_(None),  # Audit fix 8.6
             )
             .order_by(BodyMeasurement.measured_at.asc())
         )

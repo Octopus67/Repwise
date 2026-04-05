@@ -53,7 +53,7 @@ class ContentArticle(Base, SoftDeleteMixin, AuditLogMixin):
     __tablename__ = "content_articles"
 
     module_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("content_modules.id"), nullable=False, index=True
+        ForeignKey("content_modules.id", ondelete="SET NULL"), nullable=True, index=True
     )
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     content_markdown: Mapped[str] = mapped_column(Text, nullable=False, default="")
@@ -107,7 +107,7 @@ class ArticleVersion(Base):
     __tablename__ = "article_versions"
 
     article_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("content_articles.id"), nullable=False, index=True
+        ForeignKey("content_articles.id", ondelete="CASCADE"), nullable=False, index=True
     )
     version_number: Mapped[int] = mapped_column(Integer, nullable=False)
     title: Mapped[str] = mapped_column(String(500), nullable=False)

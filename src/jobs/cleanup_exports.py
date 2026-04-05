@@ -35,7 +35,7 @@ async def run_cleanup_exports(session: AsyncSession | None = None) -> int:
         session = async_session_factory()
 
     try:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         stmt = select(ExportRequest).where(
             ExportRequest.expires_at.isnot(None),
             ExportRequest.expires_at <= now,

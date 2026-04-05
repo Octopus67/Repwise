@@ -49,7 +49,7 @@ def track_event(
             event=event,
             properties={
                 **(properties or {}),
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             },
         )
     except (OSError, ValueError, TypeError):

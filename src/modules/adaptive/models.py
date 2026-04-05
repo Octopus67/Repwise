@@ -4,7 +4,7 @@ import uuid
 from datetime import date, datetime
 from typing import Any, Optional
 
-from sqlalchemy import Date, Float, ForeignKey, Index, String, Text, text
+from sqlalchemy import Date, DateTime, Float, ForeignKey, Index, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -63,7 +63,7 @@ class CoachingSuggestion(Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False,
     )
     snapshot_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("adaptive_snapshots.id", ondelete="CASCADE"), nullable=False,
+        ForeignKey("adaptive_snapshots.id", ondelete="CASCADE"), nullable=False, index=True,  # Audit fix 8.1
     )
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="pending",
@@ -82,7 +82,7 @@ class CoachingSuggestion(Base):
     modified_fat_g: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     explanation: Mapped[str] = mapped_column(Text, nullable=False)
-    resolved_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     __table_args__ = (
         Index("ix_coaching_suggestions_user_status", "user_id", "status"),

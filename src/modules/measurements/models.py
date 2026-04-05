@@ -10,9 +10,10 @@ from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, In
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.shared.base_model import Base
+from src.shared.soft_delete import SoftDeleteMixin  # Audit fix 8.6
 
 
-class BodyMeasurement(Base):
+class BodyMeasurement(SoftDeleteMixin, Base):  # Audit fix 8.6
     """A single body measurement entry for a user."""
 
     __tablename__ = "body_measurements"
@@ -41,6 +42,8 @@ class BodyMeasurement(Base):
 
     __table_args__ = (
         Index("ix_body_measurements_user_id", "user_id"),
+        # Audit fix 8.5 — composite index for user measurement history queries
+        Index("ix_body_measurements_user_measured", "user_id", "measured_at"),
     )
 
 

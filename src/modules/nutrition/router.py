@@ -117,6 +117,9 @@ async def create_entries_batch(
     service: NutritionService = Depends(_get_service),
 ) -> list[NutritionEntryResponse]:
     """Atomically create multiple nutrition entries as a meal batch."""
+    # Audit fix 6.4 — batch rate limit
+    from src.middleware.rate_limiter import check_user_endpoint_rate_limit
+    check_user_endpoint_rate_limit(str(user.id), "nutrition_batch", max_attempts=10, window_seconds=60)
     entries = await service.create_entries_batch(user_id=user.id, data=data)
     return [NutritionEntryResponse.model_validate(e) for e in entries]
 

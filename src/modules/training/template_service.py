@@ -90,7 +90,7 @@ class TemplateService:
                 entity_id=template_id,
                 changes=changes,
             )
-            template.updated_at = datetime.utcnow()
+            template.updated_at = datetime.now(timezone.utc)
 
         await self.session.flush()
         return UserWorkoutTemplateResponse.from_orm_model(template)
@@ -100,7 +100,7 @@ class TemplateService:
     ) -> None:
         """Soft-delete a user workout template."""
         template = await self._get_or_404(user_id, template_id)
-        template.deleted_at = datetime.utcnow()
+        template.deleted_at = datetime.now(timezone.utc)
 
         await WorkoutTemplate.write_audit(
             self.session,

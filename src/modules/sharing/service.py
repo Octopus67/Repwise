@@ -83,11 +83,12 @@ class SharingService:
             return None
 
         # Get user display name
+        # Audit fix 6.5 — soft delete filter on sharing
         user_result = await self._db.execute(
-            select(User).where(User.id == session.user_id)
+            select(User).where(User.id == session.user_id, User.deleted_at.is_(None))
         )
         user = user_result.scalar_one_or_none()
-        display_name = user.email.split("@")[0] if user else "Athlete"
+        display_name = user.email.split("@")[0] if user else "Unknown User"
 
         exercises = session.exercises or []
         total_sets = sum(len(ex.get("sets", [])) for ex in exercises)

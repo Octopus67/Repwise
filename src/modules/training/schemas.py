@@ -8,6 +8,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
+from src.shared.sanitize import strip_html  # Audit fix 2.4 — HTML sanitization
 from src.shared.validators import validate_json_size
 
 
@@ -42,6 +43,12 @@ class ExerciseEntry(BaseModel):
 
     exercise_name: str = Field(min_length=1, max_length=200, description="Name of the exercise")
     sets: list[SetEntry] = Field(min_length=1, max_length=20, description="At least one set required")
+
+    # Audit fix 2.4 — HTML sanitization
+    @field_validator('exercise_name', mode='before')
+    @classmethod
+    def sanitize_exercise_name(cls, v: str) -> str:
+        return strip_html(v) if isinstance(v, str) else v
 
 
 class TrainingSessionCreate(BaseModel):
@@ -243,6 +250,12 @@ class WorkoutTemplateCreate(BaseModel):
     exercises: list[ExerciseEntry] = Field(min_length=1, max_length=50)
     metadata: Optional[dict[str, Any]] = None
 
+    # Audit fix 2.4 — HTML sanitization
+    @field_validator('name', 'description', mode='before')
+    @classmethod
+    def sanitize_text(cls, v: str) -> str:
+        return strip_html(v) if isinstance(v, str) else v
+
     @field_validator("metadata")
     @classmethod
     def validate_metadata_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
@@ -256,6 +269,12 @@ class WorkoutTemplateUpdate(BaseModel):
     description: Optional[str] = Field(default=None, max_length=1000)
     exercises: Optional[list[ExerciseEntry]] = Field(default=None, max_length=50)
     metadata: Optional[dict[str, Any]] = None
+
+    # Audit fix 2.4 — HTML sanitization
+    @field_validator('name', 'description', mode='before')
+    @classmethod
+    def sanitize_text(cls, v: str) -> str:
+        return strip_html(v) if isinstance(v, str) else v
 
     @field_validator("metadata")
     @classmethod
@@ -358,6 +377,12 @@ class CustomExerciseCreate(BaseModel):
     secondary_muscles: list[str] = Field(default_factory=list)
     notes: Optional[str] = Field(default=None, max_length=1000)
 
+    # Audit fix 2.4 — HTML sanitization
+    @field_validator('name', 'notes', mode='before')
+    @classmethod
+    def sanitize_text(cls, v: str) -> str:
+        return strip_html(v) if isinstance(v, str) else v
+
 
 class CustomExerciseUpdate(BaseModel):
     """Payload for updating a user custom exercise. All fields optional."""
@@ -368,6 +393,12 @@ class CustomExerciseUpdate(BaseModel):
     category: Optional[str] = Field(default=None, max_length=100)
     secondary_muscles: Optional[list[str]] = None
     notes: Optional[str] = Field(default=None, max_length=1000)
+
+    # Audit fix 2.4 — HTML sanitization
+    @field_validator('name', 'notes', mode='before')
+    @classmethod
+    def sanitize_text(cls, v: str) -> str:
+        return strip_html(v) if isinstance(v, str) else v
 
 
 class CustomExerciseResponse(BaseModel):

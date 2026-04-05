@@ -58,7 +58,7 @@ async def try_auto_freeze(
                 user_id=user_id,
                 freeze_date=d,
                 month=month_str,
-                used_at=datetime.utcnow(),
+                used_at=datetime.now(timezone.utc),
             )
             session.add(freeze)
 

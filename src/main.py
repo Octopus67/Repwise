@@ -191,9 +191,9 @@ async def lifespan(application: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version="0.1.0",
-    # Only expose interactive docs in development — disable in production
-    docs_url="/api/v1/docs" if settings.DEBUG else None,
-    openapi_url="/api/v1/openapi.json" if settings.DEBUG else None,
+    # Audit fix 6.11 — docs independent of DEBUG
+    docs_url="/api/v1/docs" if settings.ENABLE_DOCS else None,
+    openapi_url="/api/v1/openapi.json" if settings.ENABLE_DOCS else None,
     lifespan=lifespan,
 )
 
@@ -202,7 +202,9 @@ if settings.SENTRY_DSN:
     sentry_sdk.init(
         dsn=settings.SENTRY_DSN,
         integrations=[FastApiIntegration(), SqlalchemyIntegration()],
-        traces_sample_rate=0.1,
+        # Audit fix 7.8 — higher trace rate for launch
+        # TODO: Reduce to 0.1 after launch stabilization (2 weeks)
+        traces_sample_rate=float(os.getenv('SENTRY_TRACES_SAMPLE_RATE', '0.5')),
         environment="production" if not settings.DEBUG else "development",
     )
 
@@ -218,6 +220,10 @@ if not settings.DEBUG:
     app.add_middleware(HTTPSRedirectMiddleware)
 
 # CORS
+# Audit fix 10.8 — reject wildcard origin when credentials are enabled
+if "*" in settings.cors_origins_list:
+    raise RuntimeError("CORS: wildcard '*' origin is not allowed when allow_credentials=True")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,

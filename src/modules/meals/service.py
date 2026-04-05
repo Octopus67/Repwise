@@ -76,7 +76,7 @@ class MealService:
     ) -> None:
         """Soft-delete a custom meal."""
         meal = await self._get_custom_meal_or_raise(user_id, meal_id)
-        meal.deleted_at = datetime.utcnow()
+        meal.deleted_at = datetime.now(timezone.utc)
         await self.db.flush()
 
     async def get_custom_meals(

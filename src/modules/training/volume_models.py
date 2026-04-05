@@ -14,7 +14,7 @@ class UserVolumeLandmark(Base):
     __tablename__ = "user_volume_landmarks"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id"), index=True, nullable=False
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False  # Audit fix 1.3
     )
     muscle_group: Mapped[str] = mapped_column(String(50), nullable=False)
     mev: Mapped[int] = mapped_column(nullable=False)

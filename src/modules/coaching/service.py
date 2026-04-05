@@ -202,7 +202,10 @@ class CoachingService:
         pagination: PaginationParams,
     ) -> PaginatedResult[CoachingRequestResponse]:
         """Get coaching requests for a user (Requirement 12.1)."""
-        base = select(CoachingRequest).where(CoachingRequest.user_id == user_id)
+        base = select(CoachingRequest).where(
+            CoachingRequest.user_id == user_id,
+            CoachingRequest.deleted_at.is_(None),  # Audit fix 8.6
+        )
 
         count_stmt = select(func.count()).select_from(base.subquery())
         total_count = (await self.session.execute(count_stmt)).scalar_one()
@@ -243,7 +246,7 @@ class CoachingService:
         validate_session_transition(session.status, CoachingSessionStatus.COMPLETED)
         session.status = CoachingSessionStatus.COMPLETED
         session.notes = data.notes
-        session.completed_at = datetime.utcnow()
+        session.completed_at = datetime.now(timezone.utc)
 
         await CoachingSession.write_audit(
             self.session,
@@ -265,7 +268,10 @@ class CoachingService:
         base = (
             select(CoachingSession)
             .join(CoachingRequest, CoachingSession.request_id == CoachingRequest.id)
-            .where(CoachingRequest.user_id == user_id)
+            .where(
+                CoachingRequest.user_id == user_id,
+                CoachingSession.deleted_at.is_(None),  # Audit fix 8.6
+            )
         )
 
         count_stmt = select(func.count()).select_from(base.subquery())
@@ -317,7 +323,10 @@ class CoachingService:
     async def _get_request_or_404(
         self, request_id: uuid.UUID, user_id: uuid.UUID | None = None
     ) -> CoachingRequest:
-        stmt = select(CoachingRequest).where(CoachingRequest.id == request_id)
+        stmt = select(CoachingRequest).where(
+            CoachingRequest.id == request_id,
+            CoachingRequest.deleted_at.is_(None),  # Audit fix 8.6
+        )
         if user_id is not None:
             stmt = stmt.where(CoachingRequest.user_id == user_id)
         result = await self.session.execute(stmt)
@@ -329,7 +338,10 @@ class CoachingService:
     async def _get_session_or_404(
         self, session_id: uuid.UUID, user_id: uuid.UUID | None = None
     ) -> CoachingSession:
-        stmt = select(CoachingSession).where(CoachingSession.id == session_id)
+        stmt = select(CoachingSession).where(
+            CoachingSession.id == session_id,
+            CoachingSession.deleted_at.is_(None),  # Audit fix 8.6
+        )
         if user_id is not None:
             stmt = stmt.join(CoachingRequest, CoachingSession.request_id == CoachingRequest.id)
             stmt = stmt.where(CoachingRequest.user_id == user_id)

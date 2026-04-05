@@ -69,7 +69,7 @@ def is_in_quiet_hours(prefs: NotificationPreference, user_tz: str | None) -> boo
 
 async def get_preferred_workout_hour(session: AsyncSession, user_id) -> int:
     """Return the most common start hour from the last 30 days of sessions (default 9)."""
-    cutoff = datetime.utcnow() - timedelta(days=SESSION_LOOKBACK_DAYS)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=SESSION_LOOKBACK_DAYS)
     stmt = (
         select(extract("hour", TrainingSession.start_time))
         .where(
@@ -114,8 +114,8 @@ async def run_workout_reminders(session: AsyncSession | None = None) -> int:
 
 async def _send_reminders(session: AsyncSession) -> int:
     """Core logic: find users without recent training and send reminders."""
-    cutoff = datetime.utcnow() - timedelta(hours=24)
-    today = datetime.utcnow().date()
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    today = datetime.now(timezone.utc).date()
 
     # Users who trained in the last 24h
     recent_trainers = (

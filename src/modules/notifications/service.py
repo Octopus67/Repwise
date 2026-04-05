@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.feature_flags.service import FeatureFlagService
@@ -45,29 +47,37 @@ class NotificationService:
     async def register_device(
         self, user_id: uuid.UUID, data: DeviceTokenCreate,
     ) -> DeviceToken:
-        """Insert or update a device token (upsert on token value)."""
-        stmt = select(DeviceToken).where(DeviceToken.token == data.token)
-        result = await self.session.execute(stmt)
-        existing = result.scalar_one_or_none()
+        """Insert or update a device token (upsert on token value).
 
-        if existing is not None:
-            existing.user_id = user_id
-            existing.platform = data.platform
-            existing.is_active = True
-            existing.last_used_at = datetime.utcnow()
-            await self.session.flush()
-            return existing
+        Audit fix 8.3 — atomic upsert via INSERT ... ON CONFLICT DO UPDATE
+        to prevent race condition on concurrent device registration.
+        """
+        dialect_name = self.session.bind.dialect.name if self.session.bind else "postgresql"
+        insert_fn = sqlite_insert if dialect_name == "sqlite" else pg_insert
 
-        device = DeviceToken(
+        stmt = insert_fn(DeviceToken).values(
             user_id=user_id,
             platform=data.platform,
             token=data.token,
             is_active=True,
-            last_used_at=datetime.utcnow(),
+            last_used_at=datetime.now(timezone.utc),
         )
-        self.session.add(device)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["token"],
+            set_={
+                "user_id": stmt.excluded.user_id,
+                "platform": stmt.excluded.platform,
+                "is_active": True,
+                "last_used_at": stmt.excluded.last_used_at,
+            },
+        )
+        await self.session.execute(stmt)
         await self.session.flush()
-        return device
+
+        # Re-fetch the row
+        fetch_stmt = select(DeviceToken).where(DeviceToken.token == data.token)
+        result = await self.session.execute(fetch_stmt)
+        return result.scalar_one()
 
     async def unregister_device(
         self, user_id: uuid.UUID, token_id: uuid.UUID,
@@ -153,7 +163,7 @@ class NotificationService:
         self, user_id: uuid.UUID, notification_ids: list[uuid.UUID],
     ) -> int:
         """Mark notifications as read. Returns count of updated rows."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         stmt = (
             update(NotificationLog)
             .where(

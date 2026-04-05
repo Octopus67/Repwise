@@ -61,7 +61,7 @@ class NutritionService:
             try:
                 from src.modules.food_database.models import UserFoodFrequency
 
-                now_utc = datetime.utcnow()
+                now_utc = datetime.now(timezone.utc)
                 dialect = self.session.bind.dialect.name if self.session.bind else "postgresql"
                 if dialect == "sqlite":
                     from sqlalchemy.dialects.sqlite import insert as upsert_insert
@@ -181,7 +181,7 @@ class NutritionService:
     ) -> None:
         """Soft-delete an entry so it remains recoverable (Requirement 3.4)."""
         entry = await self._get_entry_or_raise(user_id, entry_id)
-        entry.deleted_at = datetime.utcnow()
+        entry.deleted_at = datetime.now(timezone.utc)
 
         await NutritionEntry.write_audit(
             self.session,

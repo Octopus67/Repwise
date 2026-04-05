@@ -89,7 +89,7 @@ class PRDetector:
 
         # Single query: load sessions from the last 365 days (prevents memory issues for power users)
         from datetime import datetime, timedelta, timezone
-        cutoff = datetime.utcnow() - timedelta(days=365)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=365)
         stmt = select(TrainingSession).where(
             TrainingSession.user_id == user_id,
             TrainingSession.deleted_at.is_(None),

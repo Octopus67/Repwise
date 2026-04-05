@@ -6,7 +6,7 @@ import uuid
 from datetime import date, datetime
 from typing import Any, Optional
 
-from sqlalchemy import Date, Float, ForeignKey, Index, String, UniqueConstraint, text
+from sqlalchemy import Date, DateTime, Float, ForeignKey, Index, String, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -26,7 +26,7 @@ class UserAchievement(SoftDeleteMixin, AuditLogMixin, Base):
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     achievement_id: Mapped[str] = mapped_column(String(100), nullable=False)
-    unlocked_at: Mapped[datetime] = mapped_column(nullable=False)
+    unlocked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     trigger_data: Mapped[Optional[dict[str, Any]]] = mapped_column(
         JSONB, nullable=True, server_default=text("NULL"),
     )
@@ -69,7 +69,7 @@ class StreakFreeze(Base):
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     freeze_date: Mapped[date] = mapped_column(Date, nullable=False)
-    used_at: Mapped[datetime] = mapped_column(nullable=False, server_default=text("CURRENT_TIMESTAMP"))
+    used_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP"))
     month: Mapped[str] = mapped_column(String(7), nullable=False)
 
     __table_args__ = (

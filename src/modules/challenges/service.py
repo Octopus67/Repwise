@@ -112,7 +112,7 @@ async def update_progress(
     challenge.current_value = value
     if value >= challenge.target_value and not challenge.completed:
         challenge.completed = True
-        challenge.completed_at = datetime.utcnow()
+        challenge.completed_at = datetime.now(timezone.utc)
 
     await session.flush()
     return challenge
@@ -139,5 +139,5 @@ async def update_challenge_progress_from_session(
             ch.current_value += int(vol)
         if ch.current_value >= ch.target_value and not ch.completed:
             ch.completed = True
-            ch.completed_at = datetime.utcnow()
+            ch.completed_at = datetime.now(timezone.utc)
     await session.flush()

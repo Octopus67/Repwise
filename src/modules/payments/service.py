@@ -11,6 +11,8 @@ from typing import Optional
 import uuid
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.payments.models import Subscription
@@ -170,22 +172,28 @@ class PaymentService:
     async def _get_or_create_subscription(
         self, user_id: uuid.UUID, is_trial: bool = False,
     ) -> Subscription:
-        """Get existing subscription or create a new free one."""
+        """Get existing subscription or create a new free one.
+
+        Audit fix 8.2 — for free subscriptions (provider_subscription_id=None),
+        use SELECT-first since NULL defeats ON CONFLICT in PostgreSQL.
+        """
+        # Check for existing subscription first
         existing = await self.get_subscription_status(user_id)
-        if existing is not None:
+        if existing:
             return existing
 
-        subscription = Subscription(
+        sub = Subscription(
             user_id=user_id,
             provider_name="revenuecat",
+            provider_subscription_id=None,
             status=SubscriptionStatus.FREE,
             currency="USD",
             region="US",
             is_trial=is_trial,
         )
-        self.session.add(subscription)
+        self.session.add(sub)
         await self.session.flush()
-        return subscription
+        return sub
 
     async def _get_or_create_subscription_from_webhook(
         self, user_id: str, event: WebhookEvent,

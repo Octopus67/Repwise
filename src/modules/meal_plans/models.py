@@ -3,7 +3,7 @@
 import uuid
 from datetime import date
 
-from sqlalchemy import Date, Float, ForeignKey, Index, Integer, String
+from sqlalchemy import Date, Float, ForeignKey, Index, Integer, String, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -35,7 +35,11 @@ class MealPlan(SoftDeleteMixin, Base):
         cascade="all, delete-orphan",
     )
 
-    __table_args__ = (Index("ix_meal_plans_user_id", "user_id"),)
+    __table_args__ = (
+        Index("ix_meal_plans_user_id", "user_id"),
+        # Audit fix 8.4 — partial index for active (non-deleted) plans
+        Index("ix_meal_plans_active", "user_id", postgresql_where=text("deleted_at IS NULL")),
+    )
 
 
 class MealPlanItem(Base):
@@ -49,7 +53,7 @@ class MealPlanItem(Base):
     day_index: Mapped[int] = mapped_column(Integer, nullable=False)
     slot: Mapped[str] = mapped_column(String(20), nullable=False)
     food_item_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("food_items.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("food_items.id", ondelete="CASCADE"), nullable=False, index=True  # Audit fix 10.6
     )
     scale_factor: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     calories: Mapped[float] = mapped_column(Float, nullable=False)

@@ -29,7 +29,7 @@ STALE_PROCESSING_MINUTES = 5
 
 async def _reset_stale_exports(session: AsyncSession) -> int:
     """Reset exports stuck in 'processing' for >5 minutes back to 'pending'."""
-    cutoff = datetime.utcnow() - timedelta(minutes=STALE_PROCESSING_MINUTES)
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=STALE_PROCESSING_MINUTES)
     stmt = select(ExportRequest).where(
         and_(
             ExportRequest.status == "processing",

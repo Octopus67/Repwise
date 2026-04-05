@@ -42,6 +42,9 @@ async def follow_user(
     service: SocialService = Depends(_get_social_service),
 ) -> FollowResponse:
     """Follow a user."""
+    # Audit fix 6.3 — follow rate limit
+    from src.middleware.rate_limiter import check_user_endpoint_rate_limit
+    check_user_endpoint_rate_limit(str(current_user.id), "follow", max_attempts=30, window_seconds=60)
     follow = await service.follow_user(current_user.id, user_id)
     return FollowResponse.model_validate(follow)
 

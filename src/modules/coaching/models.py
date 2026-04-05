@@ -16,6 +16,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.shared.audit import AuditLogMixin
 from src.shared.base_model import Base
+from src.shared.soft_delete import SoftDeleteMixin  # Audit fix 8.6
 
 
 class CoachProfile(Base, AuditLogMixin):
@@ -36,7 +37,7 @@ class CoachProfile(Base, AuditLogMixin):
     is_active: Mapped[bool] = mapped_column(default=True)
 
 
-class CoachingRequest(Base, AuditLogMixin):
+class CoachingRequest(SoftDeleteMixin, Base, AuditLogMixin):  # Audit fix 8.6
     """A coaching request submitted by a premium user (Requirement 12.1).
 
     Status transitions: pending → approved | rejected | cancelled.
@@ -63,10 +64,12 @@ class CoachingRequest(Base, AuditLogMixin):
 
     __table_args__ = (
         Index("ix_coaching_requests_user_status", "user_id", "status"),
+        # Audit fix 8.5 — composite index for user request history queries
+        Index("ix_coaching_requests_user_created", "user_id", "created_at"),
     )
 
 
-class CoachingSession(Base, AuditLogMixin):
+class CoachingSession(SoftDeleteMixin, Base, AuditLogMixin):  # Audit fix 8.6
     """A coaching session created when a request is approved (Requirement 12.2, 12.3).
 
     Status transitions: scheduled → in_progress → completed, scheduled → cancelled.
@@ -85,8 +88,8 @@ class CoachingSession(Base, AuditLogMixin):
     document_urls: Mapped[Optional[list[str]]] = mapped_column(
         JSONB, nullable=True, server_default=text("'[]'::jsonb"),
     )
-    scheduled_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    scheduled_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)  # Audit fix 1.4 — timezone-aware
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)  # Audit fix 1.4 — timezone-aware
 
     # Relationships
     request: Mapped[CoachingRequest] = relationship(

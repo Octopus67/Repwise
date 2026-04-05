@@ -51,7 +51,7 @@ class PhotoCreate(BaseModel):
     @field_validator("capture_date")
     @classmethod
     def capture_date_not_far_future(cls, v: date) -> date:
-        today = datetime.utcnow().date()
+        today = datetime.now(timezone.utc).date()
         max_date = today + timedelta(days=MAX_FUTURE_DAYS)
         if v > max_date:
             raise ValueError(

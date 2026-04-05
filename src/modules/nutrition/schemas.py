@@ -7,7 +7,9 @@ import logging
 import uuid
 from datetime import date, datetime
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+from src.shared.sanitize import strip_html  # Audit fix 2.4 — HTML sanitization
 
 _logger = logging.getLogger(__name__)
 
@@ -29,6 +31,12 @@ class NutritionEntryCreate(BaseModel):
     entry_date: date
     source_meal_id: Optional[uuid.UUID] = None
     food_item_id: Optional[uuid.UUID] = None
+
+    # Audit fix 2.4 — HTML sanitization
+    @field_validator('meal_name', 'food_name', mode='before')
+    @classmethod
+    def sanitize_text(cls, v: str) -> str:
+        return strip_html(v) if isinstance(v, str) else v
 
     @model_validator(mode='after')
     def validate_micro_nutrients(self) -> 'NutritionEntryCreate':
@@ -68,6 +76,12 @@ class NutritionEntryUpdate(BaseModel):
     micro_nutrients: Optional[dict[str, float]] = None
     entry_date: Optional[date] = None
     source_meal_id: Optional[uuid.UUID] = None
+
+    # Audit fix 2.4 — HTML sanitization
+    @field_validator('meal_name', 'food_name', mode='before')
+    @classmethod
+    def sanitize_text(cls, v: str) -> str:
+        return strip_html(v) if isinstance(v, str) else v
 
     @model_validator(mode='after')
     def validate_micro_nutrients(self) -> 'NutritionEntryUpdate':
@@ -146,6 +160,12 @@ class BatchEntryCreate(BaseModel):
     meal_name: str = Field(..., min_length=1, max_length=255)
     entry_date: date
     entries: list[BatchEntryItem] = Field(..., min_length=1, max_length=50)
+
+    # Audit fix 2.4 — HTML sanitization
+    @field_validator('meal_name', mode='before')
+    @classmethod
+    def sanitize_text(cls, v: str) -> str:
+        return strip_html(v) if isinstance(v, str) else v
 
 
 class CopyEntriesRequest(BaseModel):

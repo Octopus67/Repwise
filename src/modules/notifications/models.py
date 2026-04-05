@@ -83,4 +83,6 @@ class NotificationLog(Base):
     __table_args__ = (
         Index("ix_notification_log_user_sent", "user_id", "sent_at"),
         Index("ix_notification_log_type", "type"),
+        # Audit fix 8.5 — composite index for unread notification queries
+        Index("ix_notification_log_user_read", "user_id", "read_at"),
     )

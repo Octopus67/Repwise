@@ -6,7 +6,7 @@ exclude soft-deleted records.
 
 from datetime import datetime
 
-from sqlalchemy import Select
+from sqlalchemy import DateTime, Select
 from sqlalchemy.orm import Mapped, mapped_column
 from typing import Optional
 
@@ -18,7 +18,7 @@ class SoftDeleteMixin:
     record is considered deleted but remains in the database for recovery.
     """
 
-    deleted_at: Mapped[Optional[datetime]] = mapped_column(default=None, nullable=True)
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=None, nullable=True)  # Audit fix 1.4 — timezone-aware
 
     @property
     def is_deleted(self) -> bool:

@@ -2,9 +2,11 @@
 
 import uuid
 from datetime import date, datetime
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from src.shared.validators import validate_json_size
 
 
 # ---------------------------------------------------------------------------
@@ -18,6 +20,12 @@ class GeneratePlanRequest(BaseModel):
         description="Slot name → fraction of daily macros. Values must be positive and sum to ~1.0.",
     )
     num_days: int = Field(default=5, ge=1, le=14)
+
+    # Audit fix 6.9 — JSONB validation
+    @field_validator("slot_splits")
+    @classmethod
+    def validate_slot_splits(cls, v: dict[str, float] | None) -> dict[str, float] | None:
+        return validate_json_size(v, expected_type=dict)
 
 
 class MealAssignmentPayload(BaseModel):
@@ -43,6 +51,12 @@ class SavePlanRequest(BaseModel):
     start_date: date
     days: list[DayPlanPayload]
     slot_splits: Optional[dict[str, float]] = None
+
+    # Audit fix 6.9 — JSONB validation
+    @field_validator("slot_splits")
+    @classmethod
+    def validate_slot_splits(cls, v: dict[str, float] | None) -> dict[str, float] | None:
+        return validate_json_size(v, expected_type=dict)
 
 
 class DuplicatePlanRequest(BaseModel):

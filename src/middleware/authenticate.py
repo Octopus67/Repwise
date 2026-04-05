@@ -16,11 +16,19 @@ from typing import Optional
 
 
 def _extract_bearer_token(request: Request) -> str:
-    """Extract Bearer token from the Authorization header."""
+    """Extract Bearer token from the Authorization header or httpOnly cookie.
+
+    Checks the Authorization header first (mobile / API clients), then falls
+    back to the ``access_token`` cookie (web clients using httpOnly cookies).
+    """
+    # Audit fix 2.5 — read token from httpOnly cookie for web
     auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        raise UnauthorizedError("Missing or invalid Authorization header")
-    return auth_header[7:]
+    if auth_header and auth_header.startswith("Bearer "):
+        return auth_header[7:]
+    cookie_token = request.cookies.get("access_token")
+    if cookie_token:
+        return cookie_token
+    raise UnauthorizedError("Missing or invalid Authorization header")
 
 
 async def get_current_user(
@@ -94,11 +102,14 @@ async def get_current_user_optional(
     missing or invalid — it simply returns ``None``.  Useful for
     endpoints that behave differently for authenticated vs anonymous users.
     """
+    # Audit fix 2.5 — also check httpOnly cookie for web clients
     auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+    elif request.cookies.get("access_token"):
+        token = request.cookies["access_token"]
+    else:
         return None
-
-    token = auth_header[7:]
     try:
         payload = jwt.decode(
             token,

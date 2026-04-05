@@ -44,7 +44,7 @@ class ExportService:
         """Create a new export request after rate-limit check."""
         await self._check_rate_limit(user_id)
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         export = ExportRequest(
             user_id=user_id,
             format=fmt,
@@ -93,9 +93,9 @@ class ExportService:
         export = await self.get_export(export_id, user_id)
         if export.status != "completed":
             raise UnprocessableError("Export is not ready for download")
-        if export.expires_at and datetime.utcnow() > export.expires_at:
+        if export.expires_at and datetime.now(timezone.utc) > export.expires_at:
             raise UnprocessableError("Export has expired")
-        export.downloaded_at = datetime.utcnow()
+        export.downloaded_at = datetime.now(timezone.utc)
         await self.session.flush()
         return export
 
@@ -128,7 +128,7 @@ class ExportService:
             else:
                 raise ValueError(f"Unknown format: {export.format}")
 
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             export.status = "completed"
             export.download_url = str(path)
             export.file_size_bytes = path.stat().st_size
@@ -160,7 +160,7 @@ class ExportService:
             # README
             readme = (
                 "Repwise Data Export\n"
-                f"Generated: {datetime.utcnow().isoformat()}\n\n"
+                f"Generated: {datetime.now(timezone.utc).isoformat()}\n\n"
                 "This archive contains your personal data in CSV format.\n"
                 "Each file corresponds to a data category.\n"
             )
@@ -204,7 +204,7 @@ class ExportService:
             elements.append(Spacer(1, 0.5 * cm))
             elements.append(
                 Paragraph(
-                    f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
+                    f"Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
                     styles["Normal"],
                 )
             )
@@ -244,7 +244,7 @@ class ExportService:
             # Fallback: write a plain text file with .pdf extension
             with open(path, "w") as f:
                 f.write("Repwise Data Export Report\n")
-                f.write(f"Generated: {datetime.utcnow().isoformat()}\n\n")
+                f.write(f"Generated: {datetime.now(timezone.utc).isoformat()}\n\n")
                 for category, rows in data.items():
                     if isinstance(rows, list):
                         f.write(f"\n{category}: {len(rows)} records\n")
@@ -321,7 +321,7 @@ class ExportService:
 
         # Measurements
         from src.modules.measurements.models import BodyMeasurement
-        stmt = select(BodyMeasurement).where(BodyMeasurement.user_id == user_id).order_by(BodyMeasurement.measured_at)
+        stmt = select(BodyMeasurement).where(BodyMeasurement.user_id == user_id, BodyMeasurement.deleted_at.is_(None)).order_by(BodyMeasurement.measured_at)  # Audit fix 8.6
         result = await self.session.execute(stmt)
         data["measurements"] = [
             {
@@ -369,7 +369,7 @@ class ExportService:
 
     async def _check_rate_limit(self, user_id: uuid.UUID) -> None:
         """Enforce max 1 export per 24 hours."""
-        cutoff = datetime.utcnow() - timedelta(hours=RATE_LIMIT_HOURS)
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=RATE_LIMIT_HOURS)
         stmt = select(func.count()).select_from(ExportRequest).where(
             ExportRequest.user_id == user_id,
             ExportRequest.requested_at >= cutoff,

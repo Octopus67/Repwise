@@ -158,7 +158,7 @@ class RevenueCatProvider(PaymentProvider):
         entitlements = data.get("subscriber", {}).get("entitlements", {})
 
         # Check if any entitlement is currently active
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         for ent in entitlements.values():
             expires = ent.get("expires_date")
             if expires is None:

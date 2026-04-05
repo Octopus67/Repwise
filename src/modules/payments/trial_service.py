@@ -70,7 +70,7 @@ class TrialService:
         if result.scalar_one_or_none() is not None:
             raise ConflictError("User already has an active subscription")
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         ends_at = now + timedelta(days=TRIAL_DURATION_DAYS)
 
         # Update user trial fields
@@ -101,7 +101,7 @@ class TrialService:
         if not user.trial_started_at:
             return {"active": False, "has_used_trial": user.has_used_trial}
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         ends_at = user.trial_ends_at
         if ends_at is not None and ends_at.tzinfo is None:
             ends_at = ends_at.replace(tzinfo=timezone.utc)
@@ -202,6 +202,7 @@ class TrialService:
                     BodyMeasurement.user_id == user_id,
                     BodyMeasurement.measured_at >= start,
                     BodyMeasurement.measured_at <= end,
+                    BodyMeasurement.deleted_at.is_(None),  # Audit fix 8.6
                 )
             )
         ).scalar_one()

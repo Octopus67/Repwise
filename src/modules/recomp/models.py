@@ -7,10 +7,11 @@ from sqlalchemy import Date, Float, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.shared.base_model import Base
+from src.shared.soft_delete import SoftDeleteMixin  # Audit fix 8.6
 from typing import Optional
 
 
-class RecompMeasurement(Base):
+class RecompMeasurement(SoftDeleteMixin, Base):  # Audit fix 8.6
     """Body composition measurement for recomp tracking."""
 
     __tablename__ = "recomp_measurements"

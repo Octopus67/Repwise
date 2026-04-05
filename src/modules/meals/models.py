@@ -2,7 +2,7 @@
 
 import uuid
 
-from sqlalchemy import ForeignKey, Index, String
+from sqlalchemy import ForeignKey, Index, String, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -36,6 +36,8 @@ class CustomMeal(SoftDeleteMixin, Base):
 
     __table_args__ = (
         Index("ix_custom_meals_user_id", "user_id"),
+        # Audit fix 8.4 — partial index for active (non-deleted) meals
+        Index("ix_custom_meals_active", "user_id", postgresql_where=text("deleted_at IS NULL")),
     )
 
 
@@ -52,7 +54,7 @@ class MealFavorite(Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     meal_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        ForeignKey("custom_meals.id", ondelete="SET NULL"), nullable=True
+        ForeignKey("custom_meals.id", ondelete="SET NULL"), nullable=True, index=True  # Audit fix 10.6
     )
     food_item_id: Mapped[Optional[uuid.UUID]] = mapped_column(nullable=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)

@@ -168,7 +168,7 @@ class CustomExerciseService:
         if notes is not None:
             exercise.notes = notes
 
-        exercise.updated_at = datetime.utcnow()
+        exercise.updated_at = datetime.now(timezone.utc)
         await self.session.flush()
         return exercise
 
@@ -177,7 +177,7 @@ class CustomExerciseService:
     ) -> None:
         """Soft-delete a custom exercise."""
         exercise = await self._get_or_404(user_id, exercise_id)
-        exercise.deleted_at = datetime.utcnow()
+        exercise.deleted_at = datetime.now(timezone.utc)
         await self.session.flush()
 
     async def _get_or_404(

@@ -67,6 +67,7 @@ class RecompService:
                 RecompMeasurement.user_id == user_id,
                 RecompMeasurement.recorded_date >= start_date,
                 RecompMeasurement.recorded_date <= end_date,
+                RecompMeasurement.deleted_at.is_(None),  # Audit fix 8.6
             )
             .order_by(RecompMeasurement.recorded_date.asc())
             .limit(200)

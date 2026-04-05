@@ -33,13 +33,14 @@ class AdaptiveService:
         from datetime import timedelta
         from src.modules.measurements.models import BodyMeasurement
 
-        cutoff = datetime.utcnow() - timedelta(days=30)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=30)
         stmt = (
             select(BodyMeasurement)
             .where(
                 BodyMeasurement.user_id == user_id,
                 BodyMeasurement.body_fat_pct.isnot(None),
                 BodyMeasurement.measured_at >= cutoff,
+                BodyMeasurement.deleted_at.is_(None),  # Audit fix 8.6
             )
             .order_by(BodyMeasurement.measured_at.desc())
             .limit(1)
@@ -187,7 +188,7 @@ class AdaptiveService:
             )
 
         reasons: list[str] = []
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         # Trigger 3: staleness
         days_since = (now - last_snapshot.created_at.replace(tzinfo=timezone.utc)).days

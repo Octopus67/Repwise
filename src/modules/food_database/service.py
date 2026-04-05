@@ -93,7 +93,7 @@ class FoodDatabaseService:
                 f.food_item_id: f for f in freq_result.scalars().all()
             }
 
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             frequency_weight = 0.3
             recency_weight = 0.1
 
@@ -125,7 +125,7 @@ class FoodDatabaseService:
             )
         except (SQLAlchemyError, TypeError, ValueError) as e:
             # Fallback: return unranked results if frequency scoring fails
-            logger.warning("[FoodDBService] Frequency ranking failed, using default order: %s", e)
+            logger.exception("Food search failed")  # Audit fix 10.1
             return result
 
     async def _get_popular_items(
@@ -217,6 +217,9 @@ class FoodDatabaseService:
         # Sanitize query for FTS5: remove special chars, collapse whitespace
         import re
         safe_query = re.sub(r'["*(){}\[\]^~<>|+\-]', ' ', query).strip()
+        # Audit fix 6.1 — strip FTS5 boolean operators
+        safe_query = re.sub(r'\b(AND|OR|NOT|NEAR)\b', ' ', safe_query, flags=re.IGNORECASE)
+        safe_query = ' '.join(safe_query.split())  # collapse whitespace
         if not safe_query:
             # Return popular items (USDA items) for empty queries
             return await self._get_popular_items(pagination, category, region, user_prefs)
@@ -261,13 +264,14 @@ class FoodDatabaseService:
             return PaginatedResult(items=[], total_count=-1, page=pagination.page, limit=limit)
 
         # Step 3: Fetch full rows by rowid using parameterized query
+        # Audit fix 10.3 — filter soft-deleted rows
         ph = ",".join(f":rowid_{i}" for i in range(len(rowids)))
         fetch_sql = text(f"""
             SELECT id, name, category, region, serving_size, serving_unit,
                    calories, protein_g, carbs_g, fat_g, micro_nutrients,
                    is_recipe, source, barcode, description, total_servings,
                    created_by, deleted_at, created_at, updated_at
-            FROM food_items WHERE rowid IN ({ph})
+            FROM food_items WHERE rowid IN ({ph}) AND deleted_at IS NULL
         """)
         params = {f"rowid_{i}": rowid for i, rowid in enumerate(rowids)}
         if region:
@@ -276,7 +280,7 @@ class FoodDatabaseService:
                        calories, protein_g, carbs_g, fat_g, micro_nutrients,
                        is_recipe, source, barcode, description, total_servings,
                        created_by, deleted_at, created_at, updated_at
-                FROM food_items WHERE rowid IN ({ph}) AND region = :region
+                FROM food_items WHERE rowid IN ({ph}) AND deleted_at IS NULL AND region = :region
             """)
             params["region"] = region
         fetch_result = await self.db.execute(fetch_sql, params)
@@ -634,6 +638,13 @@ class FoodDatabaseService:
         await self.db.refresh(recipe)
 
         # Create ingredient rows, preventing circular references
+        # Audit fix 4.1 — batch fetch to fix N+1
+        all_food_ids = [ing.food_item_id for ing in ingredients]
+        batch_stmt = select(FoodItem).where(FoodItem.id.in_(all_food_ids))
+        batch_stmt = FoodItem.not_deleted(batch_stmt)
+        batch_result = await self.db.execute(batch_stmt)
+        food_lookup = {f.id: f for f in batch_result.scalars().all()}
+
         ingredient_rows: list[RecipeIngredient] = []
         for ing in ingredients:
             if ing.food_item_id == recipe.id:
@@ -644,10 +655,7 @@ class FoodDatabaseService:
                 raise ValidationError("Adding this ingredient would create a circular reference")
 
             # Verify ingredient exists and is not deleted
-            stmt = select(FoodItem).where(FoodItem.id == ing.food_item_id)
-            stmt = FoodItem.not_deleted(stmt)
-            result = await self.db.execute(stmt)
-            food = result.scalar_one_or_none()
+            food = food_lookup.get(ing.food_item_id)
             if food is None:
                 raise NotFoundError(f"Ingredient food item {ing.food_item_id} not found")
 
@@ -758,6 +766,13 @@ class FoodDatabaseService:
             await self.db.flush()
 
             # Create new ingredient rows
+            # Audit fix 4.1 — batch fetch to fix N+1
+            all_food_ids = [ing.food_item_id for ing in ingredients]
+            batch_stmt = select(FoodItem).where(FoodItem.id.in_(all_food_ids))
+            batch_stmt = FoodItem.not_deleted(batch_stmt)
+            batch_result = await self.db.execute(batch_stmt)
+            food_lookup = {f.id: f for f in batch_result.scalars().all()}
+
             for ing in ingredients:
                 if ing.food_item_id == recipe_id:
                     raise ValidationError("A recipe cannot contain itself as an ingredient")
@@ -766,10 +781,7 @@ class FoodDatabaseService:
                 if await self._has_circular_reference(recipe_id, ing.food_item_id):
                     raise ValidationError("Adding this ingredient would create a circular reference")
 
-                food_stmt = select(FoodItem).where(FoodItem.id == ing.food_item_id)
-                food_stmt = FoodItem.not_deleted(food_stmt)
-                food_result = await self.db.execute(food_stmt)
-                food = food_result.scalar_one_or_none()
+                food = food_lookup.get(ing.food_item_id)
                 if food is None:
                     raise NotFoundError(f"Ingredient food item {ing.food_item_id} not found")
 
@@ -825,7 +837,7 @@ class FoodDatabaseService:
         if recipe.created_by != user_id:
             raise ForbiddenError("Only the recipe owner can delete this recipe")
 
-        recipe.deleted_at = datetime.utcnow()
+        recipe.deleted_at = datetime.now(timezone.utc)
         await self.db.flush()
 
     # ------------------------------------------------------------------

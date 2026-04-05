@@ -21,10 +21,11 @@ from src.modules.feature_flags.models import FeatureFlag
 
 
 # ---------------------------------------------------------------------------
-# In-memory TTL cache
+# In-memory TTL cache — Audit fix 10.5: bounded with maxsize
 # ---------------------------------------------------------------------------
 
 CACHE_TTL_SECONDS: float = 60.0
+_CACHE_MAXSIZE: int = 1000
 
 
 @dataclass
@@ -53,6 +54,16 @@ _MISS = _MissSentinel
 
 
 def _put_cached(flag_name: str, flag: Optional[FeatureFlag]) -> None:
+    # Audit fix 10.5 — evict expired entries and enforce maxsize
+    if len(_cache) >= _CACHE_MAXSIZE:
+        now = time.monotonic()
+        expired = [k for k, v in _cache.items() if now > v.expires_at]
+        for k in expired:
+            del _cache[k]
+        # If still over limit, evict oldest entry
+        if len(_cache) >= _CACHE_MAXSIZE:
+            oldest_key = min(_cache, key=lambda k: _cache[k].expires_at)
+            del _cache[oldest_key]
     _cache[flag_name] = _CacheEntry(
         flag=flag,
         expires_at=time.monotonic() + CACHE_TTL_SECONDS,

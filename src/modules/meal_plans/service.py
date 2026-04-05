@@ -240,7 +240,7 @@ class MealPlanService:
 
     async def delete_plan(self, user_id: uuid.UUID, plan_id: uuid.UUID) -> None:
         plan = await self.get_plan(user_id, plan_id)
-        plan.deleted_at = datetime.utcnow()
+        plan.deleted_at = datetime.now(timezone.utc)
         await self.db.flush()
 
     # ------------------------------------------------------------------
@@ -291,25 +291,35 @@ class MealPlanService:
         self, user_id: uuid.UUID, plan_id: uuid.UUID
     ) -> ShoppingList:
         plan = await self.get_plan(user_id, plan_id)
+        # Audit fix 4.1 — batch fetch to fix N+1
+        all_food_ids = [item.food_item_id for item in plan.items]
+        batch_stmt = select(FoodItem).where(FoodItem.id.in_(all_food_ids))
+        batch_result = await self.db.execute(batch_stmt)
+        food_lookup = {f.id: f for f in batch_result.scalars().all()}
+
+        # Batch-fetch recipe ingredients for all recipe food items
+        recipe_ids = [fid for fid, f in food_lookup.items() if f.is_recipe]
+        recipe_ingredients_lookup: dict[uuid.UUID, list[RecipeIngredient]] = {}
+        if recipe_ids:
+            ring_stmt = (
+                select(RecipeIngredient)
+                .where(RecipeIngredient.recipe_id.in_(recipe_ids))
+                .options(selectinload(RecipeIngredient.food_item))
+            )
+            ring_result = await self.db.execute(ring_stmt)
+            for ring in ring_result.scalars().all():
+                recipe_ingredients_lookup.setdefault(ring.recipe_id, []).append(ring)
+
         all_ingredients: list[IngredientEntry] = []
 
         for item in plan.items:
-            # Load the food item
-            stmt = select(FoodItem).where(FoodItem.id == item.food_item_id)
-            result = await self.db.execute(stmt)
-            food = result.scalar_one_or_none()
+            food = food_lookup.get(item.food_item_id)
             if food is None:
                 continue
 
             if food.is_recipe:
                 # Resolve recipe ingredients
-                ing_stmt = (
-                    select(RecipeIngredient)
-                    .where(RecipeIngredient.recipe_id == food.id)
-                    .options(selectinload(RecipeIngredient.food_item))
-                )
-                ing_result = await self.db.execute(ing_stmt)
-                for ring in ing_result.scalars().all():
+                for ring in recipe_ingredients_lookup.get(food.id, []):
                     if ring.food_item:
                         all_ingredients.append(
                             IngredientEntry(
