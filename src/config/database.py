@@ -1,6 +1,7 @@
 """Async SQLAlchemy engine and session factory."""
 
 import logging
+import os
 import time
 from collections.abc import AsyncGenerator
 
@@ -11,8 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from src.config.settings import settings
 
 pool_kwargs = {} if "sqlite" in settings.DATABASE_URL else {
-    "pool_size": 5,
-    "max_overflow": 10,
+    "pool_size": int(os.getenv("DB_POOL_SIZE", "5")),  # Audit fix 8.8
+    "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "10")),  # Audit fix 8.8
     "pool_timeout": 30,
     "pool_recycle": 3600,
     "pool_pre_ping": True,
