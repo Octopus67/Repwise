@@ -1,0 +1,12 @@
+# Log food flow: Searches for a food item and logs it (assumes user is already logged in)
+appId: com.octopuslabs.repwise
+---
+- launchApp
+# Assumes already logged in
+- tapOn: "Log"
+- tapOn: "Add Food"
+- tapOn: "Search"
+- inputText: "Chicken Breast"
+- tapOn: "Chicken Breast.*"
+- tapOn: "Log Entry"
+- assertVisible: "Logged"

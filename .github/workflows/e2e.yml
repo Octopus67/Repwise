@@ -1,0 +1,42 @@
+# E2E tests using Maestro — runs on iOS simulator
+# Non-blocking (continue-on-error) until flows are stabilized
+name: E2E Tests (Maestro)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1' # Weekly on Monday at 6am UTC
+
+jobs:
+  e2e:
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Maestro CLI
+        run: curl -Ls "https://get.maestro.mobile.dev" | bash
+
+      - name: Add Maestro to PATH
+        run: echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Boot iOS Simulator
+        run: |
+          xcrun simctl boot "iPhone 16" || true
+          xcrun simctl bootstatus "iPhone 16" -b
+
+      - name: Run login flow
+        continue-on-error: true
+        run: maestro test maestro/flows/login.yaml
+
+      - name: Run log-food flow
+        continue-on-error: true
+        run: maestro test maestro/flows/log-food.yaml
+
+      - name: Run log-workout flow
+        continue-on-error: true
+        run: maestro test maestro/flows/log-workout.yaml
+
+      - name: Run view-analytics flow
+        continue-on-error: true
+        run: maestro test maestro/flows/view-analytics.yaml

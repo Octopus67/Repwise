@@ -1,18 +1,37 @@
-FROM python:3.12-slim
+# Phase 3.7: Multi-stage build — smaller runtime image
+# Stage 1: Builder — install build deps and pip packages
+FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system build dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends gcc libpq-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy project files and install dependencies
 COPY pyproject.toml .
 COPY src/ src/
 COPY alembic.ini .
 
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir --prefix=/install .
+
+# Stage 2: Runtime — lean image with only what's needed
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install only runtime system deps (libpq for psycopg2)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libpq5 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy installed Python packages from builder
+COPY --from=builder /install /usr/local
+
+# Copy application code and alembic config
+# Migrations live in src/database/migrations (copied with src/)
+COPY --from=builder /app/src/ src/
+COPY --from=builder /app/alembic.ini .
 
 RUN adduser --disabled-password --gecos '' appuser
 USER appuser

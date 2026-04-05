@@ -2,7 +2,9 @@
 builder = "DOCKERFILE"
 
 [deploy]
+startCommand = "alembic upgrade head && gunicorn -w ${WEB_CONCURRENCY:-1} -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000} --forwarded-allow-ips='*' --timeout 120 --graceful-timeout 30 --keep-alive 5 src.main:app"
 healthcheckPath = "/api/v1/health"
-healthcheckTimeout = 120
+# Audit fix 7.9 — reduced healthcheck timeout
+healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3

@@ -1,32 +1,21 @@
 name: Deploy Backend
 
+# Trigger: only deploy after CI workflow completes successfully (fixes audit #4 — CI gate was a no-op)
 on:
-  push:
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
     branches: [main]
-    paths:
-      - 'src/**'
-      - 'pyproject.toml'
-      - 'Dockerfile'
-      - 'alembic.ini'
-      - 'alembic/**'
 
 concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: false  # Never cancel an in-progress deploy
 
 jobs:
-  # Gate: wait for CI to pass before deploying
-  ci-gate:
-    name: Wait for CI
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: CI gate passed
-        run: echo "CI checks passed, proceeding to deploy"
-
   deploy:
     name: Deploy to Railway
-    needs: [ci-gate]
+    # Only deploy if CI passed — prevents deploying broken code
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: production
@@ -36,15 +25,22 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
+      # Phase 3.1: Store pre-deploy commit for automated rollback
+      - name: Capture pre-deploy state
+        id: pre_deploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          # Store current deployment commit SHA for rollback
+          echo "commit_sha=$(git rev-parse HEAD~1)" >> "$GITHUB_OUTPUT"
+
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: railway up --detach
 
-      - name: Run database migrations
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway run alembic upgrade head
+      # Phase 3.2: Migrations now run via railway.toml startCommand (alembic upgrade head && gunicorn ...)
+      # No separate migration step needed — runs atomically on container start
 
       - name: Health check with retry
         env:
@@ -61,3 +57,26 @@ jobs:
           done
           echo "::error::Health check failed after 10 attempts"
           exit 1
+
+      # Phase 3.1: Automated rollback on failed deploy
+      - name: Rollback on failure
+        if: failure()
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          echo "::warning::Deploy failed — rolling back to ${{ steps.pre_deploy.outputs.commit_sha }}"
+          git checkout ${{ steps.pre_deploy.outputs.commit_sha }} || { echo "::error::ROLLBACK FAILED — manual intervention required"; exit 1; }
+          railway up --detach || { echo "::error::ROLLBACK DEPLOY FAILED — manual intervention required"; exit 1; }
+          echo "Rollback deployed. Verify manually."
+
+      # Phase 3.6: Notify on deploy failure via Slack
+      - name: Notify deploy failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": "🚨 Deploy failed for ${{ github.repository }}@${{ github.sha }}\nAuthor: ${{ github.actor }}\nWorkflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\nRollback attempted to ${{ steps.pre_deploy.outputs.commit_sha }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

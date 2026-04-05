@@ -1,0 +1,10 @@
+# View analytics flow: Navigates through Nutrition, Training, and Body analytics tabs
+appId: com.octopuslabs.repwise
+---
+- launchApp
+- tapOn: "Analytics"
+- assertVisible: "Nutrition"
+- tapOn: "Training"
+- assertVisible: "Volume"
+- tapOn: "Body"
+- assertVisible: "Weight"

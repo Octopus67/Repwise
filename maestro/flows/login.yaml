@@ -1,0 +1,10 @@
+# Login flow: Verifies email/password authentication and dashboard landing
+appId: com.octopuslabs.repwise
+---
+- launchApp
+- tapOn: "Email"
+- inputText: "test@repwise.app"
+- tapOn: "Password"
+- inputText: "TestPassword123!"
+- tapOn: "Log In"
+- assertVisible: "Dashboard"

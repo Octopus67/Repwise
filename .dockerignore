@@ -1,0 +1,14 @@
+# Audit fix 10.10 — exclude non-essential files from Docker build context
+app/
+tests/
+docs/
+.git/
+*.md
+dev.db
+test.db
+node_modules/
+.venv/
+data/
+__pycache__/
+.github/
+maestro/

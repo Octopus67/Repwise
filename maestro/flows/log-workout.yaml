@@ -1,0 +1,10 @@
+# Log workout flow: Starts a workout, adds an exercise, and completes it
+appId: com.octopuslabs.repwise
+---
+- launchApp
+- tapOn: "Start Workout"
+- tapOn: "Add Exercise"
+- inputText: "Bench Press"
+- tapOn: "Bench Press.*"
+- tapOn: "Done"
+- assertVisible: "Workout"
