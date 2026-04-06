@@ -2,6 +2,7 @@
  * Pure function to build a nutrition entry payload with correct field names
  * for the backend NutritionEntryCreate schema.
  */
+import { getLocalDateString } from './localDate';
 export function buildNutritionPayload(
   calories: number,
   protein: number,

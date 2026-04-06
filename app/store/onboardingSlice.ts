@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TOTAL_STEPS } from '../screens/onboarding/stepConstants';
 
 // Types — re-exported from canonical source for consumer convenience
 export type {
@@ -171,14 +172,15 @@ export const useOnboardingStore = create<OnboardingWizardState & OnboardingWizar
     } else {
       set({ _hydrated: true });
     }
-  });
+  }).catch(() => {});
 
   return {
     ...initial,
 
     setStep: (step) => {
-      set({ currentStep: step });
-      saveState({ ...get(), currentStep: step });
+      const clamped = Math.max(1, Math.min(step, TOTAL_STEPS));
+      set({ currentStep: clamped });
+      saveState({ ...get(), currentStep: clamped });
     },
 
     updateField: (key, value) => {

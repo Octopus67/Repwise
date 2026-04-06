@@ -54,6 +54,7 @@ import { useWorkoutData } from '../../hooks/useWorkoutData';
 
 // Utilities
 import { formatDuration } from '../../utils/durationFormat';
+import { haptic } from '../../utils/haptics';
 import { computeWorkoutSummary } from '../../utils/workoutSummary';
 import { stepWeight } from '../../utils/weightStepper';
 import { aggregateVolume } from '../../utils/volumeAggregator';
@@ -508,7 +509,7 @@ export function ActiveWorkoutScreen({ route, navigation }: DashboardScreenProps<
         exerciseCount={summary.exerciseCount}
         setCount={summary.setCount}
         durationFormatted={durationFormatted}
-        onFinish={handleFinishTap}
+        onFinish={() => { haptic.heavy(); handleFinishTap(); }}
         loading={saving}
         disabled={saving}
       />

@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Token System Snapshot colors tokens match snapshot 1`] = `
 {
@@ -35,6 +35,36 @@ exports[`Token System Snapshot colors tokens match snapshot 1`] = `
       "#0E7490",
     ],
     "start": "#06B6D4",
+  },
+  "gradientArrays": {
+    "calories": [
+      "#EF4444",
+      "#F97316",
+    ],
+    "carbs": [
+      "#F59E0B",
+      "#F97316",
+    ],
+    "fat": [
+      "#EC4899",
+      "#F43F5E",
+    ],
+    "premium": [
+      "#D4AF37",
+      "#B8860B",
+    ],
+    "primary": [
+      "#06B6D4",
+      "#0E7490",
+    ],
+    "protein": [
+      "#3B82F6",
+      "#6366F1",
+    ],
+    "success": [
+      "#10B981",
+      "#34D399",
+    ],
   },
   "heatmap": {
     "aboveMrv": "#EF4444",

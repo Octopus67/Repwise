@@ -10,6 +10,8 @@
  * Pure function — no React Native imports.
  */
 
+import { getLocalDateString } from './localDate';
+
 export interface WeightPoint {
   date: string;
   weight_kg: number;

@@ -40,7 +40,7 @@ export function useWatch() {
         }
       });
       unsubscribe = () => sub.remove();
-    });
+    }).catch(() => {});
 
     return () => unsubscribe?.();
   }, []);

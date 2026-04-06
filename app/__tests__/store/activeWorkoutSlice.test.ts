@@ -19,6 +19,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 }));
 
 import { useActiveWorkoutStore } from '../../store/activeWorkoutSlice';
+import { getLocalDateString } from '../../utils/localDate';
 import type { ActiveExercise, ActiveSet, SetType } from '../../types/training';
 
 // Helper to reset store between tests
@@ -56,7 +57,7 @@ describe('activeWorkoutSlice', () => {
     });
 
     it('defaults sessionDate to today when not provided', () => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalDateString();
       const store = useActiveWorkoutStore.getState();
       store.startWorkout({ mode: 'new' });
 

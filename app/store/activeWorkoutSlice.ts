@@ -39,6 +39,7 @@ import { activeExercisesToPayload } from '../utils/sessionEditConversion';
 import { isValidSessionDate } from '../utils/dateValidation';
 import { swapExerciseName } from '../utils/exerciseSwapLogic';
 import type { WarmUpSet } from '../utils/warmUpGenerator';
+import { getLocalDateString } from '../utils/localDate';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

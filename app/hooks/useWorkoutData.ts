@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { getLocalDateString } from '../utils/localDate';
 import api from '../services/api';
 import { usePreviousPerformanceBatch } from './queries/usePreviousPerformance';
 import type { PreviousPerformanceData } from '../types/training';

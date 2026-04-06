@@ -231,21 +231,21 @@ export function SummaryStep({ onComplete, onEditStep }: Props) {
       {/* Macro breakdown stacked bar */}
       <View style={[styles.macroBarCard, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
         <View style={styles.macroBarRow}>
-          <View style={[styles.macroBarSegment, { flex: proteinPct, backgroundColor: '#4CAF50' }]} />
-          <View style={[styles.macroBarSegment, { flex: carbsPct, backgroundColor: '#2196F3' }]} />
-          <View style={[styles.macroBarSegment, { flex: fatPct, backgroundColor: '#FF9800' }]} />
+          <View style={[styles.macroBarSegment, { flex: proteinPct, backgroundColor: c.macro.protein }]} />
+          <View style={[styles.macroBarSegment, { flex: carbsPct, backgroundColor: c.macro.carbs }]} />
+          <View style={[styles.macroBarSegment, { flex: fatPct, backgroundColor: c.macro.fat }]} />
         </View>
         <View style={styles.macroLegendRow}>
           <View style={styles.macroLegendItem}>
-            <View style={[styles.macroLegendDot, { backgroundColor: '#4CAF50' }]} />
+            <View style={[styles.macroLegendDot, { backgroundColor: c.macro.protein }]} />
             <Text style={[styles.macroLegendText, { color: c.text.secondary }]}>Protein {macros.proteinG}g ({proteinPct}%)</Text>
           </View>
           <View style={styles.macroLegendItem}>
-            <View style={[styles.macroLegendDot, { backgroundColor: '#2196F3' }]} />
+            <View style={[styles.macroLegendDot, { backgroundColor: c.macro.carbs }]} />
             <Text style={[styles.macroLegendText, { color: c.text.secondary }]}>Carbs {macros.carbsG}g ({carbsPct}%)</Text>
           </View>
           <View style={styles.macroLegendItem}>
-            <View style={[styles.macroLegendDot, { backgroundColor: '#FF9800' }]} />
+            <View style={[styles.macroLegendDot, { backgroundColor: c.macro.fat }]} />
             <Text style={[styles.macroLegendText, { color: c.text.secondary }]}>Fat {macros.fatG}g ({fatPct}%)</Text>
           </View>
         </View>

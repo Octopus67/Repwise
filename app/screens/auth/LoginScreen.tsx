@@ -177,7 +177,7 @@ export function LoginScreen({ onNavigateRegister, onLoginSuccess, onNavigateForg
           </TouchableOpacity>
         ) : null}
 
-        <Button testID="login-submit-button" title="Sign In" onPress={handleLogin} loading={loading} style={styles.btn} />
+        <Button testID="login-submit-button" title="Sign In" onPress={handleLogin} loading={loading} disabled={loading} style={styles.btn} />
         <SocialLoginButtons onSuccess={handleSocialSuccess} onError={setError} />
         </Animated.View>
 

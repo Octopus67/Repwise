@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useStore } from '../store';
 import { useFeatureFlag } from './useFeatureFlag';
 import { useDailyTargets } from './useDailyTargets';
@@ -119,13 +119,13 @@ const INITIAL_DATA: DashboardData = {
 };
 
 export function useDashboardData() {
-  const store = useStore();
+  const setWeeklyCheckin = useStore((s) => s.setWeeklyCheckin);
+  const adaptiveTargets = useStore((s) => s.adaptiveTargets);
   const selectedDate = useStore((s) => s.selectedDate);
   const setSelectedDate = useStore((s) => s.setSelectedDate);
   const setAdaptiveTargets = useStore((s) => s.setAdaptiveTargets);
   const { impact } = useHaptics();
 
-  const [data, setData] = useState<DashboardData>(INITIAL_DATA);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [dateLoading, setDateLoading] = useState(false);
@@ -141,10 +141,9 @@ export function useDashboardData() {
   // ── TanStack Query integration ─────────────────────────────────────────
   const { results, Q, isLoading: queryLoading, isError: queryError, isFetching, refetch: invalidateAll } = useDashboardQueries(selectedDate);
 
-  // Derive DashboardData from query results whenever they change
-  useEffect(() => {
-    // Don't update while initial load is in progress
-    if (queryLoading) return;
+  // Derive DashboardData from query results (pure computation — no side effects)
+  const derivedData = useMemo<DashboardData>(() => {
+    if (queryLoading) return INITIAL_DATA;
 
     const updates: Partial<DashboardData> = {};
 
@@ -183,12 +182,6 @@ export function useDashboardData() {
         if (updates.carbs) updates.carbs.target = Math.round(snap.target_carbs_g);
         else updates.carbs = { value: 0, target: Math.round(snap.target_carbs_g) };
       }
-      setAdaptiveTargets({
-        calories: Math.round(snap.target_calories),
-        protein_g: Math.round(snap.target_protein_g),
-        carbs_g: Math.round(snap.target_carbs_g ?? 250),
-        fat_g: Math.round(snap.target_fat_g ?? 65),
-      });
     }
 
     // Training
@@ -225,10 +218,6 @@ export function useDashboardData() {
     const milestoneData = results[Q.MILESTONES].data as { milestones?: Array<{ message: string }> } | undefined;
     updates.milestoneMessage = milestoneData?.milestones?.length ? milestoneData.milestones[0].message : null;
 
-    // Weekly checkin
-    const checkinData = results[Q.WEEKLY_CHECKIN].data;
-    if (checkinData) store.setWeeklyCheckin(checkinData);
-
     // Fatigue
     updates.fatigueSuggestions = (results[Q.FATIGUE].data as FatigueSuggestion[] | undefined) ?? [];
 
@@ -244,9 +233,31 @@ export function useDashboardData() {
     // Challenges
     updates.challenges = (results[Q.CHALLENGES].data as Challenge[] | undefined) ?? [];
 
-    setData((prev) => ({ ...prev, ...updates }));
-    setDateLoading(false);
-  }, [results, queryLoading, Q, setAdaptiveTargets, store]);
+    return { ...INITIAL_DATA, ...updates };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    queryLoading,
+    results[Q.NUTRITION].data, results[Q.ADAPTIVE].data, results[Q.TRAINING].data,
+    results[Q.ARTICLES].data, results[Q.BODYWEIGHT].data, results[Q.STREAK].data,
+    results[Q.WEEK_TRAINING].data, results[Q.MILESTONES].data, results[Q.FATIGUE].data,
+    results[Q.RECOMP].data, results[Q.NUDGES].data, results[Q.VOLUME].data,
+    results[Q.CHALLENGES].data,
+  ]);
+
+  // Side effects: sync adaptive targets + weekly checkin to store (only when data changes)
+  const adaptiveSnap = results[Q.ADAPTIVE].data as Record<string, number> | null | undefined;
+  const checkinData = results[Q.WEEKLY_CHECKIN].data;
+  useEffect(() => {
+    if (adaptiveSnap) {
+      setAdaptiveTargets({
+        calories: Math.round(adaptiveSnap.target_calories),
+        protein_g: Math.round(adaptiveSnap.target_protein_g),
+        carbs_g: Math.round(adaptiveSnap.target_carbs_g ?? 250),
+        fat_g: Math.round(adaptiveSnap.target_fat_g ?? 65),
+      });
+    }
+    if (checkinData) setWeeklyCheckin(checkinData);
+  }, [adaptiveSnap, checkinData, setAdaptiveTargets, setWeeklyCheckin]);
 
   // Sync query errors to local error state
   useEffect(() => {
@@ -288,23 +299,23 @@ export function useDashboardData() {
         carbs_g: Math.round(syncTargets.carbs_g),
         fat_g: Math.round(syncTargets.fat_g),
       }
-    : store.adaptiveTargets ?? {
-        calories: data.calories.target,
-        protein_g: data.protein.target,
-        carbs_g: data.carbs.target,
+    : adaptiveTargets ?? {
+        calories: derivedData.calories.target,
+        protein_g: derivedData.protein.target,
+        carbs_g: derivedData.carbs.target,
         fat_g: 65,
       };
 
   const consumed = {
-    calories: data.calories.value,
-    protein_g: data.protein.value,
-    carbs_g: data.carbs.value,
-    fat_g: data.totalFat,
+    calories: derivedData.calories.value,
+    protein_g: derivedData.protein.value,
+    carbs_g: derivedData.carbs.value,
+    fat_g: derivedData.totalFat,
   };
 
   return {
-    data,
-    setData,
+    data: derivedData,
+    setData: () => {}, // no-op — data is now derived
     isLoading,
     error,
     setError,

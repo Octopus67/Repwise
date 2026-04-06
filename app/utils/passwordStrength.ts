@@ -1,4 +1,4 @@
-// Audit fix 7.5 — lazy-load zxcvbn
+// Audit fix 7.5 — password strength with lazy-loaded zxcvbn
 
 export type StrengthLevel = 'weak' | 'fair' | 'good' | 'strong';
 
@@ -7,6 +7,7 @@ export interface PasswordValidation {
   hasUppercase: boolean;
   hasLowercase: boolean;
   hasDigit: boolean;
+  hasSpecialChar: boolean;
 }
 
 export interface PasswordStrengthResult {
@@ -16,20 +17,35 @@ export interface PasswordStrengthResult {
   isValid: boolean;
 }
 
-export async function getPasswordStrength(password: string): Promise<PasswordStrengthResult> {
+// Lazy-load zxcvbn in background — sync callers get a heuristic until it loads
+let _zxcvbn: ((pw: string) => { score: number }) | null = null;
+import('@zxcvbn-ts/core')
+  .then((mod) => { _zxcvbn = mod.zxcvbn; })
+  .catch((e) => { console.warn('[passwordStrength] zxcvbn unavailable, using heuristic:', e.message); });
+
+function heuristicScore(password: string, v: PasswordValidation): number {
+  let s = 0;
+  if (v.minLength) s++;
+  if (v.hasUppercase && v.hasLowercase) s++;
+  if (v.hasDigit) s++;
+  if (v.hasSpecialChar) s++;
+  return Math.min(s, 4);
+}
+
+export function getPasswordStrength(password: string): PasswordStrengthResult {
   const validation: PasswordValidation = {
     minLength: password.length >= 8,
     hasUppercase: /[A-Z]/.test(password),
     hasLowercase: /[a-z]/.test(password),
     hasDigit: /[0-9]/.test(password),
+    hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password),
   };
 
   if (!password) {
     return { score: 0, level: 'weak', validation, isValid: false };
   }
 
-  const { zxcvbn } = await import('@zxcvbn-ts/core');
-  const { score } = zxcvbn(password);
+  const score = _zxcvbn ? _zxcvbn(password).score : heuristicScore(password, validation);
 
   let level: StrengthLevel;
   if (score <= 1) level = 'weak';
@@ -41,6 +57,7 @@ export async function getPasswordStrength(password: string): Promise<PasswordStr
     validation.hasUppercase &&
     validation.hasLowercase &&
     validation.hasDigit &&
+    validation.hasSpecialChar &&
     score >= 2;
 
   return { score, level, validation, isValid };

@@ -70,8 +70,8 @@ export function OnboardingWizard({ onComplete }: Props) {
 
   // Map internal step index to display number (FOOD_DNA skipped)
   const displayStep = currentStep > ONBOARDING_STEPS.DIET_STYLE
-    ? currentStep - 1
-    : currentStep;
+    ? Math.min(currentStep - 1, DISPLAY_TOTAL_STEPS)
+    : Math.min(currentStep, DISPLAY_TOTAL_STEPS);
 
   const renderStep = () => {
     switch (currentStep) {

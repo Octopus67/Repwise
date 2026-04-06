@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, useAnimatedReaction, withTiming, withDelay, Easing, runOnJS, type SharedValue } from 'react-native-reanimated';
-import { spacing, typography, radius, motion } from '../../../theme/tokens';
+import { spacing, typography, radius, motion, glowShadow, colors } from '../../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../../hooks/useThemeColors';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../../components/common/Button';
 import { useOnboardingStore, computeAge } from '../../../store/onboardingSlice';
 import { computeTDEEBreakdown } from '../../../utils/onboardingCalculations';
@@ -39,16 +40,31 @@ function AnimatedTDEEText({ value }: { value: SharedValue<number> }) {
 
 // ─── Animated Bar ────────────────────────────────────────────────────────────
 
-function AnimatedBar({ widthPct, color, delay }: { widthPct: number; color: string; delay: number }) {
+const BAR_GRADIENTS: Record<string, readonly [string, string]> = {
+  bmr: colors.gradientArrays.primary as unknown as [string, string],
+  neat: colors.gradientArrays.success as unknown as [string, string],
+  eat: colors.gradientArrays.calories as unknown as [string, string],
+  tef: colors.gradientArrays.protein as unknown as [string, string],
+};
+
+function AnimatedBar({ widthPct, color, delay, barKey }: { widthPct: number; color: string; delay: number; barKey?: string }) {
   const progress = useSharedValue(0);
   useEffect(() => {
     progress.value = withDelay(delay, withTiming(1, { duration: motion.duration.slow, easing: Easing.out(Easing.ease) }));
   }, []);
   const animStyle = useAnimatedStyle(() => ({
     width: `${progress.value * widthPct}%`,
-    backgroundColor: color,
   }));
-  return <Animated.View style={[{ height: '100%', borderRadius: radius.sm }, animStyle]} />;
+  const grad = barKey && BAR_GRADIENTS[barKey];
+  return (
+    <Animated.View style={[{ height: '100%', borderRadius: radius.sm, overflow: 'hidden' }, animStyle]}>
+      {grad ? (
+        <LinearGradient colors={grad as [string, string]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1, borderRadius: radius.sm }} />
+      ) : (
+        <View style={{ flex: 1, backgroundColor: color, borderRadius: radius.sm }} />
+      )}
+    </Animated.View>
+  );
 }
 
 export function TDEERevealStep({ onNext }: Props) {
@@ -118,7 +134,7 @@ export function TDEERevealStep({ onNext }: Props) {
       </Animated.View>
 
       {/* Total TDEE */}
-      <Animated.View style={[styles.totalCard, totalCardAnim]}>
+      <Animated.View style={[styles.totalCard, totalCardAnim, glowShadow(c.accent.primary, 16, 0.2)]}>
         <Text style={[styles.totalLabel, { color: c.text.secondary }]}>Your body burns</Text>
         {reduceMotion ? (
           <Text style={[styles.totalValue, { color: c.text.primary }]}>~{effectiveTDEE.toLocaleString()} kcal/day</Text>
@@ -140,7 +156,7 @@ export function TDEERevealStep({ onNext }: Props) {
                 {reduceMotion ? (
                   <View style={[styles.barFill, { width: `${widthPct}%`, backgroundColor: barColors[key] }]} />
                 ) : (
-                  <AnimatedBar widthPct={widthPct} color={barColors[key]} delay={BAR_DELAYS[key]} />
+                  <AnimatedBar widthPct={widthPct} color={barColors[key]} delay={BAR_DELAYS[key]} barKey={key} />
                 )}
               </View>
               <View style={styles.barValueCol}>

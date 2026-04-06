@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -70,6 +70,7 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
       if (!strengthResult.validation.hasUppercase) missing.push('an uppercase letter');
       if (!strengthResult.validation.hasLowercase) missing.push('a lowercase letter');
       if (!strengthResult.validation.hasDigit) missing.push('a number');
+      if (!strengthResult.validation.hasSpecialChar) missing.push('a special character (!@#$...)');
       setError(missing.length > 0 ? `Password needs ${missing.join(', ')}.` : 'Password is too weak. Try a more unique combination.');
       return;
     }

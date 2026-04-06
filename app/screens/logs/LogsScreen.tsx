@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { getLocalDateString } from '../../utils/localDate';
 import {
   View,
   Text,
@@ -10,7 +11,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -21,6 +22,7 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { Skeleton } from '../../components/common/Skeleton';
 import { SwipeableRow } from '../../components/common/SwipeableRow';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
+import { AnimatedTabIndicator } from '../../components/common/AnimatedTabIndicator';
 
 import { BudgetBar } from '../../components/nutrition/BudgetBar';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
@@ -32,6 +34,7 @@ import { hasMorePages } from '../../utils/pagination';
 import { groupSessionsByDate } from '../../utils/sessionGrouping';
 import { sessionHasPR } from '../../utils/sessionEditConversion';
 import { useStore } from '../../store';
+import { formatWeight } from '../../utils/unitConversion';
 import { Icon } from '../../components/common/Icon';
 import api from '../../services/api';
 import type { TrainingSessionResponse, WorkoutTemplateResponse } from '../../types/training';
@@ -83,6 +86,7 @@ export function LogsScreen() {
   const [showNutritionModal, setShowNutritionModal] = useState(false);
   const [showTrainingModal, setShowTrainingModal] = useState(false);
   const [prefilledMealName, setPrefilledMealName] = useState<string | undefined>(undefined);
+  const [tabContainerWidth, setTabContainerWidth] = useState(0);
 
   // Training pagination state
   const [trainingSessions, setTrainingSessions] = useState<TrainingSessionResponse[]>([]);
@@ -101,6 +105,7 @@ export function LogsScreen() {
   const selectedDate = useStore((s) => s.selectedDate);
   const setSelectedDate = useStore((s) => s.setSelectedDate);
   const adaptiveTargets = useStore((s) => s.adaptiveTargets);
+  const unitSystem = useStore((s) => s.unitSystem);
 
   const changeDate = (delta: number) => {
     const d = new Date(selectedDate + 'T12:00:00');
@@ -210,18 +215,28 @@ export function LogsScreen() {
     setTrainingLoadingMore(false);
   }, [trainingLoadingMore, trainingTotalCount, trainingPage, loadTrainingPage]);
 
-  const handleDeleteNutrition = async (id: string) => {
-    try {
-      await api.delete(`nutrition/entries/${id}`);
-      loadNutritionData();
-    } catch (err: unknown) { Alert.alert('Error', 'Failed to delete. Please try again.'); }
+  const handleDeleteNutrition = (id: string) => {
+    Alert.alert('Delete Entry?', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: async () => {
+        try {
+          await api.delete(`nutrition/entries/${id}`);
+          loadNutritionData();
+        } catch (err: unknown) { Alert.alert('Error', 'Failed to delete. Please try again.'); }
+      }},
+    ]);
   };
 
-  const handleDeleteTraining = async (id: string) => {
-    try {
-      await api.delete(`training/sessions/${id}`);
-      setTrainingSessions((prev) => prev.filter((s) => s.id !== id));
-    } catch (err: unknown) { Alert.alert('Error', 'Failed to delete. Please try again.'); }
+  const handleDeleteTraining = (id: string) => {
+    Alert.alert('Delete Entry?', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: async () => {
+        try {
+          await api.delete(`training/sessions/${id}`);
+          setTrainingSessions((prev) => prev.filter((s) => s.id !== id));
+        } catch (err: unknown) { Alert.alert('Error', 'Failed to delete. Please try again.'); }
+      }},
+    ]);
   };
 
   // Group training sessions by date using utility
@@ -318,7 +333,7 @@ export function LogsScreen() {
                     </View>
                     {session.exercises?.slice(0, 3).map((ex, i) => (
                       <Text key={i} style={[styles.exerciseText, { color: c.text.secondary }]}>
-                        {ex.exercise_name} — {ex.sets.length} sets{ex.sets.length > 0 ? ` · ${ex.sets[0].weight_kg}kg × ${ex.sets[0].reps}` : ''}
+                        {ex.exercise_name} — {ex.sets.length} sets{ex.sets.length > 0 ? ` · ${formatWeight(ex.sets[0].weight_kg, unitSystem)} × ${ex.sets[0].reps}` : ''}
                       </Text>
                     ))}
                     {(session.exercises?.length ?? 0) > 3 && (
@@ -394,7 +409,8 @@ export function LogsScreen() {
     <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="logs-screen">
       <Text style={[styles.title, { color: c.text.primary }]}>Logs</Text>
 
-      <View style={[styles.tabs, { backgroundColor: c.bg.surface }]}>
+      <View style={[styles.tabs, { backgroundColor: c.bg.surface }]}
+        onLayout={(e) => setTabContainerWidth(e.nativeEvent.layout.width)}>
         <TouchableOpacity
           style={[styles.tab, tab === 'nutrition' && styles.tabActive]}
           onPress={() => { impact('light'); setTab('nutrition'); }}
@@ -413,6 +429,11 @@ export function LogsScreen() {
         >
           <Text style={[styles.tabText, tab === 'training' && styles.tabTextActive]}>Training</Text>
         </TouchableOpacity>
+        <AnimatedTabIndicator
+          activeIndex={tab === 'nutrition' ? 0 : 1}
+          tabCount={2}
+          containerWidth={tabContainerWidth}
+        />
       </View>
 
       <View style={styles.dateNav}>
@@ -420,8 +441,8 @@ export function LogsScreen() {
           <Text style={[styles.dateArrow, { color: c.accent.primary }]}>‹</Text>
         </TouchableOpacity>
         <Text style={[styles.dateText, { color: c.text.primary }]}>{formatDisplayDate(selectedDate)}</Text>
-        <TouchableOpacity onPress={() => changeDate(1)} accessibilityLabel="Next day" accessibilityRole="button">{/* Audit fix 7.10 */}
-          <Text style={[styles.dateArrow, { color: c.accent.primary }]}>›</Text>
+        <TouchableOpacity onPress={() => changeDate(1)} disabled={selectedDate >= getLocalDateString()} accessibilityLabel="Next day" accessibilityRole="button">{/* Audit fix 7.10 */}
+          <Text style={[styles.dateArrow, { color: selectedDate >= getLocalDateString() ? c.text.muted : c.accent.primary }]}>›</Text>
         </TouchableOpacity>
       </View>
 
@@ -471,7 +492,8 @@ export function LogsScreen() {
                 slot.entries.map((entry) => {
                   const idx = cardIndex++;
                   return (
-                    <StaggeredCard key={entry.id} index={idx}>
+                    <Animated.View key={entry.id} entering={FadeInDown.duration(200)} exiting={FadeOutUp.duration(150)}>
+                    <StaggeredCard index={idx}>
                       <SwipeableRow onDelete={() => handleDeleteNutrition(entry.id)}>
                         <Card style={styles.entryCard}>
                           <View style={styles.entryHeader}>
@@ -493,6 +515,7 @@ export function LogsScreen() {
                         </Card>
                       </SwipeableRow>
                     </StaggeredCard>
+                    </Animated.View>
                   );
                 })
               ) : null}

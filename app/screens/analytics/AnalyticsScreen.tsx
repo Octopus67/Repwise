@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'; // Audit fix 7.3
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { getLocalDateString } from '../../utils/localDate';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, letterSpacing } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
@@ -7,6 +8,7 @@ import { Card } from '../../components/common/Card';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Skeleton } from '../../components/common/Skeleton';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
+import { AnimatedTabIndicator } from '../../components/common/AnimatedTabIndicator';
 import { TrendLineChart } from '../../components/charts/TrendLineChart';
 import { TimeRangeSelector } from '../../components/charts/TimeRangeSelector';
 import { filterByTimeRange } from '../../utils/filterByTimeRange';
@@ -105,6 +107,8 @@ export function AnalyticsScreen() {
   const [volumeLandmarks, setVolumeLandmarks] = useState<WNSMuscleVolume[]>([]);
   const [volumeLoading, setVolumeLoading] = useState(false);
   const { enabled: volumeFlagEnabled } = useFeatureFlag('volume_landmarks');
+  const [refreshing, setRefreshing] = useState(false);
+  const [tabContainerWidth, setTabContainerWidth] = useState(0);
 
   const loadAnalytics = useCallback(async (signal?: AbortSignal) => {
     setError(null);
@@ -290,7 +294,8 @@ export function AnalyticsScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="analytics-screen">
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await loadAnalytics(); setRefreshing(false); }} tintColor={c.accent.primary} />}>
         <Text style={[styles.title, { color: c.text.primary }]}>Analytics</Text>
 
         {/* Error Banner */}
@@ -303,7 +308,8 @@ export function AnalyticsScreen() {
         )}
 
         {/* Tab Pills */}
-        <View style={[styles.analyticsTabRow, { backgroundColor: c.bg.surface }]}>
+        <View style={[styles.analyticsTabRow, { backgroundColor: c.bg.surface }]}
+          onLayout={(e) => setTabContainerWidth(e.nativeEvent.layout.width)}>
           {(['nutrition', 'training', 'body', 'volume'] as const).map((t) => (
             <TouchableOpacity
               key={t}
@@ -316,6 +322,11 @@ export function AnalyticsScreen() {
               </Text>
             </TouchableOpacity>
           ))}
+          <AnimatedTabIndicator
+            activeIndex={['nutrition', 'training', 'body', 'volume'].indexOf(selectedTab)}
+            tabCount={4}
+            containerWidth={tabContainerWidth}
+          />
         </View>
 
         {/* Weekly Intelligence Report link — visible on ALL tabs */}

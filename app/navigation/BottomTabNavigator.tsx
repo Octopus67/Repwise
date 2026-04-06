@@ -5,6 +5,7 @@ import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from 'rea
 import Svg, { Path, Circle, Rect, Line } from 'react-native-svg';
 import { typography, spacing } from '../theme/tokens';
 import { triggerHaptic } from '../hooks/useHaptics';
+import { haptic } from '../utils/haptics';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { useThemeColors, getThemeColors, ThemeColors } from '../hooks/useThemeColors';
 
@@ -385,10 +386,10 @@ export function BottomTabNavigator() {
         ),
       })}
     >
-      <Tab.Screen name="Home" component={DashboardStackScreen} options={{ tabBarTestID: 'tab-home' }} listeners={{ tabPress: () => triggerHaptic('light') }} />
-      <Tab.Screen name="Log" component={LogsStackScreen} options={{ tabBarTestID: 'tab-log' }} listeners={{ tabPress: () => triggerHaptic('light') }} />
-      <Tab.Screen name="Analytics" component={AnalyticsStackScreen} options={{ tabBarTestID: 'tab-analytics' }} listeners={{ tabPress: () => triggerHaptic('light') }} />
-      <Tab.Screen name="Profile" component={ProfileStackScreen} options={{ tabBarTestID: 'tab-profile' }} listeners={{ tabPress: () => triggerHaptic('light') }} />
+      <Tab.Screen name="Home" component={DashboardStackScreen} options={{ tabBarTestID: 'tab-home' }} listeners={{ tabPress: () => haptic.selection() }} />
+      <Tab.Screen name="Log" component={LogsStackScreen} options={{ tabBarTestID: 'tab-log' }} listeners={{ tabPress: () => haptic.selection() }} />
+      <Tab.Screen name="Analytics" component={AnalyticsStackScreen} options={{ tabBarTestID: 'tab-analytics' }} listeners={{ tabPress: () => haptic.selection() }} />
+      <Tab.Screen name="Profile" component={ProfileStackScreen} options={{ tabBarTestID: 'tab-profile' }} listeners={{ tabPress: () => haptic.selection() }} />
     </Tab.Navigator>
   );
 }

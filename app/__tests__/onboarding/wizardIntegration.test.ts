@@ -59,21 +59,21 @@ describe('20.1 Wizard Navigation', () => {
   });
 
   test('step stays at 1 minimum (setStep(0) and setStep(-1) clamp)', () => {
-    // The store sets whatever value is passed; we verify the initial floor
     getState().setStep(1);
     expect(getState().currentStep).toBe(1);
-    // Attempting to go below 1 — store stores the raw value
+    // Store now clamps to 1-10 range
     getState().setStep(0);
-    expect(getState().currentStep).toBe(0);
-    // Verify the store doesn't crash; boundary enforcement is UI-level
+    expect(getState().currentStep).toBe(1);
   });
 
-  test('step stays at 9 maximum (setStep(9) works, setStep(10) stores raw)', () => {
+  test('step stays at 10 maximum (setStep(10) works, setStep(11) clamps)', () => {
     getState().setStep(9);
     expect(getState().currentStep).toBe(9);
     getState().setStep(10);
     expect(getState().currentStep).toBe(10);
-    // Store stores raw value; UI enforces bounds
+    // Store now clamps to 1-10 range
+    getState().setStep(11);
+    expect(getState().currentStep).toBe(10);
   });
 
   test('reset() returns all state to initial values', () => {

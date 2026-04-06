@@ -5,8 +5,30 @@ export const mmkv = new MMKV({ id: 'repwise-query-cache' });
 
 export const mmkvPersister = createSyncStoragePersister({
   storage: {
-    getItem: (key: string) => mmkv.getString(key) ?? null,
-    setItem: (key: string, value: string) => mmkv.set(key, value),
-    removeItem: (key: string) => mmkv.delete(key),
+    getItem: (key: string) => {
+      try {
+        return mmkv.getString(key) ?? null;
+      } catch (e) {
+        console.warn('MMKV getItem failed, clearing storage:', e);
+        try { mmkv.clearAll(); } catch (_) { /* ignore */ }
+        return null;
+      }
+    },
+    setItem: (key: string, value: string) => {
+      try {
+        mmkv.set(key, value);
+      } catch (e) {
+        console.warn('MMKV setItem failed, clearing storage:', e);
+        try { mmkv.clearAll(); } catch (_) { /* ignore */ }
+      }
+    },
+    removeItem: (key: string) => {
+      try {
+        mmkv.delete(key);
+      } catch (e) {
+        console.warn('MMKV removeItem failed, clearing storage:', e);
+        try { mmkv.clearAll(); } catch (_) { /* ignore */ }
+      }
+    },
   },
 });

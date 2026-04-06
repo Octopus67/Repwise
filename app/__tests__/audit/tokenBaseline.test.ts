@@ -1,7 +1,7 @@
 import { colors, spacing, typography, springs, radius } from '../../theme/tokens';
 
 describe('Token Baseline', () => {
-  test('(a) colors object has exactly 13 top-level groups', () => {
+  test('(a) colors object has exactly 14 top-level groups', () => {
     const expectedGroups = [
       'bg',
       'border',
@@ -10,6 +10,7 @@ describe('Token Baseline', () => {
       'semantic',
       'premium',
       'gradient',
+      'gradientArrays',
       'chart',
       'macro',
       'error',
@@ -18,7 +19,7 @@ describe('Token Baseline', () => {
       'heatmap',
     ];
     const actualGroups = Object.keys(colors);
-    expect(actualGroups).toHaveLength(13);
+    expect(actualGroups).toHaveLength(14);
     expect(actualGroups.sort()).toEqual(expectedGroups.sort());
   });
 

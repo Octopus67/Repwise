@@ -4,6 +4,8 @@
  * Pure functions — no React Native imports.
  */
 
+import { getLocalDateString } from './localDate';
+
 export interface DayCell {
   dayName: string;
   dayNumber: number;

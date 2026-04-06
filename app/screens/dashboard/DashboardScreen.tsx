@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'; // Audit fix 7.2 — memoization
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getLocalDateString } from '../../utils/localDate';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated from 'react-native-reanimated';
 import { spacing, typography, radius } from '../../theme/tokens';
@@ -46,6 +47,7 @@ import { RecoveryCheckinModal } from '../../components/modals/RecoveryCheckinMod
 import { Icon } from '../../components/common/Icon';
 import { TrendLineChart } from '../../components/charts/TrendLineChart';
 import api from '../../services/api';
+import { haptic } from '../../utils/haptics';
 import { getApiErrorMessage } from '../../utils/errors';
 import { isPremiumWorkoutLoggerEnabled } from '../../utils/featureFlags';
 import { useDashboardData } from '../../hooks/useDashboardData';
@@ -102,10 +104,10 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
   useEffect(() => {
     AsyncStorage.getItem('@repwise:verify_dismissed').then(val => {
       if (val && Date.now() - Number(val) < 86_400_000) setVerifyDismissed(true);
-    });
+    }).catch(() => {});
     AsyncStorage.getItem(TRIAL_MODAL_DISMISS_KEY).then(val => {
       if (val && Date.now() - Number(val) < 86_400_000) setTrialModalDismissed(true);
-    });
+    }).catch(() => {});
   }, []);
   const dismissVerify = () => {
     setVerifyDismissed(true);
@@ -118,7 +120,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
   const recovery = useRecoveryScore();
   const { enabled: combinedReadinessEnabled } = useFeatureFlag('combined_readiness');
 
-  useEffect(() => { if (trialStatus && !trialStatus.active && trialStatus.has_used_trial && trialStatus.days_remaining === 0 && !trialModalDismissed) { fetchInsights().then(setTrialInsights); setShowTrialExpiration(true); } }, [trialStatus, fetchInsights, trialModalDismissed]);
+  useEffect(() => { if (trialStatus && !trialStatus.active && trialStatus.has_used_trial && trialStatus.days_remaining === 0 && !trialModalDismissed) { fetchInsights().then(setTrialInsights).catch(() => {}); setShowTrialExpiration(true); } }, [trialStatus, fetchInsights, trialModalDismissed]);
   
   // Load data on mount and when date changes - handled by useDashboardQueries via TanStack Query
   // TanStack Query auto-refetches stale data, no manual useFocusEffect needed
@@ -188,7 +190,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
     <SafeAreaView style={[s.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
       <ScrollView testID="dashboard-screen" style={s.container} contentContainerStyle={s.content}
         removeClippedSubviews={Platform.OS !== 'web'}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={c.accent.primary} />}>
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { haptic.light(); handleRefresh(); }} tintColor={c.accent.primary} />}>
 
         <Animated.View style={hA}><View style={s.header} testID="dashboard-greeting">
           {premium && <PremiumBadge size="md" />}

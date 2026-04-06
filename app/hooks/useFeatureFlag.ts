@@ -36,7 +36,7 @@ export function useFeatureFlag(flagName: string): {
         setEnabled(val);
         setLoading(false);
       }
-    });
+    }).catch(() => {});
     return () => {
       cancelled = true;
     };

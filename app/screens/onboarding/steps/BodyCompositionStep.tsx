@@ -1,6 +1,9 @@
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { spacing, typography, radius } from '../../../theme/tokens';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import { spacing, typography, radius, springs } from '../../../theme/tokens';
+import { useHaptics } from '../../../hooks/useHaptics';
 import { useThemeColors, ThemeColors } from '../../../hooks/useThemeColors';
 import { useOnboardingStore } from '../../../store/onboardingSlice';
 import { estimateBodyFat } from '../../../utils/onboardingCalculations';
@@ -32,9 +35,34 @@ const BODY_FAT_RANGES: BodyFatRange[] = [
   { min: 35, max: 60, midpoint: 38, label: '35%+', maleDesc: 'Very high body fat', femaleDesc: 'High body fat' },
 ];
 
+function AnimatedCard({ isSelected, children, onPress, accessibilityLabel }: {
+  isSelected: boolean; children: React.ReactNode; onPress: () => void; accessibilityLabel: string;
+}) {
+  const c = useThemeColors();
+  const styles = getThemedStyles(c);
+  const scale = useSharedValue(1);
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
+  const handlePress = () => {
+    scale.value = withSpring(1.05, springs.snappy);
+    setTimeout(() => { scale.value = withSpring(1, springs.gentle); }, 100);
+    onPress();
+  };
+
+  return (
+    <Animated.View style={[styles.card, isSelected && styles.cardSelected, animStyle]}>
+      <TouchableOpacity onPress={handlePress} activeOpacity={0.7}
+        accessibilityLabel={accessibilityLabel} accessibilityRole="button">
+        {children}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
+
 export function BodyCompositionStep({ onNext }: Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const { impact } = useHaptics();
   const {
     sex,
     bodyFatPct,
@@ -56,6 +84,7 @@ export function BodyCompositionStep({ onNext }: Props) {
   const bodyFatValid = bodyFatPct === null || (bodyFatPct >= 3 && bodyFatPct <= 60);
 
   const handleSelectRange = (midpoint: number) => {
+    impact('light');
     updateField('bodyFatPct', midpoint);
     updateField('bodyFatSkipped', false);
   };
@@ -71,10 +100,10 @@ export function BodyCompositionStep({ onNext }: Props) {
   const isMale = sex === 'male';
   const canProceed = (bodyFatPct !== null && bodyFatValid) || bodyFatSkipped;
 
-  const getFillColor = (midpoint: number) => {
-    if (midpoint <= 17) return c.semantic.positive;
-    if (midpoint <= 27) return c.semantic.warning;
-    return c.semantic.negative;
+  const getGradientColors = (midpoint: number): [string, string] => {
+    if (midpoint <= 17) return ['#10B981', '#22C55E'];
+    if (midpoint <= 27) return ['#F59E0B', '#F97316'];
+    return ['#EF4444', '#F97316'];
   };
 
   return (
@@ -98,26 +127,20 @@ export function BodyCompositionStep({ onNext }: Props) {
       <View style={styles.grid}>
         {BODY_FAT_RANGES.map((range) => {
           const isSelected = bodyFatPct === range.midpoint && !bodyFatSkipped;
+          const fillColors = getGradientColors(range.midpoint);
           return (
-            <TouchableOpacity
+            <AnimatedCard
               key={range.label}
-              style={[styles.card, isSelected && styles.cardSelected]}
+              isSelected={isSelected}
               onPress={() => handleSelectRange(range.midpoint)}
-              activeOpacity={0.7}
               accessibilityLabel={`Select body fat range ${range.label}: ${isMale ? range.maleDesc : range.femaleDesc}`}
-              accessibilityRole="button"
             >
               <View style={styles.cardRow}>
-                {/* Vertical fill bar */}
+                {/* Gradient fill bar */}
                 <View style={[styles.barTrack, { backgroundColor: c.border.subtle }]}>
-                  <View
-                    style={[
-                      styles.barFill,
-                      {
-                        height: `${Math.min((range.midpoint / 60) * 100, 100)}%`,
-                        backgroundColor: getFillColor(range.midpoint),
-                      },
-                    ]}
+                  <LinearGradient
+                    colors={fillColors}
+                    style={[styles.barFill, { height: `${Math.min((range.midpoint / 60) * 100, 100)}%` }]}
                   />
                 </View>
                 {/* Card content */}
@@ -130,7 +153,7 @@ export function BodyCompositionStep({ onNext }: Props) {
                   </Text>
                 </View>
               </View>
-            </TouchableOpacity>
+            </AnimatedCard>
           );
         })}
       </View>

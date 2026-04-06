@@ -160,7 +160,7 @@ export function GoalStep({ onNext }: Props) {
         </View>
       )}
 
-      {onNext && <Button title="Next" onPress={onNext} disabled={!targetWeightValid || !!targetDirectionWarning} style={styles.btn} />}
+      {onNext && <Button title="Next" onPress={onNext} disabled={!targetWeightValid} style={styles.btn} />}
     </ScrollView>
   );
 }
