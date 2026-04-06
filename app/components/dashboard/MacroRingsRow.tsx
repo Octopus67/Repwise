@@ -42,6 +42,7 @@ export function MacroRingsRow({ calories, protein, carbs, fat, onTargetMissing }
           color={tc.macro.calories}
           trackColor={tc.macro.caloriesSubtle}
           label="kcal"
+          gradientColors={colors.gradientArrays.calories as [string, string]}
           onTargetMissing={onTargetMissing}
         />
       </StaggeredRing>
@@ -52,6 +53,7 @@ export function MacroRingsRow({ calories, protein, carbs, fat, onTargetMissing }
           color={tc.macro.protein}
           trackColor={tc.macro.proteinSubtle}
           label="Protein"
+          gradientColors={colors.gradientArrays.protein as [string, string]}
           onTargetMissing={onTargetMissing}
         />
       </StaggeredRing>
@@ -62,6 +64,7 @@ export function MacroRingsRow({ calories, protein, carbs, fat, onTargetMissing }
           color={tc.macro.carbs}
           trackColor={tc.macro.carbsSubtle}
           label="Carbs"
+          gradientColors={colors.gradientArrays.carbs as [string, string]}
           onTargetMissing={onTargetMissing}
         />
       </StaggeredRing>
@@ -72,6 +75,7 @@ export function MacroRingsRow({ calories, protein, carbs, fat, onTargetMissing }
           color={tc.macro.fat}
           trackColor={tc.macro.fatSubtle}
           label="Fat"
+          gradientColors={colors.gradientArrays.fat as [string, string]}
           onTargetMissing={onTargetMissing}
         />
       </StaggeredRing>

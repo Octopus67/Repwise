@@ -60,6 +60,16 @@ export const colors = {
     end: '#0E7490',
   },
 
+  gradientArrays: {
+    primary: ['#06B6D4', '#0E7490'],     // cyan accent
+    premium: ['#D4AF37', '#B8860B'],     // gold
+    calories: ['#EF4444', '#F97316'],    // red → orange
+    protein: ['#3B82F6', '#6366F1'],     // blue → indigo
+    carbs: ['#F59E0B', '#F97316'],       // amber → orange
+    fat: ['#EC4899', '#F43F5E'],         // pink → rose
+    success: ['#10B981', '#34D399'],     // emerald
+  },
+
   chart: {
     calories: '#06B6D4',
     positiveTrend: '#22C55E',

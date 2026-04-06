@@ -18,6 +18,10 @@ const STRENGTH_CONFIG = {
 
 const RULES: { key: keyof PasswordValidation; label: string }[] = [
   { key: 'minLength', label: 'At least 8 characters' },
+  { key: 'hasUppercase', label: 'One uppercase letter' },
+  { key: 'hasLowercase', label: 'One lowercase letter' },
+  { key: 'hasDigit', label: 'One number' },
+  { key: 'hasSpecialChar', label: 'One special character (!@#$...)' },
 ];
 
 export function PasswordStrengthMeter({ result, password }: PasswordStrengthMeterProps) {

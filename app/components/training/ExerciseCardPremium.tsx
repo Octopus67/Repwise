@@ -30,6 +30,7 @@ import { WarmUpSuggestion } from './WarmUpSuggestion';
 import type { WarmUpSet } from '../../utils/warmUpGenerator';
 import { typography, spacing, radius } from '../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { haptic } from '../../utils/haptics';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -352,10 +353,10 @@ export const ExerciseCardPremium = React.memo<ExerciseCardPremiumProps>(({
             isCompleted={set.completed}
             unitSystem={unitSystem}
             showRpeRir={showRpeRir}
-            onToggleComplete={() => onToggleSetCompleted(set.localId)}
+            onToggleComplete={() => { haptic.success(); onToggleSetCompleted(set.localId); }}
             onCopyPrevious={() => onCopyPreviousToSet(set.localId)}
             onUpdateField={(field, value) => onUpdateSetField(set.localId, field, value)}
-            onWeightStep={(dir) => onWeightStep(set.localId, dir)}
+            onWeightStep={(dir) => { haptic.light(); onWeightStep(set.localId, dir); }}
             onSetTypeChange={onUpdateSetType ? (type) => onUpdateSetType(set.localId, type) : undefined}
             onOpenPlateCalculator={onOpenPlateCalculator}
             onRemoveSet={() => onRemoveSet(set.localId)}

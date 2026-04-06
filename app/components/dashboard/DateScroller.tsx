@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
+import { getLocalDateString } from '../../utils/localDate';
 import {
   View,
   Text,
@@ -11,6 +12,7 @@ import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { getWeekDates, formatDayCell } from '../../utils/dateScrollerLogic';
 import { useHaptics } from '../../hooks/useHaptics';
+import { haptic } from '../../utils/haptics';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -65,7 +67,7 @@ export function DateScroller({ selectedDate, onDateSelect, loggedDates }: DateSc
     <View style={styles.container}>
       {!isToday && (
         <TouchableOpacity
-          onPress={() => { impact('light'); setWeekOffset(0); onDateSelect(today); }}
+          onPress={() => { haptic.selection(); setWeekOffset(0); onDateSelect(today); }}
           style={[styles.todayPill, { backgroundColor: c.accent.primaryMuted }]}
           activeOpacity={0.7}
         >
@@ -96,7 +98,7 @@ export function DateScroller({ selectedDate, onDateSelect, loggedDates }: DateSc
                     isToday && styles.dayCellToday,
                     isSelected && styles.dayCellSelected,
                   ]}
-                  onPress={() => { impact('light'); onDateSelect(dateStr); }}
+                  onPress={() => { haptic.selection(); onDateSelect(dateStr); }}
                   activeOpacity={0.7}
                 >
                   <Text style={[styles.dayName, isToday && styles.dayNameToday, isSelected && styles.dayNameSelected]}>

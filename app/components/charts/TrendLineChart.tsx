@@ -1,8 +1,11 @@
-import { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableWithoutFeedback, GestureResponderEvent } from 'react-native';
-import Svg, { Line, Polyline, Circle, Text as SvgText } from 'react-native-svg';
+import { useMemo, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Dimensions, TouchableWithoutFeedback, GestureResponderEvent, Platform } from 'react-native';
+import Svg, { Line, Polyline, Circle, Text as SvgText, Defs, LinearGradient, Stop, Polygon } from 'react-native-svg';
+import Animated, { useSharedValue, useAnimatedProps, withTiming } from 'react-native-reanimated';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+
+const AnimatedPolyline = Platform.OS === 'web' ? Polyline : Animated.createAnimatedComponent(Polyline);
 
 const CHART_WIDTH = Dimensions.get('window').width - spacing[4] * 2 - spacing[4] * 2; // screen padding + card padding
 const CHART_HEIGHT = 160;
@@ -108,6 +111,43 @@ export function TrendLineChart({
     return { points: pts, yMin: min, yMax: max, xLabels: xl, yLabels: yl, plotWidth: pw, plotHeight: ph };
   }, [data, targetLine, secondaryData]);
 
+  // Estimate total path length for draw-in animation
+  const pathLength = useMemo(() => {
+    if (data.length < 2) return 0;
+    const pw = CHART_WIDTH - PADDING.left - PADDING.right;
+    const ph = CHART_HEIGHT - PADDING.top - PADDING.bottom;
+    let len = 0;
+    for (let i = 1; i < data.length; i++) {
+      const dx = pw / (data.length - 1);
+      const dy = ((data[i].value - data[i - 1].value) / ((yMax - yMin) || 1)) * ph;
+      len += Math.sqrt(dx * dx + dy * dy);
+    }
+    return len;
+  }, [data, yMax, yMin]);
+
+  // Polygon points for gradient area fill (line path + bottom corners)
+  const areaPolygonPoints = useMemo(() => {
+    if (!points || data.length < 2) return '';
+    const pw = CHART_WIDTH - PADDING.left - PADDING.right;
+    const bottomY = PADDING.top + (CHART_HEIGHT - PADDING.top - PADDING.bottom);
+    const firstX = PADDING.left;
+    const lastX = PADDING.left + pw;
+    return `${firstX},${bottomY} ${points} ${lastX},${bottomY}`;
+  }, [points, data.length]);
+
+  // Draw-in animation
+  const dashOffset = useSharedValue(pathLength || 1000);
+  useEffect(() => {
+    if (pathLength > 0) {
+      dashOffset.value = pathLength;
+      dashOffset.value = withTiming(0, { duration: 800 });
+    }
+  }, [pathLength]);
+
+  const animatedLineProps = useAnimatedProps(() => ({
+    strokeDashoffset: dashOffset.value,
+  }));
+
   if (data.length === 0) {
     return (
       <View style={[styles.emptyContainer]}>
@@ -184,6 +224,19 @@ export function TrendLineChart({
             />
           )}
 
+          {/* Gradient area fill */}
+          {!primaryAsDots && areaPolygonPoints && (
+            <>
+              <Defs>
+                <LinearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                  <Stop offset="0" stopColor={color} stopOpacity="0.3" />
+                  <Stop offset="1" stopColor={color} stopOpacity="0" />
+                </LinearGradient>
+              </Defs>
+              <Polygon points={areaPolygonPoints} fill="url(#areaGrad)" />
+            </>
+          )}
+
           {/* Primary data — line or dots depending on primaryAsDots */}
           {primaryAsDots ? (
             // Render as individual dots with reduced opacity
@@ -202,13 +255,15 @@ export function TrendLineChart({
               );
             })
           ) : (
-            <Polyline
+            <AnimatedPolyline
               points={points}
               fill="none"
               stroke={color}
               strokeWidth={2}
               strokeLinejoin="round"
               strokeLinecap="round"
+              strokeDasharray={pathLength > 0 ? pathLength : undefined}
+              animatedProps={Platform.OS === 'web' ? undefined : animatedLineProps}
             />
           )}
 

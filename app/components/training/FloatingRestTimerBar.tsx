@@ -17,7 +17,9 @@ import { radius, spacing, typography, shadows, springs, motion } from '../../the
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { adjustTime, getTimerColor } from '../../utils/restTimerLogic';
 import { useHaptics } from '../../hooks/useHaptics';
+import { haptic } from '../../utils/haptics';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
+import Svg, { Circle as SvgCircle } from 'react-native-svg';
 
 interface FloatingRestTimerBarProps {
   durationSeconds: number;
@@ -91,6 +93,7 @@ export function FloatingRestTimerBar({
             clearInterval(intervalRef.current);
             intervalRef.current = null;
           }
+          haptic.heavy();
           hapticNotification('success');
           onCompleteRef.current();
         }
@@ -118,6 +121,7 @@ export function FloatingRestTimerBar({
             intervalRef.current = null;
           }
           setTimeout(() => {
+            haptic.heavy();
             hapticNotification('success');
             onCompleteRef.current();
           }, 0);
@@ -162,13 +166,47 @@ export function FloatingRestTimerBar({
   const seconds = clampedRemaining % 60;
   const timeText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 
+  // Progress ring calculations
+  const RING_SIZE = 36;
+  const RING_STROKE = 3;
+  const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
+  const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+  const progress = durationSeconds > 0 ? clampedRemaining / durationSeconds : 0;
+  const strokeDashoffset = RING_CIRCUMFERENCE * (1 - progress);
+  const ringColor = progress > 0.5 ? c.semantic.positive : progress > 0.25 ? c.semantic.warning : c.semantic.negative;
+
   return (
     <Animated.View style={[styles.container, slideStyle]} accessibilityRole="timer" accessibilityLabel={`Rest timer: ${remaining} seconds`}>
       <View style={styles.row}>
         {/* Exercise name */}
         <View style={styles.infoSection}>
           <Text style={[styles.exerciseName, { color: c.text.secondary }]} numberOfLines={1}>{exerciseName}</Text>
-          <Text style={[styles.countdown, { color: timerColor }]}>{timeText}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2] }}>
+            <Svg width={RING_SIZE} height={RING_SIZE}>
+              <SvgCircle
+                cx={RING_SIZE / 2}
+                cy={RING_SIZE / 2}
+                r={RING_RADIUS}
+                stroke={c.border.subtle}
+                strokeWidth={RING_STROKE}
+                fill="none"
+              />
+              <SvgCircle
+                cx={RING_SIZE / 2}
+                cy={RING_SIZE / 2}
+                r={RING_RADIUS}
+                stroke={ringColor}
+                strokeWidth={RING_STROKE}
+                fill="none"
+                strokeDasharray={`${RING_CIRCUMFERENCE}`}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                rotation="-90"
+                origin={`${RING_SIZE / 2}, ${RING_SIZE / 2}`}
+              />
+            </Svg>
+            <Text style={[styles.countdown, { color: timerColor }]}>{timeText}</Text>
+          </View>
         </View>
 
         {/* Controls */}

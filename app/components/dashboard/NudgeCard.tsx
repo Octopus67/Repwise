@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { useThemeColors, getThemeColors } from '../../hooks/useThemeColors';
+import { GlassCard } from '../common/GlassCard';
 
 interface Nudge {
   type: string;
@@ -22,7 +23,7 @@ export default function NudgeCard({ nudge, onDismiss, onAction }: NudgeCardProps
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: c.semantic.warningSubtle, borderLeftColor: c.semantic.warning }]}>
+    <GlassCard style={StyleSheet.flatten([styles.container, { borderLeftColor: c.semantic.warning }]) as ViewStyle}>
       <View style={styles.content}>
         <Text style={[styles.title, { color: c.text.primary }]}>{nudge.title}</Text>
         <Text style={[styles.message, { color: c.text.secondary }]}>{nudge.message}</Text>
@@ -35,7 +36,7 @@ export default function NudgeCard({ nudge, onDismiss, onAction }: NudgeCardProps
           <Text style={[styles.actionText, { color: c.text.inverse }]}>Take Action</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </GlassCard>
   );
 }
 

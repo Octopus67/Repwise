@@ -73,7 +73,7 @@ export function BarcodeScanner({ onFoodSelected, onClose }: Props) {
     } else if (permission.canAskAgain) {
       requestPermission().then((result: { granted: boolean }) => {
         setState(result.granted ? 'scanning' : 'denied');
-      });
+      }).catch(() => {});
     } else {
       setState('denied');
     }

@@ -14,6 +14,7 @@ import { ModalContainer } from '../common/ModalContainer';
 import { useStore } from '../../store';
 import { kgToLbs, lbsToKg, parseWeightToKg } from '../../utils/unitConversion';
 import api from '../../services/api';
+import { haptic } from '../../utils/haptics';
 
 interface Props {
   visible: boolean;
@@ -50,6 +51,7 @@ export function AddBodyweightModal({ visible, onClose, onSuccess }: Props) {
   };
 
   const handleSubmit = async () => {
+    haptic.success();
     if (!weight) {
       Alert.alert('Missing field', 'Please enter your weight.');
       return;

@@ -7,13 +7,16 @@
  * Requirements: Feature 6, Step 12
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { ModalContainer } from '../common/ModalContainer';
-import { spacing, typography, radius } from '../../theme/tokens';
+import { spacing, typography, radius, colors } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { getVolumeStatus, type VolumeLandmarks, type VolumeStatus } from '../../utils/wnsRecommendations';
 import { formatMuscle } from '../../utils/formatting';
+import { haptic } from '../../utils/haptics';
+import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 
 export interface WorkoutSummaryModalProps {
   visible: boolean;
@@ -22,6 +25,7 @@ export interface WorkoutSummaryModalProps {
   huByMuscle: Record<string, number>;
   landmarksByMuscle?: Record<string, VolumeLandmarks>;
   recommendations: string[];
+  prs?: string[];
   onClose: () => void;
   onShowExplainer?: () => void;
 }
@@ -50,6 +54,7 @@ export function WorkoutSummaryModal({
   huByMuscle,
   landmarksByMuscle,
   recommendations,
+  prs = [],
   onClose,
   onShowExplainer,
 }: WorkoutSummaryModalProps) {
@@ -58,24 +63,20 @@ export function WorkoutSummaryModal({
   const STATUS_COLORS = useVolumeStatusColors();
   const muscleEntries = Object.entries(huByMuscle).filter(([, hu]) => hu > 0);
   const totalHU = muscleEntries.reduce((sum, [, hu]) => sum + hu, 0);
+  const hasPRs = prs.length > 0;
+
+  useEffect(() => {
+    if (visible) haptic.heavy();
+  }, [visible]);
 
   return (
     <ModalContainer visible={visible} onClose={onClose} title="Workout Complete! 💪">
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* Summary stats */}
+        {/* Summary stats with staggered entrance */}
         <View style={styles.statsRow}>
-          <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: c.accent.primary }]}>{durationFormatted}</Text>
-            <Text style={[styles.statLabel, { color: c.text.muted }]}>Duration</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: c.accent.primary }]}>{totalSets}</Text>
-            <Text style={[styles.statLabel, { color: c.text.muted }]}>Sets</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: c.accent.primary }]}>{totalHU.toFixed(1)}</Text>
-            <Text style={[styles.statLabel, { color: c.text.muted }]}>Total HU</Text>
-          </View>
+          <StatCard index={0} value={durationFormatted} label="Duration" hasPR={false} styles={styles} accentColor={c.accent.primary} />
+          <StatCard index={1} value={String(totalSets)} label="Sets" hasPR={false} styles={styles} accentColor={c.accent.primary} />
+          <StatCard index={2} value={totalHU.toFixed(1)} label="Total HU" hasPR={hasPRs} styles={styles} accentColor={c.accent.primary} />
         </View>
 
         {/* HU by muscle */}
@@ -140,6 +141,19 @@ export function WorkoutSummaryModal({
   );
 }
 
+function StatCard({ index, value, label, hasPR, styles, accentColor }: {
+  index: number; value: string; label: string; hasPR: boolean; styles: any; accentColor: string;
+}) {
+  const entranceStyle = useStaggeredEntrance(index);
+  const goldBorder = hasPR ? { borderWidth: 1, borderColor: colors.premium.gold, borderRadius: radius.sm } : undefined;
+  return (
+    <Animated.View style={[styles.stat, entranceStyle, goldBorder]}>
+      <Text style={[styles.statValue, { color: accentColor }]}>{value}</Text>
+      <Text style={[styles.statLabel]}>{label}</Text>
+    </Animated.View>
+  );
+}
+
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   scroll: { maxHeight: 420 },
   statsRow: {
@@ -157,6 +171,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   statLabel: {
+    color: c.text.muted,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
     marginTop: spacing[0.5],

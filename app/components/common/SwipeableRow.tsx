@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
 import { spacing, typography } from '../../theme/tokens';
 import { triggerHaptic } from '../../hooks/useHaptics';
+import { haptic } from '../../utils/haptics';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 
 // Conditionally import Swipeable — only available on native
@@ -52,7 +53,7 @@ export function SwipeableRow({ children, onDelete }: SwipeableRowProps) {
       renderRightActions={renderRightActions}
       overshootRight={false}
       friction={2}
-      onSwipeableWillOpen={() => triggerHaptic('medium')}
+      onSwipeableWillOpen={() => haptic.light()}
     >
       {children}
     </Swipeable>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getLocalDateString } from '../../utils/localDate';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';

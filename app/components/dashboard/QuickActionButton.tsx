@@ -23,6 +23,8 @@ export const QuickActionButton = React.memo(function QuickActionButton({
   accentColor,
   completed,
   onPress,
+  accessibilityLabel,
+  accessibilityRole,
 }: QuickActionButtonProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
@@ -35,6 +37,8 @@ export const QuickActionButton = React.memo(function QuickActionButton({
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         activeOpacity={0.7}
+        accessibilityLabel={accessibilityLabel}
+        accessibilityRole={accessibilityRole as any}
       >
         <Card style={[styles.card, { borderLeftColor: accentColor }]}>
           <View style={styles.iconArea}>

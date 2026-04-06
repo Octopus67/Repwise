@@ -17,10 +17,14 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { typography, radius, spacing, motion } from '../../theme/tokens';
 import { springs } from '../../theme/tokens';
 import { Icon } from './Icon';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+
+let BlurView: React.ComponentType<any> | null = null;
+try { BlurView = require('expo-blur').BlurView; } catch { /* expo-blur unavailable */ }
 
 interface ModalContainerProps {
   visible: boolean;
@@ -45,6 +49,8 @@ export function ModalContainer({
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(300);
   const themeColors = useThemeColors();
+  const insets = useSafeAreaInsets();
+  const canBlur = BlurView && Platform.OS !== 'web';
 
   const panGesture = Gesture.Pan()
     .onUpdate((e) => {
@@ -125,11 +131,12 @@ export function ModalContainer({
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <View style={getStyles().mobileOverlay}>
-        <Animated.View style={[getStyles().backdrop, { backgroundColor: themeColors.bg.overlay }, backdropStyle]}>
+        <Animated.View style={[getStyles().backdrop, { backgroundColor: canBlur ? 'transparent' : themeColors.bg.overlay }, backdropStyle]}>
+          {canBlur && BlurView && <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} />}
           <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         </Animated.View>
         <GestureDetector gesture={panGesture}>
-          <Animated.View style={[getStyles().mobileSheet, { backgroundColor: themeColors.bg.surface, borderColor: themeColors.border.default }, mobileContentStyle]} testID={testID}>
+          <Animated.View style={[getStyles().mobileSheet, { backgroundColor: themeColors.bg.surface, borderColor: themeColors.border.default, paddingBottom: insets.bottom + spacing[6] }, mobileContentStyle]} testID={testID}>
             <View style={getStyles().dragHandleContainer}>
               <View style={[getStyles().dragHandle, { backgroundColor: themeColors.bg.surfaceRaised }]} />
             </View>

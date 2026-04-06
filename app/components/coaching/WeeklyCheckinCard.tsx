@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../common/Card';
+import { GlassCard } from '../common/GlassCard';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 
@@ -85,7 +86,7 @@ export function WeeklyCheckinCard({
         : c.text.secondary;
 
     return (
-      <Card variant="flat" style={getStyles().card}>
+      <GlassCard style={getStyles().card}>
         <View style={getStyles().header}>
           <Ionicons name="body-outline" size={20} color={c.accent.primary} />
           <Text style={[getStyles().title, { color: c.text.primary }]}>Recomp Check-in</Text>
@@ -104,7 +105,7 @@ export function WeeklyCheckinCard({
         >
           <Text style={[getStyles().primaryButtonText, { color: c.text.inverse }]}>Got it</Text>
         </TouchableOpacity>
-      </Card>
+      </GlassCard>
     );
   }
 
@@ -115,7 +116,7 @@ export function WeeklyCheckinCard({
     const progress = logged / 7;
 
     return (
-      <Card variant="flat" style={getStyles().card}>
+      <GlassCard style={getStyles().card}>
         <View style={getStyles().header}>
           <Ionicons name="analytics-outline" size={20} color={c.accent.primary} />
           <Text style={[getStyles().title, { color: c.text.primary }]}>Weekly Check-in</Text>
@@ -127,14 +128,14 @@ export function WeeklyCheckinCard({
           <View style={[getStyles().progressBarFill, { width: `${progress * 100}%` }]} />
         </View>
         <Text style={[getStyles().progressText, { color: c.text.muted }]}>{logged}/7 days logged</Text>
-      </Card>
+      </GlassCard>
     );
   }
 
   // Coached mode: informational card
   if (checkin.coaching_mode === 'coached') {
     return (
-      <Card variant="flat" style={getStyles().card}>
+      <GlassCard style={getStyles().card}>
         <View style={getStyles().header}>
           <Ionicons name="checkmark-circle" size={20} color={c.semantic.positive} />
           <Text style={[getStyles().title, { color: c.text.primary }]}>Weekly Check-in</Text>
@@ -159,14 +160,14 @@ export function WeeklyCheckinCard({
         >
           <Text style={[getStyles().primaryButtonText, { color: c.text.inverse }]}>Got it</Text>
         </TouchableOpacity>
-      </Card>
+      </GlassCard>
     );
   }
 
   // Collaborative mode: accept/modify/dismiss
   if (checkin.coaching_mode === 'collaborative' && checkin.suggestion_id) {
     return (
-      <Card variant="flat" style={getStyles().card}>
+      <GlassCard style={getStyles().card}>
         <View style={getStyles().header}>
           <Ionicons name="bulb-outline" size={20} color={c.accent.primary} />
           <Text style={[getStyles().title, { color: c.text.primary }]}>Suggested Update</Text>
@@ -244,7 +245,7 @@ export function WeeklyCheckinCard({
             </View>
           </>
         )}
-      </Card>
+      </GlassCard>
     );
   }
 

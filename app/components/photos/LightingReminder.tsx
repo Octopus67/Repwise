@@ -36,7 +36,7 @@ export function LightingReminder({ visible, onDismiss, onDontShowAgain }: Lighti
         } else {
           setShouldRender(true);
         }
-      });
+      }).catch(() => {});
     }
   }, [visible]);
 

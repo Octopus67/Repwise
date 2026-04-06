@@ -7,9 +7,10 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { radius, spacing, typography } from '../../theme/tokens';
+import { colors, radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../common/Icon';
+import { GradientButton } from '../common/GradientButton';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 
 interface UpgradeBannerProps {
@@ -48,7 +49,7 @@ export function UpgradeBanner({ onPress }: UpgradeBannerProps) {
             Coaching, advanced analytics & more
           </Text>
         </View>
-        <Text style={[styles.arrow, { color: c.accent.primary }]}>→</Text>
+        <GradientButton title="Upgrade" onPress={onPress} colors={[...colors.gradientArrays.premium]} style={{ paddingHorizontal: 0 }} />
       </Animated.View>
     </TouchableOpacity>
   );

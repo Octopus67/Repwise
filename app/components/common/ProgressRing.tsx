@@ -1,12 +1,14 @@
-import { useEffect, memo, useState } from 'react';
+import { useEffect, memo, useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import Animated, {
   useSharedValue,
   useAnimatedProps,
   useAnimatedReaction,
+  useAnimatedStyle,
   withSpring,
   withTiming,
+  withSequence,
   runOnJS,
   Easing,
 } from 'react-native-reanimated';
@@ -15,6 +17,7 @@ import { typography, springs, spacing } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { computeRingFill, formatRingLabel } from '../../utils/progressRingLogic';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
+import { haptic } from '../../utils/haptics';
 
 const isWeb = Platform.OS === 'web';
 const AnimatedCircle = isWeb ? Circle : Animated.createAnimatedComponent(Circle);
@@ -29,6 +32,7 @@ interface ProgressRingProps {
   label: string;
   animated?: boolean;
   onTargetMissing?: () => void;
+  gradientColors?: [string, string];
 }
 
 export const ProgressRing = memo(function ProgressRing({
@@ -41,6 +45,7 @@ export const ProgressRing = memo(function ProgressRing({
   label,
   animated = true,
   onTargetMissing,
+  gradientColors,
 }: ProgressRingProps) {
   const r = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * r;
@@ -52,8 +57,32 @@ export const ProgressRing = memo(function ProgressRing({
   const c = useThemeColors();
 
   const progress = useSharedValue(0);
+  const celebrationScale = useSharedValue(1);
+  const prevFillRef = useRef<number>(0);
+  const celebratedRef = useRef(false);
 
   const [animatedValue, setAnimatedValue] = useState(0);
+
+  // Ring completion micro-celebration
+  useEffect(() => {
+    const currentFill = fill.isMissing ? 0 : fill.percentage / 100;
+    if (prevFillRef.current < 1.0 && currentFill >= 1.0 && !celebratedRef.current) {
+      celebratedRef.current = true;
+      celebrationScale.value = withSequence(
+        withSpring(1.12, springs.bouncy),
+        withSpring(1.0, springs.gentle),
+      );
+      haptic.success();
+    }
+    if (currentFill < 1.0) {
+      celebratedRef.current = false;
+    }
+    prevFillRef.current = currentFill;
+  }, [fill.percentage, fill.isMissing]);
+
+  const celebrationStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: celebrationScale.value }],
+  }));
 
   useAnimatedReaction(
     () => progress.value,
@@ -94,8 +123,8 @@ export const ProgressRing = memo(function ProgressRing({
   const percentage = fill.isMissing ? 0 : fill.percentage;
 
   return (
-    <View
-      style={[getStyles().container, { width: size, height: size }]}
+    <Animated.View
+      style={[getStyles().container, { width: size, height: size }, celebrationStyle]}
       accessibilityRole="progressbar"
       accessibilityValue={{
         min: 0,
@@ -105,6 +134,14 @@ export const ProgressRing = memo(function ProgressRing({
       }}
     >
       <Svg width={size} height={size}>
+        {gradientColors && (
+          <Defs>
+            <LinearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+              <Stop offset="0" stopColor={gradientColors[0]} />
+              <Stop offset="1" stopColor={gradientColors[1]} />
+            </LinearGradient>
+          </Defs>
+        )}
         {/* Track circle */}
         <Circle
           cx={center}
@@ -121,7 +158,7 @@ export const ProgressRing = memo(function ProgressRing({
               cx={center}
               cy={center}
               r={r}
-              stroke={fill.fillColor}
+              stroke={gradientColors ? 'url(#ringGrad)' : fill.fillColor}
               strokeWidth={strokeWidth}
               fill="none"
               strokeDasharray={circumference}
@@ -134,7 +171,7 @@ export const ProgressRing = memo(function ProgressRing({
               cx={center}
               cy={center}
               r={r}
-              stroke={fill.fillColor}
+              stroke={gradientColors ? 'url(#ringGrad)' : fill.fillColor}
               strokeWidth={strokeWidth}
               fill="none"
               strokeDasharray={circumference}
@@ -164,7 +201,7 @@ export const ProgressRing = memo(function ProgressRing({
           </>
         )}
       </View>
-    </View>
+    </Animated.View>
   );
 });
 

@@ -42,7 +42,7 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
     setDangerZoneExpanded((prev) => !prev);
   }, []);
 
-  const handleLogout = useCallback(async () => {
+  const performLogout = useCallback(async () => {
     try {
       const refreshToken = await secureGet(TOKEN_KEYS.refresh);
       
@@ -77,6 +77,13 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
       try { useThemeStore.persist.clearStorage(); } catch (e) { console.warn('Failed to clear theme store:', e); }
     }
   }, [store, onLogout]);
+
+  const handleLogout = useCallback(() => {
+    Alert.alert('Log Out?', 'You will need to sign in again.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Log Out', style: 'destructive', onPress: performLogout },
+    ]);
+  }, [performLogout]);
 
   const handleRedoOnboarding = useCallback(() => {
     Alert.alert(

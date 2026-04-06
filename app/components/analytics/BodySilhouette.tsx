@@ -7,6 +7,7 @@ import { getHeatMapColor } from '../../utils/muscleVolumeLogic';
 import { colors } from '../../theme/tokens';
 import { useThemeColors, getThemeColors } from '../../hooks/useThemeColors';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
+import { haptic } from '../../utils/haptics';
 import type { MuscleGroupVolume } from '../../types/analytics';
 
 const isWeb = Platform.OS === 'web';
@@ -40,19 +41,29 @@ function WebRegion({ region, color, baseOpacity, onPress }: RegionProps) {
   );
 }
 
-/** Native: animated opacity on press */
+/** Native: animated opacity on press with haptic feedback */
 function NativeRegion({ region, color, baseOpacity, onPress, reduceMotion }: RegionProps) {
   const opacity = useSharedValue(baseOpacity);
+  const strokeW = useSharedValue(0.8);
 
   const animatedProps = useAnimatedProps(() => ({
     opacity: opacity.value,
   }));
 
+  const animatedBorderProps = useAnimatedProps(() => ({
+    strokeWidth: strokeW.value,
+  }));
+
   const handlePress = useCallback(() => {
+    haptic.selection();
     if (!reduceMotion) {
       opacity.value = withSequence(
-        withTiming(0.5, { duration: 75 }),
-        withTiming(baseOpacity, { duration: 75 }),
+        withTiming(1, { duration: 75 }),
+        withTiming(baseOpacity, { duration: 150 }),
+      );
+      strokeW.value = withSequence(
+        withTiming(2.5, { duration: 75 }),
+        withTiming(0.8, { duration: 150 }),
       );
     }
     onPress(region.id);
@@ -64,6 +75,12 @@ function NativeRegion({ region, color, baseOpacity, onPress, reduceMotion }: Reg
         d={region.path}
         fill={color}
         animatedProps={animatedProps}
+      />
+      <AnimatedPath
+        d={region.path}
+        fill="none"
+        stroke={color}
+        animatedProps={animatedBorderProps}
       />
       <Path
         d={region.path}

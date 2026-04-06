@@ -15,6 +15,7 @@ import { scaleMacros } from '../../utils/macroScaling';
 const BarcodeScanner = React.lazy(() => import('../nutrition/BarcodeScanner').then(m => ({ default: m.BarcodeScanner })));
 import { RecipeBuilderScreen } from '../../screens/nutrition/RecipeBuilderScreen';
 import { Icon } from '../common/Icon';
+import { haptic } from '../../utils/haptics';
 import { useStore } from '../../store';
 import { MacroBudgetPills } from '../nutrition/MacroBudgetPills';
 import { FoodSearchPanel } from '../nutrition/FoodSearchPanel';
@@ -258,6 +259,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
   };
 
   const handleSubmit = async () => {
+    haptic.success();
     const hasMacros = calories || protein || carbs || fat;
     const hasWater = waterGlasses > 0;
     if (!hasMacros && !hasWater) { Alert.alert('Nothing to log', 'Please add food or water before saving.'); return; }

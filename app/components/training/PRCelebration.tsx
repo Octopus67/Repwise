@@ -17,6 +17,8 @@ import { radius, spacing, typography, motion } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import type { PersonalRecordResponse } from '../../types/training';
 import { useHaptics } from '../../hooks/useHaptics';
+import { haptic } from '../../utils/haptics';
+import { GoldParticleBurst } from './GoldParticleBurst';
 
 interface PRCelebrationProps {
   prs: PersonalRecordResponse[];
@@ -39,6 +41,7 @@ export function PRCelebration({
   const onDismissRef = useRef(onDismiss);
   onDismissRef.current = onDismiss;
   const { notification: hapticNotification } = useHaptics();
+  const shakeX = useSharedValue(0);
 
   const dismiss = useCallback(() => {
     onDismissRef.current();
@@ -46,7 +49,15 @@ export function PRCelebration({
 
   useEffect(() => {
     if (visible && prs.length > 0) {
-      hapticNotification('success');
+      haptic.heavy();
+      // Screen shake
+      shakeX.value = withSequence(
+        withTiming(-2, { duration: 50 }),
+        withTiming(2, { duration: 50 }),
+        withTiming(-1, { duration: 50 }),
+        withTiming(1, { duration: 50 }),
+        withTiming(0, { duration: 50 }),
+      );
       // Animate in
       opacity.value = withTiming(1, { duration: motion.duration.slow });
       scale.value = withSequence(
@@ -85,6 +96,7 @@ export function PRCelebration({
 
   const animatedOverlay = useAnimatedStyle(() => ({
     opacity: opacity.value,
+    transform: [{ translateX: shakeX.value }],
   }));
 
   const animatedBanner = useAnimatedStyle(() => ({
@@ -98,6 +110,7 @@ export function PRCelebration({
       <Animated.View style={[styles.overlay, animatedOverlay]}>
         <Animated.View style={[styles.banner, animatedBanner]} accessibilityRole="alert" accessibilityLabel={`${prs.length === 1 ? 'New personal record' : `${prs.length} new personal records`}`}>
           <Text style={styles.trophy}>🏆</Text>
+          <GoldParticleBurst />
           <Text style={[styles.title, { color: c.premium.gold }]}>
             {prs.length === 1 ? 'New PR!' : `${prs.length} New PRs!`}
           </Text>

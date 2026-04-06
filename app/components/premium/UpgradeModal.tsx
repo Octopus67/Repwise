@@ -13,6 +13,7 @@ import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../common/Icon';
 import { Button } from '../common/Button';
+import { GradientButton } from '../common/GradientButton';
 import api from '../../services/api';
 import { getApiErrorMessage } from '../../utils/errors';
 import { getOfferings, purchasePackage, restorePurchases } from '../../services/purchases';
@@ -52,7 +53,7 @@ export function UpgradeModal({ visible, onClose, trialEligible, onStartTrial }: 
   useEffect(() => {
     if (!visible) return;
     setRcLoading(true);
-    getOfferings().then(setRcOfferings).finally(() => setRcLoading(false));
+    getOfferings().then(setRcOfferings).catch(() => {}).finally(() => setRcLoading(false));
   }, [visible]);
 
   const handlePurchase = async () => {
@@ -129,6 +130,10 @@ export function UpgradeModal({ visible, onClose, trialEligible, onStartTrial }: 
         <View style={[styles.sheet, { backgroundColor: c.bg.surface }]}>
           <View style={[styles.handle, { backgroundColor: c.border.default }]} />
 
+          <TouchableOpacity onPress={handleDismiss} style={{ position: 'absolute', top: spacing[4], right: spacing[4], zIndex: 1 }} accessibilityLabel="Close" accessibilityRole="button">
+            <Icon name="close" size={24} color={c.text.muted} />
+          </TouchableOpacity>
+
           <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
             <Text style={[styles.title, { color: c.text.primary }]}>Upgrade to Premium</Text>
             <Text style={[styles.subtitle, { color: c.text.secondary }]}>
@@ -164,12 +169,12 @@ export function UpgradeModal({ visible, onClose, trialEligible, onStartTrial }: 
               ))}
             </View>
 
-            <Button
+            <GradientButton
               title="Subscribe Now"
               onPress={handlePurchase}
               loading={loading}
-              style={styles.cta}
               disabled={rcLoading}
+              style={styles.cta}
             />
             {rcLoading && (
               <ActivityIndicator size="small" style={{ marginBottom: spacing[3] }} />

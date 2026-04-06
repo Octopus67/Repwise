@@ -5,6 +5,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { colors, radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors } from '../../hooks/useThemeColors';
@@ -96,6 +97,10 @@ export function TrialExpirationModal({
       <View style={[styles.overlay, { backgroundColor: c.bg.overlay }]}>
         <View style={[styles.sheet, { backgroundColor: c.bg.surface }]}>
           <View style={[styles.handle, { backgroundColor: c.border.default }]} />
+
+          <TouchableOpacity onPress={onClose} style={{ position: 'absolute', top: spacing[4], right: spacing[4], zIndex: 1 }} accessibilityLabel="Close" accessibilityRole="button">
+            <Icon name="close" size={24} color={c.text.muted} />
+          </TouchableOpacity>
 
           <ScrollView showsVerticalScrollIndicator={false}>
             <Text style={[styles.title, { color: c.text.primary }]}>
