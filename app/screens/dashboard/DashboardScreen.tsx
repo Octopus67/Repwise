@@ -203,7 +203,8 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
             try {
               await api.post('auth/resend-verification');
               const verifyCode = async (code: string | null) => {
-                if (!code || code.length !== 6) return;
+                if (!code) return;
+                if (code.length !== 6) { Alert.alert('Invalid Code', 'Please enter a 6-digit verification code.'); return; }
                 try {
                   await api.post('auth/verify-email', { code });
                   Alert.alert('Verified!', 'Your email has been verified.');
@@ -213,7 +214,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
                   );
                   setVerifyDismissed(true);
                 } catch {
-                  Alert.alert('Error', 'Invalid code. Please try again.');
+                  Alert.alert('Verification Failed', 'Invalid or expired code. Please try again.');
                 }
               };
               if (Platform.OS === 'web') {
