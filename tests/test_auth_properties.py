@@ -221,7 +221,7 @@ class TestProperty18JWTEnforcement:
         # Register a user to get a valid token and create the user in the DB
         reg_resp = await client.post(
             "/api/v1/auth/register",
-            json={"email": "jwt-test@example.com", "password": "Securepass123"},
+            json={"email": "jwt-test@example.com", "password": "Securepass123!"},
         )
         assert reg_resp.status_code == 201
         access_token = reg_resp.json()["access_token"]

@@ -19,7 +19,7 @@ def _clear_rate_limits():
 async def _register(client, email: str) -> dict[str, str]:
     resp = await client.post(
         "/api/v1/auth/register",
-        json={"email": email, "password": "Securepass123"},
+        json={"email": email, "password": "Securepass123!"},
     )
     assert resp.status_code == 201
     return {"Authorization": f"Bearer {resp.json()['access_token']}"}

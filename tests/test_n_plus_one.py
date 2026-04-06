@@ -27,7 +27,7 @@ class QueryCounter:
 
 
 async def _get_auth_token(client, db_session, override_get_db) -> str:
-    email, password = "n1test@test.com", "Test1234"
+    email, password = "n1test@test.com", "Test1234!"
     await client.post("/api/v1/auth/register", json={"email": email, "password": password})
     resp = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
     return resp.json()["access_token"]

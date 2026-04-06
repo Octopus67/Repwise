@@ -11,7 +11,7 @@ TRAINING_SESSION_FIELDS = {"id", "user_id", "date", "exercises"}
 
 async def _register_and_login(client, db_session, override_get_db):
     """Helper: register a user and return login response."""
-    email, password = "contract@test.com", "Test1234"
+    email, password = "contract@test.com", "Test1234!"
     await client.post("/api/v1/auth/register", json={"email": email, "password": password})
     resp = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
     return resp

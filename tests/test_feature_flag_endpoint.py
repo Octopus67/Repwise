@@ -23,7 +23,7 @@ async def test_nonexistent_flag_returns_enabled_false(client, override_get_db, d
     # Register a user to get a valid JWT
     resp = await client.post(
         "/api/v1/auth/register",
-        json={"email": "flagcheck@example.com", "password": "Securepass123"},
+        json={"email": "flagcheck@example.com", "password": "Securepass123!"},
     )
     assert resp.status_code == 201
     token = resp.json()["access_token"]
@@ -64,7 +64,7 @@ async def test_existing_enabled_flag_returns_enabled_true(client, override_get_d
     # Register a user to get a valid JWT
     resp = await client.post(
         "/api/v1/auth/register",
-        json={"email": "flagenabled@example.com", "password": "Securepass123"},
+        json={"email": "flagenabled@example.com", "password": "Securepass123!"},
     )
     assert resp.status_code == 201
     token = resp.json()["access_token"]

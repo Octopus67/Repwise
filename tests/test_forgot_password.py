@@ -32,7 +32,7 @@ def mock_ses():
 KNOWN_OTP = "654321"
 
 
-async def _register_user(client, email="forgot@example.com", password="SecurePass123"):
+async def _register_user(client, email="forgot@example.com", password="SecurePass123!"):
     resp = await client.post(
         "/api/v1/auth/register",
         json={"email": email, "password": password},
@@ -87,7 +87,7 @@ async def test_reset_password_with_valid_token(client, override_get_db, mock_ses
 
     reset_resp = await client.post(
         "/api/v1/auth/reset-password",
-        json={"email": "forgot@example.com", "code": KNOWN_OTP, "new_password": "NewSecurePass456"},
+        json={"email": "forgot@example.com", "code": KNOWN_OTP, "new_password": "NewSecurePass456!"},
     )
     assert reset_resp.status_code == 200
     assert reset_resp.json()["message"] == "Password has been reset"
@@ -95,7 +95,7 @@ async def test_reset_password_with_valid_token(client, override_get_db, mock_ses
     # Verify login with new password works
     login_resp = await client.post(
         "/api/v1/auth/login",
-        json={"email": "forgot@example.com", "password": "NewSecurePass456"},
+        json={"email": "forgot@example.com", "password": "NewSecurePass456!"},
     )
     assert login_resp.status_code == 200
     assert "access_token" in login_resp.json()
@@ -109,7 +109,7 @@ async def test_reset_password_with_valid_token(client, override_get_db, mock_ses
 async def test_reset_password_with_invalid_token(client, override_get_db, mock_ses):
     resp = await client.post(
         "/api/v1/auth/reset-password",
-        json={"email": "nobody@example.com", "code": "000000", "new_password": "ValidPass123"},
+        json={"email": "nobody@example.com", "code": "000000", "new_password": "ValidPass123!"},
     )
     assert resp.status_code == 400
 
@@ -128,14 +128,14 @@ async def test_reset_password_token_single_use(client, override_get_db, mock_ses
     # First use — success
     resp1 = await client.post(
         "/api/v1/auth/reset-password",
-        json={"email": "forgot@example.com", "code": KNOWN_OTP, "new_password": "FirstNewPass123"},
+        json={"email": "forgot@example.com", "code": KNOWN_OTP, "new_password": "FirstNewPass123!"},
     )
     assert resp1.status_code == 200
 
     # Second use — should fail
     resp2 = await client.post(
         "/api/v1/auth/reset-password",
-        json={"email": "forgot@example.com", "code": KNOWN_OTP, "new_password": "SecondNewPass456"},
+        json={"email": "forgot@example.com", "code": KNOWN_OTP, "new_password": "SecondNewPass456!"},
     )
     assert resp2.status_code == 400
 

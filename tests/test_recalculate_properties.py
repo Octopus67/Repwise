@@ -36,7 +36,7 @@ async def _register_onboard_and_get_headers(client, email: str = "recalc@example
     """Register a user, complete onboarding, ensure age/sex in profile prefs, return auth headers."""
     resp = await client.post(
         "/api/v1/auth/register",
-        json={"email": email, "password": "Securepass123"},
+        json={"email": email, "password": "Securepass123!"},
     )
     assert resp.status_code == 201
     token = resp.json()["access_token"]

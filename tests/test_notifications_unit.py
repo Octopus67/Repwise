@@ -61,11 +61,18 @@ async def test_register_device_duplicate_token_reassigns(db_session):
     device_a = await svc.register_device(user_a.id, data)
     assert device_a.user_id == user_a.id
 
-    # Re-register same token for user_b
+    # Re-register same token for user_b — expire device_a so identity map doesn't return stale object
+    db_session.expire(device_a)
     device_b = await svc.register_device(user_b.id, data)
-    assert device_b.user_id == user_b.id
-    assert device_b.token == "shared_token_xyz"
-    assert device_b.is_active is True
+    # Verify via fresh query to avoid identity map caching
+    from sqlalchemy import select as sa_select
+    result = await db_session.execute(
+        sa_select(DeviceToken).where(DeviceToken.token == "shared_token_xyz")
+    )
+    refreshed = result.scalar_one()
+    assert refreshed.user_id == user_b.id
+    assert refreshed.token == "shared_token_xyz"
+    assert refreshed.is_active is True
 
 
 # --- 3. unregister_device removes token ---

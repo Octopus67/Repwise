@@ -55,14 +55,14 @@ async def test_login_timing_oracle_mitigated(client, override_get_db, db_session
     # Register a real user
     await client.post(
         "/api/v1/auth/register",
-        json={"email": "real@example.com", "password": "SecurePass1"},
+        json={"email": "real@example.com", "password": "SecurePass1!"},
     )
 
     # Time login with wrong password (real user — bcrypt verify runs)
     t0 = time.perf_counter()
     await client.post(
         "/api/v1/auth/login",
-        json={"email": "real@example.com", "password": "WrongPass1"},
+        json={"email": "real@example.com", "password": "WrongPass1!"},
     )
     real_elapsed = time.perf_counter() - t0
 
@@ -70,7 +70,7 @@ async def test_login_timing_oracle_mitigated(client, override_get_db, db_session
     t0 = time.perf_counter()
     await client.post(
         "/api/v1/auth/login",
-        json={"email": "ghost@example.com", "password": "WrongPass1"},
+        json={"email": "ghost@example.com", "password": "WrongPass1!"},
     )
     fake_elapsed = time.perf_counter() - t0
 
@@ -86,7 +86,7 @@ async def test_forgot_password_timing_normalized(client, override_get_db, mock_s
     # Real user
     await client.post(
         "/api/v1/auth/register",
-        json={"email": "fp-real@example.com", "password": "SecurePass1"},
+        json={"email": "fp-real@example.com", "password": "SecurePass1!"},
     )
 
     t0 = time.perf_counter()
@@ -115,7 +115,7 @@ async def test_reset_password_timing_normalized(client, override_get_db, mock_se
     t0 = time.perf_counter()
     resp = await client.post(
         "/api/v1/auth/reset-password",
-        json={"email": "nobody@example.com", "code": "123456", "new_password": "NewSecure1"},
+        json={"email": "nobody@example.com", "code": "123456", "new_password": "NewSecure1!"},
     )
     elapsed = time.perf_counter() - t0
 
@@ -198,7 +198,7 @@ async def test_apple_oauth_nonce_verification_failure(
 async def test_apple_oauth_nonce_optional_backward_compat(
     client, override_get_db, monkeypatch, mock_ses
 ):
-    """Apple OAuth without nonce still works (backward compat)."""
+    """Apple OAuth without nonce returns 401 (nonce now mandatory — audit fix 2.2)."""
     monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.octopuslabs.repwise")
 
     fake_key = MagicMock()
@@ -221,7 +221,7 @@ async def test_apple_oauth_nonce_optional_backward_compat(
         "/api/v1/auth/oauth/apple",
         json={"provider": "apple", "token": "tok"},
     )
-    assert resp.status_code == 200
+    assert resp.status_code == 401
 
 
 # ------------------------------------------------------------------
@@ -244,6 +244,7 @@ async def test_oauth_conflict_doesnt_leak_provider(
         "email": "conflict@example.com",
         "iss": "https://appleid.apple.com",
         "aud": "com.octopuslabs.repwise",
+        "nonce": "7a9c2b4a6171f03ed9f403889969421080fe4cc08f1b774eed9ee58e6a5b572b",
     }
     monkeypatch.setattr(
         "src.modules.auth.service._apple_jwk_client.get_signing_key_from_jwt",
@@ -254,7 +255,7 @@ async def test_oauth_conflict_doesnt_leak_provider(
     )
     resp1 = await client.post(
         "/api/v1/auth/oauth/apple",
-        json={"provider": "apple", "token": "tok1"},
+        json={"provider": "apple", "token": "tok1", "nonce": "test-nonce-123"},
     )
     assert resp1.status_code == 200
 
@@ -264,13 +265,14 @@ async def test_oauth_conflict_doesnt_leak_provider(
         "email": "conflict@example.com",
         "iss": "https://appleid.apple.com",
         "aud": "com.octopuslabs.repwise",
+        "nonce": "7a9c2b4a6171f03ed9f403889969421080fe4cc08f1b774eed9ee58e6a5b572b",
     }
     monkeypatch.setattr(
         "src.modules.auth.service.pyjwt.decode", lambda token, key, **kw: apple_decoded
     )
     resp2 = await client.post(
         "/api/v1/auth/oauth/apple",
-        json={"provider": "apple", "token": "tok2"},
+        json={"provider": "apple", "token": "tok2", "nonce": "test-nonce-123"},
     )
     assert resp2.status_code == 401
     body = resp2.json()
@@ -332,7 +334,7 @@ async def test_shared_workout_respects_soft_delete(client, override_get_db, db_s
     # Register and create a session
     reg = await client.post(
         "/api/v1/auth/register",
-        json={"email": "softdel@example.com", "password": "SecurePass1"},
+        json={"email": "softdel@example.com", "password": "SecurePass1!"},
     )
     headers = {"Authorization": f"Bearer {reg.json()['access_token']}"}
 
@@ -417,7 +419,7 @@ async def test_track_share_checks_soft_delete(client, override_get_db, db_sessio
     """
     reg = await client.post(
         "/api/v1/auth/register",
-        json={"email": "trackdel@example.com", "password": "SecurePass1"},
+        json={"email": "trackdel@example.com", "password": "SecurePass1!"},
     )
     headers = {"Authorization": f"Bearer {reg.json()['access_token']}"}
 
@@ -470,12 +472,12 @@ def test_password_validation_frontend_backend_aligned():
         )
 
     # Both should accept a valid password
-    r = RegisterRequest(email="a@b.com", password="ValidPass1")
-    assert r.password == "ValidPass1"
+    r = RegisterRequest(email="a@b.com", password="ValidPass1!")
+    assert r.password == "ValidPass1!"
     rp = ResetPasswordRequest(
-        email="a@b.com", code="123456", new_password="ValidPass1"
+        email="a@b.com", code="123456", new_password="ValidPass1!"
     )
-    assert rp.new_password == "ValidPass1"
+    assert rp.new_password == "ValidPass1!"
 
 
 def test_password_requires_uppercase_lowercase_digit():
@@ -493,16 +495,16 @@ def test_password_requires_uppercase_lowercase_digit():
     with pytest.raises(PydanticValidationError):
         RegisterRequest(email="a@b.com", password="Ab1")
     # Valid
-    r = RegisterRequest(email="a@b.com", password="GoodPass1")
-    assert r.password == "GoodPass1"
+    r = RegisterRequest(email="a@b.com", password="GoodPass1!")
+    assert r.password == "GoodPass1!"
 
 
 def test_password_max_length_128():
     """Password max length is 128 characters."""
-    long_valid = "A" + "a" * 126 + "1"  # 128 chars, has upper+lower+digit
+    long_valid = "A" + "a" * 125 + "1!"  # 128 chars, has upper+lower+digit+special
     r = RegisterRequest(email="a@b.com", password=long_valid)
     assert len(r.password) == 128
 
-    too_long = "A" + "a" * 127 + "1"  # 129 chars
+    too_long = "A" + "a" * 126 + "1!"  # 129 chars
     with pytest.raises(PydanticValidationError):
         RegisterRequest(email="a@b.com", password=too_long)

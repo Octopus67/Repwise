@@ -60,7 +60,7 @@ class TestEnums:
         assert ActivityLevel.VERY_ACTIVE == "very_active"
 
     def test_subscription_statuses(self):
-        assert len(SubscriptionStatus) == 5
+        assert len(SubscriptionStatus) == 6
 
     def test_sex_enum(self):
         assert Sex.MALE == "male"

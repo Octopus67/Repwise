@@ -51,7 +51,7 @@ async def _register_user(client, email="verify@example.com"):
     """Register a user and return (access_token, response)."""
     resp = await client.post(
         "/api/v1/auth/register",
-        json={"email": email, "password": "Securepass1"},
+        json={"email": email, "password": "Securepass1!"},
     )
     return resp.json().get("access_token"), resp
 
@@ -566,7 +566,7 @@ class TestResetPasswordWithOTP:
             json={
                 "email": "resetok@example.com",
                 "code": known_code,
-                "new_password": "NewSecure1",
+                "new_password": "NewSecure1!",
             },
         )
         assert resp.status_code == 200
@@ -580,7 +580,7 @@ class TestResetPasswordWithOTP:
         # Verify login works with new password
         login_resp = await client.post(
             "/api/v1/auth/login",
-            json={"email": "resetok@example.com", "password": "NewSecure1"},
+            json={"email": "resetok@example.com", "password": "NewSecure1!"},
         )
         assert login_resp.status_code == 200
 
@@ -596,7 +596,7 @@ class TestResetPasswordWithOTP:
             json={
                 "email": "badcode@example.com",
                 "code": "000000",
-                "new_password": "NewSecure1",
+                "new_password": "NewSecure1!",
             },
         )
         assert resp.status_code == 400
@@ -626,7 +626,7 @@ class TestResetPasswordWithOTP:
             json={
                 "email": "expired@example.com",
                 "code": known_code,
-                "new_password": "NewSecure1",
+                "new_password": "NewSecure1!",
             },
         )
         assert resp.status_code == 400
@@ -657,7 +657,7 @@ class TestResetPasswordWithOTP:
             json={
                 "email": "usedcode@example.com",
                 "code": known_code,
-                "new_password": "NewSecure1",
+                "new_password": "NewSecure1!",
             },
         )
         assert resp.status_code == 400
@@ -688,7 +688,7 @@ class TestResetPasswordWithOTP:
             json={
                 "email": "wrong@example.com",
                 "code": known_code,
-                "new_password": "NewSecure1",
+                "new_password": "NewSecure1!",
             },
         )
         assert resp.status_code == 400
@@ -719,7 +719,7 @@ class TestResetPasswordWithOTP:
             json={
                 "email": "markused@example.com",
                 "code": known_code,
-                "new_password": "NewSecure1",
+                "new_password": "NewSecure1!",
             },
         )
         assert resp.status_code == 200
@@ -745,7 +745,7 @@ class TestResetPasswordWithOTP:
             json={
                 "email": "test@example.com",
                 "code": "abcdef",
-                "new_password": "NewSecure1",
+                "new_password": "NewSecure1!",
             },
         )
         assert resp.status_code in (400, 422)
@@ -755,7 +755,7 @@ class TestResetPasswordWithOTP:
             json={
                 "email": "test@example.com",
                 "code": "123",
-                "new_password": "NewSecure1",
+                "new_password": "NewSecure1!",
             },
         )
         assert resp2.status_code in (400, 422)

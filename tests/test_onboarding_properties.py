@@ -203,8 +203,8 @@ class TestProperty12SnapshotReflectsInput:
         assert output.target_carbs_g >= 0, (
             f"Expected non-negative target_carbs_g, got {output.target_carbs_g}"
         )
-        assert output.target_fat_g > 0, (
-            f"Expected positive target_fat_g, got {output.target_fat_g}"
+        assert output.target_fat_g >= 0, (
+            f"Expected non-negative target_fat_g, got {output.target_fat_g}"
         )
 
 

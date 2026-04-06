@@ -40,7 +40,7 @@ async def test_register_email_happy_path(client, override_get_db, mock_ses):
     """POST /register with valid email/password → 201, returns tokens."""
     resp = await client.post(
         "/api/v1/auth/register",
-        json={"email": "new@example.com", "password": "SecurePass123"},
+        json={"email": "new@example.com", "password": "SecurePass123!"},
     )
     assert resp.status_code == 201
     body = resp.json()
@@ -58,7 +58,7 @@ async def test_register_email_happy_path(client, override_get_db, mock_ses):
 @pytest.mark.asyncio
 async def test_register_duplicate_email(client, override_get_db, mock_ses):
     """Register same email twice → second returns 201 with generic message, no tokens."""
-    payload = {"email": "dup@example.com", "password": "SecurePass123"}
+    payload = {"email": "dup@example.com", "password": "SecurePass123!"}
     first = await client.post("/api/v1/auth/register", json=payload)
     assert first.status_code == 201
 
@@ -79,7 +79,7 @@ async def test_register_duplicate_email(client, override_get_db, mock_ses):
 @pytest.mark.asyncio
 async def test_login_correct_credentials(client, override_get_db, db_session, mock_ses):
     """Register, verify email, then POST /login → 200, returns tokens."""
-    creds = {"email": "login@example.com", "password": "SecurePass123"}
+    creds = {"email": "login@example.com", "password": "SecurePass123!"}
     await client.post("/api/v1/auth/register", json=creds)
 
     # Mark email as verified so login succeeds
@@ -106,7 +106,7 @@ async def test_login_correct_credentials(client, override_get_db, db_session, mo
 @pytest.mark.asyncio
 async def test_login_incorrect_password(client, override_get_db, mock_ses):
     """POST /login with wrong password → 401."""
-    creds = {"email": "wrongpw@example.com", "password": "SecurePass123"}
+    creds = {"email": "wrongpw@example.com", "password": "SecurePass123!"}
     await client.post("/api/v1/auth/register", json=creds)
 
     resp = await client.post(
@@ -139,7 +139,7 @@ async def test_refresh_valid_token(client, override_get_db, mock_ses):
     """Register, extract refresh_token, POST /refresh → 200, new tokens."""
     reg = await client.post(
         "/api/v1/auth/register",
-        json={"email": "refresh@example.com", "password": "SecurePass123"},
+        json={"email": "refresh@example.com", "password": "SecurePass123!"},
     )
     refresh_tok = reg.json()["refresh_token"]
 
@@ -174,6 +174,7 @@ async def test_refresh_invalid_token(client, override_get_db, mock_ses):
 @pytest.mark.asyncio
 async def test_apple_oauth_happy_path(client, override_get_db, monkeypatch, mock_ses):
     """POST /oauth/apple with valid token → 200, returns tokens and creates user."""
+    import hashlib
     import jwt as pyjwt
     from unittest.mock import MagicMock
 
@@ -185,6 +186,7 @@ async def test_apple_oauth_happy_path(client, override_get_db, monkeypatch, mock
         "email": "user@example.com",
         "iss": "https://appleid.apple.com",
         "aud": "com.octopuslabs.repwise",
+        "nonce": hashlib.sha256(b"test-nonce-123").hexdigest(),
     }
 
     def mock_get_signing_key(token):
@@ -201,7 +203,7 @@ async def test_apple_oauth_happy_path(client, override_get_db, monkeypatch, mock
 
     resp = await client.post(
         "/api/v1/auth/oauth/apple",
-        json={"provider": "apple", "token": "valid-apple-token"},
+        json={"provider": "apple", "token": "valid-apple-token", "nonce": "test-nonce-123"},
     )
     assert resp.status_code == 200
     body = resp.json()
@@ -248,6 +250,7 @@ async def test_apple_oauth_not_configured(client, override_get_db, monkeypatch, 
 @pytest.mark.asyncio
 async def test_apple_oauth_privacy_relay_email(client, override_get_db, monkeypatch, mock_ses):
     """Apple user with no email gets a privaterelay fallback."""
+    import hashlib
     from unittest.mock import MagicMock
 
     monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.octopuslabs.repwise")
@@ -257,6 +260,7 @@ async def test_apple_oauth_privacy_relay_email(client, override_get_db, monkeypa
         "sub": "apple-user-no-email",
         "iss": "https://appleid.apple.com",
         "aud": "com.octopuslabs.repwise",
+        "nonce": hashlib.sha256(b"test-nonce-123").hexdigest(),
     }
 
     monkeypatch.setattr(
@@ -270,7 +274,7 @@ async def test_apple_oauth_privacy_relay_email(client, override_get_db, monkeypa
 
     resp = await client.post(
         "/api/v1/auth/oauth/apple",
-        json={"provider": "apple", "token": "valid-apple-token"},
+        json={"provider": "apple", "token": "valid-apple-token", "nonce": "test-nonce-123"},
     )
     assert resp.status_code == 200
     body = resp.json()
@@ -280,6 +284,7 @@ async def test_apple_oauth_privacy_relay_email(client, override_get_db, monkeypa
 @pytest.mark.asyncio
 async def test_apple_oauth_existing_user(client, override_get_db, monkeypatch, mock_ses):
     """Second Apple login with same sub returns tokens without creating duplicate."""
+    import hashlib
     from unittest.mock import MagicMock
 
     monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.octopuslabs.repwise")
@@ -290,6 +295,7 @@ async def test_apple_oauth_existing_user(client, override_get_db, monkeypatch, m
         "email": "returning@example.com",
         "iss": "https://appleid.apple.com",
         "aud": "com.octopuslabs.repwise",
+        "nonce": hashlib.sha256(b"test-nonce-123").hexdigest(),
     }
 
     monkeypatch.setattr(
@@ -304,14 +310,14 @@ async def test_apple_oauth_existing_user(client, override_get_db, monkeypatch, m
     # First login — creates user
     resp1 = await client.post(
         "/api/v1/auth/oauth/apple",
-        json={"provider": "apple", "token": "token1"},
+        json={"provider": "apple", "token": "token1", "nonce": "test-nonce-123"},
     )
     assert resp1.status_code == 200
 
     # Second login — finds existing user
     resp2 = await client.post(
         "/api/v1/auth/oauth/apple",
-        json={"provider": "apple", "token": "token2"},
+        json={"provider": "apple", "token": "token2", "nonce": "test-nonce-123"},
     )
     assert resp2.status_code == 200
     assert resp2.json()["access_token"] != resp1.json()["access_token"]
@@ -345,13 +351,14 @@ async def test_rate_limiting_after_threshold(client, override_get_db, mock_ses):
 @pytest.mark.asyncio
 async def test_login_unverified_email_succeeds_with_flag(client, override_get_db, mock_ses):
     """POST /login with correct creds but unverified email → 200 with email_verified=false."""
-    creds = {"email": "unverified@example.com", "password": "SecurePass123"}
+    creds = {"email": "unverified@example.com", "password": "SecurePass123!"}
     await client.post("/api/v1/auth/register", json=creds)
 
     resp = await client.post("/api/v1/auth/login", json=creds)
     assert resp.status_code == 200
     body = resp.json()
-    assert body["email_verified"] is False
+    # email_verified removed from LoginResponse (audit fix 10.12)
+    assert "email_verified" not in body
     assert "access_token" in body
 
 
@@ -364,7 +371,7 @@ async def test_verify_email_rate_limited(client, override_get_db, db_session, mo
     """Exceed 5 verify-email attempts → 429."""
     resp = await client.post(
         "/api/v1/auth/register",
-        json={"email": "ratelimitverify@example.com", "password": "SecurePass123"},
+        json={"email": "ratelimitverify@example.com", "password": "SecurePass123!"},
     )
     token = resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
@@ -416,6 +423,7 @@ async def test_apple_oauth_identity_token_field(client, override_get_db, monkeyp
         "email": "identity@example.com",
         "iss": "https://appleid.apple.com",
         "aud": "com.octopuslabs.repwise",
+        "nonce": "7a9c2b4a6171f03ed9f403889969421080fe4cc08f1b774eed9ee58e6a5b572b",
     }
 
     monkeypatch.setattr(
@@ -429,7 +437,7 @@ async def test_apple_oauth_identity_token_field(client, override_get_db, monkeyp
 
     resp = await client.post(
         "/api/v1/auth/oauth/apple",
-        json={"provider": "apple", "identity_token": "valid-apple-identity-token"},
+        json={"provider": "apple", "identity_token": "valid-apple-identity-token", "nonce": "test-nonce-123"},
     )
     assert resp.status_code == 200
     body = resp.json()
@@ -443,7 +451,7 @@ async def test_apple_oauth_identity_token_field(client, override_get_db, monkeyp
 @pytest.mark.asyncio
 async def test_register_duplicate_sends_account_exists_email(client, override_get_db, mock_ses):
     """Register same email twice → second call sends account-exists notification."""
-    payload = {"email": "exists@example.com", "password": "SecurePass123"}
+    payload = {"email": "exists@example.com", "password": "SecurePass123!"}
     await client.post("/api/v1/auth/register", json=payload)
     mock_ses.send_email.reset_mock()
 
@@ -464,7 +472,7 @@ async def test_error_responses_have_message_field(client, override_get_db, mock_
     # Bad reset code
     resp = await client.post(
         "/api/v1/auth/reset-password",
-        json={"email": "nobody@example.com", "code": "000000", "new_password": "NewSecure1"},
+        json={"email": "nobody@example.com", "code": "000000", "new_password": "NewSecure1!"},
     )
     assert resp.status_code == 400
     body = resp.json()
