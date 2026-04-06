@@ -81,4 +81,34 @@ test.describe('Logs Screen', () => {
     // If feature flag routes to ActiveWorkout, modal won't appear — that's OK
     expect(true).toBeTruthy();
   });
+
+  test('can navigate to previous day', async ({ page }) => {
+    const logsScreen = page.locator('[data-testid="logs-screen"]');
+    await expect(logsScreen).toBeVisible({ timeout: 10000 });
+
+    // Get current date text
+    const prevBtn = page.getByRole('button', { name: /previous day/i });
+    await expect(prevBtn).toBeVisible({ timeout: 5000 });
+    await prevBtn.click();
+    await page.waitForTimeout(1000);
+
+    // Screen should still be functional
+    await expect(logsScreen).toBeVisible({ timeout: 5000 });
+  });
+
+  test('can navigate forward after going back', async ({ page }) => {
+    const logsScreen = page.locator('[data-testid="logs-screen"]');
+    await expect(logsScreen).toBeVisible({ timeout: 10000 });
+
+    const prevBtn = page.getByRole('button', { name: /previous day/i });
+    await prevBtn.click();
+    await page.waitForTimeout(500);
+
+    const nextBtn = page.getByRole('button', { name: /next day/i });
+    await expect(nextBtn).toBeVisible({ timeout: 3000 });
+    await nextBtn.click();
+    await page.waitForTimeout(500);
+
+    await expect(logsScreen).toBeVisible({ timeout: 5000 });
+  });
 });
