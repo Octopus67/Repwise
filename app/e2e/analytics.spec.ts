@@ -5,6 +5,9 @@ test.describe('Analytics Screen', () => {
   test.beforeEach(async ({ page }) => {
     await ensureLoggedIn(page);
     await navigateToTab(page, 'Analytics');
+    await page.waitForTimeout(2000);
+    const screen = page.locator('[data-testid="analytics-screen"]');
+    await expect(screen).toBeVisible({ timeout: 15000 });
   });
 
   test('shows analytics screen', async ({ page }) => {
@@ -18,6 +21,11 @@ test.describe('Analytics Screen', () => {
   });
 
   test('shows bodyweight chart section', async ({ page }) => {
+    // Bodyweight chart is on the Body tab
+    const bodyTab = page.getByText('Body', { exact: true }).first();
+    await expect(bodyTab).toBeVisible({ timeout: 5000 });
+    await bodyTab.click();
+    await page.waitForTimeout(1500);
     const chart = page.locator('[data-testid="analytics-bodyweight-chart"]');
     await expect(chart).toBeVisible({ timeout: 10000 });
   });

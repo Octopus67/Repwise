@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { waitForApp, TEST_USER, registerUser, loginUser } from './helpers';
+import { waitForApp } from './helpers';
 
 test.describe('Authentication', () => {
   test.beforeEach(async ({ page }) => {
@@ -27,7 +27,7 @@ test.describe('Authentication', () => {
   });
 
   test('shows validation error for short password', async ({ page }) => {
-    await page.locator('[data-testid="login-email-input"]').fill('test@example.com');
+    await page.locator('[data-testid="login-email-input"]').fill(`e2e_short_${Date.now()}@test.com`);
     await page.locator('[data-testid="login-password-input"]').fill('short');
     await page.locator('[data-testid="login-submit-button"]').click();
     await page.waitForTimeout(1000);
@@ -68,7 +68,7 @@ test.describe('Authentication', () => {
     // After registration, should be on dashboard or onboarding
     const dashboard = page.locator('[data-testid="dashboard-screen"]');
     const isOnDashboard = await dashboard.isVisible({ timeout: 5000 }).catch(() => false);
-    const isOnOnboarding = await page.getByText(/welcome|get started|skip/i).isVisible({ timeout: 2000 }).catch(() => false);
+    const isOnOnboarding = await page.getByText(/your mission|Step 1 of|Lose Fat|Build Muscle/i).first().isVisible({ timeout: 5000 }).catch(() => false);
     expect(isOnDashboard || isOnOnboarding).toBeTruthy();
   });
 
@@ -92,7 +92,7 @@ test.describe('Authentication', () => {
     // After registration, should be on dashboard or onboarding
     const dashboard = page.locator('[data-testid="dashboard-screen"]');
     const isOnDashboard = await dashboard.isVisible({ timeout: 5000 }).catch(() => false);
-    const isOnOnboarding = await page.getByText(/welcome|get started|skip/i).isVisible({ timeout: 2000 }).catch(() => false);
+    const isOnOnboarding = await page.getByText(/your mission|Step 1 of|Lose Fat|Build Muscle/i).first().isVisible({ timeout: 5000 }).catch(() => false);
     expect(isOnDashboard || isOnOnboarding).toBeTruthy();
   });
 

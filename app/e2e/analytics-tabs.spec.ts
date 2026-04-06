@@ -5,6 +5,10 @@ test.describe('Analytics Tabs', () => {
   test.beforeEach(async ({ page }) => {
     await ensureLoggedIn(page);
     await navigateToTab(page, 'Analytics');
+    await page.waitForTimeout(2000);
+    // Wait for analytics screen to fully render under parallel load
+    const screen = page.locator('[data-testid="analytics-screen"]');
+    await expect(screen).toBeVisible({ timeout: 15000 });
   });
 
   test('analytics screen shows tab pills', async ({ page }) => {
