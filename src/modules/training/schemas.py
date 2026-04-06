@@ -6,7 +6,7 @@ import uuid
 from datetime import date, datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from src.shared.sanitize import strip_html  # Audit fix 2.4 — HTML sanitization
 from src.shared.validators import validate_json_size
@@ -76,6 +76,14 @@ class TrainingSessionCreate(BaseModel):
     def validate_metadata_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
         return validate_json_size(v)
 
+    @model_validator(mode='after')
+    def check_time_order(self) -> TrainingSessionCreate:
+        """5.3: Reject negative durations — end_time must be >= start_time."""
+        if self.start_time is not None and self.end_time is not None:
+            if self.end_time < self.start_time:
+                raise ValueError("end_time must be >= start_time")
+        return self
+
 
 class TrainingSessionUpdate(BaseModel):
     """Payload for updating an existing training session. All fields optional."""
@@ -90,6 +98,14 @@ class TrainingSessionUpdate(BaseModel):
     @classmethod
     def validate_metadata_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
         return validate_json_size(v)
+
+    @model_validator(mode='after')
+    def check_time_order(self) -> 'TrainingSessionUpdate':
+        """Reject negative durations — end_time must be >= start_time."""
+        if self.start_time is not None and self.end_time is not None:
+            if self.end_time < self.start_time:
+                raise ValueError("end_time must be >= start_time")
+        return self
 
 
 class WorkoutTemplateResponse(BaseModel):

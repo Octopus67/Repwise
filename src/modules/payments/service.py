@@ -28,10 +28,14 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 VALID_TRANSITIONS: dict[str, set[str]] = {
-    SubscriptionStatus.FREE: {SubscriptionStatus.PENDING_PAYMENT, SubscriptionStatus.ACTIVE},
+    SubscriptionStatus.FREE: {SubscriptionStatus.PENDING_PAYMENT, SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING},
     SubscriptionStatus.PENDING_PAYMENT: {
         SubscriptionStatus.ACTIVE,
         SubscriptionStatus.FREE,
+    },
+    SubscriptionStatus.TRIALING: {
+        SubscriptionStatus.ACTIVE,      # trial converts to paid
+        SubscriptionStatus.CANCELLED,   # trial expired or user cancels
     },
     SubscriptionStatus.ACTIVE: {
         SubscriptionStatus.ACTIVE,      # renewal success
@@ -144,7 +148,11 @@ class PaymentService:
         self,
         user_id: uuid.UUID,
     ) -> Optional[Subscription]:
-        """Return the user's current subscription, or None if none exists."""
+        """Return the user's current subscription, or None if none exists.
+
+        If the subscription is trialing and the trial period has ended,
+        the status is updated to cancelled in-place (5.1: trial expiry enforcement).
+        """
         stmt = (
             select(Subscription)
             .where(Subscription.user_id == user_id)
@@ -153,7 +161,15 @@ class PaymentService:
             .limit(1)
         )
         result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()
+        sub = result.scalar_one_or_none()
+
+        if sub and sub.status == SubscriptionStatus.TRIALING and sub.current_period_end:
+            from datetime import datetime, timezone
+            if datetime.now(timezone.utc) > sub.current_period_end:
+                sub.status = SubscriptionStatus.CANCELLED
+                await self.session.flush()
+
+        return sub
 
     # ------------------------------------------------------------------
     # RevenueCat entitlement check
@@ -235,6 +251,7 @@ class PaymentService:
             .where(Subscription.id == subscription_id)
             .where(Subscription.user_id == user_id)
             .where(Subscription.deleted_at.is_(None))
+            .with_for_update()
         )
         result = await self.session.execute(stmt)
         subscription = result.scalar_one_or_none()
@@ -249,7 +266,7 @@ class PaymentService:
         stmt = select(Subscription).where(
             Subscription.provider_subscription_id == event.provider_subscription_id,
             Subscription.deleted_at.is_(None),
-        )
+        ).with_for_update()
         result = await self.session.execute(stmt)
         subscription = result.scalar_one_or_none()
 

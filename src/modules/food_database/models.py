@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Optional
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
@@ -151,15 +151,3 @@ class BarcodeCache(Base):
         String(20), nullable=False
     )  # "off" or "usda"
     raw_response: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-
-    # Override Base timestamps with plain Python defaults (no server_default
-    # needed for a cache table — keeps SQLite happy without patching).
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc)
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
-    )

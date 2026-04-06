@@ -67,6 +67,17 @@ class EmailService:
         )
         return self._send(to_email, subject, body)
 
+    def send_oauth_password_reset_notice(self, to_email: str, provider: str) -> bool:
+        """Notify an OAuth user that password reset is not applicable (5.7)."""
+        subject = f"{settings.APP_NAME} — Password reset not available"
+        body = (
+            f"You requested a password reset, but your account uses {provider} sign-in "
+            f"and does not have a password.\n\n"
+            f"Please sign in using {provider} instead. "
+            f"If you didn't request this, you can safely ignore this email."
+        )
+        return self._send(to_email, subject, body)
+
     @sync_retry(
         max_retries=3,
         base_delay=1.0,
@@ -84,6 +95,8 @@ class EmailService:
                 },
             )
             return True
+        except (EndpointConnectionError, ConnectTimeoutError):
+            raise  # let @sync_retry handle transient failures
         except ClientError:
             logger.exception("Failed to send email to %s", to_email[:3] + "***@" + to_email.split("@")[1])
             return False

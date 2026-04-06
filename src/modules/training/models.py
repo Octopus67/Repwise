@@ -49,6 +49,7 @@ class TrainingSession(SoftDeleteMixin, AuditLogMixin, Base):
     )
     start_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     end_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    version: Mapped[int] = mapped_column(default=1, server_default="1")
 
     __table_args__ = (
         Index(

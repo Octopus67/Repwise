@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.modules.content.models import (
     ArticleFavorite,
@@ -67,6 +68,7 @@ class ContentService:
 
         items_stmt = (
             base.order_by(ContentArticle.created_at.desc())
+            .options(selectinload(ContentArticle.versions))
             .offset(pagination.offset)
             .limit(pagination.limit)
         )
@@ -301,6 +303,7 @@ class ContentService:
 
         items_stmt = (
             base.order_by(ContentArticle.created_at.desc())
+            .options(selectinload(ContentArticle.versions))
             .offset(pagination.offset)
             .limit(pagination.limit)
         )
@@ -325,6 +328,7 @@ class ContentService:
         """Fetch a non-deleted article or raise NotFoundError."""
         stmt = select(ContentArticle).where(ContentArticle.id == article_id)
         stmt = ContentArticle.not_deleted(stmt)
+        stmt = stmt.options(selectinload(ContentArticle.versions))
         result = await self.session.execute(stmt)
         article = result.scalar_one_or_none()
         if article is None:

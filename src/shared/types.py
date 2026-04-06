@@ -33,6 +33,7 @@ class SubscriptionStatus(StrEnum):
     FREE = "free"
     PENDING_PAYMENT = "pending_payment"
     ACTIVE = "active"
+    TRIALING = "trialing"
     PAST_DUE = "past_due"
     CANCELLED = "cancelled"
 

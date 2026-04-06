@@ -259,7 +259,12 @@ class ExportService:
     # ------------------------------------------------------------------
 
     async def _collect_user_data(self, user_id: uuid.UUID) -> dict[str, Any]:
-        """Collect all user data for export."""
+        """Collect all user data for export.
+
+        NOTE: Each query has a .limit(100_000) safety cap to prevent unbounded
+        memory usage.  When async streaming is supported, replace with
+        yield_per() to stream rows incrementally.
+        """
         data: dict[str, Any] = {}
 
         # Profile
@@ -280,7 +285,7 @@ class ExportService:
 
         # Bodyweight logs
         from src.modules.user.models import BodyweightLog
-        stmt = select(BodyweightLog).where(BodyweightLog.user_id == user_id).order_by(BodyweightLog.created_at)
+        stmt = select(BodyweightLog).where(BodyweightLog.user_id == user_id).order_by(BodyweightLog.created_at).limit(100_000)
         result = await self.session.execute(stmt)
         data["bodyweight_logs"] = [
             {"weight_kg": r.weight_kg, "recorded_at": str(r.created_at)}
@@ -291,7 +296,7 @@ class ExportService:
         from src.modules.training.models import TrainingSession
         stmt = select(TrainingSession).where(
             TrainingSession.user_id == user_id, TrainingSession.deleted_at.is_(None)
-        ).order_by(TrainingSession.session_date)
+        ).order_by(TrainingSession.session_date).limit(100_000)
         result = await self.session.execute(stmt)
         data["sessions"] = [
             {
@@ -305,7 +310,7 @@ class ExportService:
         from src.modules.nutrition.models import NutritionEntry
         stmt = select(NutritionEntry).where(
             NutritionEntry.user_id == user_id, NutritionEntry.deleted_at.is_(None)
-        ).order_by(NutritionEntry.entry_date)
+        ).order_by(NutritionEntry.entry_date).limit(100_000)
         result = await self.session.execute(stmt)
         data["nutrition_entries"] = [
             {
@@ -321,7 +326,7 @@ class ExportService:
 
         # Measurements
         from src.modules.measurements.models import BodyMeasurement
-        stmt = select(BodyMeasurement).where(BodyMeasurement.user_id == user_id, BodyMeasurement.deleted_at.is_(None)).order_by(BodyMeasurement.measured_at)  # Audit fix 8.6
+        stmt = select(BodyMeasurement).where(BodyMeasurement.user_id == user_id, BodyMeasurement.deleted_at.is_(None)).order_by(BodyMeasurement.measured_at).limit(100_000)  # Audit fix 8.6
         result = await self.session.execute(stmt)
         data["measurements"] = [
             {
@@ -336,7 +341,7 @@ class ExportService:
         from src.modules.progress_photos.models import ProgressPhoto
         stmt = select(ProgressPhoto).where(
             ProgressPhoto.user_id == user_id, ProgressPhoto.deleted_at.is_(None)
-        )
+        ).limit(100_000)
         result = await self.session.execute(stmt)
         data["progress_photos"] = [
             {"capture_date": str(r.capture_date), "pose_type": r.pose_type, "url": f"{settings.CDN_BASE_URL}/{r.r2_key}"}
@@ -345,7 +350,7 @@ class ExportService:
 
         # Achievements
         from src.modules.achievements.models import UserAchievement
-        stmt = select(UserAchievement).where(UserAchievement.user_id == user_id)
+        stmt = select(UserAchievement).where(UserAchievement.user_id == user_id).limit(100_000)
         result = await self.session.execute(stmt)
         data["achievements"] = [
             {"achievement_id": r.achievement_id, "unlocked_at": str(r.unlocked_at)}
@@ -354,7 +359,7 @@ class ExportService:
 
         # Goals
         from src.modules.user.models import UserGoal
-        stmt = select(UserGoal).where(UserGoal.user_id == user_id)
+        stmt = select(UserGoal).where(UserGoal.user_id == user_id).limit(100_000)
         result = await self.session.execute(stmt)
         data["goals"] = [
             {"goal_type": r.goal_type, "target_weight_kg": r.target_weight_kg, "goal_rate_per_week": r.goal_rate_per_week}

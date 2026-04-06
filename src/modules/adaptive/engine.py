@@ -57,6 +57,7 @@ ADJUSTMENT_CLAMP_MAX = 300.0
 
 MIN_TARGET_CALORIES = 1200.0
 MIN_CARBS_G = 50.0
+MIN_FAT_G = 20.0  # minimum for hormonal health
 
 MAX_DAILY_FLUCTUATION_KG = 2.0  # exclude >2 kg/day swings from EMA
 
@@ -264,6 +265,8 @@ def _compute_macros(
 
     if carbs_g < MIN_CARBS_G:
         carbs_g = MIN_CARBS_G
+
+    fat_g = max(fat_g, MIN_FAT_G)
 
     return protein_g, fat_g, carbs_g
 

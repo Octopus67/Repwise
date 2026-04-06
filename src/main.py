@@ -14,7 +14,7 @@ from pydantic import ValidationError as PydanticValidationError
 import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from src.config.settings import settings
 from src.config.logging_config import configure_logging
@@ -37,6 +37,8 @@ logger = logging.getLogger(__name__)
 async def lifespan(application: FastAPI):
     """Create tables on startup when using SQLite (local dev mode)."""
     configure_logging(debug=settings.DEBUG)
+    if settings.DEBUG and settings.ENVIRONMENT == "production":
+        logger.warning("DEBUG=true in production!")
     if "sqlite" in settings.DATABASE_URL:
         from sqlalchemy import JSON, text
         from sqlalchemy.dialects.postgresql import JSONB
@@ -177,6 +179,18 @@ async def lifespan(application: FastAPI):
     if _is_scheduler_leader:
         await start_scheduler()
 
+    # Startup DB connectivity check (Phase 3 — F13)
+    from sqlalchemy import text as _text
+    from src.config.database import async_session_factory as _check_session
+    try:
+        async with _check_session() as _sess:
+            await _sess.execute(_text("SELECT 1"))
+        logger.info("Startup DB connectivity check passed")
+    except Exception as exc:
+        logger.critical("Startup DB connectivity check FAILED: %s — exiting", exc)
+        import sys
+        sys.exit(1)
+
     yield
 
     # Graceful shutdown: stop scheduler before closing Redis
@@ -257,6 +271,16 @@ async def api_error_handler(_request: Request, exc: ApiError) -> JSONResponse:
 # Global exception handler for request validation errors (Requirement 20.4)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore[arg-type]
 app.add_exception_handler(PydanticValidationError, pydantic_validation_exception_handler)  # type: ignore[arg-type]
+
+
+# Global exception handler for SQLAlchemy IntegrityError (Phase 3 — F12)
+@app.exception_handler(IntegrityError)
+async def integrity_error_handler(_request: Request, exc: IntegrityError) -> JSONResponse:
+    logger.warning("IntegrityError: %s", exc.orig)
+    return JSONResponse(
+        status_code=409,
+        content={"status": 409, "code": "CONFLICT", "message": "A conflicting record already exists.", "details": None},
+    )
 
 
 # Catch-all for unhandled exceptions — ensures CORS headers are attached to 500 responses

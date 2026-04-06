@@ -20,7 +20,7 @@ from src.modules.training.schemas import (
     TrainingSessionResponse,
     TrainingSessionUpdate,
 )
-from src.shared.errors import NotFoundError
+from src.shared.errors import ConflictError, NotFoundError
 from src.shared.pagination import PaginatedResult, PaginationParams
 from src.shared.types import AuditAction
 
@@ -208,6 +208,7 @@ class TrainingService:
     ) -> TrainingSessionResponse:
         """Update a training session with audit trail (Requirement 6.3)."""
         training = await self._get_or_404(user_id, session_id)
+        expected_version = training.version
 
         changes: dict[str, dict] = {}
         pr_responses: list[PersonalRecordResponse] = []
@@ -267,6 +268,7 @@ class TrainingService:
             }
             training.end_time = data.end_time
 
+        # Optimistic locking: increment version to detect concurrent modifications
         if changes:
             await TrainingSession.write_audit(
                 self.session,
@@ -276,7 +278,9 @@ class TrainingService:
                 changes=changes,
             )
 
+        training.version = expected_version + 1
         await self.session.flush()
+
         return TrainingSessionResponse.from_orm_model(training, personal_records=pr_responses)
 
     async def soft_delete_session(
@@ -284,6 +288,8 @@ class TrainingService:
     ) -> None:
         """Soft-delete a training session (Requirement 6.4)."""
         training = await self._get_or_404(user_id, session_id)
+        expected_version = training.version
+
         training.deleted_at = datetime.now(timezone.utc)
 
         await TrainingSession.write_audit(
@@ -292,6 +298,8 @@ class TrainingService:
             action=AuditAction.DELETE,
             entity_id=session_id,
         )
+
+        training.version = expected_version + 1
         await self.session.flush()
 
     # ------------------------------------------------------------------
@@ -337,7 +345,10 @@ class TrainingService:
         return [TrainingSessionResponse.from_orm_model(r) for r in rows]
 
     async def get_streak_count(self, user_id: uuid.UUID) -> int:
-        """Return the current consecutive-day training streak."""
+        """Return the current consecutive-day training streak.
+
+        5.4: Streak is 0 if the most recent session is not today or yesterday.
+        """
         from datetime import timedelta
 
         stmt = (
@@ -351,6 +362,11 @@ class TrainingService:
         dates = [row[0] for row in result.all()]
 
         if not dates:
+            return 0
+
+        # Anchor check: most recent date must be today or yesterday
+        today = date.today()
+        if (today - dates[0]).days > 1:
             return 0
 
         streak = 1

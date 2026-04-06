@@ -57,7 +57,14 @@ def _is_web_client(request: Request) -> bool:
 
 
 def _set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
-    """Set httpOnly cookies for web clients."""
+    """Set httpOnly cookies for web clients.
+
+    SameSite=Lax is used (rather than Strict) for OAuth compatibility:
+    OAuth redirects from Google/Apple are top-level navigations that would
+    be blocked by SameSite=Strict, preventing the auth cookie from being
+    sent on the callback request. Lax allows these while still protecting
+    against CSRF on sub-requests. (Amendment E)
+    """
     response.set_cookie(
         key="access_token", value=access_token,
         httponly=True, secure=True, samesite="lax",

@@ -39,7 +39,7 @@ class ContentModule(Base):
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
     articles: Mapped[list[ContentArticle]] = relationship(
-        "ContentArticle", back_populates="module", lazy="selectin"
+        "ContentArticle", back_populates="module", lazy="raise"
     )
 
 
@@ -80,7 +80,7 @@ class ContentArticle(Base, SoftDeleteMixin, AuditLogMixin):
         "ContentModule", back_populates="articles", lazy="selectin"
     )
     versions: Mapped[list[ArticleVersion]] = relationship(
-        "ArticleVersion", back_populates="article", lazy="selectin"
+        "ArticleVersion", back_populates="article", lazy="raise"
     )
 
     __table_args__ = (

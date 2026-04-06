@@ -11,7 +11,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.nutrition.models import NutritionEntry
@@ -243,7 +243,23 @@ class DietaryAnalysisService:
         end_date = date.today()
         start_date = end_date - timedelta(days=window_days - 1)
 
-        entries = await self._get_entries(user_id, start_date, end_date)
+        # SQL aggregation: GROUP BY entry_date for daily summaries
+        stmt = (
+            select(
+                NutritionEntry.entry_date,
+                func.sum(NutritionEntry.calories).label("calories"),
+                func.sum(NutritionEntry.protein_g).label("protein_g"),
+                func.sum(NutritionEntry.carbs_g).label("carbs_g"),
+                func.sum(NutritionEntry.fat_g).label("fat_g"),
+            )
+            .where(NutritionEntry.user_id == user_id)
+            .where(NutritionEntry.entry_date >= start_date)
+            .where(NutritionEntry.entry_date <= end_date)
+        )
+        stmt = NutritionEntry.not_deleted(stmt)
+        stmt = stmt.group_by(NutritionEntry.entry_date)
+        result = await self.session.execute(stmt)
+        rows = result.all()
 
         # Build daily summaries (one per day in the window)
         daily_map: dict[date, DailySummary] = {}
@@ -251,15 +267,22 @@ class DietaryAnalysisService:
             d = start_date + timedelta(days=d_offset)
             daily_map[d] = DailySummary(date=d)
 
+        for row in rows:
+            summary = daily_map.get(row.entry_date)
+            if summary is None:
+                summary = DailySummary(date=row.entry_date)
+                daily_map[row.entry_date] = summary
+            summary.calories = float(row.calories or 0)
+            summary.protein_g = float(row.protein_g or 0)
+            summary.carbs_g = float(row.carbs_g or 0)
+            summary.fat_g = float(row.fat_g or 0)
+
+        # Fetch micro_nutrients separately (JSONB can't be aggregated in SQL)
+        entries = await self._get_entries(user_id, start_date, end_date)
         for entry in entries:
             summary = daily_map.get(entry.entry_date)
             if summary is None:
-                summary = DailySummary(date=entry.entry_date)
-                daily_map[entry.entry_date] = summary
-            summary.calories += entry.calories
-            summary.protein_g += entry.protein_g
-            summary.carbs_g += entry.carbs_g
-            summary.fat_g += entry.fat_g
+                continue
             micros = entry.micro_nutrients or {}
             for k, v in micros.items():
                 if not isinstance(v, (int, float)):
@@ -271,14 +294,15 @@ class DietaryAnalysisService:
         # Compute averages using pure function
         entry_data = [
             NutritionEntryData(
-                entry_date=e.entry_date,
-                calories=e.calories,
-                protein_g=e.protein_g,
-                carbs_g=e.carbs_g,
-                fat_g=e.fat_g,
-                micro_nutrients=e.micro_nutrients,
+                entry_date=s.date,
+                calories=s.calories,
+                protein_g=s.protein_g,
+                carbs_g=s.carbs_g,
+                fat_g=s.fat_g,
+                micro_nutrients=s.micro_nutrients if s.micro_nutrients else None,
             )
-            for e in entries
+            for s in daily_summaries
+            if s.calories > 0 or s.protein_g > 0 or s.carbs_g > 0 or s.fat_g > 0
         ]
         averages = compute_daily_averages(entry_data, window_days)
 

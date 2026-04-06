@@ -5,10 +5,16 @@ from pathlib import Path
 
 _DATA_FILE = Path(__file__).resolve().parent.parent.parent.parent / "data" / "global_food_items.json"
 
+_CACHED_FOOD_ITEMS: list[dict] | None = None
+
 
 def _load_global_food_items() -> list[dict]:
+    global _CACHED_FOOD_ITEMS
+    if _CACHED_FOOD_ITEMS is not None:
+        return _CACHED_FOOD_ITEMS
     with open(_DATA_FILE) as f:
-        return json.load(f)
+        _CACHED_FOOD_ITEMS = json.load(f)
+    return _CACHED_FOOD_ITEMS
 
 
 try:

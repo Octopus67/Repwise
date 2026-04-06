@@ -1,43 +1,47 @@
-"""Food database service — search, CRUD, and recipe nutritional aggregation."""
+"""Food database service — thin facade delegating to focused sub-services."""
 
 from __future__ import annotations
 
-import logging
 import uuid
 from typing import Any, Optional
 
-from sqlalchemy import case, func, select
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
-from src.modules.food_database.models import FoodItem, RecipeIngredient
+from src.modules.food_database.favorites_service import FavoritesService
+from src.modules.food_database.models import FoodItem
+from src.modules.food_database.recipe_service import (
+    RecipeService,
+    aggregate_recipe_nutrition,
+)
 from src.modules.food_database.schemas import (
     FoodItemCreate,
     FoodItemUpdate,
     RecipeDetailResponse,
     RecipeIngredientInput,
-    RecipeIngredientResponse,
-    RecipeNutrition,
-    FoodItemResponse,
 )
-from src.shared.errors import ForbiddenError, NotFoundError, ValidationError
+from src.modules.food_database.search_service import SearchService
+from src.shared.errors import NotFoundError
 from src.shared.pagination import PaginatedResult, PaginationParams
-
-logger = logging.getLogger(__name__)
 
 
 class FoodDatabaseService:
     """Manages food items, recipes, and nutritional data."""
 
-    _fts_cache: tuple[bool, float] | None = None
-
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
+        self._search = SearchService(db)
+        self._recipes = RecipeService(db)
+        self._favorites = FavoritesService(db)
 
     # ------------------------------------------------------------------
     # Search
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _personalize_results(items: list, user_prefs: dict | None) -> list:
+        """Delegate to SearchService for backward compatibility with tests."""
+        return SearchService._personalize_results(items, user_prefs)
 
     async def search(
         self,
@@ -55,453 +59,7 @@ class FoodDatabaseService:
         When user_id is provided and food_search_ranking flag is enabled,
         applies frequency-based weighted ranking.
         """
-        # Try FTS5 path for text queries on SQLite
-        if query and await self._has_fts_table():
-            result = await self._search_fts(query, pagination, category, region, user_prefs)
-        else:
-            # Fallback: original LIKE-based search
-            result = await self._search_like(query, pagination, category, region, user_prefs)
-
-        # Apply frequency-based re-ranking if user_id provided
-        if user_id and result.items:
-            result = await self._apply_frequency_ranking(result, user_id)
-
-        return result
-
-    async def _apply_frequency_ranking(
-        self,
-        result: PaginatedResult[Any],
-        user_id: uuid.UUID,
-    ) -> PaginatedResult[Any]:
-        """Re-rank search results using user food frequency data."""
-        import math
-        from datetime import datetime, timezone
-
-        try:
-            from src.modules.food_database.models import UserFoodFrequency
-
-            item_ids = [item.id for item in result.items if hasattr(item, "id")]
-            if not item_ids:
-                return result
-
-            stmt = select(UserFoodFrequency).where(
-                UserFoodFrequency.user_id == user_id,
-                UserFoodFrequency.food_item_id.in_(item_ids),
-            )
-            freq_result = await self.db.execute(stmt)
-            freq_map = {
-                f.food_item_id: f for f in freq_result.scalars().all()
-            }
-
-            now = datetime.now(timezone.utc)
-            frequency_weight = 0.3
-            recency_weight = 0.1
-
-            scored: list[tuple[float, int, Any]] = []
-            for idx, item in enumerate(result.items):
-                base_score = len(result.items) - idx  # preserve original order as base
-                freq = freq_map.get(item.id)
-                if freq and freq.log_count > 0:
-                    freq_bonus = frequency_weight * math.log(1 + freq.log_count)
-                    days_since = (
-                        (now - freq.last_logged_at).days
-                        if freq.last_logged_at
-                        else 999
-                    )
-                    recency_bonus = recency_weight * (1.0 / (1 + days_since / 30))
-                    total = base_score + freq_bonus + recency_bonus
-                else:
-                    total = base_score
-                scored.append((total, idx, item))
-
-            scored.sort(key=lambda x: -x[0])
-            reranked = [item for _, _, item in scored]
-
-            return PaginatedResult(
-                items=reranked,
-                total_count=result.total_count,
-                page=result.page,
-                limit=result.limit,
-            )
-        except (SQLAlchemyError, TypeError, ValueError) as e:
-            # Fallback: return unranked results if frequency scoring fails
-            logger.exception("Food search failed")  # Audit fix 10.1
-            return result
-
-    async def _get_popular_items(
-        self,
-        pagination: PaginationParams,
-        category: Optional[str] = None,
-        region: Optional[str] = None,
-        user_prefs: Optional[dict] = None,
-    ) -> PaginatedResult[Any]:
-        """Return popular items (USDA items) for empty queries."""
-        base = select(FoodItem).where(FoodItem.source == "usda")
-        base = FoodItem.not_deleted(base)
-
-        if category:
-            base = base.where(FoodItem.category == category)
-        if region:
-            base = base.where(FoodItem.region == region)
-
-        items_stmt = (
-            base.order_by(FoodItem.name)
-            .offset(pagination.offset)
-            .limit(pagination.limit)
-        )
-        result = await self.db.execute(items_stmt)
-        items = list(result.scalars().all())
-
-        if user_prefs:
-            items = self._personalize_results(items, user_prefs)
-
-        return PaginatedResult(
-            items=items,
-            total_count=-1,  # Don't count for popular items
-            page=pagination.page,
-            limit=pagination.limit,
-        )
-
-    async def _has_fts_table(self) -> bool:
-        """Check if the FTS5 virtual table exists (cached with 60s TTL).
-
-        FTS5 is SQLite-only — skip the check entirely on PostgreSQL.
-        """
-        import time
-        from sqlalchemy.exc import SQLAlchemyError
-
-        now = time.monotonic()
-        cache = FoodDatabaseService._fts_cache
-        if cache is not None and (now - cache[1]) < 60:
-            return cache[0]
-
-        try:
-            # FTS5 only exists on SQLite — skip on PostgreSQL
-            dialect = self.db.bind.dialect.name if self.db.bind else "unknown"
-            if dialect != "sqlite":
-                FoodDatabaseService._fts_cache = (False, now)
-                return False
-
-            from sqlalchemy import text
-            result = await self.db.execute(
-                text("SELECT 1 FROM sqlite_master WHERE type='table' AND name='food_items_fts' LIMIT 1")
-            )
-            available = result.scalar_one_or_none() is not None
-        except (SQLAlchemyError, AttributeError):
-            available = False
-        FoodDatabaseService._fts_cache = (available, now)
-        return available
-
-    async def _search_fts(
-        self,
-        query: str,
-        pagination: PaginationParams,
-        category: Optional[str] = None,
-        region: Optional[str] = None,
-        user_prefs: Optional[dict] = None,
-    ) -> PaginatedResult[Any]:
-        """FTS5-based search — prefix match first, then full token match.
-
-        Strategy:
-        1. Prefix match (query*) — instant, covers typeahead use case
-        2. If <limit results, try full token match — catches compound words
-        3. Fetch full FoodItem rows by rowid (indexed, ~1ms)
-        """
-        from sqlalchemy import text
-
-        limit = pagination.limit
-        offset = pagination.offset
-        # Fetch more candidates from FTS so Python re-ranking can surface exact/USDA matches
-        fts_fetch_limit = max(limit * 5, 100)
-
-        # Sanitize query for FTS5: remove special chars, collapse whitespace
-        import re
-        safe_query = re.sub(r'["*(){}\[\]^~<>|+\-]', ' ', query).strip()
-        # Audit fix 6.1 — strip FTS5 boolean operators
-        safe_query = re.sub(r'\b(AND|OR|NOT|NEAR)\b', ' ', safe_query, flags=re.IGNORECASE)
-        safe_query = ' '.join(safe_query.split())  # collapse whitespace
-        if not safe_query:
-            # Return popular items (USDA items) for empty queries
-            return await self._get_popular_items(pagination, category, region, user_prefs)
-
-        # Build FTS MATCH expression: prefix match on each token
-        tokens = safe_query.split()
-        prefix_expr = " ".join(f"{t}*" for t in tokens)
-
-        # Optional category/source filter via FTS columns
-        fts_filter = ""
-        params: dict = {"match_expr": prefix_expr, "limit": fts_fetch_limit, "offset": offset}
-        if category:
-            fts_filter = " AND fts.category = :category"
-            params["category"] = category
-
-        # Step 1: Prefix match with BM25 ranking
-        fts_sql = text(f"""
-            SELECT fts.rowid
-            FROM food_items_fts fts
-            WHERE fts.name MATCH :match_expr{fts_filter}
-            ORDER BY bm25(food_items_fts)
-            LIMIT :limit OFFSET :offset
-        """)
-        result = await self.db.execute(fts_sql, params)
-        rowids = [r[0] for r in result.fetchall()]
-
-        # Step 2: If too few results, try full token match (no prefix)
-        if len(rowids) < fts_fetch_limit and len(tokens) == 1:
-            full_expr = safe_query
-            params2 = {**params, "match_expr": full_expr}
-            result2 = await self.db.execute(fts_sql, params2)
-            extra_rowids = [r[0] for r in result2.fetchall()]
-            seen = set(rowids)
-            for rid in extra_rowids:
-                if rid not in seen:
-                    rowids.append(rid)
-                    seen.add(rid)
-                    if len(rowids) >= fts_fetch_limit:
-                        break
-
-        if not rowids:
-            return PaginatedResult(items=[], total_count=-1, page=pagination.page, limit=limit)
-
-        # Step 3: Fetch full rows by rowid using parameterized query
-        # Audit fix 10.3 — filter soft-deleted rows
-        ph = ",".join(f":rowid_{i}" for i in range(len(rowids)))
-        fetch_sql = text(f"""
-            SELECT id, name, category, region, serving_size, serving_unit,
-                   calories, protein_g, carbs_g, fat_g, micro_nutrients,
-                   is_recipe, source, barcode, description, total_servings,
-                   created_by, deleted_at, created_at, updated_at
-            FROM food_items WHERE rowid IN ({ph}) AND deleted_at IS NULL
-        """)
-        params = {f"rowid_{i}": rowid for i, rowid in enumerate(rowids)}
-        if region:
-            fetch_sql = text(f"""
-                SELECT id, name, category, region, serving_size, serving_unit,
-                       calories, protein_g, carbs_g, fat_g, micro_nutrients,
-                       is_recipe, source, barcode, description, total_servings,
-                       created_by, deleted_at, created_at, updated_at
-                FROM food_items WHERE rowid IN ({ph}) AND deleted_at IS NULL AND region = :region
-            """)
-            params["region"] = region
-        fetch_result = await self.db.execute(fetch_sql, params)
-        rows = fetch_result.fetchall()
-
-        # Build a map of id→row for ordering
-        row_map: dict = {}
-        rowid_to_id: dict = {}
-        for row in rows:
-            row_map[row[0]] = row  # id is first column
-
-        # Also get rowid→id mapping for ordering — reuse params from fetch query
-        id_map_sql = text(
-            "SELECT rowid, id FROM food_items WHERE rowid IN ("
-            + ",".join(f":rowid_{i}" for i in range(len(rowids)))
-            + ")"
-        )
-        id_result = await self.db.execute(
-            id_map_sql, {f"rowid_{i}": rid for i, rid in enumerate(rowids)}
-        )
-        for r in id_result.fetchall():
-            rowid_to_id[r[0]] = r[1]
-
-        # Build ordered FoodItem objects preserving FTS rank
-        import json as _json
-        from datetime import datetime as _dt
-        items = []
-        for rid in rowids:
-            fid = rowid_to_id.get(rid)
-            if fid and fid in row_map:
-                row = row_map[fid]
-                item = FoodItem()
-                item.id = row[0]
-                item.name = row[1]
-                item.category = row[2]
-                item.region = row[3]
-                item.serving_size = row[4]
-                item.serving_unit = row[5]
-                item.calories = row[6]
-                item.protein_g = row[7]
-                item.carbs_g = row[8]
-                item.fat_g = row[9]
-                # micro_nutrients may be a JSON string from raw SQL
-                mn = row[10]
-                item.micro_nutrients = _json.loads(mn) if isinstance(mn, str) else mn
-                item.is_recipe = bool(row[11])
-                item.source = row[12]
-                item.barcode = row[13]
-                item.description = row[14]
-                item.total_servings = row[15]
-                # Parse datetime strings
-                ca = row[18]
-                item.created_at = _dt.fromisoformat(ca) if isinstance(ca, str) else ca
-                ua = row[19]
-                item.updated_at = _dt.fromisoformat(ua) if isinstance(ua, str) else ua
-                items.append(item)
-
-        # Apply Food DNA personalization
-        if user_prefs:
-            items = self._personalize_results(items, user_prefs)
-
-        # Re-rank: exact → starts-with → word-match → contains, prefer USDA/verified, shorter names first
-        q_lower = query.lower()
-        q_words = q_lower.split()
-        source_order = {"usda": 0, "verified": 1, "community": 2, "custom": 3}
-        def _rank(item: FoodItem) -> tuple:
-            n = item.name.lower()
-            if n == q_lower:
-                tier = 0  # exact match: "apple" == "apple"
-            elif n.startswith(q_lower):
-                tier = 1  # starts with: "apple juice" starts with "apple"
-            elif all(any(w.startswith(qw) for w in n.split()) for qw in q_words):
-                tier = 2  # all query words match word starts: "White Bread" for "bread"
-            else:
-                tier = 3  # substring: "Breadless" contains "bread"
-            return (tier, source_order.get(item.source, 9), len(item.name), item.name)
-        items.sort(key=_rank)
-        items = items[:limit]  # Trim to requested limit after re-ranking
-
-        return PaginatedResult(
-            items=items,
-            total_count=len(items) if len(items) < limit else -1,  # Estimate: if less than limit, that's the total
-            page=pagination.page,
-            limit=limit,
-        )
-
-    async def _search_like(
-        self,
-        query: str,
-        pagination: PaginationParams,
-        category: Optional[str] = None,
-        region: Optional[str] = None,
-        user_prefs: Optional[dict] = None,
-    ) -> PaginatedResult[Any]:
-        """Original LIKE-based search — fallback for PostgreSQL or missing FTS."""
-        base = select(FoodItem)
-        base = FoodItem.not_deleted(base)
-
-        if query:
-            escaped = query.replace("%", r"\%").replace("_", r"\_")
-            base = base.where(func.lower(FoodItem.name).like(func.lower(f"%{escaped}%"), escape="\\"))
-
-        if category:
-            base = base.where(FoodItem.category == category)
-        if region:
-            base = base.where(FoodItem.region == region)
-
-        total = -1
-        if not query:
-            count_stmt = select(func.count()).select_from(base.subquery())
-            total = (await self.db.execute(count_stmt)).scalar_one()
-
-        if query:
-            relevance = case(
-                (func.lower(FoodItem.name) == func.lower(query), 0),
-                (func.lower(FoodItem.name).like(func.lower(f"{query}%")), 1),
-                (func.lower(FoodItem.name).like(func.lower(f"% {query}%")), 2),
-                else_=3,
-            )
-            source_priority = case(
-                (FoodItem.source == "usda", 0),
-                (FoodItem.source == "verified", 1),
-                (FoodItem.source == "community", 2),
-                (FoodItem.source == "custom", 3),
-                else_=4,
-            )
-            items_stmt = (
-                base.order_by(relevance, func.length(FoodItem.name), source_priority, FoodItem.name)
-                .offset(pagination.offset)
-                .limit(pagination.limit)
-            )
-        else:
-            source_priority = case(
-                (FoodItem.source == "usda", 0),
-                (FoodItem.source == "verified", 1),
-                (FoodItem.source == "community", 2),
-                (FoodItem.source == "custom", 3),
-                else_=4,
-            )
-            items_stmt = (
-                base.order_by(source_priority, FoodItem.name)
-                .offset(pagination.offset)
-                .limit(pagination.limit)
-            )
-        result = await self.db.execute(items_stmt)
-        items = list(result.scalars().all())
-
-        if user_prefs:
-            items = self._personalize_results(items, user_prefs)
-
-        return PaginatedResult(
-            items=items,
-            total_count=total,
-            page=pagination.page,
-            limit=pagination.limit,
-        )
-
-    # ------------------------------------------------------------------
-    # Food DNA personalization
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _personalize_results(
-        items: list[Any],
-        user_prefs: Optional[dict],
-    ) -> list[Any]:
-        """Re-rank search results based on user's Food DNA preferences.
-        
-        Boost factors (multiplicative):
-          +50% if food.region matches any cuisine_preferences
-          +30% if food.source == 'verified'
-          +20% if food.source == 'usda'
-          -80% if food name contains an allergen keyword
-          -50% if food category conflicts with dietary restrictions
-        """
-        if not user_prefs or not items:
-            return items
-
-        cuisine_prefs = {c.lower() for c in (user_prefs.get("cuisine_preferences") or [])}
-        restrictions = {r.lower() for r in (user_prefs.get("dietary_restrictions") or [])}
-        allergies = {a.lower() for a in (user_prefs.get("allergies") or [])}
-
-        if not cuisine_prefs and not restrictions and not allergies:
-            return items
-
-        scored: list[tuple[float, Any]] = []
-        for item in items:
-            score = 1.0
-
-            # Boost matching cuisines
-            region = getattr(item, "region", "") or ""
-            if cuisine_prefs and region.lower() in cuisine_prefs:
-                score *= 1.5
-
-            # Boost verified/usda sources
-            source = getattr(item, "source", "") or ""
-            if source == "verified":
-                score *= 1.3
-            elif source == "usda":
-                score *= 1.2
-
-            # Demote allergens
-            name_lower = (getattr(item, "name", "") or "").lower()
-            for allergen in allergies:
-                if allergen in name_lower:
-                    score *= 0.2
-                    break
-
-            # Demote restricted foods
-            cat_lower = (getattr(item, "category", "") or "").lower()
-            if restrictions:
-                meat_categories = {"meat", "poultry", "seafood", "protein"}
-                if "vegetarian" in restrictions and cat_lower in meat_categories:
-                    score *= 0.5
-                if "vegan" in restrictions and cat_lower in (meat_categories | {"dairy"}):
-                    score *= 0.3
-
-            scored.append((score, item))
-
-        scored.sort(key=lambda x: -x[0])
-        return [item for _, item in scored]
+        return await self._search.search(query, pagination, category, region, user_prefs, user_id)
 
     # ------------------------------------------------------------------
     # Favorites
@@ -509,36 +67,11 @@ class FoodDatabaseService:
 
     async def toggle_favorite(self, user_id: uuid.UUID, food_item_id: uuid.UUID) -> bool:
         """Toggle is_favorite on a UserFoodFrequency row. Creates row if missing. Returns new state."""
-        from src.modules.food_database.models import UserFoodFrequency
-
-        stmt = select(UserFoodFrequency).where(
-            UserFoodFrequency.user_id == user_id,
-            UserFoodFrequency.food_item_id == food_item_id,
-        ).with_for_update()
-        result = await self.db.execute(stmt)
-        freq = result.scalar_one_or_none()
-        if freq is None:
-            freq = UserFoodFrequency(user_id=user_id, food_item_id=food_item_id, is_favorite=True)
-            self.db.add(freq)
-        else:
-            freq.is_favorite = not freq.is_favorite
-        await self.db.flush()
-        return freq.is_favorite
+        return await self._favorites.toggle_favorite(user_id, food_item_id)
 
     async def get_favorites(self, user_id: uuid.UUID, limit: int = 10) -> list[Any]:
         """Return favorite food items ordered by log_count desc."""
-        from src.modules.food_database.models import UserFoodFrequency
-
-        stmt = (
-            select(FoodItem)
-            .join(UserFoodFrequency, UserFoodFrequency.food_item_id == FoodItem.id)
-            .where(UserFoodFrequency.user_id == user_id, UserFoodFrequency.is_favorite.is_(True))
-            .order_by(UserFoodFrequency.log_count.desc())
-            .limit(limit)
-        )
-        stmt = FoodItem.not_deleted(stmt)
-        result = await self.db.execute(stmt)
-        return list(result.scalars().all())
+        return await self._favorites.get_favorites(user_id, limit)
 
     # ------------------------------------------------------------------
     # Get by ID
@@ -555,47 +88,6 @@ class FoodDatabaseService:
         if not allow_any_owner and item.created_by is not None and (user_id is None or item.created_by != user_id):
             raise NotFoundError("Food item not found")
         return item
-
-    # ------------------------------------------------------------------
-    # Helper methods
-    # ------------------------------------------------------------------
-
-    async def _has_circular_reference(
-        self, recipe_id: uuid.UUID, ingredient_id: uuid.UUID, visited: Optional[set] = None, depth: int = 0
-    ) -> bool:
-        """Check if adding ingredient_id to recipe_id would create a circular reference."""
-        if depth > 10:  # Prevent infinite recursion
-            return True
-        
-        if visited is None:
-            visited = set()
-        
-        if ingredient_id in visited:
-            return True
-        
-        # Check if the ingredient is a recipe
-        stmt = select(FoodItem).where(FoodItem.id == ingredient_id, FoodItem.is_recipe.is_(True))
-        stmt = FoodItem.not_deleted(stmt)
-        result = await self.db.execute(stmt)
-        ingredient_recipe = result.scalar_one_or_none()
-        
-        if ingredient_recipe is None:
-            return False  # Not a recipe, no circular reference possible
-        
-        # If the ingredient recipe contains our original recipe, it's circular
-        if ingredient_id == recipe_id:
-            return True
-        
-        # Check all ingredients of this recipe recursively
-        visited.add(ingredient_id)
-        ing_stmt = select(RecipeIngredient).where(RecipeIngredient.recipe_id == ingredient_id)
-        ing_result = await self.db.execute(ing_stmt)
-        
-        for ing in ing_result.scalars().all():
-            if await self._has_circular_reference(recipe_id, ing.food_item_id, visited.copy(), depth + 1):
-                return True
-        
-        return False
 
     # ------------------------------------------------------------------
     # Recipe CRUD
@@ -616,79 +108,7 @@ class FoodDatabaseService:
         3. Compute aggregate nutrition via aggregate_recipe_nutrition()
         4. Store per-serving macros on FoodItem (denormalized for search)
         """
-        # Create the recipe FoodItem
-        recipe = FoodItem(
-            name=name,
-            description=description,
-            category="Recipe",
-            region="Custom",
-            serving_size=100.0,  # placeholder — per-serving macros are denormalized
-            serving_unit="serving",
-            calories=0,
-            protein_g=0,
-            carbs_g=0,
-            fat_g=0,
-            is_recipe=True,
-            source="custom",
-            total_servings=total_servings,
-            created_by=user_id,
-        )
-        self.db.add(recipe)
-        await self.db.flush()
-        await self.db.refresh(recipe)
-
-        # Create ingredient rows, preventing circular references
-        # Audit fix 4.1 — batch fetch to fix N+1
-        all_food_ids = [ing.food_item_id for ing in ingredients]
-        batch_stmt = select(FoodItem).where(FoodItem.id.in_(all_food_ids))
-        batch_stmt = FoodItem.not_deleted(batch_stmt)
-        batch_result = await self.db.execute(batch_stmt)
-        food_lookup = {f.id: f for f in batch_result.scalars().all()}
-
-        ingredient_rows: list[RecipeIngredient] = []
-        for ing in ingredients:
-            if ing.food_item_id == recipe.id:
-                raise ValidationError("A recipe cannot contain itself as an ingredient")
-
-            # Check for circular references recursively
-            if await self._has_circular_reference(recipe.id, ing.food_item_id):
-                raise ValidationError("Adding this ingredient would create a circular reference")
-
-            # Verify ingredient exists and is not deleted
-            food = food_lookup.get(ing.food_item_id)
-            if food is None:
-                raise NotFoundError(f"Ingredient food item {ing.food_item_id} not found")
-
-            row = RecipeIngredient(
-                recipe_id=recipe.id,
-                food_item_id=ing.food_item_id,
-                quantity=ing.quantity,
-                unit=ing.unit,
-            )
-            self.db.add(row)
-            ingredient_rows.append(row)
-
-        await self.db.flush()
-
-        # Reload ingredients with food_item relationship for aggregation
-        stmt = (
-            select(RecipeIngredient)
-            .where(RecipeIngredient.recipe_id == recipe.id)
-            .options(selectinload(RecipeIngredient.food_item))
-        )
-        result = await self.db.execute(stmt)
-        loaded_ingredients = list(result.scalars().all())
-
-        # Compute aggregate nutrition and denormalize per-serving macros
-        nutrition = aggregate_recipe_nutrition(loaded_ingredients)
-        recipe.calories = nutrition.total_calories / total_servings
-        recipe.protein_g = nutrition.total_protein_g / total_servings
-        recipe.carbs_g = nutrition.total_carbs_g / total_servings
-        recipe.fat_g = nutrition.total_fat_g / total_servings
-
-        await self.db.flush()
-        await self.db.refresh(recipe)
-        return recipe
+        return await self._recipes.create_recipe(user_id, name, description, total_servings, ingredients)
 
     async def list_user_recipes(
         self,
@@ -696,29 +116,7 @@ class FoodDatabaseService:
         pagination: PaginationParams,
     ) -> PaginatedResult[Any]:
         """List recipes created by this user (FoodItems with is_recipe=True)."""
-        base = select(FoodItem).where(
-            FoodItem.is_recipe.is_(True),
-            FoodItem.created_by == user_id,
-        )
-        base = FoodItem.not_deleted(base)
-
-        count_stmt = select(func.count()).select_from(base.subquery())
-        total = (await self.db.execute(count_stmt)).scalar_one()
-
-        items_stmt = (
-            base.order_by(FoodItem.created_at.desc())
-            .offset(pagination.offset)
-            .limit(pagination.limit)
-        )
-        result = await self.db.execute(items_stmt)
-        items = list(result.scalars().all())
-
-        return PaginatedResult(
-            items=items,
-            total_count=total,
-            page=pagination.page,
-            limit=pagination.limit,
-        )
+        return await self._recipes.list_user_recipes(user_id, pagination)
 
     async def update_recipe(
         self,
@@ -734,87 +132,7 @@ class FoodDatabaseService:
         Recomputes nutrition if ingredients or total_servings change.
         Only the recipe owner can update.
         """
-        stmt = select(FoodItem).where(
-            FoodItem.id == recipe_id,
-            FoodItem.is_recipe.is_(True),
-        )
-        stmt = FoodItem.not_deleted(stmt)
-        result = await self.db.execute(stmt)
-        recipe = result.scalar_one_or_none()
-        if recipe is None:
-            raise NotFoundError("Recipe not found")
-
-        if recipe.created_by != user_id:
-            raise ForbiddenError("Only the recipe owner can update this recipe")
-
-        if name is not None:
-            recipe.name = name
-        if description is not None:
-            recipe.description = description
-        if total_servings is not None:
-            recipe.total_servings = total_servings
-
-        # Replace ingredients if provided
-        if ingredients is not None:
-            # Delete existing ingredients
-            existing_stmt = select(RecipeIngredient).where(
-                RecipeIngredient.recipe_id == recipe_id
-            )
-            existing_result = await self.db.execute(existing_stmt)
-            for old_ing in existing_result.scalars().all():
-                await self.db.delete(old_ing)
-            await self.db.flush()
-
-            # Create new ingredient rows
-            # Audit fix 4.1 — batch fetch to fix N+1
-            all_food_ids = [ing.food_item_id for ing in ingredients]
-            batch_stmt = select(FoodItem).where(FoodItem.id.in_(all_food_ids))
-            batch_stmt = FoodItem.not_deleted(batch_stmt)
-            batch_result = await self.db.execute(batch_stmt)
-            food_lookup = {f.id: f for f in batch_result.scalars().all()}
-
-            for ing in ingredients:
-                if ing.food_item_id == recipe_id:
-                    raise ValidationError("A recipe cannot contain itself as an ingredient")
-
-                # Check for circular references recursively
-                if await self._has_circular_reference(recipe_id, ing.food_item_id):
-                    raise ValidationError("Adding this ingredient would create a circular reference")
-
-                food = food_lookup.get(ing.food_item_id)
-                if food is None:
-                    raise NotFoundError(f"Ingredient food item {ing.food_item_id} not found")
-
-                row = RecipeIngredient(
-                    recipe_id=recipe_id,
-                    food_item_id=ing.food_item_id,
-                    quantity=ing.quantity,
-                    unit=ing.unit,
-                )
-                self.db.add(row)
-
-            await self.db.flush()
-
-        # Recompute nutrition if ingredients or servings changed
-        if ingredients is not None or total_servings is not None:
-            reload_stmt = (
-                select(RecipeIngredient)
-                .where(RecipeIngredient.recipe_id == recipe_id)
-                .options(selectinload(RecipeIngredient.food_item))
-            )
-            reload_result = await self.db.execute(reload_stmt)
-            loaded_ingredients = list(reload_result.scalars().all())
-
-            nutrition = aggregate_recipe_nutrition(loaded_ingredients)
-            servings = recipe.total_servings or 1.0
-            recipe.calories = nutrition.total_calories / servings
-            recipe.protein_g = nutrition.total_protein_g / servings
-            recipe.carbs_g = nutrition.total_carbs_g / servings
-            recipe.fat_g = nutrition.total_fat_g / servings
-
-        await self.db.flush()
-        await self.db.refresh(recipe)
-        return recipe
+        return await self._recipes.update_recipe(user_id, recipe_id, name, description, total_servings, ingredients)
 
     async def delete_recipe(
         self,
@@ -822,23 +140,7 @@ class FoodDatabaseService:
         recipe_id: uuid.UUID,
     ) -> None:
         """Soft-delete a recipe. Only the owner can delete."""
-        from datetime import datetime, timezone
-
-        stmt = select(FoodItem).where(
-            FoodItem.id == recipe_id,
-            FoodItem.is_recipe.is_(True),
-        )
-        stmt = FoodItem.not_deleted(stmt)
-        result = await self.db.execute(stmt)
-        recipe = result.scalar_one_or_none()
-        if recipe is None:
-            raise NotFoundError("Recipe not found")
-
-        if recipe.created_by != user_id:
-            raise ForbiddenError("Only the recipe owner can delete this recipe")
-
-        recipe.deleted_at = datetime.now(timezone.utc)
-        await self.db.flush()
+        return await self._recipes.delete_recipe(user_id, recipe_id)
 
     # ------------------------------------------------------------------
     # Recipe with nutritional aggregation
@@ -851,44 +153,7 @@ class FoodDatabaseService:
         nutritional values by (quantity / serving_size), then sum across
         all ingredients (Requirement 5.3).
         """
-        # Fetch the recipe food item
-        stmt = (
-            select(FoodItem)
-            .where(FoodItem.id == recipe_id, FoodItem.is_recipe.is_(True))
-            .options(selectinload(FoodItem.ingredients).selectinload(RecipeIngredient.food_item))
-        )
-        stmt = FoodItem.not_deleted(stmt)
-        result = await self.db.execute(stmt)
-        recipe = result.scalar_one_or_none()
-        if recipe is None:
-            raise NotFoundError("Recipe not found")
-
-        # INVARIANT: System/seeded recipes have created_by=None and are accessible to all users.
-        # User-created recipes have created_by set and are only visible to their creator.
-        # If seeding logic ever sets created_by, those recipes become invisible to other users.
-        if recipe.created_by is not None and user_id is not None and recipe.created_by != user_id:
-            raise NotFoundError("Recipe not found")
-
-        # Aggregate nutrition from ingredients
-        nutrition = aggregate_recipe_nutrition(recipe.ingredients)
-
-        ingredient_responses = [
-            RecipeIngredientResponse(
-                id=ing.id,
-                recipe_id=ing.recipe_id,
-                food_item_id=ing.food_item_id,
-                quantity=ing.quantity,
-                unit=ing.unit,
-                food_item=FoodItemResponse.model_validate(ing.food_item) if ing.food_item and ing.food_item.deleted_at is None else None,
-            )
-            for ing in recipe.ingredients
-        ]
-
-        return RecipeDetailResponse(
-            recipe=FoodItemResponse.model_validate(recipe),
-            ingredients=ingredient_responses,
-            nutrition=nutrition,
-        )
+        return await self._recipes.get_recipe(recipe_id, user_id)
 
     # ------------------------------------------------------------------
     # Admin CRUD
@@ -929,95 +194,3 @@ class FoodDatabaseService:
         await self.db.flush()
         await self.db.refresh(item)
         return item
-
-
-# ---------------------------------------------------------------------------
-# Unit conversion helpers
-# ---------------------------------------------------------------------------
-
-_GRAM_CONVERSIONS: dict[str, float] = {
-    "g": 1.0,
-    "kg": 1000.0,
-    "oz": 28.3495,
-    "lb": 453.592,
-}
-
-_ML_CONVERSIONS: dict[str, float] = {
-    "ml": 1.0,
-    "l": 1000.0,
-    "cup": 240.0,
-    "tbsp": 15.0,
-    "tsp": 5.0,
-    "fl_oz": 29.5735,
-}
-
-
-_DIMENSIONLESS_UNITS: set[str] = {"piece", "serving", "whole", "unit", "each"}
-
-
-def _convert_unit(quantity: float, from_unit: str, to_unit: str) -> float:
-    """Convert quantity between compatible units. Returns quantity unchanged if units match or are incompatible."""
-    fu = from_unit.lower().strip()
-    tu = to_unit.lower().strip()
-    if fu == tu:
-        return quantity
-    # Dimensionless units — treat as 1:1 with each other
-    if fu in _DIMENSIONLESS_UNITS and tu in _DIMENSIONLESS_UNITS:
-        return quantity
-    # Mass conversions
-    if fu in _GRAM_CONVERSIONS and tu in _GRAM_CONVERSIONS:
-        return quantity * _GRAM_CONVERSIONS[fu] / _GRAM_CONVERSIONS[tu]
-    # Volume conversions
-    if fu in _ML_CONVERSIONS and tu in _ML_CONVERSIONS:
-        return quantity * _ML_CONVERSIONS[fu] / _ML_CONVERSIONS[tu]
-    # Incompatible units — return as-is (best effort)
-    return quantity
-
-
-# ---------------------------------------------------------------------------
-# Pure function: recipe nutritional aggregation
-# ---------------------------------------------------------------------------
-
-
-def aggregate_recipe_nutrition(
-    ingredients: list[RecipeIngredient],
-) -> RecipeNutrition:
-    """Compute total nutritional values for a recipe from its ingredients.
-
-    For each ingredient, scale its per-serving nutritional values by
-    (quantity_in_serving_unit / serving_size), then sum across all ingredients.
-
-    This is a pure function with no side effects.
-    """
-    total_calories = 0.0
-    total_protein = 0.0
-    total_carbs = 0.0
-    total_fat = 0.0
-    total_micros: dict[str, float] = {}
-
-    for ing in ingredients:
-        food = ing.food_item
-        if food is None:
-            continue
-
-        quantity = _convert_unit(ing.quantity, ing.unit, food.serving_unit)
-        scale = quantity / food.serving_size if food.serving_size > 0 else 0.0
-
-        total_calories += food.calories * scale
-        total_protein += food.protein_g * scale
-        total_carbs += food.carbs_g * scale
-        total_fat += food.fat_g * scale
-
-        # Aggregate micro-nutrients
-        if food.micro_nutrients:
-            for key, value in food.micro_nutrients.items():
-                if isinstance(value, (int, float)):
-                    total_micros[key] = total_micros.get(key, 0.0) + value * scale
-
-    return RecipeNutrition(
-        total_calories=total_calories,
-        total_protein_g=total_protein,
-        total_carbs_g=total_carbs,
-        total_fat_g=total_fat,
-        total_micro_nutrients=total_micros,
-    )

@@ -333,12 +333,20 @@ class AuthService:
         """Generate a 6-digit OTP for password reset and send via email.
 
         Does nothing if no user exists (caller should still return generic message).
+        Returns early for OAuth-only users who have no password set (5.7).
         """
         email = _normalize_email(email)
         user = await self._get_user_by_email(email)
         if user is None:
             # Dummy bcrypt to normalize timing (prevent user enumeration)
             bcrypt.hashpw(b"dummy", bcrypt.gensalt())
+            return
+
+        # 5.7: OAuth users without a password cannot reset — send helpful email instead
+        if user.hashed_password is None:
+            from src.services.email_service import EmailService
+            provider = user.auth_provider or "OAuth"
+            EmailService().send_oauth_password_reset_notice(email, provider)
             return
 
         from src.services.email_service import EmailService, generate_otp

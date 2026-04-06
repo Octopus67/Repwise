@@ -20,7 +20,7 @@ class ExportRequest(Base):
     )
     format: Mapped[str] = mapped_column(String(10), nullable=False)  # json, csv, pdf
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="pending"
+        String(20), nullable=False, default="pending", index=True
     )  # pending, processing, completed, failed
     download_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     file_size_bytes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)

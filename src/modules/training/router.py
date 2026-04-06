@@ -59,6 +59,7 @@ async def list_muscle_groups() -> List[str]:
 @router.get("/exercises/search")
 async def search_exercises_endpoint(
     request: Request,  # Audit fix 10.4 — IP-based rate limit: 60 req/min
+    response: Response,
     q: str = Query(default="", max_length=200),
     muscle_group: Optional[str] = Query(default=None, max_length=100),
     equipment: Optional[str] = Query(default=None, max_length=100),
@@ -66,6 +67,7 @@ async def search_exercises_endpoint(
 ) -> List[dict]:
     """Search exercises by name with optional muscle group, equipment, and category filters."""
     check_ip_endpoint_rate_limit(get_client_ip(request), "exercise_search", 60, 60)  # Audit fix 10.4
+    response.headers["Cache-Control"] = "public, max-age=300"
     return search_exercises(query=q, muscle_group=muscle_group, equipment=equipment, category=category)
 
 

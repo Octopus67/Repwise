@@ -62,13 +62,28 @@ async def require_premium(
     if subscription is None or subscription.status not in (
         SubscriptionStatus.ACTIVE,
         SubscriptionStatus.PAST_DUE,
+        SubscriptionStatus.TRIALING,
+        SubscriptionStatus.CANCELLED,
     ):
         raise PremiumRequiredError("Active subscription required")
 
-    # Check expiry date (applies to both trial and paid)
-    if subscription.current_period_end:
-        from datetime import datetime, timezone
-        if datetime.now(timezone.utc) > subscription.current_period_end:
+    from datetime import datetime, timezone
+
+    now = datetime.now(timezone.utc)
+
+    # 5.1: Trial expiry — if trialing and current_period_end has passed, deny access
+    if subscription.status == SubscriptionStatus.TRIALING:
+        if subscription.current_period_end and now > subscription.current_period_end:
+            raise PremiumRequiredError("Trial has expired")
+
+    # 5.2: Cancelled but still within paid period — grant access until period ends
+    if subscription.status == SubscriptionStatus.CANCELLED:
+        if not subscription.current_period_end or now > subscription.current_period_end:
+            raise PremiumRequiredError("Subscription has expired")
+
+    # Check expiry date for active/past_due subscriptions
+    if subscription.status in (SubscriptionStatus.ACTIVE, SubscriptionStatus.PAST_DUE):
+        if subscription.current_period_end and now > subscription.current_period_end:
             raise PremiumRequiredError("Subscription has expired")
 
     return user

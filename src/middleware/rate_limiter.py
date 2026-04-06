@@ -184,12 +184,46 @@ def reset_attempts(email: str) -> None:
     _redis_clear("login", email)
 
 
+def _get_lockout_failure_count(email: str) -> int:
+    """Return the number of lockout entries for the email in the last 24h."""
+    r = get_redis()
+    if r is None:
+        key = f"rl:lockout:{email}"
+        now = time.time()
+        with _mem_lock:
+            entries = _mem_store.get(key, [])
+            return len([t for t in entries if t > now - 86400])
+    try:
+        redis_key = f"rl:lockout:{email}"
+        now = time.time()
+        pipe = r.pipeline()
+        pipe.zremrangebyscore(redis_key, 0, now - 86400)
+        pipe.zcard(redis_key)
+        results = pipe.execute()
+        return results[1]
+    except (redis.exceptions.RedisError, ConnectionError, TimeoutError):
+        return 0
+
+
+# Exponential backoff thresholds: (failure_count, cooldown_seconds)
+_LOCKOUT_TIERS = [
+    (10, 3600),   # 10+ failures → 1 hour
+    (8, 900),     # 8+ failures → 15 min
+    (5, 300),     # 5+ failures → 5 min
+    (3, 60),      # 3+ failures → 1 min
+]
+
+
 def check_lockout(email: str) -> None:
-    """Block login if the account has hit rate limits too many times (escalating lockout)."""
-    _redis_sliding_window_check(
-        "lockout", email, 3, 86400,
-        "Account temporarily locked due to repeated failed attempts. Try again later.",
-    )
+    """Block login with exponential backoff based on consecutive failure count."""
+    failures = _get_lockout_failure_count(email)
+    for threshold, cooldown in _LOCKOUT_TIERS:
+        if failures >= threshold:
+            _redis_sliding_window_check(
+                "lockout", email, threshold, cooldown,
+                f"Account temporarily locked ({cooldown // 60}min cooldown). Try again later.",
+            )
+            return
 
 
 def check_login_ip_rate_limit(ip: str) -> None:

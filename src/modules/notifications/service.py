@@ -74,7 +74,7 @@ class NotificationService:
         await self.session.execute(stmt)
         await self.session.flush()
 
-        # Re-fetch the row
+        # Re-fetch the row to get upserted values
         fetch_stmt = select(DeviceToken).where(DeviceToken.token == data.token)
         result = await self.session.execute(fetch_stmt)
         return result.scalar_one()

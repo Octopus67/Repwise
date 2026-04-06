@@ -112,6 +112,17 @@ class Settings(BaseSettings):
             )
         return v
 
+    @field_validator("USDA_API_KEY")
+    @classmethod
+    def validate_usda_api_key(cls, v: str, info: ValidationInfo) -> str:
+        import logging as _logging
+        env = info.data.get("ENVIRONMENT", "production")
+        if env == "production" and v == "DEMO_KEY":
+            _logging.getLogger(__name__).warning(
+                "USDA_API_KEY is DEMO_KEY in production — rate limits will apply"
+            )
+        return v
+
     @field_validator("CORS_ORIGINS")
     @classmethod
     def validate_cors_origins(cls, v: str, info: ValidationInfo) -> str:

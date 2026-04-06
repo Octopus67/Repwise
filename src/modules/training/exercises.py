@@ -12,10 +12,16 @@ from typing import Optional
 
 _DATA_FILE = Path(__file__).resolve().parent / "exercises_data.json"
 
+_CACHED_EXERCISES: list[dict] | None = None
+
 
 def _load_exercises() -> list[dict]:
+    global _CACHED_EXERCISES
+    if _CACHED_EXERCISES is not None:
+        return _CACHED_EXERCISES
     with open(_DATA_FILE) as f:
-        return json.load(f)
+        _CACHED_EXERCISES = json.load(f)
+    return _CACHED_EXERCISES
 
 
 try:

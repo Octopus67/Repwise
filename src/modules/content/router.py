@@ -5,7 +5,7 @@ from typing import Optional
 
 import uuid
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
@@ -45,6 +45,7 @@ def _article_to_response(article: object) -> ArticleResponse:
 
 @router.get("/articles", response_model=PaginatedResult[ArticleResponse])
 async def get_articles(
+    response: Response,
     user: User = Depends(get_current_user),
     service: ContentService = Depends(_get_service),
     module_id: Optional[uuid.UUID] = Query(default=None),
@@ -54,6 +55,7 @@ async def get_articles(
     limit: int = Query(default=20, ge=1, le=100),
 ) -> PaginatedResult[ArticleResponse]:
     """List published articles with optional category/tag filters."""
+    response.headers["Cache-Control"] = "public, max-age=300"
     pagination = PaginationParams(page=page, limit=limit)
     result = await service.get_articles(
         pagination=pagination,
