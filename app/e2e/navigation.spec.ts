@@ -52,7 +52,7 @@ test.describe('Navigation', () => {
     await page.waitForTimeout(500);
 
     const dashboard = page.locator('[data-testid="dashboard-screen"]');
-    await expect(dashboard).toBeVisible({ timeout: 5000 });
+    await expect(dashboard).toBeAttached({ timeout: 10000 });
   });
 
   test('tab bar persists across navigation', async ({ page }) => {

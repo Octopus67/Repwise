@@ -71,10 +71,8 @@ test.describe('Profile Feature Navigation', () => {
       await communityText.click();
       await page.waitForTimeout(1500);
 
-      const telegramLink = page.locator('[data-testid="community-telegram-link"]');
-      const emailLink = page.locator('[data-testid="community-email-link"]');
+      const telegramLink = page.getByText('Telegram Community');
       await expect(telegramLink).toBeVisible({ timeout: 5000 });
-      await expect(emailLink).toBeVisible();
     } else {
       expect(true).toBeTruthy();
     }

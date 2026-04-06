@@ -7,12 +7,11 @@ test.describe('Learn Screen', () => {
     await navigateToTab(page, 'Profile');
     await page.waitForTimeout(500);
 
-    // Navigate to Learn from Profile
-    const learnLink = page.locator('[data-testid="profile-learn-link"]');
     const profileScreen = page.locator('[data-testid="profile-screen"]');
     await profileScreen.evaluate((el) => el.scrollTo(0, el.scrollHeight / 2));
     await page.waitForTimeout(500);
 
+    const learnLink = page.locator('[data-testid="profile-learn-link"]');
     if (await learnLink.isVisible({ timeout: 3000 }).catch(() => false)) {
       await learnLink.click();
       await page.waitForTimeout(1500);
@@ -24,29 +23,28 @@ test.describe('Learn Screen', () => {
     await expect(learnScreen).toBeVisible({ timeout: 10000 });
   });
 
-  test('shows filter pills', async ({ page }) => {
-    const filterPills = page.locator('[data-testid="learn-filter-pills"]');
-    await expect(filterPills).toBeVisible({ timeout: 10000 });
+  test('shows category filters', async ({ page }) => {
+    // Categories: All, Favorites, Hypertrophy, Nutrition, etc.
+    const allCategory = page.getByText('All', { exact: true }).first();
+    await expect(allCategory).toBeVisible({ timeout: 10000 });
   });
 
   test('shows article list or empty state', async ({ page }) => {
     const articleList = page.locator('[data-testid="learn-article-list"]');
-    await expect(articleList).toBeVisible({ timeout: 10000 });
+    const emptyState = page.locator('[data-testid="learn-empty-state"]');
+    const hasArticles = await articleList.isVisible({ timeout: 5000 }).catch(() => false);
+    const hasEmpty = await emptyState.isVisible({ timeout: 3000 }).catch(() => false);
+    expect(hasArticles || hasEmpty).toBeTruthy();
   });
 
-  test('can interact with filter pills', async ({ page }) => {
-    const filterPills = page.locator('[data-testid="learn-filter-pills"]');
-    await expect(filterPills).toBeVisible({ timeout: 10000 });
-
-    // Try clicking a filter pill (e.g., "Training")
-    const trainingPill = page.getByText('Training').first();
-    if (await trainingPill.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await trainingPill.click();
+  test('can filter by category', async ({ page }) => {
+    const nutritionPill = page.getByText('Nutrition', { exact: true }).first();
+    if (await nutritionPill.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await nutritionPill.click();
       await page.waitForTimeout(1000);
     }
-
-    // Page should still be functional
-    const body = await page.locator('body').textContent();
-    expect(body).toBeTruthy();
+    // Screen should still be functional
+    const learnScreen = page.locator('[data-testid="learn-screen"]');
+    await expect(learnScreen).toBeVisible({ timeout: 5000 });
   });
 });
