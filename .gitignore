@@ -64,3 +64,4 @@ dev.db.bak
 .kiro/REPWISE-DEV-AGENT-MASTER-PLAN.md
 .kiro/YOLO-REPWISE-DEV-GUIDE.md
 uv.lock
+*.log

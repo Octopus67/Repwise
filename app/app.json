@@ -63,6 +63,7 @@
         }
       ],
       "expo-apple-authentication",
+      "lottie-react-native"
     ],
     "scheme": "repwise",
     "extra": {

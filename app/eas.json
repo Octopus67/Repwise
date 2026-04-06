@@ -10,8 +10,8 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://hypertrophyos-production.up.railway.app",
-        "EXPO_PUBLIC_POSTHOG_KEY": "phc_v6tVok9EaERgQ9NKJJATGgsfvM2Ea78GFfs8jA6kaRaw",
-        "EXPO_PUBLIC_SENTRY_DSN": "https://1fc3a257081e1053ffaeacb4edf3be86@o4510946415607808.ingest.us.sentry.io/4511163459960832",
+        "EXPO_PUBLIC_POSTHOG_KEY": "$EXPO_PUBLIC_POSTHOG_KEY",
+        "EXPO_PUBLIC_SENTRY_DSN": "$EXPO_PUBLIC_SENTRY_DSN",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
@@ -19,8 +19,8 @@
       "distribution": "store",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.repwise.app",
-        "EXPO_PUBLIC_POSTHOG_KEY": "phc_v6tVok9EaERgQ9NKJJATGgsfvM2Ea78GFfs8jA6kaRaw",
-        "EXPO_PUBLIC_SENTRY_DSN": "https://1fc3a257081e1053ffaeacb4edf3be86@o4510946415607808.ingest.us.sentry.io/4511163459960832",
+        "EXPO_PUBLIC_POSTHOG_KEY": "$EXPO_PUBLIC_POSTHOG_KEY",
+        "EXPO_PUBLIC_SENTRY_DSN": "$EXPO_PUBLIC_SENTRY_DSN",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     }
