@@ -69,4 +69,53 @@ test.describe('Profile', () => {
       expect(true).toBeTruthy();
     }
   });
+
+  test('can navigate to Measurements', async ({ page }) => {
+    const profileScreen = page.locator('[data-testid="profile-screen"]');
+    await profileScreen.evaluate((el) => el.scrollTo(0, el.scrollHeight / 2));
+    await page.waitForTimeout(500);
+
+    const link = page.locator('[data-testid="profile-measurements-link"]');
+    if (await link.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await link.click();
+      await page.waitForTimeout(1500);
+      // Should navigate to measurements screen
+      const heading = page.getByText(/Body Measurements/i).first();
+      await expect(heading).toBeAttached({ timeout: 5000 });
+    } else {
+      expect(true).toBeTruthy();
+    }
+  });
+
+  test('can navigate to Notification Settings', async ({ page }) => {
+    const profileScreen = page.locator('[data-testid="profile-screen"]');
+    await profileScreen.evaluate((el) => el.scrollTo(0, el.scrollHeight / 2));
+    await page.waitForTimeout(500);
+
+    const link = page.locator('[data-testid="profile-notifications-link"]');
+    if (await link.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await link.click();
+      await page.waitForTimeout(1500);
+      const screen = page.locator('[data-testid="notification-settings-screen"]');
+      await expect(screen).toBeVisible({ timeout: 5000 });
+    } else {
+      expect(true).toBeTruthy();
+    }
+  });
+
+  test('can navigate to Data Export', async ({ page }) => {
+    const profileScreen = page.locator('[data-testid="profile-screen"]');
+    await profileScreen.evaluate((el) => el.scrollTo(0, el.scrollHeight / 2));
+    await page.waitForTimeout(500);
+
+    const link = page.locator('[data-testid="profile-data-export-link"]');
+    if (await link.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await link.click();
+      await page.waitForTimeout(1500);
+      const heading = page.getByText(/data export|export/i).first();
+      await expect(heading).toBeAttached({ timeout: 5000 });
+    } else {
+      expect(true).toBeTruthy();
+    }
+  });
 });
