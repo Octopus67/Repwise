@@ -1,0 +1,60 @@
+#!/bin/bash
+# Pre-push hook — runs test suite before allowing git push.
+# Install: cp scripts/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+# Skip:    git push --no-verify
+
+set -e
+
+DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$DIR"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo -e "${YELLOW}🧪 Pre-push checks starting...${NC}"
+START=$(date +%s)
+
+# 1. Backend E2E flow tests
+echo -e "\n${YELLOW}→ Backend E2E flow tests...${NC}"
+.venv/bin/pytest tests/e2e/ -x -q --tb=line 2>&1 | tail -5
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
+  echo -e "${RED}✗ Backend E2E tests failed${NC}"
+  exit 1
+fi
+echo -e "${GREEN}✓ Backend E2E tests passed${NC}"
+
+# 2. Frontend type check
+echo -e "\n${YELLOW}→ Frontend type check...${NC}"
+cd app
+npx tsc --noEmit 2>&1 | tail -3
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
+  echo -e "${RED}✗ TypeScript type check failed${NC}"
+  exit 1
+fi
+echo -e "${GREEN}✓ Type check passed${NC}"
+
+# 3. Frontend unit tests
+echo -e "\n${YELLOW}→ Frontend unit tests...${NC}"
+npx jest --passWithNoTests --no-coverage --silent 2>&1 | tail -3
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
+  echo -e "${RED}✗ Frontend tests failed${NC}"
+  exit 1
+fi
+echo -e "${GREEN}✓ Frontend tests passed${NC}"
+
+# 4. Playwright E2E smoke tests (auto-starts servers if needed)
+echo -e "\n${YELLOW}→ Playwright E2E smoke tests...${NC}"
+npx playwright test smoke.spec.ts auth.spec.ts dashboard.spec.ts navigation.spec.ts 2>&1 | tail -10
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
+  echo -e "${RED}✗ Playwright E2E tests failed${NC}"
+  exit 1
+fi
+echo -e "${GREEN}✓ Playwright E2E tests passed${NC}"
+
+cd "$DIR"
+END=$(date +%s)
+ELAPSED=$((END - START))
+
+echo -e "\n${GREEN}✅ All pre-push checks passed (${ELAPSED}s)${NC}"

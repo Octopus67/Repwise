@@ -2,10 +2,11 @@
 
 Usage: .venv/bin/python scripts/monitor_db_indexes.py
 """
+import os
 import asyncio
 import asyncpg
 
-NEON_POOLER = "postgresql://neondb_owner:npg_yVzuCrjh7TL4@ep-steep-bonus-ai7arlzn-pooler.c-4.us-east-1.aws.neon.tech/neondb?ssl=require"
+NEON_POOLER = os.environ["DATABASE_URL"]  # Never hardcode credentials
 
 
 async def main():

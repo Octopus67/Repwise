@@ -1338,3 +1338,105 @@ Already captured in Amendment F. Confirmed in this pass.
 | F11 (DNS) | Phase 1 | 1.9 (infrastructure) |
 | F12 (IntegrityError handler) | Phase 3 | 3.8 |
 | F13 (startup DB check) | Phase 3 | 3.9 |
+
+
+---
+
+## UI AUDIT ADDENDUM (60 findings)
+
+Full report: `docs/UI_AUDIT_REPORT.md`
+
+### Launch-Blocking UI Bugs (add to Phase 1)
+
+| Task | Finding | Fix |
+|------|---------|-----|
+| 1.10 | **RegisterScreen missing `useMemo` import — CRASH** | Add `useMemo` to the React import line |
+| 1.11 | **Skeleton conditional hooks violation — CRASH RISK** | Move `useSharedValue`/`useEffect` before the early return, or restructure |
+| 1.12 | **Swipe-to-delete no confirmation** | Add `Alert.alert("Delete?", ..., [{text:"Cancel"}, {text:"Delete", style:"destructive", onPress: delete}])` |
+| 1.13 | **ModalContainer no safe area** | Add `useSafeAreaInsets()` and apply `paddingBottom: insets.bottom` |
+| 1.14 | **Logout no confirmation** | Add `Alert.alert("Log Out?", ..., [{text:"Cancel"}, {text:"Log Out", onPress: handleLogout}])` |
+| 1.15 | **Login double-submit** | Add explicit `disabled={loading}` prop to submit Button |
+
+### Post-Launch UI Fixes (add to Phase 4)
+
+| Task | Finding | Fix |
+|------|---------|-----|
+| 4.19 | Future date guard on Logs date nav | Disable right arrow when `selectedDate === today` |
+| 4.20 | Analytics pull-to-refresh | Add `RefreshControl` to Analytics ScrollView |
+| 4.21 | QuickActionButton a11y props | Destructure and apply `accessibilityLabel`/`accessibilityRole` in component |
+| 4.22 | GoalStep warning vs blocker | Change `disabled` to allow proceeding with warning shown |
+| 4.23 | Training card unit system | Use `formatWeight(weight_kg, unitSystem)` instead of hardcoded kg |
+| 4.24 | TrendLineChart rotation | Replace `Dimensions.get` with `useWindowDimensions()` |
+| 4.25 | Upgrade/Trial modals close button | Add X button in top-right corner |
+| 4.26 | Upgrade/Trial modals backdrop dismiss | Add `onRequestClose` + backdrop `TouchableWithoutFeedback` |
+| 4.27 | New user welcome state on Dashboard | Add conditional card when all data arrays are empty |
+| 4.28 | Inline errors in modals | Replace `Alert.alert` with `ErrorBanner` inside modal content |
+| 4.29 | AddBodyweightModal keyboard avoidance | Wrap in `KeyboardAvoidingView` |
+| 4.30 | SummaryStep hardcoded colors | Replace `#4CAF50` etc. with `c.macro.protein`, `c.macro.carbs`, `c.macro.fat` |
+
+### Polish Phase (add to Phase 6)
+
+| Task | Finding | Fix |
+|------|---------|-----|
+| 6.20 | Tab sliding indicator animation | Add Reanimated sliding underline to Logs/Analytics tabs |
+| 6.21 | Success animations | Add checkmark/confetti on email verify, password reset, onboarding complete |
+| 6.22 | Onboarding a11y labels | Add `accessibilityLabel` to all interactive elements in 5 onboarding steps |
+| 6.23 | Auto-focus on auth screens | Add `autoFocus` to first TextInput on Login, Register, ForgotPassword |
+| 6.24 | Keyboard dismiss in onboarding | Wrap OnboardingWizard content in `TouchableWithoutFeedback onPress={Keyboard.dismiss}` |
+| 6.25 | QuickAddModal implementation | Either implement or remove from codebase (currently a stub) |
+| 6.26 | Pull-to-refresh consistency | Add RefreshControl to Leaderboard, Profile, Measurements screens |
+| 6.27 | Social reaction haptic + animation | Add `impact('light')` + scale animation on reaction press |
+| 6.28 | Scroll-to-top on tab tap | Add `scrollToTop` behavior on tab bar press |
+
+### Updated Total Finding Count
+
+| Category | Previous | UI Audit | New Total |
+|----------|----------|----------|-----------|
+| CRITICAL (code) | 8 | 0 | 8 |
+| HIGH (code) | 15 | 0 | 15 |
+| MEDIUM (code) | 33 | 0 | 33 |
+| LOW (code) | 16 | 0 | 16 |
+| BLOCKING (infra) | 3 | 0 | 3 |
+| BUG (UI) | 0 | 14 | 14 |
+| UX (UI) | 0 | 28 | 28 |
+| POLISH (UI) | 0 | 18 | 18 |
+| **GRAND TOTAL** | **75** | **60** | **135** |
+
+
+---
+
+## CORRECTIONS (User Review Feedback)
+
+### False Positives Removed
+
+| Finding | Reason | Action |
+|---------|--------|--------|
+| H3 / Task 1.5 (webhook timing attack) | **FALSE POSITIVE.** `revenuecat_provider.py:81` already uses `hmac.compare_digest()`. Audit said "may use ==" — it doesn't. | Removed from plan. No work needed. |
+| C1 severity as "launch blocker" for PostHog/Sentry keys | PostHog public SDK keys and Sentry DSNs are **designed to be client-visible**. Not secrets. | Downgraded. Only NEON_API_KEY and SENTRY_AUTH_TOKEN are real secret leaks. |
+| F9 (6 Railway env vars are placeholders) | Infrastructure checklist item, not an audit finding. | Moved to launch checklist, removed from fix plan. |
+| F10 (Redis not configured) | In-memory rate limiting is fine with 1-2 workers at launch scale. | Removed as finding. Documented as future scaling item. |
+
+### Real Issues Missed by Audit
+
+| Finding | Severity | Details | Status |
+|---------|----------|---------|--------|
+| **scripts/*.py has hardcoded Neon production credentials** | 🔴 CRITICAL | 6 script files had full `postgresql://neondb_owner:npg_...` connection strings hardcoded. More dangerous than .env.example — these are direct DB access credentials in committed code. | **FIXED** — replaced with `os.environ["DATABASE_URL"]`, added `import os` to all 6 files. |
+| **B1 (RegisterScreen useMemo) is CRITICAL, not BUG** | 🔴 CRITICAL | Missing import = guaranteed crash on registration screen. Users literally cannot sign up. | **FIXED** — added `useMemo` to import. |
+| **B10 (Skeleton hooks) is CRITICAL, not BUG** | 🔴 CRITICAL | Hooks called after early return = crash on any screen showing loading state (every screen). | **FIXED** — moved hooks before conditional return. |
+
+### Fixes Applied in This Session
+
+| File | Change |
+|------|--------|
+| `app/screens/auth/RegisterScreen.tsx:1` | Added `useMemo` to React import |
+| `app/components/common/Skeleton.tsx` | Restructured to call all hooks before conditional return |
+| `scripts/monitor_db_indexes.py` | Replaced hardcoded Neon URL with `os.environ["DATABASE_URL"]` |
+| `scripts/phase1_fk_cascade.py` | Same |
+| `scripts/phase2_timestamps.py` | Same |
+| `scripts/phase3_gin_indexes.py` | Same |
+| `scripts/phase4_checks.py` | Same |
+| `scripts/verify_all_phases.py` | Same |
+
+### Neon Credential Rotation Still Needed
+
+The hardcoded credentials are removed from HEAD but remain in git history. The Neon database password `npg_yVzuCrjh7TL4` should be rotated via Neon dashboard → Project Settings → Reset password. Then update the `DATABASE_URL` in Railway env vars.

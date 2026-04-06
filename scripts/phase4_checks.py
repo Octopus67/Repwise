@@ -1,8 +1,9 @@
 """Phase 4: Add CHECK constraints, verify column counts, create monitoring."""
+import os
 import asyncio
 import asyncpg
 
-NEON_DIRECT = "postgresql://neondb_owner:npg_yVzuCrjh7TL4@ep-steep-bonus-ai7arlzn.c-4.us-east-1.aws.neon.tech/neondb?ssl=require"
+NEON_DIRECT = os.environ["DATABASE_URL"]  # Never hardcode credentials
 
 CHECKS = [
     ("ck_nutrition_calories_positive", "nutrition_entries", "calories >= 0"),
