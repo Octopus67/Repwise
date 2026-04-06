@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { getThemeColors, ThemeColors, useThemeColors} from '../../hooks/useThemeColors';
@@ -59,7 +60,9 @@ export function EmailVerificationScreen({ email, onVerified, onBack }: EmailVeri
     verifyLimiter.recordAttempt();
     try {
       await api.post('auth/verify-email', { code: verificationCode });
-      onVerified();
+      Alert.alert('Email Verified! ✅', 'Your email has been verified successfully.', [
+        { text: 'Continue', onPress: onVerified },
+      ]);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Invalid verification code';
       setError(msg);
