@@ -1,9 +1,11 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { AppState } from 'react-native';
 import { useStore } from '../store';
 import { useFeatureFlag } from './useFeatureFlag';
 import { useDailyTargets } from './useDailyTargets';
 import { useHaptics } from './useHaptics';
 import { useDashboardQueries } from './queries/useDashboardQueries';
+import { getLocalDateString } from '../utils/localDate';
 import type { TrainingSessionResponse } from '../types/training';
 import type { RecoveryFactor } from '../types/common';
 
@@ -129,6 +131,19 @@ export function useDashboardData() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [dateLoading, setDateLoading] = useState(false);
+
+  // Reset selectedDate when app resumes and the calendar date has changed
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        const today = getLocalDateString();
+        if (selectedDate !== today) {
+          setSelectedDate(today);
+        }
+      }
+    });
+    return () => sub.remove();
+  }, [selectedDate, setSelectedDate]);
 
   const dateDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

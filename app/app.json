@@ -21,7 +21,8 @@
         "NSPhotoLibraryUsageDescription": "Repwise needs photo library access to select progress photos.",
         "NSPhotoLibraryAddUsageDescription": "Repwise needs permission to save workout share cards to your photo library.",
         "ITSAppUsesNonExemptEncryption": false,
-        "NSUserNotificationsUsageDescription": "Repwise sends notifications for workout reminders, personal records, and weekly check-ins."
+        "NSUserNotificationsUsageDescription": "Repwise sends notifications for workout reminders, personal records, and weekly check-ins.",
+        "NSUserTrackingUsageDescription": "Repwise uses this data to improve your experience and provide personalized fitness recommendations."
       }
     },
     "android": {
@@ -49,6 +50,7 @@
       ],
       "expo-secure-store",
       "expo-notifications",
+      "expo-tracking-transparency",
       [
         "expo-media-library",
         {

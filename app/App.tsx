@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -18,6 +19,9 @@ import { ResetPasswordScreen } from './screens/auth/ResetPasswordScreen';
 // import { OnboardingScreen } from './screens/onboarding/OnboardingScreen';
 import { OnboardingWizard } from './screens/onboarding/OnboardingWizard';
 import { initAnalytics } from './services/analytics';
+import { initSentry } from './services/sentry';
+
+initSentry();
 import { registerForPushNotifications, setupNotificationListeners, handleInitialNotification } from './services/notifications';
 import { useStore } from './store';
 import { useActiveWorkoutStore } from './store/activeWorkoutSlice';
@@ -198,7 +202,10 @@ export default function App() {
 
   useEffect(() => {
     initTokenProvider(clearAuth);
-    initAnalytics(process.env.EXPO_PUBLIC_POSTHOG_KEY);
+    // Request App Tracking Transparency before initializing analytics (iOS 14.5+)
+    requestTrackingPermissionsAsync()
+      .then(() => initAnalytics(process.env.EXPO_PUBLIC_POSTHOG_KEY))
+      .catch(() => initAnalytics(process.env.EXPO_PUBLIC_POSTHOG_KEY));
     setupNetworkManager();
     restoreSession();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -342,7 +349,7 @@ export default function App() {
           persistOptions={{ persister: mmkvPersister }}
           onSuccess={() => { queryClient.resumePausedMutations().then(() => {}); }}
         >
-          <NavigationContainer ref={navigationRef} theme={navTheme} linking={linking}>
+          <NavigationContainer ref={navigationRef} theme={navTheme} linking={ready && isAuthenticated ? linking : undefined}>
             <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
             <ErrorBoundary onError={(error, errorInfo) => {
               console.error('[ErrorBoundary:Root]', error.message);
