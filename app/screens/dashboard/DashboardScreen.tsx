@@ -263,7 +263,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
         <Animated.View style={bA}>{!isLoading && <BudgetBar consumed={consumed} targets={targets} />}</Animated.View>
         <Animated.View style={msA}>{!isLoading && <MealSlotDiary entries={data.nutritionEntries} onAddToSlot={nav.handleAddToSlot} />}</Animated.View>
 
-        {!isLoading && !nudgeDismissed && data.nudges.length > 0 && <NudgeCard nudge={data.nudges[0]} onDismiss={async () => { setNudgeDismissed(true); setData((p) => ({ ...p, nudges: [] })); try { await AsyncStorage.setItem('@repwise:nudge_dismissed', Date.now().toString()); } catch (e) { console.error('[Dashboard] Nudge dismiss save failed:', e); } }} onAction={(a) => { if (a === 'recalculate' || a === 'edit_goals') { navigation.getParent()?.navigate('Profile'); } }} />}
+        {!isLoading && !nudgeDismissed && data.nudges.length > 0 && <NudgeCard nudge={data.nudges[0]} onDismiss={async () => { setNudgeDismissed(true); setData(); try { await AsyncStorage.setItem('@repwise:nudge_dismissed', Date.now().toString()); } catch (e) { console.error('[Dashboard] Nudge dismiss save failed:', e); } }} onAction={(a) => { if (a === 'recalculate' || a === 'edit_goals') { navigation.getParent()?.navigate('Profile'); } }} />}
         {showRestDay
           ? <RestDayCard proteinTarget={targets.protein_g} />
           : !isLoading && <TodayWorkoutCard sessions={data.trainingSessions} isWorkoutActive={isWorkoutActive} activeExerciseCount={activeExerciseCount} onPress={nav.handleSessionPress} onResume={nav.handleResumeWorkout} onStartWorkout={nav.handleStartWorkout} />}

@@ -16,7 +16,7 @@ export function GlassCard({ children, style, intensity = 15, tint = 'dark' }: Gl
   const canBlur = BlurView && Platform.OS !== 'web';
   return (
     <View style={[styles.wrapper, !canBlur && styles.fallback, style]}>
-      {canBlur && <BlurView intensity={intensity} tint={tint} style={StyleSheet.absoluteFill} />}
+      {canBlur && BlurView && <BlurView intensity={intensity} tint={tint} style={StyleSheet.absoluteFill} />}
       {children}
     </View>
   );

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Animated, { useAnimatedProps } from 'react-native-reanimated';
+import Animated, { useAnimatedProps, type SharedValue } from 'react-native-reanimated';
 import { typography, spacing, glowShadow, colors } from '../../theme/tokens';
 import { useThemeColors, ThemeColors, getThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../common/Icon';
@@ -63,7 +63,7 @@ export function StreakIndicator({ count, type = 'week' }: StreakIndicatorProps) 
 
 const AnimatedText = Animated.createAnimatedComponent(Text);
 
-function AnimatedCount({ value, type, styles }: { value: Animated.SharedValue<number>; type: string; styles: any }) {
+function AnimatedCount({ value, type, styles }: { value: SharedValue<number>; type: string; styles: any }) {
   const animatedProps = useAnimatedProps(() => ({
     text: `${Math.round(value.value)} ${type} streak`,
   } as any));

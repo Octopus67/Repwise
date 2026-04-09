@@ -139,6 +139,7 @@ export type ProfileStackParamList = {
   PRHistory: undefined;
   YearInReview: undefined;
   ImportData: undefined;
+  MetricsHistory: undefined;
 };
 
 export type BottomTabParamList = {

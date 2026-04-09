@@ -67,11 +67,13 @@ export function FeedScreen() {
       const previous = queryClient.getQueryData(['feed']);
       const optimistic: FeedEvent = {
         id: `temp-${Date.now()}`,
-        content,
-        post_type: 'text',
+        event_type: 'post',
+        summary: content,
         created_at: new Date().toISOString(),
+        reaction_count: 0,
+        user_reacted: false,
         user: { id: user?.id ?? '', display_name: 'You', avatar_url: null },
-      } as FeedEvent;
+      };
       queryClient.setQueryData(['feed'], (old: any) => {
         if (!old?.pages?.length) return old;
         const first = { ...old.pages[0], events: [optimistic, ...old.pages[0].events] };
@@ -176,7 +178,7 @@ export function FeedScreen() {
         }
         ListEmptyComponent={
           <View style={s.center}>
-            <Icon name="users" size={48} color={c.text.muted} />
+            <Icon name="heart" size={48} color={c.text.muted} />
             <Text style={s.emptyTitle}>No activity yet</Text>
             <Text style={s.emptyText}>Follow friends to see their workouts</Text>
           </View>

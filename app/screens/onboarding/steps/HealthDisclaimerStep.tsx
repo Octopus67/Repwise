@@ -39,7 +39,7 @@ export function HealthDisclaimerStep({ onNext, onBack }: Props) {
         Please read before continuing
       </Text>
 
-      <View style={[styles.card, { backgroundColor: c.surface.secondary }]}>
+      <View style={[styles.card, { backgroundColor: c.bg.surface }]}>
         {DISCLAIMER_POINTS.map((point, i) => (
           <View key={i} style={styles.bulletRow}>
             <Text style={[styles.bullet, { color: c.accent.primary }]}>•</Text>

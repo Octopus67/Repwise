@@ -201,7 +201,7 @@ export function MicronutrientDashboardScreen() {
           {/* Top & Worst */}
           <View style={styles.topWorstRow}>
             <View style={[styles.topWorstCol, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
-              <Text style={[styles.sectionTitle, { color: c.text.primary }]}><Icon name="check" size={14} color={c.semantic.success} /> Best</Text>
+              <Text style={[styles.sectionTitle, { color: c.text.primary }]}><Icon name="check" size={14} color={c.semantic.positive} /> Best</Text>
               {data.top_nutrients.map(n => (
                 <Text key={n.key} style={[styles.topWorstItem, { color: c.text.secondary }]}>
                   {n.label}: {n.rda_pct.toFixed(0)}%

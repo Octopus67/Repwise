@@ -27,7 +27,8 @@ export function GradientButton({
   style,
 }: GradientButtonProps) {
   const scale = useSharedValue(1);
-  const resolvedColors = gradientColors ?? [...colors.gradient.premiumCta];
+  // Spread into a new array and assert as tuple — LinearGradient requires at least 2 entries
+  const resolvedColors = (gradientColors ?? [...colors.gradient.premiumCta]) as [string, string, ...string[]];
   const isDisabled = disabled || loading;
 
   const animatedStyle = useAnimatedStyle(() => ({

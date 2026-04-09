@@ -97,7 +97,7 @@ export function WorkoutSummaryModal({
                     </Text>
                     <Text style={styles.muscleStatus}>
                       {statusInfo.emoji === 'alert-triangle' ? <Icon name="alert-triangle" size={14} color={c.semantic.warning} /> :
-                       statusInfo.emoji === 'check' ? <Icon name="check" size={14} color={c.semantic.success} /> :
+                       statusInfo.emoji === 'check' ? <Icon name="check" size={14} color={c.semantic.positive} /> :
                        statusInfo.emoji} {statusInfo.label}
                     </Text>
                   </View>

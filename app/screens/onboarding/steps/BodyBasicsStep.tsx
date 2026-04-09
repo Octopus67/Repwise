@@ -56,7 +56,7 @@ function VerticalPicker({ data, selectedValue, onValueChange }: VerticalPickerPr
 
   // Scroll to selected item on mount
   // Audit fix 10.14 — store timeout ref and clear on unmount
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout>(undefined);
   useEffect(() => {
     const idx = data.findIndex((d) => d.value === selectedValue);
     if (idx >= 0 && scrollRef.current) {

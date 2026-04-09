@@ -19,7 +19,7 @@ const EVENT_ICONS: Record<FeedEvent['event_type'], IconName> = {
   workout_completed: 'dumbbell',
   pr_achieved: 'trophy',
   streak_milestone: 'flame',
-  post: 'message-circle',
+  post: 'chat',
 };
 
 function timeAgo(iso: string): string {
