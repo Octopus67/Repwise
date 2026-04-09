@@ -82,7 +82,11 @@ async def lifespan(application: FastAPI):
                 if isinstance(column.type, JSONB):
                     column.type = JSON()
                 if column.server_default is not None:
-                    default_text = str(column.server_default.arg) if hasattr(column.server_default, "arg") else ""
+                    default_text = (
+                        str(column.server_default.arg)
+                        if hasattr(column.server_default, "arg")
+                        else ""
+                    )
                     if "::jsonb" in default_text or "gen_random_uuid" in default_text:
                         column.server_default = None
 
@@ -159,6 +163,7 @@ async def lifespan(application: FastAPI):
 
         # Seed social bot accounts and starter content
         from src.modules.social.seed import seed_social_data
+
         async with async_session_factory() as session:
             try:
                 await seed_social_data(session)
@@ -168,6 +173,7 @@ async def lifespan(application: FastAPI):
     # Cleanup expired rate limit entries on startup (all backends)
     from src.middleware.db_rate_limiter import cleanup_expired_entries
     from src.config.database import async_session_factory as _session_factory
+
     async with _session_factory() as session:
         deleted = await cleanup_expired_entries(session)
         if deleted:
@@ -175,13 +181,15 @@ async def lifespan(application: FastAPI):
 
     # Scheduler: only one Gunicorn worker becomes the leader via Redis lock
     from src.config.scheduler import try_acquire_lock, start_scheduler, stop_scheduler
-    _is_scheduler_leader = try_acquire_lock()
+
+    _is_scheduler_leader = await try_acquire_lock()
     if _is_scheduler_leader:
         await start_scheduler()
 
     # Startup DB connectivity check (Phase 3 — F13)
     from sqlalchemy import text as _text
     from src.config.database import async_session_factory as _check_session
+
     try:
         async with _check_session() as _sess:
             await _sess.execute(_text("SELECT 1"))
@@ -189,6 +197,7 @@ async def lifespan(application: FastAPI):
     except Exception as exc:
         logger.critical("Startup DB connectivity check FAILED: %s — exiting", exc)
         import sys
+
         sys.exit(1)
 
     yield
@@ -199,7 +208,8 @@ async def lifespan(application: FastAPI):
 
     # Shutdown: close Redis connection
     from src.config.redis import close_redis
-    close_redis()
+
+    await close_redis()
 
 
 app = FastAPI(
@@ -218,7 +228,7 @@ if settings.SENTRY_DSN:
         integrations=[FastApiIntegration(), SqlalchemyIntegration()],
         # Audit fix 7.8 — higher trace rate for launch
         # TODO: Reduce to 0.1 after launch stabilization (2 weeks)
-        traces_sample_rate=float(os.getenv('SENTRY_TRACES_SAMPLE_RATE', '0.5')),
+        traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.5")),
         environment="production" if not settings.DEBUG else "development",
     )
 
@@ -231,6 +241,7 @@ app.add_middleware(RequestTimeoutMiddleware)
 # HTTPS enforcement in production
 if not settings.DEBUG:
     from src.middleware.https_redirect import HTTPSRedirectMiddleware
+
     app.add_middleware(HTTPSRedirectMiddleware)
 
 # CORS
@@ -248,6 +259,7 @@ app.add_middleware(
 
 # Security headers on every response
 from src.middleware.security_headers import SecurityHeadersMiddleware
+
 app.add_middleware(SecurityHeadersMiddleware)
 
 # Note: TrustedHostMiddleware removed — Railway's reverse proxy handles host
@@ -279,7 +291,12 @@ async def integrity_error_handler(_request: Request, exc: IntegrityError) -> JSO
     logger.warning("IntegrityError: %s", exc.orig)
     return JSONResponse(
         status_code=409,
-        content={"status": 409, "code": "CONFLICT", "message": "A conflicting record already exists.", "details": None},
+        content={
+            "status": 409,
+            "code": "CONFLICT",
+            "message": "A conflicting record already exists.",
+            "details": None,
+        },
     )
 
 
@@ -287,8 +304,9 @@ async def integrity_error_handler(_request: Request, exc: IntegrityError) -> JSO
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(_request: Request, exc: Exception) -> JSONResponse:
     import logging
-    import uuid as _uuid
-    request_id = str(_uuid.uuid4())
+    from src.middleware.logging_middleware import request_id_ctx
+
+    request_id = request_id_ctx.get("") or str(__import__("uuid").uuid4())
     logging.getLogger(__name__).exception("Unhandled exception [%s]: %s", request_id, exc)
     log_api_error(
         path=str(_request.url.path),
@@ -302,8 +320,20 @@ async def unhandled_exception_handler(_request: Request, exc: Exception) -> JSON
     sentry_sdk.capture_exception(exc)
     return JSONResponse(
         status_code=500,
-        content={"status": 500, "code": "INTERNAL_ERROR", "message": "An unexpected error occurred", "details": None, "request_id": request_id},
+        content={
+            "status": 500,
+            "code": "INTERNAL_ERROR",
+            "message": "An unexpected error occurred",
+            "details": None,
+            "request_id": request_id,
+        },
     )
+
+
+# Liveness probe
+@app.get("/healthz")
+async def liveness():
+    return {"status": "ok"}
 
 
 # Health check
@@ -311,31 +341,47 @@ async def unhandled_exception_handler(_request: Request, exc: Exception) -> JSON
 async def health_check() -> JSONResponse:
     from sqlalchemy import text
     from src.config.database import async_session_factory
+    from src.config.redis import redis_health_check
+
+    redis_status = await redis_health_check()
 
     try:
         async with async_session_factory() as session:
             await session.execute(text("SELECT 1"))
-        return JSONResponse(status_code=200, content={"status": "ok"})
+        return JSONResponse(status_code=200, content={"status": "ok", "redis_status": redis_status})
     except (SQLAlchemyError, OSError):
         logger.exception("Health check DB ping failed")
-        return JSONResponse(status_code=503, content={"status": "unhealthy", "reason": "database unreachable"})
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unhealthy",
+                "reason": "database unreachable",
+                "redis_status": redis_status,
+            },
+        )
 
 
 # Jobs health — returns next-run timestamps for all scheduled jobs
 # Restricted to debug mode: exposes scheduler internals (job names, schedules)
 if settings.DEBUG:
+
     @app.get("/api/v1/health/jobs")
     async def jobs_health() -> JSONResponse:
         from src.config.scheduler import scheduler
+
         jobs = {}
         for job in scheduler.get_jobs():
             jobs[job.id] = {
                 "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
             }
-        return JSONResponse(status_code=200, content={
-            "scheduler_running": scheduler.running,
-            "jobs": jobs,
-        })
+        return JSONResponse(
+            status_code=200,
+            content={
+                "scheduler_running": scheduler.running,
+                "jobs": jobs,
+            },
+        )
+
 
 # Serve exercise images from local static directory
 _static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
@@ -356,102 +402,138 @@ app.include_router(training_router, prefix="/api/v1/training", tags=["training"]
 app.include_router(meals_router, prefix="/api/v1/meals", tags=["meals"])
 
 from src.modules.adaptive.router import router as adaptive_router
+
 app.include_router(adaptive_router, prefix="/api/v1/adaptive", tags=["adaptive"])
 
 from src.modules.payments.router import router as payments_router
+
 app.include_router(payments_router, prefix="/api/v1/payments", tags=["payments"])
 
 from src.modules.payments.trial_router import router as trial_router
+
 app.include_router(trial_router, prefix="/api/v1/trial", tags=["trial"])
 
 from src.modules.content.router import router as content_router
+
 app.include_router(content_router, prefix="/api/v1/content", tags=["content"])
 
 from src.modules.coaching.router import router as coaching_router
+
 app.include_router(coaching_router, prefix="/api/v1/coaching", tags=["coaching"])
 
 from src.modules.food_database.router import router as food_router
+
 app.include_router(food_router, prefix="/api/v1/food", tags=["food"])
 
 
-
 from src.modules.dietary_analysis.router import router as dietary_router
+
 app.include_router(dietary_router, prefix="/api/v1/dietary", tags=["dietary"])
 
 from src.modules.founder.router import router as founder_router
+
 app.include_router(founder_router, prefix="/api/v1/founder", tags=["founder"])
 
 from src.modules.community.router import router as community_router
+
 app.include_router(community_router, prefix="/api/v1/community", tags=["community"])
 
 from src.modules.account.router import router as account_router
+
 app.include_router(account_router, prefix="/api/v1/account", tags=["account"])
 
 from src.modules.onboarding.router import router as onboarding_router
+
 app.include_router(onboarding_router, prefix="/api/v1/onboarding", tags=["onboarding"])
 
 from src.modules.dashboard.router import router as dashboard_router
+
 app.include_router(dashboard_router, prefix="/api/v1", tags=["dashboard"])
 
 from src.modules.training.analytics_router import router as analytics_router
+
 app.include_router(analytics_router, prefix="/api/v1/training", tags=["training-analytics"])
 
 from src.modules.training.volume_router import router as volume_router
+
 app.include_router(volume_router, prefix="/api/v1/training", tags=["training-volume"])
 
 from src.modules.training.templates_router import router as templates_router
+
 app.include_router(templates_router, prefix="/api/v1/training", tags=["training-templates"])
 
 from src.modules.training.fatigue_router import router as fatigue_router
+
 app.include_router(fatigue_router, prefix="/api/v1/training", tags=["training-fatigue"])
 
 from src.modules.progress_photos.router import router as progress_photos_router
-app.include_router(progress_photos_router, prefix="/api/v1/progress-photos", tags=["progress-photos"])
+
+app.include_router(
+    progress_photos_router, prefix="/api/v1/progress-photos", tags=["progress-photos"]
+)
 
 from src.modules.achievements.router import router as achievements_router
+
 app.include_router(achievements_router, prefix="/api/v1/achievements", tags=["achievements"])
 
 from src.modules.periodization.router import router as periodization_router
+
 app.include_router(periodization_router, prefix="/api/v1/periodization", tags=["periodization"])
 
 from src.modules.readiness.readiness_router import router as readiness_router
+
 app.include_router(readiness_router, prefix="/api/v1/readiness", tags=["readiness"])
 
 from src.modules.reports.router import router as reports_router
+
 app.include_router(reports_router, prefix="/api/v1/reports", tags=["reports"])
 
 from src.modules.recomp.router import router as recomp_router
+
 app.include_router(recomp_router, prefix="/api/v1/recomp", tags=["recomp"])
 
 from src.modules.meal_plans.router import router as meal_plans_router
+
 app.include_router(meal_plans_router, prefix="/api/v1/meal-plans", tags=["meal-plans"])
 
 from src.modules.notifications.router import router as notifications_router
+
 app.include_router(notifications_router, prefix="/api/v1/notifications", tags=["notifications"])
 
 from src.modules.feature_flags.router import router as feature_flags_router
+
 app.include_router(feature_flags_router, prefix="/api/v1/feature-flags", tags=["feature-flags"])
 
 from src.modules.measurements.router import router as measurements_router
-app.include_router(measurements_router, prefix="/api/v1/body-measurements", tags=["body-measurements"])
+
+app.include_router(
+    measurements_router, prefix="/api/v1/body-measurements", tags=["body-measurements"]
+)
 
 from src.modules.sharing.router import router as sharing_router
+
 app.include_router(sharing_router, prefix="/api/v1/share", tags=["sharing"])
 
 from src.modules.export.router import router as export_router
+
 app.include_router(export_router, prefix="/api/v1/export", tags=["export"])
 
 from src.modules.challenges.router import router as challenges_router
+
 app.include_router(challenges_router, prefix="/api/v1", tags=["challenges"])
 
 from src.modules.health_reports.router import router as health_reports_router
+
 app.include_router(health_reports_router, prefix="/api/v1/health-reports", tags=["health-reports"])
 
 from src.modules.social.router import router as social_router
+
 app.include_router(social_router, prefix="/api/v1/social", tags=["social"])
 
 from src.modules.import_data.router import router as import_router
+
 app.include_router(import_router, prefix="/api/v1/import", tags=["import"])
 
 from src.modules.legal.router import router as legal_router
+
 app.include_router(legal_router)  # Root level — /privacy and /terms

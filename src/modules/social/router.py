@@ -16,9 +16,8 @@ from src.modules.social.schemas import (
     FeedEventResponse,
     FeedPageResponse,
     FollowResponse,
-    LeaderboardEntryEnriched,
     LeaderboardPageResponse,
-    LeaderboardResponse,
+    PostCreate,
     ReactionCreate,
     ReactionResponse,
     SharedTemplateResponse,
@@ -35,6 +34,17 @@ def _get_social_service(db: AsyncSession = Depends(get_db)) -> SocialService:
 # ── Follows ───────────────────────────────────────────────────────────────
 
 
+@router.get("/discover")
+async def discover_users(
+    current_user: User = Depends(get_current_user),
+    service: SocialService = Depends(_get_social_service),
+    q: str = Query(default="", max_length=100),
+    limit: int = Query(default=20, ge=1, le=50),
+) -> list[dict]:
+    """Search for users to follow."""
+    return await service.discover_users(current_user.id, q, limit)
+
+
 @router.post("/follow/{user_id}", response_model=FollowResponse, status_code=201)
 async def follow_user(
     user_id: uuid.UUID,
@@ -44,7 +54,10 @@ async def follow_user(
     """Follow a user."""
     # Audit fix 6.3 — follow rate limit
     from src.middleware.rate_limiter import check_user_endpoint_rate_limit
-    check_user_endpoint_rate_limit(str(current_user.id), "follow", max_attempts=30, window_seconds=60)
+
+    await check_user_endpoint_rate_limit(
+        str(current_user.id), "follow", max_attempts=30, window_seconds=60
+    )
     follow = await service.follow_user(current_user.id, user_id)
     return FollowResponse.model_validate(follow)
 
@@ -64,10 +77,11 @@ async def get_followers(
     current_user: User = Depends(get_current_user),
     service: SocialService = Depends(_get_social_service),
     cursor: Optional[datetime] = Query(default=None),
-    limit: int = Query(default=20, ge=1, le=100),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
 ) -> list[FollowResponse]:
     """Get paginated followers list."""
-    follows = await service.get_followers(current_user.id, cursor, limit)
+    follows = await service.get_followers(current_user.id, cursor, limit, offset)
     return [FollowResponse.model_validate(f) for f in follows]
 
 
@@ -76,10 +90,11 @@ async def get_following(
     current_user: User = Depends(get_current_user),
     service: SocialService = Depends(_get_social_service),
     cursor: Optional[datetime] = Query(default=None),
-    limit: int = Query(default=20, ge=1, le=100),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
 ) -> list[FollowResponse]:
     """Get paginated following list."""
-    follows = await service.get_following(current_user.id, cursor, limit)
+    follows = await service.get_following(current_user.id, cursor, limit, offset)
     return [FollowResponse.model_validate(f) for f in follows]
 
 
@@ -105,6 +120,20 @@ async def get_feed(
     return FeedPageResponse(events=items, next_cursor=next_cursor)
 
 
+@router.post("/feed", response_model=FeedEventResponse, status_code=201)
+async def create_post(
+    data: PostCreate,
+    current_user: User = Depends(get_current_user),
+    service: SocialService = Depends(_get_social_service),
+) -> FeedEventResponse:
+    """Create a user-generated social post."""
+    from src.middleware.rate_limiter import check_user_endpoint_rate_limit
+
+    await check_user_endpoint_rate_limit(str(current_user.id), "social_create", 30, 60)
+    event = await service.create_post(current_user.id, data.content, data.post_type)
+    return FeedEventResponse.model_validate(event)
+
+
 # ── Reactions ─────────────────────────────────────────────────────────────
 
 
@@ -116,6 +145,9 @@ async def add_reaction(
     service: SocialService = Depends(_get_social_service),
 ) -> ReactionResponse:
     """Add or update a reaction on a feed event."""
+    from src.middleware.rate_limiter import check_user_endpoint_rate_limit
+
+    await check_user_endpoint_rate_limit(str(current_user.id), "social_reaction", 60, 60)
     reaction = await service.add_reaction(current_user.id, event_id, data.emoji)
     return ReactionResponse.model_validate(reaction)
 
@@ -149,7 +181,9 @@ async def get_leaderboard(
 # ── Template Sharing ──────────────────────────────────────────────────────
 
 
-@router.post("/templates/{template_id}/share", response_model=SharedTemplateResponse, status_code=201)
+@router.post(
+    "/templates/{template_id}/share", response_model=SharedTemplateResponse, status_code=201
+)
 async def share_template(
     template_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
@@ -179,4 +213,8 @@ async def copy_shared_template(
 ) -> dict:
     """Copy a shared template to your account."""
     template = await service.copy_shared_template(current_user.id, share_code)
-    return {"id": str(template.id), "name": template.name, "message": "Template copied successfully"}
+    return {
+        "id": str(template.id),
+        "name": template.name,
+        "message": "Template copied successfully",
+    }

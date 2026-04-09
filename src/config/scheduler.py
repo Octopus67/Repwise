@@ -20,7 +20,6 @@ import sentry_sdk
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
-from sqlalchemy.exc import SQLAlchemyError
 
 from src.config.redis import get_redis
 
@@ -30,27 +29,30 @@ LOCK_KEY = "scheduler_leader"
 LOCK_TTL = 60  # seconds
 RENEW_INTERVAL = 30  # seconds
 
-scheduler = AsyncIOScheduler()
+scheduler = AsyncIOScheduler(timezone="UTC")
 _worker_id: str = uuid.uuid4().hex
 _renew_task: asyncio.Task | None = None
 
 
 # ── Leader election ───────────────────────────────────────────────
 
-def try_acquire_lock() -> bool:
+
+async def try_acquire_lock() -> bool:
     """Attempt to become the scheduler leader via Redis NX lock.
 
     When Redis is unavailable (e.g. single-worker Railway deployment),
     assume leadership — there's only one worker, so no contention.
     """
-    r = get_redis()
+    r = await get_redis()
     if r is None:
         logger.warning("Redis unavailable — assuming single-worker mode, starting scheduler")
         return True
     try:
-        acquired = r.set(LOCK_KEY, _worker_id, nx=True, ex=LOCK_TTL)
+        acquired = await r.set(LOCK_KEY, _worker_id, nx=True, ex=LOCK_TTL)
     except (OSError, ConnectionError, Exception) as exc:
-        logger.warning("Redis error during lock acquisition (%s) — assuming single-worker mode", exc)
+        logger.warning(
+            "Redis error during lock acquisition (%s) — assuming single-worker mode", exc
+        )
         return True
     if acquired:
         logger.info("Worker %s acquired scheduler lock", _worker_id[:8])
@@ -66,12 +68,13 @@ async def _renew_lock_loop() -> None:
     """
     while True:
         await asyncio.sleep(RENEW_INTERVAL)
-        r = get_redis()
+        r = await get_redis()
         if r is None:
             continue  # single-worker mode — no lock to renew
         try:
-            if r.get(LOCK_KEY) == _worker_id:
-                r.expire(LOCK_KEY, LOCK_TTL)
+            val = await r.get(LOCK_KEY)
+            if val == _worker_id:
+                await r.expire(LOCK_KEY, LOCK_TTL)
             else:
                 logger.warning("Lost scheduler lock — stopping scheduler")
                 scheduler.shutdown(wait=False)
@@ -82,19 +85,28 @@ async def _renew_lock_loop() -> None:
 
 # ── Safe job wrapper ──────────────────────────────────────────────
 
-def safe_run(job_fn: Callable, job_name: str) -> Callable:
+
+def safe_run(job_fn: Callable, job_name: str, timeout: int = 300) -> Callable:
     """Wrap an async job so exceptions are captured to Sentry without crashing the scheduler."""
+
     @wraps(job_fn)
     async def wrapper():
         try:
-            await job_fn()
+            await asyncio.wait_for(job_fn(), timeout=timeout)
+        except asyncio.TimeoutError:
+            logger.error("Job '%s' timed out after %ds", job_name, timeout)
+            sentry_sdk.capture_message(
+                f"Job '{job_name}' timed out after {timeout}s", level="error"
+            )
         except Exception as exc:
             logger.exception("Job '%s' failed (%s)", job_name, type(exc).__name__)
             sentry_sdk.capture_exception()
+
     return wrapper
 
 
 # ── Scheduler configuration ──────────────────────────────────────
+
 
 def configure_scheduler() -> None:
     """Register all background jobs on the scheduler."""
@@ -131,6 +143,7 @@ def configure_scheduler() -> None:
 
 # ── Lifecycle helpers ─────────────────────────────────────────────
 
+
 async def start_scheduler() -> None:
     """Start the scheduler and the lock-renewal background task."""
     global _renew_task
@@ -151,10 +164,12 @@ async def stop_scheduler() -> None:
     if scheduler.running:
         # Wait for in-flight jobs to finish
         scheduler.shutdown(wait=True)
-    r = get_redis()
+    r = await get_redis()
     try:
-        if r and r.get(LOCK_KEY) == _worker_id:
-            r.delete(LOCK_KEY)
-            logger.info("Released scheduler lock (worker %s)", _worker_id[:8])
+        if r:
+            val = await r.get(LOCK_KEY)
+            if val == _worker_id:
+                await r.delete(LOCK_KEY)
+                logger.info("Released scheduler lock (worker %s)", _worker_id[:8])
     except (OSError, ConnectionError, Exception) as exc:
         logger.warning("Redis error during lock release (%s) — best-effort cleanup", exc)

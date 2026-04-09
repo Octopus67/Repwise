@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import asdict
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,7 +36,7 @@ async def analyze_trends(
 
     Basic trend data is available to all users.
     """
-    check_user_endpoint_rate_limit(str(user.id), "dietary_analysis", 10, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "dietary_analysis", 10, 60)
     report = await service.analyze_trends(user_id=user.id, window_days=window_days)
     return {
         "window_days": report.window_days,
@@ -49,8 +52,12 @@ async def identify_gaps(
     window_days: int = Query(default=7, ge=1, le=90),
 ) -> list[dict]:
     """Identify nutritional gaps (premium-gated). Req 9.3, 9.5."""
-    check_user_endpoint_rate_limit(str(user.id), "dietary_analysis", 10, 60)
-    gaps = await service.identify_gaps(user_id=user.id, window_days=window_days)
+    await check_user_endpoint_rate_limit(str(user.id), "dietary_analysis", 10, 60)
+    try:
+        gaps = await service.identify_gaps(user_id=user.id, window_days=window_days)
+    except Exception:
+        logger.exception("Dietary analysis failed for user %s", user.id)
+        return []
     return [asdict(g) for g in gaps]
 
 
@@ -61,7 +68,7 @@ async def get_recommendations(
     window_days: int = Query(default=7, ge=1, le=90),
 ) -> list[dict]:
     """Get food recommendations for nutritional gaps (premium-gated). Req 9.5."""
-    check_user_endpoint_rate_limit(str(user.id), "dietary_analysis", 10, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "dietary_analysis", 10, 60)
     gaps = await service.identify_gaps(user_id=user.id, window_days=window_days)
     recs = await service.get_recommendations(user_id=user.id, gaps=gaps)
     return [asdict(r) for r in recs]

@@ -39,7 +39,7 @@ async def get_upload_url(
     user: User = Depends(get_current_user),
 ) -> UploadUrlResponse:
     """Generate a pre-signed R2 upload URL for a progress photo."""
-    check_user_endpoint_rate_limit(str(user.id), "photos:upload_url", 20, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "photos:upload_url", 20, 60)
     result = generate_upload_url(str(user.id), data.filename, data.content_type)
     return UploadUrlResponse(upload_url=result["upload_url"], key=result["key"])
 
@@ -69,7 +69,9 @@ async def list_photos(
     """List progress photos with optional pose_type filter and pagination."""
     pagination = PaginationParams(page=page, limit=limit)
     result = await service.list_photos(
-        user_id=user.id, pagination=pagination, pose_type=pose_type,
+        user_id=user.id,
+        pagination=pagination,
+        pose_type=pose_type,
     )
     return PaginatedResult[PhotoResponse](
         items=[PhotoResponse.model_validate(p) for p in result.items],
@@ -99,7 +101,9 @@ async def update_photo(
 ) -> PhotoResponse:
     """Update progress photo metadata (alignment_data)."""
     photo = await service.update_photo(
-        user_id=user.id, photo_id=photo_id, data=data,
+        user_id=user.id,
+        photo_id=photo_id,
+        data=data,
     )
     return PhotoResponse.model_validate(photo)
 

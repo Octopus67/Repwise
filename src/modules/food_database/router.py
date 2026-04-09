@@ -53,7 +53,7 @@ async def search_food_items(
     service: FoodDatabaseService = Depends(_get_service),
 ) -> PaginatedResult[FoodItemResponse]:
     """Search food items by name with optional category/region filters."""
-    check_user_endpoint_rate_limit(str(user.id), "food_search", 30, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "food_search", 30, 60)
     # Guard against empty queries
     if not q or not q.strip():
         return PaginatedResult(
@@ -62,10 +62,11 @@ async def search_food_items(
             page=page,
             limit=limit,
         )
-    
+
     # Load user Food DNA preferences for search personalization
     from src.modules.user.models import UserProfile
     from sqlalchemy import select as sa_select
+
     user_prefs = None
     try:
         db = service.db
@@ -78,7 +79,9 @@ async def search_food_items(
         logger.warning("Failed to load user preferences for food search", exc_info=True)
 
     pagination = PaginationParams(page=page, limit=limit)
-    result = await service.search(q, pagination, category=category, region=region, user_prefs=user_prefs, user_id=user.id)
+    result = await service.search(
+        q, pagination, category=category, region=region, user_prefs=user_prefs, user_id=user.id
+    )
     return PaginatedResult(
         items=[FoodItemResponse.model_validate(item) for item in result.items],
         total_count=result.total_count,
@@ -163,7 +166,7 @@ async def delete_recipe(
 
 @router.get("/barcode/{barcode}", response_model=BarcodeResponse)
 async def lookup_barcode(
-    barcode: str = Path(..., pattern=r'^[0-9]{8,14}$', description="Product barcode (8-14 digits)"),
+    barcode: str = Path(..., pattern=r"^[0-9]{8,14}$", description="Product barcode (8-14 digits)"),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> BarcodeResponse:

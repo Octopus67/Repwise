@@ -7,7 +7,7 @@ from typing import Optional
 
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,6 +15,7 @@ from src.config.database import get_db
 from src.middleware.authenticate import get_current_user
 from src.middleware.rate_limiter import check_user_endpoint_rate_limit
 from src.modules.auth.models import User
+from src.shared.errors import InternalError, ValidationError
 from src.modules.reports.monthly_schemas import MonthlyReportResponse
 from src.modules.reports.monthly_service import MonthlyReportService
 from src.modules.reports.schemas import WeeklyReportResponse
@@ -47,7 +48,7 @@ async def get_weekly_report(
     service: WeeklyReportService = Depends(_get_service),
 ) -> WeeklyReportResponse:
     """Get the weekly intelligence report for a given ISO week."""
-    check_user_endpoint_rate_limit(str(user.id), "report_gen", 10, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "report_gen", 10, 60)
     today = date.today()
     current_iso = today.isocalendar()
 
@@ -58,23 +59,26 @@ async def get_weekly_report(
     # Validate week is valid for the given year (ISO years can have 52 or 53 weeks)
     max_week = date(year, 12, 28).isocalendar().week  # Dec 28 is always in the last ISO week
     if week > max_week:
-        raise HTTPException(
-            status_code=400,
-            detail=f"ISO year {year} only has {max_week} weeks",
+        raise ValidationError(
+            message=f"ISO year {year} only has {max_week} weeks",
         )
 
     # Validate not in the future
     if (year, week) > (current_iso.year, current_iso.week):
-        raise HTTPException(status_code=400, detail="Cannot generate report for a future week")
+        raise ValidationError(message="Cannot generate report for a future week")
 
     try:
         report = await service.get_weekly_report(user_id=user.id, year=year, week=week)
     except SQLAlchemyError:
-        logger.exception("DB error generating weekly report for user=%s year=%d week=%d", user.id, year, week)
-        raise HTTPException(status_code=500, detail="Failed to generate weekly report")
+        logger.exception(
+            "DB error generating weekly report for user=%s year=%d week=%d", user.id, year, week
+        )
+        raise InternalError(message="Failed to generate weekly report")
     except (ValueError, KeyError, TypeError, ZeroDivisionError):
-        logger.exception("Computation error in weekly report for user=%s year=%d week=%d", user.id, year, week)
-        raise HTTPException(status_code=500, detail="Failed to generate weekly report")
+        logger.exception(
+            "Computation error in weekly report for user=%s year=%d week=%d", user.id, year, week
+        )
+        raise InternalError(message="Failed to generate weekly report")
 
     return report
 
@@ -87,7 +91,7 @@ async def get_monthly_report(
     service: MonthlyReportService = Depends(_get_monthly_service),
 ) -> MonthlyReportResponse:
     """Get the monthly recap report for a given calendar month."""
-    check_user_endpoint_rate_limit(str(user.id), "report_gen", 10, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "report_gen", 10, 60)
     today = date.today()
 
     if year is None or month is None:
@@ -96,18 +100,22 @@ async def get_monthly_report(
 
     # Validate not in the future
     if (year, month) > (today.year, today.month):
-        raise HTTPException(status_code=400, detail="Cannot generate report for a future month")
+        raise ValidationError(message="Cannot generate report for a future month")
 
     try:
         report = await service.get_monthly_report(user_id=user.id, year=year, month=month)
     except (ValueError, KeyError):
         raise
     except SQLAlchemyError:
-        logger.exception("DB error generating monthly report for user=%s year=%d month=%d", user.id, year, month)
-        raise HTTPException(status_code=500, detail="Failed to generate monthly report")
+        logger.exception(
+            "DB error generating monthly report for user=%s year=%d month=%d", user.id, year, month
+        )
+        raise InternalError(message="Failed to generate monthly report")
     except (TypeError, ZeroDivisionError):
-        logger.exception("Computation error in monthly report for user=%s year=%d month=%d", user.id, year, month)
-        raise HTTPException(status_code=500, detail="Failed to generate monthly report")
+        logger.exception(
+            "Computation error in monthly report for user=%s year=%d month=%d", user.id, year, month
+        )
+        raise InternalError(message="Failed to generate monthly report")
 
     return report
 
@@ -119,14 +127,14 @@ async def get_yearly_report(
     service: YearlyReportService = Depends(_get_yearly_service),
 ) -> YearlyReportResponse:
     """Get the year in review report for a given calendar year."""
-    check_user_endpoint_rate_limit(str(user.id), "report_gen", 10, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "report_gen", 10, 60)
     today = date.today()
 
     if year is None:
         year = today.year
 
     if year > today.year:
-        raise HTTPException(status_code=400, detail="Cannot generate report for a future year")
+        raise ValidationError(message="Cannot generate report for a future year")
 
     try:
         report = await service.get_yearly_report(user_id=user.id, year=year)
@@ -134,9 +142,9 @@ async def get_yearly_report(
         raise
     except SQLAlchemyError:
         logger.exception("DB error generating yearly report for user=%s year=%d", user.id, year)
-        raise HTTPException(status_code=500, detail="Failed to generate yearly report")
+        raise InternalError(message="Failed to generate yearly report")
     except (TypeError, ZeroDivisionError):
         logger.exception("Computation error in yearly report for user=%s year=%d", user.id, year)
-        raise HTTPException(status_code=500, detail="Failed to generate yearly report")
+        raise InternalError(message="Failed to generate yearly report")
 
     return report

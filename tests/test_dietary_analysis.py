@@ -18,6 +18,7 @@ from src.modules.payments.models import Subscription
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 async def _create_user(db: AsyncSession, email: str = "diet@test.com") -> User:
     user = User(email=email, hashed_password="hashed", auth_provider="email", role="user")
     db.add(user)
@@ -52,8 +53,15 @@ async def _add_nutrition(db: AsyncSession, user_id: uuid.UUID, days_ago: int = 0
 def _auth_headers(user_id: uuid.UUID) -> dict:
     import jwt
     from src.config.settings import settings
+
     token = jwt.encode(
-        {"sub": str(user_id), "type": "access", "exp": datetime.now(timezone.utc) + timedelta(hours=1)},
+        {
+            "sub": str(user_id),
+            "type": "access",
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "iss": "repwise",
+            "aud": "repwise-api",
+        },
         settings.JWT_SECRET,
         algorithm=settings.JWT_ALGORITHM,
     )
@@ -61,12 +69,17 @@ def _auth_headers(user_id: uuid.UUID) -> dict:
 
 
 def _no_rate_limit():
-    return patch("src.modules.dietary_analysis.router.check_user_endpoint_rate_limit")
+    from unittest.mock import AsyncMock
+
+    return patch(
+        "src.modules.dietary_analysis.router.check_user_endpoint_rate_limit", new=AsyncMock()
+    )
 
 
 # ---------------------------------------------------------------------------
 # Auth tests
 # ---------------------------------------------------------------------------
+
 
 class TestDietaryAuth:
     @pytest.mark.asyncio
@@ -88,6 +101,7 @@ class TestDietaryAuth:
 # ---------------------------------------------------------------------------
 # Premium gating
 # ---------------------------------------------------------------------------
+
 
 class TestDietaryPremiumGating:
     @pytest.mark.asyncio
@@ -116,6 +130,7 @@ class TestDietaryPremiumGating:
 # GET /dietary/trends
 # ---------------------------------------------------------------------------
 
+
 class TestDietaryTrends:
     @pytest.mark.asyncio
     async def test_empty_data(self, client, override_get_db, db_session):
@@ -142,21 +157,27 @@ class TestDietaryTrends:
     async def test_custom_window(self, client, override_get_db, db_session):
         user = await _create_user(db_session)
         with _no_rate_limit():
-            r = await client.get("/api/v1/dietary/trends?window_days=30", headers=_auth_headers(user.id))
+            r = await client.get(
+                "/api/v1/dietary/trends?window_days=30", headers=_auth_headers(user.id)
+            )
         assert r.json()["window_days"] == 30
 
     @pytest.mark.asyncio
     async def test_window_min_validation(self, client, override_get_db, db_session):
         user = await _create_user(db_session)
         with _no_rate_limit():
-            r = await client.get("/api/v1/dietary/trends?window_days=0", headers=_auth_headers(user.id))
+            r = await client.get(
+                "/api/v1/dietary/trends?window_days=0", headers=_auth_headers(user.id)
+            )
         assert r.status_code == 400
 
     @pytest.mark.asyncio
     async def test_window_max_validation(self, client, override_get_db, db_session):
         user = await _create_user(db_session)
         with _no_rate_limit():
-            r = await client.get("/api/v1/dietary/trends?window_days=91", headers=_auth_headers(user.id))
+            r = await client.get(
+                "/api/v1/dietary/trends?window_days=91", headers=_auth_headers(user.id)
+            )
         assert r.status_code == 400
 
     @pytest.mark.asyncio
@@ -174,6 +195,7 @@ class TestDietaryTrends:
 # ---------------------------------------------------------------------------
 # GET /dietary/gaps
 # ---------------------------------------------------------------------------
+
 
 class TestDietaryGaps:
     @pytest.mark.asyncio
@@ -201,13 +223,16 @@ class TestDietaryGaps:
         user = await _create_user(db_session)
         await _make_premium(db_session, user)
         with _no_rate_limit():
-            r = await client.get("/api/v1/dietary/gaps?window_days=14", headers=_auth_headers(user.id))
+            r = await client.get(
+                "/api/v1/dietary/gaps?window_days=14", headers=_auth_headers(user.id)
+            )
         assert r.status_code == 200
 
 
 # ---------------------------------------------------------------------------
 # GET /dietary/recommendations
 # ---------------------------------------------------------------------------
+
 
 class TestDietaryRecommendations:
     @pytest.mark.asyncio

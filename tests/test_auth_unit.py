@@ -5,10 +5,10 @@ Validates: Requirements 1.1, 1.4, 1.5, 1.7, 1.8
 
 import pytest
 
-from src.middleware.rate_limiter import clear_all, record_attempt
+from src.middleware.rate_limiter import clear_all
 from src.modules.auth.router import clear_verify_attempts
 from src.config.settings import settings
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 
 @pytest.fixture(autouse=True)
@@ -35,6 +35,7 @@ def mock_ses():
 # 1. Email registration happy path
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_register_email_happy_path(client, override_get_db, mock_ses):
     """POST /register with valid email/password → 201, returns tokens."""
@@ -54,6 +55,7 @@ async def test_register_email_happy_path(client, override_get_db, mock_ses):
 # ------------------------------------------------------------------
 # 2. Duplicate email registration
 # ------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_register_duplicate_email(client, override_get_db, mock_ses):
@@ -76,6 +78,7 @@ async def test_register_duplicate_email(client, override_get_db, mock_ses):
 # 3. Login with correct credentials
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_login_correct_credentials(client, override_get_db, db_session, mock_ses):
     """Register, verify email, then POST /login → 200, returns tokens."""
@@ -85,6 +88,7 @@ async def test_login_correct_credentials(client, override_get_db, db_session, mo
     # Mark email as verified so login succeeds
     from sqlalchemy import select
     from src.modules.auth.models import User
+
     stmt = select(User).where(User.email == "login@example.com")
     result = await db_session.execute(stmt)
     user = result.scalar_one()
@@ -103,6 +107,7 @@ async def test_login_correct_credentials(client, override_get_db, db_session, mo
 # 4. Login with incorrect password
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_login_incorrect_password(client, override_get_db, mock_ses):
     """POST /login with wrong password → 401."""
@@ -120,6 +125,7 @@ async def test_login_incorrect_password(client, override_get_db, mock_ses):
 # 5. Login with non-existent email
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_login_nonexistent_email(client, override_get_db, mock_ses):
     """POST /login with unknown email → 401."""
@@ -133,6 +139,7 @@ async def test_login_nonexistent_email(client, override_get_db, mock_ses):
 # ------------------------------------------------------------------
 # 6. Token refresh with valid refresh token
 # ------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_refresh_valid_token(client, override_get_db, mock_ses):
@@ -157,6 +164,7 @@ async def test_refresh_valid_token(client, override_get_db, mock_ses):
 # 7. Token refresh with invalid token
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_refresh_invalid_token(client, override_get_db, mock_ses):
     """POST /refresh with garbage token → 401."""
@@ -170,6 +178,7 @@ async def test_refresh_invalid_token(client, override_get_db, mock_ses):
 # ------------------------------------------------------------------
 # 8. Apple OAuth — verifies token and creates/finds user
 # ------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_apple_oauth_happy_path(client, override_get_db, monkeypatch, mock_ses):
@@ -327,6 +336,7 @@ async def test_apple_oauth_existing_user(client, override_get_db, monkeypatch, m
 # 9. Rate limiting after threshold exceeded
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_rate_limiting_after_threshold(client, override_get_db, mock_ses):
     """Make failed attempts until rate-limited, then verify 429."""
@@ -337,7 +347,7 @@ async def test_rate_limiting_after_threshold(client, override_get_db, mock_ses):
     # so we expect 429 after 3 failed attempts (lockout kicks in first).
     for i in range(3):
         resp = await client.post("/api/v1/auth/login", json=bad_creds)
-        assert resp.status_code == 401, f"Attempt {i+1} expected 401, got {resp.status_code}"
+        assert resp.status_code == 401, f"Attempt {i + 1} expected 401, got {resp.status_code}"
 
     # Next attempt should be rate-limited by lockout
     resp = await client.post("/api/v1/auth/login", json=bad_creds)
@@ -347,6 +357,7 @@ async def test_rate_limiting_after_threshold(client, override_get_db, mock_ses):
 # ------------------------------------------------------------------
 # 10. Login with unverified email succeeds with email_verified=false (C2 deferrable)
 # ------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_login_unverified_email_succeeds_with_flag(client, override_get_db, mock_ses):
@@ -366,6 +377,7 @@ async def test_login_unverified_email_succeeds_with_flag(client, override_get_db
 # 11. Verify-email rate limiting (5 attempts per 15 min)
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_verify_email_rate_limited(client, override_get_db, db_session, mock_ses):
     """Exceed 5 verify-email attempts → 429."""
@@ -384,9 +396,13 @@ async def test_verify_email_rate_limited(client, override_get_db, db_session, mo
         call_count += 1
         if call_count > max_attempts:
             from src.shared.errors import RateLimitedError
+
             raise RateLimitedError(message="Too many requests", retry_after=window_seconds)
 
-    with patch("src.modules.auth.router.check_user_endpoint_rate_limit", side_effect=_mock_check):
+    with patch(
+        "src.modules.auth.router.check_user_endpoint_rate_limit",
+        new=AsyncMock(side_effect=_mock_check),
+    ):
         # 5 attempts should succeed (returning 400 for bad code, not 429)
         for _ in range(5):
             r = await client.post(
@@ -408,6 +424,7 @@ async def test_verify_email_rate_limited(client, override_get_db, db_session, mo
 # ------------------------------------------------------------------
 # 12. Apple OAuth accepts identity_token field
 # ------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_apple_oauth_identity_token_field(client, override_get_db, monkeypatch, mock_ses):
@@ -437,7 +454,11 @@ async def test_apple_oauth_identity_token_field(client, override_get_db, monkeyp
 
     resp = await client.post(
         "/api/v1/auth/oauth/apple",
-        json={"provider": "apple", "identity_token": "valid-apple-identity-token", "nonce": "test-nonce-123"},
+        json={
+            "provider": "apple",
+            "identity_token": "valid-apple-identity-token",
+            "nonce": "test-nonce-123",
+        },
     )
     assert resp.status_code == 200
     body = resp.json()
@@ -447,6 +468,7 @@ async def test_apple_oauth_identity_token_field(client, override_get_db, monkeyp
 # ------------------------------------------------------------------
 # 13. Register duplicate sends account-exists email
 # ------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_register_duplicate_sends_account_exists_email(client, override_get_db, mock_ses):
@@ -465,6 +487,7 @@ async def test_register_duplicate_sends_account_exists_email(client, override_ge
 # ------------------------------------------------------------------
 # 14. Error responses use message field (not detail)
 # ------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_error_responses_have_message_field(client, override_get_db, mock_ses):

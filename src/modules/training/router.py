@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
 from src.middleware.authenticate import get_current_user, get_current_user_optional
-from src.middleware.rate_limiter import check_ip_endpoint_rate_limit
+from src.middleware.rate_limiter import check_ip_endpoint_rate_limit, check_user_endpoint_rate_limit
 from src.modules.auth.models import User
 from src.shared.ip_utils import get_client_ip
 from src.modules.training.exercises import (
@@ -34,7 +34,7 @@ from src.modules.training.schemas import (
 )
 from src.modules.training.custom_exercise_service import CustomExerciseService
 from src.modules.training.service import TrainingService
-from src.shared.pagination import PaginatedResult, PaginationParams
+from src.shared.pagination import PaginationParams
 
 router = APIRouter()
 
@@ -66,9 +66,13 @@ async def search_exercises_endpoint(
     category: Optional[str] = Query(default=None, max_length=100),
 ) -> List[dict]:
     """Search exercises by name with optional muscle group, equipment, and category filters."""
-    check_ip_endpoint_rate_limit(get_client_ip(request), "exercise_search", 60, 60)  # Audit fix 10.4
+    await check_ip_endpoint_rate_limit(
+        get_client_ip(request), "exercise_search", 60, 60
+    )  # Audit fix 10.4
     response.headers["Cache-Control"] = "public, max-age=300"
-    return search_exercises(query=q, muscle_group=muscle_group, equipment=equipment, category=category)
+    return search_exercises(
+        query=q, muscle_group=muscle_group, equipment=equipment, category=category
+    )
 
 
 @router.get(
@@ -165,9 +169,11 @@ async def create_custom_exercise(
 async def list_custom_exercises(
     user: User = Depends(get_current_user),
     service: CustomExerciseService = Depends(_get_custom_exercise_service),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
 ) -> list[CustomExerciseResponse]:
     """Return all custom exercises for the authenticated user."""
-    exercises = await service.list_user_custom_exercises(user.id)
+    exercises = await service.list_user_custom_exercises(user.id, limit=limit, offset=offset)
     return [CustomExerciseResponse.from_orm_model(ex) for ex in exercises]
 
 
@@ -242,6 +248,7 @@ async def create_session(
     service: TrainingService = Depends(_get_training_service),
 ) -> TrainingSessionResponse:
     """Create a new training session."""
+    await check_user_endpoint_rate_limit(str(user.id), "training_create", 60, 60)
     return await service.create_session(user_id=user.id, data=data)
 
 
@@ -253,7 +260,9 @@ async def get_sessions(
     limit: int = Query(default=20, ge=1, le=100),
     start_date: Optional[date] = Query(default=None),
     end_date: Optional[date] = Query(default=None),
-    lightweight: bool = Query(default=False, description="Return summary without full exercises JSONB"),
+    lightweight: bool = Query(
+        default=False, description="Return summary without full exercises JSONB"
+    ),
 ):
     """Get training sessions with optional date range filter and pagination.
 
@@ -278,9 +287,8 @@ async def update_session(
     service: TrainingService = Depends(_get_training_service),
 ) -> TrainingSessionResponse:
     """Update an existing training session."""
-    return await service.update_session(
-        user_id=user.id, session_id=session_id, data=data
-    )
+    await check_user_endpoint_rate_limit(str(user.id), "training_update", 60, 60)
+    return await service.update_session(user_id=user.id, session_id=session_id, data=data)
 
 
 @router.delete("/sessions/{session_id}", status_code=204, response_model=None)

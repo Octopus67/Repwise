@@ -44,7 +44,7 @@ async def generate_plan(
     service: MealPlanService = Depends(_get_service),
 ) -> GeneratedPlanResponse:
     """Generate a new meal plan from adaptive targets."""
-    check_user_endpoint_rate_limit(str(user.id), "meal_plans:generate", 10, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "meal_plans:generate", 10, 60)
     try:
         plan = await service.generate_plan(user.id, body.slot_splits, body.num_days)
     except ValueError:
@@ -105,9 +105,7 @@ async def save_plan(
 ) -> MealPlanResponse:
     """Save a generated plan."""
     plan_data = {"days": [d.model_dump() for d in body.days]}
-    plan = await service.save_plan(
-        user.id, plan_data, body.name, body.start_date, body.slot_splits
-    )
+    plan = await service.save_plan(user.id, plan_data, body.name, body.start_date, body.slot_splits)
     return MealPlanResponse.model_validate(plan)
 
 
@@ -207,9 +205,7 @@ async def get_shopping_list(
     shopping = await service.get_shopping_list(user.id, plan_id)
     return ShoppingListResponse(
         items=[
-            ShoppingItemResponse(
-                name=i.name, quantity=i.quantity, unit=i.unit, category=i.category
-            )
+            ShoppingItemResponse(name=i.name, quantity=i.quantity, unit=i.unit, category=i.category)
             for i in shopping.items
         ]
     )

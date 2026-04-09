@@ -37,6 +37,9 @@ async def create_entry(
     service: NutritionService = Depends(_get_service),
 ) -> NutritionEntryResponse:
     """Create a new nutrition entry for the authenticated user."""
+    from src.middleware.rate_limiter import check_user_endpoint_rate_limit
+
+    await check_user_endpoint_rate_limit(str(user.id), "nutrition_create", 60, 60)
     entry = await service.create_entry(user_id=user.id, data=data)
     resp = NutritionEntryResponse.model_validate(entry)
     # Attach achievement unlocks if present
@@ -64,7 +67,7 @@ async def get_entries(
     start_date: Optional[date] = Query(default=None),
     end_date: Optional[date] = Query(default=None),
     page: int = Query(default=1, ge=1),
-    limit: int = Query(default=20, ge=1, le=100),
+    limit: int = Query(default=20, ge=1, le=500),
 ) -> PaginatedResult[NutritionEntryResponse]:
     """Get nutrition entries with optional date range filter and pagination."""
     filters = None
@@ -76,9 +79,7 @@ async def get_entries(
         filters = DateRangeFilter(start_date=end_date, end_date=end_date)
 
     pagination = PaginationParams(page=page, limit=limit)
-    result = await service.get_entries(
-        user_id=user.id, filters=filters, pagination=pagination
-    )
+    result = await service.get_entries(user_id=user.id, filters=filters, pagination=pagination)
 
     return PaginatedResult[NutritionEntryResponse](
         items=[NutritionEntryResponse.model_validate(e) for e in result.items],
@@ -96,6 +97,9 @@ async def update_entry(
     service: NutritionService = Depends(_get_service),
 ) -> NutritionEntryResponse:
     """Update an existing nutrition entry."""
+    from src.middleware.rate_limiter import check_user_endpoint_rate_limit
+
+    await check_user_endpoint_rate_limit(str(user.id), "nutrition_update", 60, 60)
     entry = await service.update_entry(user_id=user.id, entry_id=entry_id, data=data)
     return NutritionEntryResponse.model_validate(entry)
 
@@ -119,7 +123,10 @@ async def create_entries_batch(
     """Atomically create multiple nutrition entries as a meal batch."""
     # Audit fix 6.4 — batch rate limit
     from src.middleware.rate_limiter import check_user_endpoint_rate_limit
-    check_user_endpoint_rate_limit(str(user.id), "nutrition_batch", max_attempts=10, window_seconds=60)
+
+    await check_user_endpoint_rate_limit(
+        str(user.id), "nutrition_batch", max_attempts=10, window_seconds=60
+    )
     entries = await service.create_entries_batch(user_id=user.id, data=data)
     return [NutritionEntryResponse.model_validate(e) for e in entries]
 
@@ -163,7 +170,7 @@ async def get_micronutrient_dashboard(
         end_date = date.today()
     if start_date is None:
         start_date = end_date - timedelta(days=6)
-    
+
     # Read sex from user profile
     user_service = UserService(db)
     profile = await user_service.get_profile(user.id)

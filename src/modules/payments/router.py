@@ -46,7 +46,7 @@ async def webhook_revenuecat(
 
     Requirement 10.3: Verify webhook auth before processing.
     """
-    sentry_sdk.set_tag('component', 'webhook')
+    sentry_sdk.set_tag("component", "webhook")
     payload = await request.body()
     # RevenueCat uses Authorization: Bearer <key> instead of signature header
     authorization = request.headers.get("Authorization", "")
@@ -65,7 +65,7 @@ async def cancel(
     service: PaymentService = Depends(_get_service),
 ) -> SubscriptionResponse:
     """Cancel the user's subscription."""
-    check_user_endpoint_rate_limit(str(user.id), "payments:cancel", 10, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "payments:cancel", 10, 60)
     subscription = await service.cancel_subscription(user_id=user.id, data=data)
     return SubscriptionResponse.model_validate(subscription)
 

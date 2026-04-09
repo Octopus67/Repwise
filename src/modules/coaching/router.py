@@ -47,7 +47,7 @@ async def submit_request(
     service: CoachingService = Depends(_get_service),
 ) -> CoachingRequestResponse:
     """Submit a coaching request (premium users only, Requirement 12.1, 12.4, 12.7)."""
-    check_user_endpoint_rate_limit(str(user.id), "coaching:submit", 20, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "coaching:submit", 20, 60)
     return await service.submit_request(
         user_id=user.id,
         is_premium=_is_premium(user),
@@ -78,7 +78,7 @@ async def approve_request(
     service: CoachingService = Depends(_get_service),
 ) -> CoachingSessionResponse:
     """Approve a coaching request (admin only, Requirement 12.2)."""
-    check_user_endpoint_rate_limit(str(user.id), "coaching:approve", 20, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "coaching:approve", 20, 60)
     return await service.approve_request(
         request_id=request_id,
         admin_user_id=user.id,
@@ -96,7 +96,7 @@ async def reject_request(
     service: CoachingService = Depends(_get_service),
 ) -> CoachingRequestResponse:
     """Reject a coaching request (admin only)."""
-    check_user_endpoint_rate_limit(str(user.id), "coaching:reject", 20, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "coaching:reject", 20, 60)
     return await service.reject_request(
         request_id=request_id,
         admin_user_id=user.id,
@@ -113,7 +113,7 @@ async def cancel_request(
     service: CoachingService = Depends(_get_service),
 ) -> CoachingRequestResponse:
     """Cancel a coaching request."""
-    check_user_endpoint_rate_limit(str(user.id), "coaching:cancel", 20, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "coaching:cancel", 20, 60)
     return await service.cancel_request(
         request_id=request_id,
         user_id=user.id,
@@ -143,7 +143,7 @@ async def complete_session(
     service: CoachingService = Depends(_get_service),
 ) -> CoachingSessionResponse:
     """Complete a coaching session (Requirement 12.3)."""
-    check_user_endpoint_rate_limit(str(user.id), "coaching:complete", 20, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "coaching:complete", 20, 60)
     return await service.complete_session(
         session_id=session_id,
         user_id=user.id,
@@ -162,7 +162,7 @@ async def upload_document(
     service: CoachingService = Depends(_get_service),
 ) -> CoachingSessionResponse:
     """Upload a document to a coaching session (Requirement 12.5)."""
-    check_user_endpoint_rate_limit(str(user.id), "coaching:upload", 20, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "coaching:upload", 20, 60)
     return await service.upload_document(
         session_id=session_id,
         user_id=user.id,

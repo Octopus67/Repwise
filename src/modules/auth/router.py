@@ -9,16 +9,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.config.database import get_db
 from src.middleware.authenticate import get_current_user
 from src.middleware.rate_limiter import (
-    check_rate_limit,
-    check_forgot_password_rate_limit,
-    check_reset_password_rate_limit,
-    check_register_rate_limit,
-    check_oauth_rate_limit,
-    check_lockout,
-    check_login_ip_rate_limit,
+    async_check_rate_limit,
+    async_check_forgot_password_rate_limit,
+    async_check_reset_password_rate_limit,
+    async_check_register_rate_limit,
+    async_check_oauth_rate_limit,
+    async_check_lockout,
+    async_check_login_ip_rate_limit,
+    async_record_attempt,
+    async_reset_attempts,
     check_user_endpoint_rate_limit,
-    record_attempt,
-    reset_attempts,
 )
 from src.config.settings import settings
 from src.middleware.db_rate_limiter import check_db_rate_limit, record_db_attempt, reset_db_attempts
@@ -66,25 +66,35 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
     against CSRF on sub-requests. (Amendment E)
     """
     response.set_cookie(
-        key="access_token", value=access_token,
-        httponly=True, secure=True, samesite="lax",
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
         max_age=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
     response.set_cookie(
-        key="refresh_token", value=refresh_token,
-        httponly=True, secure=True, samesite="lax",
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
         max_age=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS * 86400,
         path="/api/v1/auth/refresh",
     )
+
 
 VERIFY_MAX_ATTEMPTS = 5
 VERIFY_WINDOW_SECONDS = 900  # 15 minutes
 
 
-def _check_verify_rate_limit(user_id: str) -> None:
+async def _check_verify_rate_limit(user_id: str) -> None:
     """Raise RateLimitedError if user exceeded 5 verify attempts in 15 min."""
-    check_user_endpoint_rate_limit(
-        user_id, "verify_email", VERIFY_MAX_ATTEMPTS, VERIFY_WINDOW_SECONDS,
+    await check_user_endpoint_rate_limit(
+        user_id,
+        "verify_email",
+        VERIFY_MAX_ATTEMPTS,
+        VERIFY_WINDOW_SECONDS,
     )
 
 
@@ -111,13 +121,16 @@ async def register(
     (to prevent enumeration). An 'account exists' email is sent silently.
     """
     ip = get_client_ip(request)
-    check_register_rate_limit(ip)
+    await async_check_register_rate_limit(ip)
     # Audit fix 10.11 — CAPTCHA gate
     if settings.REQUIRE_CAPTCHA and not data.captcha_token:
         raise ValidationError("CAPTCHA required")
     await check_db_rate_limit(
-        session=db, key=f"register:{ip}", endpoint="register",
-        max_attempts=5, window_seconds=3600,
+        session=db,
+        key=f"register:{ip}",
+        endpoint="register",
+        max_attempts=5,
+        window_seconds=3600,
         message="Too many registration attempts. Please try again later.",
     )
     tokens = await service.register_email(email=data.email, password=data.password, ip=ip)
@@ -144,23 +157,27 @@ async def login(
     service: AuthService = Depends(_get_auth_service),
 ) -> LoginResponse:
     """Authenticate with email and password."""
-    check_lockout(data.email)
-    check_rate_limit(data.email)
-    check_login_ip_rate_limit(get_client_ip(request))
+    await async_check_lockout(data.email)
+    await async_check_rate_limit(data.email)
+    await async_check_login_ip_rate_limit(get_client_ip(request))
     await check_db_rate_limit(
-        session=db, key=f"login:{data.email}", endpoint="login",
+        session=db,
+        key=f"login:{data.email}",
+        endpoint="login",
         max_attempts=settings.LOGIN_RATE_LIMIT_THRESHOLD,
         window_seconds=settings.LOGIN_RATE_LIMIT_WINDOW_SECONDS,
         message="Too many login attempts. Please try again later.",
     )
     try:
-        result = await service.login_email(email=data.email, password=data.password, ip=get_client_ip(request))
+        result = await service.login_email(
+            email=data.email, password=data.password, ip=get_client_ip(request)
+        )
     except UnauthorizedError:
-        record_attempt(data.email)
+        await async_record_attempt(data.email)
         await record_db_attempt(db, key=f"login:{data.email}", endpoint="login")
         raise
     # Successful login — clear rate limit counters
-    reset_attempts(data.email)
+    await async_reset_attempts(data.email)
     await reset_db_attempts(db, key=f"login:{data.email}", endpoint="login")
     # Audit fix 2.5 — set httpOnly cookies for web clients
     if _is_web_client(request) and result.access_token and result.refresh_token:
@@ -179,18 +196,22 @@ async def get_oauth_state() -> dict:
 async def oauth_login(
     data: OAuthCallbackRequest,
     request: Request,
-    provider: str = Path(..., pattern=r'^(google|apple)$'),
+    provider: str = Path(..., pattern=r"^(google|apple)$"),
     service: AuthService = Depends(_get_auth_service),
 ) -> AuthTokensResponse:
     """Authenticate via OAuth provider (google, apple, etc.)."""
-    check_oauth_rate_limit(get_client_ip(request))
+    await async_check_oauth_rate_limit(get_client_ip(request))
     # Audit fix 2.3 — validate state if provided (web flow), allow without for mobile
     if data.state is not None:
         if not validate_state(data.state):
             raise ValidationError("Invalid or expired OAuth state parameter")
     else:
-        logger.info("OAuth request without state parameter (mobile flow) from %s", get_client_ip(request))
-    tokens = await service.login_oauth(provider=provider, token=data.token, ip=get_client_ip(request), data=data)
+        logger.info(
+            "OAuth request without state parameter (mobile flow) from %s", get_client_ip(request)
+        )
+    tokens = await service.login_oauth(
+        provider=provider, token=data.token, ip=get_client_ip(request), data=data
+    )
     return tokens
 
 
@@ -219,6 +240,7 @@ async def logout(
 ) -> None:
     """Logout the current user (invalidate both access and refresh tokens)."""
     from src.middleware.authenticate import _extract_bearer_token
+
     access_token = _extract_bearer_token(request)
     await service.logout(access_token, refresh_token, ip=get_client_ip(request))
     # Audit fix 2.5 — clear httpOnly cookies on logout
@@ -231,7 +253,9 @@ async def get_current_user_info(
     user: User = Depends(get_current_user),
 ) -> CurrentUserResponse:
     """Return the current authenticated user's basic info."""
-    return CurrentUserResponse(id=str(user.id), email=user.email, role=user.role, email_verified=user.email_verified)
+    return CurrentUserResponse(
+        id=str(user.id), email=user.email, role=user.role, email_verified=user.email_verified
+    )
 
 
 @router.post("/forgot-password")
@@ -244,11 +268,9 @@ async def forgot_password(
     Always returns 200 regardless of whether the email exists,
     to avoid leaking account information.
     """
-    check_forgot_password_rate_limit(data.email)
+    await async_check_forgot_password_rate_limit(data.email)
     await service.generate_reset_code(email=data.email)
-    return {
-        "message": "If an account exists with that email, a reset code has been sent"
-    }
+    return {"message": "If an account exists with that email, a reset code has been sent"}
 
 
 @router.post("/reset-password")
@@ -259,10 +281,13 @@ async def reset_password(
     service: AuthService = Depends(_get_auth_service),
 ) -> dict:
     """Reset password using a valid 6-digit OTP code."""
-    check_reset_password_rate_limit(data.email)
+    await async_check_reset_password_rate_limit(data.email)
     await check_db_rate_limit(
-        session=db, key=f"reset:{data.email}", endpoint="reset_password",
-        max_attempts=5, window_seconds=900,
+        session=db,
+        key=f"reset:{data.email}",
+        endpoint="reset_password",
+        max_attempts=5,
+        window_seconds=900,
         message="Too many password reset attempts. Please try again later.",
     )
     success = await service.reset_password(
@@ -285,7 +310,7 @@ async def verify_email(
     if user.email_verified:
         return {"message": "Email already verified"}
 
-    _check_verify_rate_limit(str(user.id))
+    await _check_verify_rate_limit(str(user.id))
 
     success = await service.verify_email(user_id=user.id, code=data.code)
     if not success:
@@ -316,6 +341,6 @@ async def resend_verification_by_email(
     Always returns 200 to prevent email enumeration.
     """
     # Audit fix 2.1 — rate limit email resend
-    check_forgot_password_rate_limit(data.email)
+    await async_check_forgot_password_rate_limit(data.email)
     await service.resend_verification_code_by_email(data.email)
     return {"message": "If an unverified account exists, a verification code has been sent"}

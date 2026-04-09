@@ -26,7 +26,7 @@ async def delete_account(
 
     Requirement 22.1, 22.4, 22.5.
     """
-    check_user_endpoint_rate_limit(str(user.id), "account:delete", 3, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "account:delete", 3, 60)
     result = await service.request_deletion(user.id)
     return AccountDeletionResponse(**result)
 

@@ -1,6 +1,5 @@
 """Global API rate limiting middleware — protects all endpoints by IP."""
 
-import asyncio
 import json
 import logging
 import time
@@ -20,12 +19,12 @@ DEFAULT_RPM = 100
 WINDOW = 60
 
 
-def _check_global_limit(ip: str, rpm: int) -> bool | None:
-    """Check global per-IP rate limit via Redis sorted set.
+async def _check_global_limit(ip: str, rpm: int) -> bool | None:
+    """Check global per-IP rate limit via async Redis sorted set.
 
     Returns True=allowed, False=blocked, None=Redis unavailable.
     """
-    r = get_redis()
+    r = await get_redis()
     if r is None:
         return None
     try:
@@ -37,21 +36,22 @@ def _check_global_limit(ip: str, rpm: int) -> bool | None:
         pipe.zremrangebyscore(redis_key, 0, cutoff)
         pipe.zcard(redis_key)
         pipe.expire(redis_key, WINDOW)
-        results = pipe.execute()
+        results = await pipe.execute()
         count = results[1]
 
         if count >= rpm:
             return False
 
-        # Record AFTER checking
         pipe2 = r.pipeline()
         pipe2.zadd(redis_key, {f"{now}": now})
         pipe2.expire(redis_key, WINDOW)
-        pipe2.execute()
+        await pipe2.execute()
 
         return True
     except (redis.exceptions.RedisError, ConnectionError, TimeoutError) as exc:
-        logger.warning("[GlobalRateLimit] Redis check failed (%s), failing open: %s", type(exc).__name__, exc)
+        logger.warning(
+            "[GlobalRateLimit] Redis check failed (%s), failing open: %s", type(exc).__name__, exc
+        )
         return None
 
 
@@ -66,11 +66,14 @@ class GlobalRateLimitMiddleware(BaseHTTPMiddleware):
 
         ip = get_client_ip(request)
 
-        # Redis-backed check (sync client — offload to thread)
-        redis_result = await asyncio.to_thread(_check_global_limit, ip, self.rpm)
+        redis_result = await _check_global_limit(ip, self.rpm)
         if redis_result is not None:
             if not redis_result:
-                logger.warning(json.dumps({"event": "global_rate_limit_hit", "ip": ip, "path": request.url.path}))
+                logger.warning(
+                    json.dumps(
+                        {"event": "global_rate_limit_hit", "ip": ip, "path": request.url.path}
+                    )
+                )
                 return JSONResponse(
                     status_code=429,
                     content={"detail": "Too many requests"},
@@ -78,6 +81,5 @@ class GlobalRateLimitMiddleware(BaseHTTPMiddleware):
                 )
             return await call_next(request)
 
-        # Redis unavailable — fail open
         logger.warning("[GlobalRateLimit] Redis unavailable, failing open for ip=%s", ip)
         return await call_next(request)

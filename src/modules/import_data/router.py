@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
+
+from fastapi import APIRouter, Depends, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
@@ -11,6 +12,7 @@ from src.middleware.rate_limiter import check_user_endpoint_rate_limit
 from src.modules.auth.models import User
 from src.modules.import_data.schemas import ImportPreviewResponse, ImportResultResponse
 from src.modules.import_data.service import ImportService
+from src.shared.errors import ValidationError
 
 router = APIRouter()
 
@@ -25,15 +27,15 @@ SUPPORTED_FORMATS = [
 
 async def _read_file(file: UploadFile) -> str:
     """Read and validate uploaded file."""
-    if not file.filename or not file.filename.lower().endswith('.csv'):
-        raise HTTPException(status_code=400, detail="Only .csv files are accepted")
+    if not file.filename or not file.filename.lower().endswith(".csv"):
+        raise ValidationError(message="Only .csv files are accepted")
     content = await file.read()
     if len(content) > MAX_FILE_SIZE:
-        raise HTTPException(status_code=413, detail="File exceeds 5MB limit")
+        raise ValidationError(message="File exceeds 5MB limit")
     try:
         return content.decode("utf-8")
     except UnicodeDecodeError:
-        raise HTTPException(status_code=400, detail="File must be UTF-8 encoded CSV")
+        raise ValidationError(message="File must be UTF-8 encoded CSV")
 
 
 @router.get("/formats")
@@ -63,7 +65,7 @@ async def execute_import(
     db: AsyncSession = Depends(get_db),
 ) -> ImportResultResponse:
     """Execute CSV import — rate limited to 3 per hour."""
-    check_user_endpoint_rate_limit(str(user.id), "import:execute", 3, 3600)
+    await check_user_endpoint_rate_limit(str(user.id), "import:execute", 3, 3600)
     text = await _read_file(file)
     service = ImportService(db)
     result = await service.execute_import(user.id, text, weight_unit)

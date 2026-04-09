@@ -50,7 +50,7 @@ async def get_volume_trend(
 ) -> list[VolumeTrendPoint]:
     """Return daily training volume over a date range."""
     _validate_date_range(start_date, end_date)
-    check_user_endpoint_rate_limit(str(user.id), "training_analytics", 20, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "training_analytics", 20, 60)
     service = TrainingAnalyticsService(db)
     return await service.get_volume_trend(
         user_id=user.id,
@@ -73,7 +73,7 @@ async def get_strength_progression(
 ) -> list[StrengthProgressionPoint]:
     """Return strength progression for a specific exercise."""
     _validate_date_range(start_date, end_date)
-    check_user_endpoint_rate_limit(str(user.id), "training_analytics", 20, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "training_analytics", 20, 60)
     service = TrainingAnalyticsService(db)
     return await service.get_strength_progression(
         user_id=user.id,
@@ -92,7 +92,7 @@ async def get_muscle_group_frequency(
 ) -> list[MuscleGroupFrequency]:
     """Return muscle group training frequency per ISO week."""
     _validate_date_range(start_date, end_date)
-    check_user_endpoint_rate_limit(str(user.id), "training_analytics", 20, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "training_analytics", 20, 60)
     service = TrainingAnalyticsService(db)
     return await service.get_muscle_group_frequency(
         user_id=user.id,
