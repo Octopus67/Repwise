@@ -3,12 +3,13 @@ import { View, Text, StyleSheet } from 'react-native';
 import Animated, { useAnimatedProps } from 'react-native-reanimated';
 import { typography, spacing, glowShadow, colors } from '../../theme/tokens';
 import { useThemeColors, ThemeColors, getThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 import { useCountingValue } from '../../hooks/useCountingValue';
 import { haptic } from '../../utils/haptics';
 
 // Conditionally import LottieView
 let LottieView: any = null;
-try { LottieView = require('lottie-react-native'); } catch {}
+try { LottieView = require('lottie-react-native').default; } catch {}
 
 interface StreakIndicatorProps {
   count: number;
@@ -51,7 +52,7 @@ export function StreakIndicator({ count, type = 'week' }: StreakIndicatorProps) 
             style={{ width: tier.size, height: tier.size }}
           />
         ) : (
-          <Text style={{ fontSize: tier.size * 0.6 }}>🔥</Text>
+          <Icon name="flame" size={tier.size * 0.6} color={colors.premium.gold} />
         )}
       </View>
       <AnimatedCount value={countValue} type={type} styles={styles} />

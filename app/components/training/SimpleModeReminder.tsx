@@ -5,6 +5,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
 import { capture } from '../../services/analytics';
 
@@ -27,7 +28,7 @@ export function SimpleModeReminder({ onOpenPreferences }: Props) {
     <View style={[s.banner, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}>
       <TouchableOpacity style={s.body} onPress={onOpenPreferences} accessibilityRole="button">
         <Text style={[s.text, { color: c.text.secondary }]}>
-          💡 Turn on Smart Feedback to see when you've done enough
+          <Icon name="lightbulb" size={14} color={c.text.secondary} /> Turn on Smart Feedback to see when you've done enough
         </Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={dismiss} accessibilityLabel="Dismiss" hitSlop={8}>

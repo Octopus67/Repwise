@@ -1,4 +1,5 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useRef, useState } from 'react';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 
@@ -24,15 +25,31 @@ interface Props {
   locked?: boolean;
 }
 
+const FIELD_MAX: Record<string, number> = { calories: 50000, protein: 5000, carbs: 5000, fat: 5000, fibre: 5000 };
+
 export function ManualEntryForm({ values, onChange, locked }: Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const proteinRef = useRef<TextInput>(null);
+  const carbsRef = useRef<TextInput>(null);
+  const fatRef = useRef<TextInput>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
+
+  const validate = (field: string, v: string) => {
+    if (v === '' || v === '-') { setFieldErrors((p) => ({ ...p, [field]: false })); return; }
+    const n = parseFloat(v);
+    const invalid = !isNaN(n) && (n < 0 || n > (FIELD_MAX[field] ?? Infinity));
+    setFieldErrors((p) => ({ ...p, [field]: invalid }));
+  };
+
+  const errorBorder = { borderColor: c.semantic.negative };
 
   const handleNumericChange = (field: keyof MacroValues, v: string) => {
     if (v !== '' && v !== '-') {
       const n = parseFloat(v);
       if (!isNaN(n) && n < 0) return;
     }
+    validate(field as string, v);
     onChange(field, v);
   };
 
@@ -42,30 +59,34 @@ export function ManualEntryForm({ values, onChange, locked }: Props) {
       <View style={styles.row}>
         <View style={styles.fieldHalf}>
           <Text style={[styles.label, { color: c.text.secondary }]}>Calories</Text>
-          <TextInput style={[styles.input, locked && styles.inputLocked]} value={values.calories}
+          <TextInput style={[styles.input, locked && styles.inputLocked, fieldErrors.calories && errorBorder]} value={values.calories}
             onChangeText={(v) => handleNumericChange('calories', v)} keyboardType="numeric" placeholder="kcal"
-            placeholderTextColor={c.text.muted} editable={!locked} testID="nutrition-calories-input" />
+            placeholderTextColor={c.text.muted} editable={!locked} testID="nutrition-calories-input"
+            returnKeyType="next" onSubmitEditing={() => proteinRef.current?.focus()} />
         </View>
         <View style={styles.fieldHalf}>
           <Text style={[styles.label, { color: c.text.secondary }]}>Protein (g)</Text>
-          <TextInput style={[styles.input, locked && styles.inputLocked]} value={values.protein}
+          <TextInput style={[styles.input, locked && styles.inputLocked, fieldErrors.protein && errorBorder]} value={values.protein}
             onChangeText={(v) => handleNumericChange('protein', v)} keyboardType="numeric" placeholder="g"
-            placeholderTextColor={c.text.muted} editable={!locked} testID="nutrition-protein-input" />
+            placeholderTextColor={c.text.muted} editable={!locked} testID="nutrition-protein-input"
+            ref={proteinRef} returnKeyType="next" onSubmitEditing={() => carbsRef.current?.focus()} />
         </View>
       </View>
 
       <View style={styles.row}>
         <View style={styles.fieldHalf}>
           <Text style={[styles.label, { color: c.text.secondary }]}>Carbs (g)</Text>
-          <TextInput style={[styles.input, locked && styles.inputLocked]} value={values.carbs}
+          <TextInput style={[styles.input, locked && styles.inputLocked, fieldErrors.carbs && errorBorder]} value={values.carbs}
             onChangeText={(v) => handleNumericChange('carbs', v)} keyboardType="numeric" placeholder="g"
-            placeholderTextColor={c.text.muted} editable={!locked} testID="nutrition-carbs-input" />
+            placeholderTextColor={c.text.muted} editable={!locked} testID="nutrition-carbs-input"
+            ref={carbsRef} returnKeyType="next" onSubmitEditing={() => fatRef.current?.focus()} />
         </View>
         <View style={styles.fieldHalf}>
           <Text style={[styles.label, { color: c.text.secondary }]}>Fat (g)</Text>
-          <TextInput style={[styles.input, locked && styles.inputLocked]} value={values.fat}
+          <TextInput style={[styles.input, locked && styles.inputLocked, fieldErrors.fat && errorBorder]} value={values.fat}
             onChangeText={(v) => handleNumericChange('fat', v)} keyboardType="numeric" placeholder="g"
-            placeholderTextColor={c.text.muted} editable={!locked} testID="nutrition-fat-input" />
+            placeholderTextColor={c.text.muted} editable={!locked} testID="nutrition-fat-input"
+            ref={fatRef} returnKeyType="done" />
         </View>
       </View>
 

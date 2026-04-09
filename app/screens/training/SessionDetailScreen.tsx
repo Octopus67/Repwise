@@ -99,7 +99,8 @@ export function SessionDetailScreen({ route, navigation, showE1RM = true }: Sess
           }
           setExerciseImages(imageMap);
         }
-      } catch {
+      } catch (err) {
+        console.error('[SessionDetail] Image load failed:', err);
         // best-effort — images are optional
       }
     }
@@ -289,7 +290,7 @@ export function SessionDetailScreen({ route, navigation, showE1RM = true }: Sess
                     </View>
                     <View style={styles.prCol}>
                       {hasPR && (
-                        <Text style={styles.prBadge} testID={`pr-badge-${exIdx}-${setIdx}`}>🏆</Text>
+                        <View testID={`pr-badge-${exIdx}-${setIdx}`}><Icon name="trophy" size={14} color={c.accent.primary} /></View>
                       )}
                     </View>
                   </View>

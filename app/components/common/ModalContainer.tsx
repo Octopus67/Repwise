@@ -22,6 +22,7 @@ import { typography, radius, spacing, motion } from '../../theme/tokens';
 import { springs } from '../../theme/tokens';
 import { Icon } from './Icon';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { useReduceMotion } from '../../hooks/useReduceMotion';
 
 let BlurView: React.ComponentType<any> | null = null;
 try { BlurView = require('expo-blur').BlurView; } catch { /* expo-blur unavailable */ }
@@ -51,8 +52,10 @@ export function ModalContainer({
   const themeColors = useThemeColors();
   const insets = useSafeAreaInsets();
   const canBlur = BlurView && Platform.OS !== 'web';
+  const reduceMotion = useReduceMotion();
 
   const panGesture = Gesture.Pan()
+    .activeOffsetY([-10, 10])
     .onUpdate((e) => {
       if (e.translationY > 0) {
         translateY.value = e.translationY;
@@ -70,7 +73,9 @@ export function ModalContainer({
 
   useEffect(() => {
     if (visible) {
-      if (isWeb) {
+      if (reduceMotion) {
+        scale.value = 1; opacity.value = 1; translateY.value = 0;
+      } else if (isWeb) {
         scale.value = withTiming(1, { duration: motion.duration.default, easing: Easing.out(Easing.ease) });
         opacity.value = withTiming(1, { duration: motion.duration.default, easing: Easing.out(Easing.ease) });
       } else {
@@ -78,7 +83,9 @@ export function ModalContainer({
         opacity.value = withTiming(1, { duration: motion.duration.moderate, easing: Easing.out(Easing.ease) });
       }
     } else {
-      if (isWeb) {
+      if (reduceMotion) {
+        scale.value = 0.95; opacity.value = 0; translateY.value = 300;
+      } else if (isWeb) {
         scale.value = withTiming(0.95, { duration: motion.duration.quick, easing: Easing.in(Easing.ease) });
         opacity.value = withTiming(0, { duration: motion.duration.quick, easing: Easing.in(Easing.ease) });
       } else {
@@ -88,7 +95,7 @@ export function ModalContainer({
     }
   // scale, opacity, translateY are stable shared value refs — safe to omit from deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible]);
+  }, [visible, reduceMotion]);
 
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,

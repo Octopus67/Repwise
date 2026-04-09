@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { spacing, typography, radius, springs } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 import { useHaptics } from '../../hooks/useHaptics';
 
@@ -27,11 +28,11 @@ interface PRBannerProps {
   onDismiss: () => void;
 }
 
-const PR_TYPE_LABELS: Record<string, string> = {
-  weight: '🏋️ Weight PR',
-  reps: '💪 Rep PR',
-  volume: '📊 Volume PR',
-  e1rm: '🎯 e1RM PR',
+const PR_TYPE_ICONS: Record<string, { icon: 'dumbbell' | 'muscle' | 'chart' | 'target'; label: string }> = {
+  weight: { icon: 'dumbbell', label: 'Weight PR' },
+  reps: { icon: 'muscle', label: 'Rep PR' },
+  volume: { icon: 'chart', label: 'Volume PR' },
+  e1rm: { icon: 'target', label: 'e1RM PR' },
 };
 
 export function PRBanner({ prs, visible, onDismiss }: PRBannerProps) {
@@ -87,12 +88,12 @@ export function PRBanner({ prs, visible, onDismiss }: PRBannerProps) {
       onPress={onDismiss}
     >
       <Animated.View style={[styles.banner, animatedStyle]}>
-        <Text style={styles.trophy}>🏆</Text>
+        <Icon name="trophy" size={40} color={c.premium.gold} />
         <Text style={[styles.title, { color: c.premium.gold }]}>New Personal Record!</Text>
         {prs.map((pr, i) => (
           <View key={i} style={styles.prRow}>
             <Text style={[styles.prType, { color: c.text.secondary }]}>
-              {PR_TYPE_LABELS[pr.type] ?? pr.type}
+              {PR_TYPE_ICONS[pr.type] ? <><Icon name={PR_TYPE_ICONS[pr.type].icon} size={14} color={c.accent.primary} /> {PR_TYPE_ICONS[pr.type].label}</> : pr.type}
             </Text>
             <Text style={[styles.prExercise, { color: c.text.primary }]}>{pr.exerciseName}</Text>
             <Text style={[styles.prValue, { color: c.premium.gold }]}>{pr.value}</Text>

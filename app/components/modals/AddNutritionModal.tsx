@@ -115,6 +115,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
   // ── Fetch on open ────────────────────────────────────────────────────
   useEffect(() => {
     if (visible && isAuthenticated) { fetchFavorites(); fetchDayTotals(); }
+    if (!visible) { reset(); }
   }, [visible, isAuthenticated]);
 
   useEffect(() => {
@@ -308,14 +309,21 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
     finally { setLoading(false); }
   };
 
-  const hasUnsavedData = (): boolean => calories !== '' || protein !== '' || carbs !== '' || fat !== '' || notes !== '' || waterGlasses > 0;
+  const hasUnsavedData = (): boolean => calories !== '' || protein !== '' || carbs !== '' || fat !== '' || waterGlasses > 0;
 
   const handleClose = () => {
     if (hasUnsavedData()) {
-      Alert.alert('Discard changes?', 'You have unsaved data. Are you sure you want to close?', [
-        { text: 'Keep Editing', style: 'cancel' },
-        { text: 'Discard', style: 'destructive', onPress: () => { reset(); onClose(); } },
-      ]);
+      if (Platform.OS === 'web') {
+        // RN Web Alert.alert is a no-op — use window.confirm instead
+        if (typeof window !== 'undefined' && window.confirm('You have unsaved data. Discard changes?')) {
+          reset(); onClose();
+        }
+      } else {
+        Alert.alert('Discard changes?', 'You have unsaved data. Are you sure you want to close?', [
+          { text: 'Keep Editing', style: 'cancel' },
+          { text: 'Discard', style: 'destructive', onPress: () => { reset(); onClose(); } },
+        ]);
+      }
     } else { reset(); onClose(); }
   };
 
@@ -384,7 +392,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
             {/* Favorites */}
             {favorites.length > 0 && (
               <View style={styles.favoritesSection}>
-                <Text style={[styles.sectionLabel, { color: c.text.secondary }]}>⭐ Favorites</Text>
+                <Text style={[styles.sectionLabel, { color: c.text.secondary }]}><Icon name="star" size={14} color={c.accent.primary} /> Favorites</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.favoritesScroll}>
                   {favorites.map((fav) => (
                     <TouchableOpacity key={fav.id} style={[styles.favoriteChip, { backgroundColor: c.bg.surfaceRaised, borderColor: c.border.default }]}

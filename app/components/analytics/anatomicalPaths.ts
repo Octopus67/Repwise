@@ -269,3 +269,8 @@ export const MUSCLE_REGIONS: AnatomicalRegion[] = [
     labelPosition: { x: 100, y: 356 },
   },
 ];
+
+/**
+ * @deprecated Use anatomicalPathsV2.ts for the high-fidelity 300×660 version.
+ * This file is kept for backward compatibility with existing tests.
+ */

@@ -1,12 +1,14 @@
-import React from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity, TextInput, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { spacing, typography } from '../../theme/tokens';
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, type ThemeColors } from '../../hooks/useThemeColors';
 import { Skeleton } from '../../components/common/Skeleton';
 import { FeedCard, type FeedEvent } from '../../components/social/FeedCard';
+import { Icon } from '../../components/common/Icon';
 import api from '../../services/api';
+import { useStore } from '../../store';
 
 interface FeedPage {
   events: FeedEvent[];
@@ -26,6 +28,7 @@ async function fetchFeed({ pageParam }: { pageParam?: { cursor_time: string; cur
 export function FeedScreen() {
   const c = useThemeColors();
   const s = styles(c);
+  const user = useStore((st) => st.user);
 
   const {
     data,
@@ -48,6 +51,51 @@ export function FeedScreen() {
   });
 
   const events = data?.pages.flatMap((p) => p.events) ?? [];
+
+  // ── Compose post ──
+  const queryClient = useQueryClient();
+  const [composing, setComposing] = useState(false);
+  const [postText, setPostText] = useState('');
+
+  const postMutation = useMutation({
+    mutationFn: async (content: string) => {
+      const { data } = await api.post('social/feed', { content, post_type: 'text' });
+      return data;
+    },
+    onMutate: async (content: string) => {
+      await queryClient.cancelQueries({ queryKey: ['feed'] });
+      const previous = queryClient.getQueryData(['feed']);
+      const optimistic: FeedEvent = {
+        id: `temp-${Date.now()}`,
+        content,
+        post_type: 'text',
+        created_at: new Date().toISOString(),
+        user: { id: user?.id ?? '', display_name: 'You', avatar_url: null },
+      } as FeedEvent;
+      queryClient.setQueryData(['feed'], (old: any) => {
+        if (!old?.pages?.length) return old;
+        const first = { ...old.pages[0], events: [optimistic, ...old.pages[0].events] };
+        return { ...old, pages: [first, ...old.pages.slice(1)] };
+      });
+      return { previous };
+    },
+    onError: (_err, _content, context) => {
+      if (context?.previous) queryClient.setQueryData(['feed'], context.previous);
+    },
+    onSuccess: () => {
+      setPostText('');
+      setComposing(false);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+    },
+  });
+
+  const handlePost = useCallback(() => {
+    const trimmed = postText.trim();
+    if (!trimmed) return;
+    postMutation.mutate(trimmed);
+  }, [postText, postMutation]);
 
   if (isLoading) {
     return (
@@ -78,6 +126,37 @@ export function FeedScreen() {
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
+      {/* Compose area */}
+      {composing && (
+        <View style={[s.composeBox, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
+          <TextInput
+            style={[s.composeInput, { color: c.text.primary, borderColor: c.border.default }]}
+            placeholder="What's on your mind?"
+            placeholderTextColor={c.text.muted}
+            value={postText}
+            onChangeText={setPostText}
+            multiline
+            maxLength={500}
+            autoFocus
+          />
+          <View style={s.composeActions}>
+            <TouchableOpacity onPress={() => { setComposing(false); setPostText(''); }}>
+              <Text style={{ color: c.text.muted }}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handlePost}
+              disabled={!postText.trim() || postMutation.isPending}
+              style={[s.postBtn, { backgroundColor: postText.trim() ? c.accent.primary : c.border.default }]}
+            >
+              {postMutation.isPending ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={s.postBtnText}>Post</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
       <FlatList
         data={events}
         keyExtractor={(item) => item.id}
@@ -97,13 +176,24 @@ export function FeedScreen() {
         }
         ListEmptyComponent={
           <View style={s.center}>
-            <Text style={s.emptyEmoji}>👥</Text>
+            <Icon name="users" size={48} color={c.text.muted} />
             <Text style={s.emptyTitle}>No activity yet</Text>
             <Text style={s.emptyText}>Follow friends to see their workouts</Text>
           </View>
         }
         accessibilityLabel="Activity feed"
       />
+      {/* FAB */}
+      {!composing && (
+        <TouchableOpacity
+          style={[s.fab, { backgroundColor: c.accent.primary }]}
+          onPress={() => setComposing(true)}
+          accessibilityLabel="Create post"
+          accessibilityRole="button"
+        >
+          <Text style={s.fabIcon}>+</Text>
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }
@@ -113,7 +203,6 @@ const styles = (c: ThemeColors) =>
     safe: { flex: 1, backgroundColor: c.bg.base },
     container: { padding: spacing[4] },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: spacing[16] },
-    emptyEmoji: { fontSize: 48, marginBottom: spacing[3] },
     emptyTitle: {
       color: c.text.primary,
       fontSize: typography.size.lg,
@@ -126,5 +215,56 @@ const styles = (c: ThemeColors) =>
       fontSize: typography.size.sm,
       textAlign: 'center',
       lineHeight: typography.lineHeight.sm,
+    },
+    composeBox: {
+      padding: spacing[4],
+      borderBottomWidth: 1,
+    },
+    composeInput: {
+      borderWidth: 1,
+      borderRadius: radius.md,
+      padding: spacing[3],
+      fontSize: typography.size.sm,
+      minHeight: 80,
+      textAlignVertical: 'top',
+      marginBottom: spacing[3],
+    },
+    composeActions: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    postBtn: {
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[2],
+      borderRadius: radius.md,
+      minWidth: 60,
+      alignItems: 'center',
+    },
+    postBtnText: {
+      color: '#fff',
+      fontWeight: typography.weight.semibold,
+      fontSize: typography.size.sm,
+    },
+    fab: {
+      position: 'absolute',
+      bottom: spacing[6],
+      right: spacing[4],
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...Platform.select({
+        ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
+        android: { elevation: 6 },
+        default: {},
+      }),
+    },
+    fabIcon: {
+      color: '#fff',
+      fontSize: 28,
+      fontWeight: typography.weight.bold,
+      lineHeight: 30,
     },
   });

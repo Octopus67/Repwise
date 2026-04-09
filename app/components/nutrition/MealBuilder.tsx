@@ -257,7 +257,7 @@ export function MealBuilder({ visible, onClose, onSuccess, targets, consumed }: 
             {savingFavorite ? (
               <ActivityIndicator color={c.text.primary} />
             ) : (
-              <Text style={[styles.favBtnText, { color: c.text.primary }]}>⭐ Save as Favorite</Text>
+              <Text style={[styles.favBtnText, { color: c.text.primary }]}><Icon name="star" size={14} color={c.accent.primary} /> Save as Favorite</Text>
             )}
           </TouchableOpacity>
         </View>

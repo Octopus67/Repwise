@@ -53,6 +53,7 @@ export function GradientButton({
       onPressOut={handlePressOut}
       onPress={handlePress}
       disabled={isDisabled}
+      accessibilityRole="button"
       style={[animatedStyle, style]}
     >
       {variant === 'primary' ? (

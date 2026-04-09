@@ -11,6 +11,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { typography, spacing, radius, shadows } from '../../theme/tokens';
 import { useThemeColors, getThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 import type { VolumeStatus } from '../../utils/wnsRecommendations';
 
 export interface HUFloatingPillProps {
@@ -58,7 +59,7 @@ export function HUFloatingPill({ huByMuscle, statusByMuscle, onPress }: HUFloati
       accessibilityRole="button"
       accessibilityHint="Tap for HU breakdown"
     >
-      <Text style={[styles.icon, { color: pillColor.text }]}>📊</Text>
+      <Icon name="chart" size={14} color={pillColor.text} />
       <Text style={[styles.text, { color: pillColor.text }]}>
         {totalHU.toFixed(1)} HU
       </Text>

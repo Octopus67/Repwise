@@ -29,6 +29,8 @@ export function FatigueHeatMapOverlay({ scores, onMuscleGroupPress }: Props) {
               style={[styles.cell, { borderColor: bg }]}
               onPress={() => onMuscleGroupPress(s.muscle_group)}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`${s.muscle_group} fatigue: ${s.score.toFixed(0)}, ${label}`}
             >
               <View style={[styles.dot, { backgroundColor: bg }]} />
               <Text style={[styles.name, { color: c.text.primary }]}>{s.muscle_group}</Text>

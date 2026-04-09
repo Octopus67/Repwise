@@ -12,6 +12,7 @@ import { formatRestTimer } from '../../utils/durationFormat';
 import { getTimerRingColor } from '../../utils/restDurationV2';
 import { spacing, typography, radius, motion } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { haptic } from '../../utils/haptics';
 import type { TimerState } from '../../types/training';
 
 interface RestTimerV2Props {
@@ -82,6 +83,7 @@ export function RestTimerV2({
           clearTimer();
           setState('COMPLETED');
           playCompletionSound();
+          haptic.success();
           setTimeout(() => onCompleteRef.current(), 0);
           return 0;
         }

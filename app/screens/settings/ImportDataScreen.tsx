@@ -6,6 +6,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useMutation } from '@tanstack/react-query';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon, type IconName } from '../../components/common/Icon';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { capture } from '../../services/analytics';
@@ -14,10 +15,10 @@ import api from '../../services/api';
 type Source = 'strong' | 'hevy' | 'fitnotes';
 type Step = 'source' | 'file' | 'preview' | 'result';
 
-const SOURCES: { id: Source; label: string; icon: string }[] = [
-  { id: 'strong', label: 'Strong', icon: '💪' },
-  { id: 'hevy', label: 'Hevy', icon: '🏋️' },
-  { id: 'fitnotes', label: 'FitNotes', icon: '📝' },
+const SOURCES: { id: Source; label: string; icon: IconName }[] = [
+  { id: 'strong', label: 'Strong', icon: 'muscle' },
+  { id: 'hevy', label: 'Hevy', icon: 'dumbbell' },
+  { id: 'fitnotes', label: 'FitNotes', icon: 'clipboard' },
 ];
 
 interface PreviewData {
@@ -89,7 +90,7 @@ export function ImportDataScreen() {
             <Text style={s.subtitle}>Select your app</Text>
             {SOURCES.map((src) => (
               <TouchableOpacity key={src.id} onPress={() => { setSource(src.id); pickFile(); }} style={s.sourceRow}>
-                <Card><View style={s.sourceInner}><Text style={s.icon}>{src.icon}</Text><Text style={s.sourceLabel}>{src.label}</Text><Text style={s.chevron}>›</Text></View></Card>
+                <Card><View style={s.sourceInner}><Icon name={src.icon} size={20} color={c.accent.primary} /><Text style={s.sourceLabel}>{src.label}</Text><Text style={s.chevron}>›</Text></View></Card>
               </TouchableOpacity>
             ))}
           </View>
@@ -127,7 +128,7 @@ export function ImportDataScreen() {
 
         {step === 'result' && executeMut.data && (
           <View style={s.section}>
-            <Text style={s.successIcon}>✅</Text>
+            <Icon name="check" size={40} color={c.semantic.positive} />
             <Text style={s.successTitle}>Import Complete</Text>
             <Card>
               <Text style={s.stat}>{executeMut.data.sessions_imported} sessions imported</Text>

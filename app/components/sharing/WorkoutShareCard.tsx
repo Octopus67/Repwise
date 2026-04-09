@@ -10,6 +10,7 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import ViewShot from 'react-native-view-shot';
 import QRCode from 'react-native-qrcode-svg';
 import { colors, spacing, typography, radius, letterSpacing as ls } from '../../theme/tokens';
+import { Icon } from '../common/Icon';
 import { buildShareUrl } from '../../services/sharing';
 import type { TrainingSessionResponse } from '../../types/training';
 import type { UnitSystem } from '../../utils/unitConversion';
@@ -89,7 +90,7 @@ export const WorkoutShareCard = forwardRef<ViewShot, WorkoutShareCardProps>(
             </View>
             {options.showPRs && prCount > 0 && (
               <View style={styles.stat}>
-                <Text style={[styles.statValue, { color: t.accent }]}>🏆 {prCount}</Text>
+                <Text style={[styles.statValue, { color: t.accent }]}><Icon name="trophy" size={14} color={t.accent} /> {prCount}</Text>
                 <Text style={[styles.statLabel, { color: t.muted }]}>PRs</Text>
               </View>
             )}

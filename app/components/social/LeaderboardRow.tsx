@@ -15,7 +15,7 @@ interface LeaderboardRowProps {
   isCurrentUser: boolean;
 }
 
-const RANK_MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
+const RANK_COLORS: Record<number, string> = { 1: '#FFD700', 2: '#C0C0C0', 3: '#CD7F32' };
 
 export function LeaderboardRow({ entry, isCurrentUser }: LeaderboardRowProps) {
   const c = useThemeColors();
@@ -28,12 +28,20 @@ export function LeaderboardRow({ entry, isCurrentUser }: LeaderboardRowProps) {
     .slice(0, 2)
     .toUpperCase();
 
+  const badgeColor = RANK_COLORS[entry.rank];
+
   return (
     <View
       style={[s.row, isCurrentUser && s.highlighted]}
       accessibilityLabel={`Rank ${entry.rank}, ${entry.user.display_name}, ${entry.score} ${entry.unit}`}
     >
-      <Text style={s.rank}>{RANK_MEDALS[entry.rank] ?? `${entry.rank}`}</Text>
+      {badgeColor ? (
+        <View style={[s.badge, { backgroundColor: badgeColor }]}>
+          <Text style={s.badgeText}>{entry.rank}</Text>
+        </View>
+      ) : (
+        <Text style={s.rank}>{`${entry.rank}`}</Text>
+      )}
       <View style={[s.avatar, isCurrentUser && s.avatarHighlighted]}>
         <Text style={s.avatarText}>{initials}</Text>
       </View>
@@ -70,6 +78,18 @@ const styles = (c: ThemeColors) =>
       fontWeight: typography.weight.bold,
       color: c.text.secondary,
       lineHeight: typography.lineHeight.base,
+    },
+    badge: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    badgeText: {
+      color: '#FFFFFF',
+      fontSize: typography.size.xs,
+      fontWeight: typography.weight.bold,
     },
     avatar: {
       width: 32,

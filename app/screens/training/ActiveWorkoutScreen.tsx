@@ -202,7 +202,8 @@ export function ActiveWorkoutScreen({ route, navigation }: DashboardScreenProps<
                 store.startWorkout({ mode: 'new', sessionDate: sessionDate || undefined });
               }
             }
-          } catch {
+          } catch (err) {
+            console.error('[ActiveWorkout] Template load failed:', err);
             showAlert('Template Load Failed', 'Could not load the template. Starting a blank workout.');
             store.startWorkout({ mode: 'new', sessionDate: sessionDate || undefined });
           }
@@ -218,14 +219,16 @@ export function ActiveWorkoutScreen({ route, navigation }: DashboardScreenProps<
               showAlert('No Previous Workout', 'No previous session found to copy. Starting a blank workout.');
               store.startWorkout({ mode: 'new', sessionDate: sessionDate || undefined });
             }
-          } catch {
+          } catch (err) {
+            console.error('[ActiveWorkout] Copy last failed:', err);
             showAlert('Copy Failed', 'Could not load your last workout. Starting a blank workout.');
             store.startWorkout({ mode: 'new', sessionDate: sessionDate || undefined });
           }
         } else if (!store.isActive) {
           store.startWorkout({ mode: 'new', sessionDate: sessionDate || undefined });
         }
-      } catch {
+      } catch (err) {
+        console.error('[ActiveWorkout] Init failed:', err);
         if (!store.isActive) {
           store.startWorkout({ mode: 'new', sessionDate: sessionDate || undefined });
         }

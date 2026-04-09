@@ -30,7 +30,8 @@ function useZoneColors() {
 const DOT_SIZE = 14;
 const BAR_HEIGHT = 12;
 
-function getZoneLabel(volume: number, landmarks: WNSLandmarks): string {
+function getZoneLabel(volume: number, landmarks: WNSLandmarks | null | undefined): string {
+  if (!landmarks) return 'Unknown';
   if (volume < landmarks.mev) return 'Below MEV';
   if (volume <= landmarks.mav_high) return 'Optimal';
   if (volume <= landmarks.mrv) return 'Approaching MRV';
@@ -41,6 +42,7 @@ export function VolumeBar({ landmarks, currentVolume, muscleGroup }: VolumeBarPr
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const ZONE_COLORS = useZoneColors();
+  if (!landmarks) return null;
   const { mv, mev, mav_high, mrv } = landmarks;
   // Total range extends 20% past MRV to show overflow
   const maxRange = mrv * 1.2;

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon, type IconName } from '../common/Icon';
 import { ProgressBar } from '../common/ProgressBar';
 import type { Challenge } from '../../hooks/useDashboardData';
 
@@ -9,11 +10,13 @@ interface Props {
   challenges: Challenge[];
 }
 
-const ICONS: Record<string, string> = {
-  training_volume: '🏋️',
-  workout_count: '💪',
-  nutrition_compliance: '🥗',
+const ICONS: Record<string, IconName> = {
+  training_volume: 'dumbbell',
+  workout_count: 'muscle',
+  nutrition_compliance: 'salad',
 };
+
+const DEFAULT_ICON: IconName = 'target';
 
 export function WeeklyChallengeCard({ challenges }: Props) {
   const c = useThemeColors();
@@ -27,9 +30,9 @@ export function WeeklyChallengeCard({ challenges }: Props) {
       {challenges.map((ch) => (
         <View key={ch.id} style={s.row}>
           <View style={s.rowHeader}>
-            <Text style={s.icon}>{ICONS[ch.challenge_type] ?? '🎯'}</Text>
+            <Icon name={ICONS[ch.challenge_type] ?? DEFAULT_ICON} size={16} color={c.accent.primary} />
             <Text style={[s.title, { color: c.text.primary }]} numberOfLines={1}>{ch.title}</Text>
-            {ch.completed && <Text style={s.check}>✅</Text>}
+            {ch.completed && <Icon name="check" size={14} color={c.semantic.positive} />}
           </View>
           <ProgressBar
             value={ch.current_value}

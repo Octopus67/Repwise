@@ -17,6 +17,7 @@ import { secureSet, secureGet } from '../../utils/secureStorage'; // Audit fix 6
 import { saveImageToGallery } from '../../services/sharing';
 import { radius, spacing, typography, shadows } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../../components/common/Icon';
 import api from '../../services/api';
 import { uploadProgressPhoto } from '../../services/photoUpload';
 
@@ -201,7 +202,7 @@ export function ProgressPhotosScreen() {
       {/* Local-only warning banner */}
       <View style={[styles.warningBanner, { backgroundColor: c.semantic.warningSubtle }]}>
         <Text style={[styles.warningText, { color: c.semantic.warning }]}>
-          ⚠ Photos are stored locally only and will be lost if you uninstall the app or switch devices. Export them to your gallery for safekeeping.
+          <Icon name="alert-triangle" size={14} color={c.semantic.warning} /> Photos are stored locally only and will be lost if you uninstall the app or switch devices. Export them to your gallery for safekeeping.
         </Text>
         {photos.length > 0 && (
           <TouchableOpacity onPress={handleExportAll} style={[styles.exportBtn, { borderColor: c.semantic.warning }]}>

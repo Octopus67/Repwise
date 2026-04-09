@@ -3,6 +3,7 @@ import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, type ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 import api from '../../services/api';
 
 interface ReactionButtonProps {
@@ -57,7 +58,7 @@ export function ReactionButton({ eventId, count, reacted }: ReactionButtonProps)
       accessibilityLabel={reacted ? 'Remove reaction' : 'React to workout'}
       accessibilityRole="button"
     >
-      <Text style={s.emoji}>💪</Text>
+      <Icon name="muscle" size={16} color={c.accent.primary} />
       {count > 0 && (
         <Text style={[s.count, reacted && { color: c.accent.primary }]}>{count}</Text>
       )}

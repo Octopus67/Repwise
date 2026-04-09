@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { getLocalDateString } from '../../utils/localDate';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { spacing, typography, radius } from '../../theme/tokens';
@@ -74,6 +74,7 @@ export function LeaderboardScreen() {
           renderItem={({ item }) => (
             <LeaderboardRow entry={item} isCurrentUser={item.user.id === userId} />
           )}
+          refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={c.accent.primary} />}
           ListEmptyComponent={
             <View style={s.center}>
               <Text style={s.errorText}>No entries yet</Text>

@@ -63,7 +63,7 @@ export function OnboardingTrialPrompt({
         {/* Social proof */}
         <View style={styles.socialProof}>
           <Text style={styles.socialProofText}>
-            ⭐ 4.8 rating · Join 10,000+ users already training smarter
+            <Icon name="star" size={14} color={c.premium.gold} /> 4.8 rating · Join 10,000+ users already training smarter
           </Text>
         </View>
 

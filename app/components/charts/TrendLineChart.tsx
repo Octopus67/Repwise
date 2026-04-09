@@ -1,13 +1,13 @@
 import { useMemo, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableWithoutFeedback, GestureResponderEvent, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableWithoutFeedback, GestureResponderEvent, Platform, useWindowDimensions } from 'react-native';
 import Svg, { Line, Polyline, Circle, Text as SvgText, Defs, LinearGradient, Stop, Polygon } from 'react-native-svg';
-import Animated, { useSharedValue, useAnimatedProps, withTiming } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedProps, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { computeChartA11yLabel } from '../../utils/chartAccessibility';
 
 const AnimatedPolyline = Platform.OS === 'web' ? Polyline : Animated.createAnimatedComponent(Polyline);
 
-const CHART_WIDTH = Dimensions.get('window').width - spacing[4] * 2 - spacing[4] * 2; // screen padding + card padding
 const CHART_HEIGHT = 160;
 const PADDING = { top: spacing[4], right: spacing[3], bottom: 28, left: 44 };
 
@@ -22,12 +22,17 @@ interface TrendLineChartProps {
   targetLine?: number;
   suffix?: string;
   emptyMessage?: string;
+  label?: string;
   /** Optional secondary data series rendered as a solid overlay line */
   secondaryData?: DataPoint[];
   /** Color for the secondary data series (defaults to color) */
   secondaryColor?: string;
   /** If true, primary data renders as dots with reduced opacity instead of a line */
   primaryAsDots?: boolean;
+  /** Indices of PR (personal record) data points to mark with a star */
+  prIndices?: number[];
+  /** Optional legend for dual-series charts */
+  legend?: Array<{color: string; label: string}>;
 }
 
 export function TrendLineChart({
@@ -36,13 +41,20 @@ export function TrendLineChart({
   targetLine,
   suffix = '',
   emptyMessage,
+  label,
   secondaryData,
   secondaryColor,
   primaryAsDots,
+  prIndices,
+  legend,
 }: TrendLineChartProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isLandscape = windowWidth > windowHeight;
+  const chartHeight = isLandscape ? Math.round(CHART_HEIGHT * 1.5) : CHART_HEIGHT;
+  const CHART_WIDTH = windowWidth - spacing[4] * 2 - spacing[4] * 2;
 
   const { points, yMin, yMax, xLabels, yLabels, plotWidth, plotHeight } = useMemo(() => {
     if (data.length === 0) {
@@ -79,7 +91,7 @@ export function TrendLineChart({
     }
 
     const pw = CHART_WIDTH - PADDING.left - PADDING.right;
-    const ph = CHART_HEIGHT - PADDING.top - PADDING.bottom;
+    const ph = chartHeight - PADDING.top - PADDING.bottom;
 
     const pts = data
       .map((d, i) => {
@@ -109,13 +121,13 @@ export function TrendLineChart({
     }
 
     return { points: pts, yMin: min, yMax: max, xLabels: xl, yLabels: yl, plotWidth: pw, plotHeight: ph };
-  }, [data, targetLine, secondaryData]);
+  }, [data, targetLine, secondaryData, CHART_WIDTH, chartHeight]);
 
   // Estimate total path length for draw-in animation
   const pathLength = useMemo(() => {
     if (data.length < 2) return 0;
     const pw = CHART_WIDTH - PADDING.left - PADDING.right;
-    const ph = CHART_HEIGHT - PADDING.top - PADDING.bottom;
+    const ph = chartHeight - PADDING.top - PADDING.bottom;
     let len = 0;
     for (let i = 1; i < data.length; i++) {
       const dx = pw / (data.length - 1);
@@ -123,17 +135,17 @@ export function TrendLineChart({
       len += Math.sqrt(dx * dx + dy * dy);
     }
     return len;
-  }, [data, yMax, yMin]);
+  }, [data, yMax, yMin, CHART_WIDTH, chartHeight]);
 
   // Polygon points for gradient area fill (line path + bottom corners)
   const areaPolygonPoints = useMemo(() => {
     if (!points || data.length < 2) return '';
     const pw = CHART_WIDTH - PADDING.left - PADDING.right;
-    const bottomY = PADDING.top + (CHART_HEIGHT - PADDING.top - PADDING.bottom);
+    const bottomY = PADDING.top + (chartHeight - PADDING.top - PADDING.bottom);
     const firstX = PADDING.left;
     const lastX = PADDING.left + pw;
     return `${firstX},${bottomY} ${points} ${lastX},${bottomY}`;
-  }, [points, data.length]);
+  }, [points, data.length, CHART_WIDTH, chartHeight]);
 
   // Draw-in animation
   const dashOffset = useSharedValue(pathLength || 1000);
@@ -144,13 +156,24 @@ export function TrendLineChart({
     }
   }, [pathLength]);
 
+  // Fade-in on data change
+  const chartOpacity = useSharedValue(1);
+  useEffect(() => {
+    chartOpacity.value = 0.3;
+    chartOpacity.value = withTiming(1, { duration: 300 });
+  }, [data]);
+
+  const chartFadeStyle = useAnimatedStyle(() => ({
+    opacity: chartOpacity.value,
+  }));
+
   const animatedLineProps = useAnimatedProps(() => ({
     strokeDashoffset: dashOffset.value,
   }));
 
   if (data.length === 0) {
     return (
-      <View style={[styles.emptyContainer]}>
+      <View style={[styles.emptyContainer, { height: chartHeight }]}>
         <Text style={[styles.emptyText, { color: c.text.muted }]}>{emptyMessage || 'No data for this period'}</Text>
       </View>
     );
@@ -181,9 +204,10 @@ export function TrendLineChart({
       : 0;
 
   return (
-    <View>
+    <Animated.View style={chartFadeStyle}>
       <TouchableWithoutFeedback onPress={handlePress}>
-        <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
+        <View accessibilityRole="image" accessibilityLabel={computeChartA11yLabel(data, suffix || '', label || 'Chart')}>
+        <Svg width={CHART_WIDTH} height={chartHeight}>
           {/* Y-axis labels */}
           {yLabels.map((tick, i) => (
             <SvgText
@@ -296,12 +320,20 @@ export function TrendLineChart({
             </>
           )}
 
+          {/* PR markers */}
+          {prIndices && prIndices.map((idx) => {
+            if (idx < 0 || idx >= data.length) return null;
+            const px = PADDING.left + (data.length === 1 ? plotWidth / 2 : (idx / (data.length - 1)) * plotWidth);
+            const py = PADDING.top + plotHeight - ((data[idx].value - yMin) / (yMax - yMin)) * plotHeight;
+            return <Circle key={`pr-${idx}`} cx={px} cy={py - 8} r={4} fill={c.semantic.warning} />;
+          })}
+
           {/* X-axis labels */}
           {xLabels.map((tick, i) => (
             <SvgText
               key={`x-${i}`}
               x={tick.x}
-              y={CHART_HEIGHT - 4}
+              y={chartHeight - 4}
               textAnchor="middle"
               fill={c.text.muted}
               fontSize={10}
@@ -310,20 +342,35 @@ export function TrendLineChart({
             </SvgText>
           ))}
         </Svg>
+        </View>
       </TouchableWithoutFeedback>
 
-      {/* Tooltip */}
+      {/* Tooltip positioned near selected point */}
       {selectedPoint && (
-        <View style={styles.tooltip}>
-          <Text style={[styles.tooltipDate, { color: c.text.secondary }]}>
-            {new Date(selectedPoint.date + 'T00:00:00').toLocaleDateString()}
-          </Text>
-          <Text style={[styles.tooltipValue, { color }]}>
-            {selectedPoint.value.toFixed(1)}{suffix}
-          </Text>
+        <View style={{ position: 'relative', height: 24 }}>
+          <View style={[styles.tooltip, { position: 'absolute', left: Math.max(0, Math.min(selectedX - 60, CHART_WIDTH - 120)) }]}>
+            <Text style={[styles.tooltipDate, { color: c.text.secondary }]}>
+              {new Date(selectedPoint.date + 'T00:00:00').toLocaleDateString()}
+            </Text>
+            <Text style={[styles.tooltipValue, { color }]}>
+              {selectedPoint.value.toFixed(1)}{suffix}
+            </Text>
+          </View>
         </View>
       )}
-    </View>
+
+      {/* Legend for dual-series */}
+      {legend && legend.length > 0 && (
+        <View style={styles.legendRow}>
+          {legend.map((item, i) => (
+            <View key={i} style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: item.color }]} />
+              <Text style={[styles.legendLabel, { color: c.text.secondary }]}>{item.label}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </Animated.View>
   );
 }
 
@@ -341,10 +388,9 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   tooltip: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
     gap: spacing[2],
-    paddingTop: spacing[2],
+    paddingTop: spacing[1],
   },
   tooltipDate: {
     color: c.text.secondary,
@@ -356,5 +402,25 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.sm,
     fontVariant: [...typography.numeric.fontVariant],
+  },
+  legendRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing[4],
+    paddingTop: spacing[2],
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[1],
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  legendLabel: {
+    fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.xs,
   },
 });

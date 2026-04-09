@@ -10,8 +10,6 @@ import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { VerificationBanner } from '../../components/common/VerificationBanner';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { MacroRingsRow } from '../../components/dashboard/MacroRingsRow';
-import { TodaySummaryRow } from '../../components/dashboard/TodaySummaryRow';
-import { StreakIndicator } from '../../components/dashboard/StreakIndicator';
 import { QuickActionButton } from '../../components/dashboard/QuickActionButton';
 import { DateScroller } from '../../components/dashboard/DateScroller';
 import { WeeklyTrainingCalendar } from '../../components/dashboard/WeeklyTrainingCalendar';
@@ -78,7 +76,7 @@ function InfoBanner({ icon, emoji, text, chevronColor, onPress, style, accessibi
       {icon && <Icon name={icon} size={16} color={c.accent.primary} />}
       {emoji && <Text style={{ fontSize: 16 }}>{emoji}</Text>}
       <Text style={{ flex: 1, fontSize: typography.size.sm, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.sm, color: c.text.primary }} numberOfLines={1}>{text}</Text>
-      <Text style={{ color: chevronColor, fontSize: typography.size.lg }}>›</Text>
+      <Icon name="chevron-right" size={16} color={c.text.muted} />
     </TouchableOpacity>
   );
 }
@@ -100,6 +98,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
   const activeExerciseCount = useActiveWorkoutStore(st => st.exercises.length);
   const emailVerified = useStore((st) => st.user?.emailVerified);
   const [verifyDismissed, setVerifyDismissed] = useState(false);
+  const [nudgeDismissed, setNudgeDismissed] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem('@repwise:verify_dismissed').then(val => {
@@ -107,6 +106,9 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
     }).catch(() => {});
     AsyncStorage.getItem(TRIAL_MODAL_DISMISS_KEY).then(val => {
       if (val && Date.now() - Number(val) < 86_400_000) setTrialModalDismissed(true);
+    }).catch(() => {});
+    AsyncStorage.getItem('@repwise:nudge_dismissed').then(val => {
+      if (val && Date.now() - Number(val) < 86_400_000) setNudgeDismissed(true);
     }).catch(() => {});
   }, []);
   const dismissVerify = () => {
@@ -132,7 +134,6 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
   const rA = anim(4, 60);
   const bA = anim(5, 60);
   const msA = anim(6, 60);
-  const smA = anim(7, 60);
   const fA = anim(8, 60);
 
   const bannerStyle = useMemo(() => [s.banner, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }], [s.banner, c.bg.surface, c.border.subtle]); // Audit fix 7.2
@@ -213,7 +214,8 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
                     useStore.getState().tokens!,
                   );
                   setVerifyDismissed(true);
-                } catch {
+                } catch (err) {
+                  console.error('[Dashboard] Verification failed:', err);
                   Alert.alert('Verification Failed', 'Invalid or expired code. Please try again.');
                 }
               };
@@ -240,7 +242,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
 
         <Animated.View style={qaA}>
           <SectionHeader title="Quick Log" />
-          {isLoading ? <View style={s.quickRow}><Skeleton width="30%" height={100} borderRadius={12} /><Skeleton width="30%" height={100} borderRadius={12} /><Skeleton width="30%" height={100} borderRadius={12} /></View> : (
+          {isLoading ? <View style={s.quickRow}><Skeleton width="30%" height={100} borderRadius={radius.md} /><Skeleton width="30%" height={100} borderRadius={radius.md} /><Skeleton width="30%" height={100} borderRadius={radius.md} /></View> : (
             <View style={s.quickRow}>
               <View style={s.quickItem} testID="dashboard-log-food-button"><QuickActionButton icon="utensils" label="Log Food" accentColor={c.macro.calories} completed={data.nutritionLogged} onPress={() => nav.handleQuickAction(() => openNutrition())} accessibilityLabel="Log food" accessibilityRole="button" /></View>
               <View style={s.quickItem}><QuickActionButton icon="lunchbox" label="Build Meal" accentColor={c.accent.primary} completed={false} onPress={() => nav.handleQuickAction(openMealBuilder)} accessibilityLabel="Build meal" accessibilityRole="button" /></View>
@@ -250,7 +252,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
         </Animated.View>
 
         <Animated.View style={rA}>
-          {isLoading ? <View style={s.skelRings}><Skeleton width={96} height={96} variant="circle" /><Skeleton width={96} height={96} variant="circle" /><Skeleton width={96} height={96} variant="circle" /></View> : (
+          {isLoading ? <View style={s.skelRings}><Skeleton width={96} height={96} variant="circle" /><Skeleton width={96} height={96} variant="circle" /><Skeleton width={96} height={96} variant="circle" /><Skeleton width={96} height={96} variant="circle" /></View> : (
             <View>
               <MacroRingsRow calories={{ ...data.calories, target: targets.calories }} protein={{ ...data.protein, target: targets.protein_g }} carbs={{ ...data.carbs, target: targets.carbs_g }} fat={{ value: data.totalFat, target: targets.fat_g }} />
               {dateLoading && <View style={[s.dateOverlay, { backgroundColor: c.bg.overlay }]}><ActivityIndicator size="small" color={c.accent.primary} /></View>}
@@ -261,18 +263,12 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
         <Animated.View style={bA}>{!isLoading && <BudgetBar consumed={consumed} targets={targets} />}</Animated.View>
         <Animated.View style={msA}>{!isLoading && <MealSlotDiary entries={data.nutritionEntries} onAddToSlot={nav.handleAddToSlot} />}</Animated.View>
 
-        {!isLoading && data.nudges.length > 0 && <NudgeCard nudge={data.nudges[0]} onDismiss={() => setData((p) => ({ ...p, nudges: [] }))} onAction={(a) => { console.warn('[Dashboard] Unhandled nudge action:', a); }} />}
+        {!isLoading && !nudgeDismissed && data.nudges.length > 0 && <NudgeCard nudge={data.nudges[0]} onDismiss={async () => { setNudgeDismissed(true); setData((p) => ({ ...p, nudges: [] })); try { await AsyncStorage.setItem('@repwise:nudge_dismissed', Date.now().toString()); } catch (e) { console.error('[Dashboard] Nudge dismiss save failed:', e); } }} onAction={(a) => { if (a === 'recalculate' || a === 'edit_goals') { navigation.getParent()?.navigate('Profile'); } }} />}
         {showRestDay
           ? <RestDayCard proteinTarget={targets.protein_g} />
           : !isLoading && <TodayWorkoutCard sessions={data.trainingSessions} isWorkoutActive={isWorkoutActive} activeExerciseCount={activeExerciseCount} onPress={nav.handleSessionPress} onResume={nav.handleResumeWorkout} onStartWorkout={nav.handleStartWorkout} />}
 
         {!isLoading && <WeeklyChallengeCard challenges={data.challenges} />}
-
-        <Animated.View style={[smA, s.summarySection]}>
-          {isLoading ? <View style={s.skelSummary}><Skeleton width={120} height={24} /><Skeleton width={120} height={24} /></View> : (
-            <View style={s.summaryRow}><TodaySummaryRow mealsLogged={data.nutritionEntries.length} workoutsCompleted={data.workoutsCompleted} /><StreakIndicator count={data.streak} /></View>
-          )}
-        </Animated.View>
 
         {renderWeightTrend()}
 
@@ -282,8 +278,8 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
         {!isLoading && combinedReadinessEnabled && !recovery.isLoading && recovery.score > 0
           ? <RecoveryInsightCard score={recovery.score} volumeMultiplier={recovery.volumeMultiplier} label={recovery.label} factors={recovery.factors} onPress={openCheckin} />
           : !isLoading && (data.readinessScore !== null && !Number.isNaN(data.readinessScore)
-          ? <InfoBanner style={bannerStyle} emoji="⚡" text={`Readiness: ${data.readinessScore}/100`} chevronColor={c.accent.primary} onPress={openCheckin} accessibilityLabel={`Readiness score ${data.readinessScore}`} />
-          : <InfoBanner style={bannerStyle} emoji="💤" text="Tap to log recovery" chevronColor={c.accent.primary} onPress={openCheckin} accessibilityLabel="Log recovery check-in" />
+          ? <InfoBanner style={bannerStyle} icon="lightning" text={`Readiness: ${data.readinessScore}/100`} chevronColor={c.accent.primary} onPress={openCheckin} accessibilityLabel={`Readiness score ${data.readinessScore}`} />
+          : <InfoBanner style={bannerStyle} icon="moon" text="Tap to log recovery" chevronColor={c.accent.primary} onPress={openCheckin} accessibilityLabel="Log recovery check-in" />
         )}
 
         {!isLoading && data.recompMetrics && store.goals?.goalType === 'recomposition' && <RecompDashboardCard metrics={data.recompMetrics} />}
@@ -328,13 +324,10 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   container: { flex: 1 },
   content: { padding: spacing[4], paddingBottom: spacing[12] },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing[4] },
-  summarySection: { marginTop: spacing[6] },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   quickRow: { flexDirection: 'row', gap: spacing[3] },
-  quickItem: { flex: 1 },
+  quickItem: { flex: 1, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 },
   skelRings: { flexDirection: 'row', justifyContent: 'center', gap: spacing[3], marginTop: spacing[4] },
   dateOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: c.bg.overlay, alignItems: 'center', justifyContent: 'center', borderRadius: radius.md },
-  skelSummary: { flexDirection: 'row', gap: spacing[6] },
   trendSection: { marginTop: spacing[3] },
   trendRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[2] },
   trendLabel: { color: c.text.secondary, fontSize: typography.size.sm, fontWeight: typography.weight.medium, lineHeight: typography.lineHeight.sm },

@@ -8,6 +8,7 @@ import { secureSet, secureGet } from '../../utils/secureStorage'; // Audit fix 1
 import { Ionicons } from '@expo/vector-icons';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 import { SourceBadge } from './SourceBadge';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 import { resolveScannerMode } from '../../utils/barcodeUtils';
@@ -213,7 +214,7 @@ export function FoodSearchPanel({ onFoodSelected, onBarcodePress, onManualBarcod
       {/* F9: Favorite chips */}
       {favorites.length > 0 && searchResults.length === 0 && !searchQuery && (
         <View style={styles.historyRow}>
-          <Text style={[styles.historyLabel, { color: c.text.muted }]}>⭐ Favorites:</Text>
+          <Text style={[styles.historyLabel, { color: c.text.muted }]}><Icon name="star" size={14} color={c.accent.primary} /> Favorites:</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {favorites.map((item) => (
               <TouchableOpacity key={item.id} style={[styles.historyChip, { backgroundColor: c.accent.primaryMuted, borderColor: c.accent.primary }]}
@@ -314,7 +315,7 @@ export function FoodSearchPanel({ onFoodSelected, onBarcodePress, onManualBarcod
                   <SourceBadge source={item.source || 'community'} />
                   {(item.frequency ?? 0) > 0 && (
                     <View style={[styles.freqBadge, { backgroundColor: c.accent.primaryMuted }]}>
-                      <Text style={[styles.freqBadgeText, { color: c.accent.primary }]}>⭐ Frequent</Text>
+                      <Text style={[styles.freqBadgeText, { color: c.accent.primary }]}><Icon name="star" size={12} color={c.accent.primary} /> Frequent</Text>
                     </View>
                   )}
                 </View>

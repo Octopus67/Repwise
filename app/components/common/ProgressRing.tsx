@@ -136,7 +136,7 @@ export const ProgressRing = memo(function ProgressRing({
       <Svg width={size} height={size}>
         {gradientColors && (
           <Defs>
-            <LinearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+            <LinearGradient id={`ringGrad-${label}`} x1="0" y1="0" x2="1" y2="1">
               <Stop offset="0" stopColor={gradientColors[0]} />
               <Stop offset="1" stopColor={gradientColors[1]} />
             </LinearGradient>
@@ -158,7 +158,7 @@ export const ProgressRing = memo(function ProgressRing({
               cx={center}
               cy={center}
               r={r}
-              stroke={gradientColors ? 'url(#ringGrad)' : fill.fillColor}
+              stroke={gradientColors ? `url(#ringGrad-${label})` : fill.fillColor}
               strokeWidth={strokeWidth}
               fill="none"
               strokeDasharray={circumference}
@@ -171,7 +171,7 @@ export const ProgressRing = memo(function ProgressRing({
               cx={center}
               cy={center}
               r={r}
-              stroke={gradientColors ? 'url(#ringGrad)' : fill.fillColor}
+              stroke={gradientColors ? `url(#ringGrad-${label})` : fill.fillColor}
               strokeWidth={strokeWidth}
               fill="none"
               strokeDasharray={circumference}

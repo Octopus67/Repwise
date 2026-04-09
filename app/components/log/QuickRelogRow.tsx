@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-nati
 import { Skeleton } from '../common/Skeleton';
 import { spacing, radius, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 import type { QuickRelogItem } from '../../utils/quickRelogLogic';
 
 interface QuickRelogRowProps {
@@ -21,7 +22,7 @@ export function QuickRelogRow({ items, onTapItem, loading }: QuickRelogRowProps)
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.sectionLabel, { color: c.text.primary }]}>⚡ Quick Re-log</Text>
+      <Text style={[styles.sectionLabel, { color: c.text.primary }]}><Icon name="lightning" size={14} color={c.accent.primary} /> Quick Re-log</Text>
 
       {loading ? (
         <View style={styles.skeletonRow}>

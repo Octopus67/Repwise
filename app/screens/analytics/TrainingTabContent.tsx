@@ -113,7 +113,7 @@ export function TrainingTabContent({
         activeOpacity={0.7}
       >
         <View style={styles.explainerHeader}>
-          <Text style={[styles.explainerTitle, { color: c.text.primary }]}>🧠 Why Repwise Tracks Hypertrophy Units (HU)</Text>
+          <Text style={[styles.explainerTitle, { color: c.text.primary }]}><Icon name="brain" size={14} color={c.accent.primary} /> Why Repwise Tracks Hypertrophy Units (HU)</Text>
           <Text style={[styles.chevron, { color: c.text.muted }]}>{wnsExplainerExpanded ? '▼' : '▶'}</Text>
         </View>
         {wnsExplainerExpanded && (
@@ -162,16 +162,22 @@ export function TrainingTabContent({
       <HeatMapCard />
 
       {/* Muscle Fatigue */}
-      {fatigueScores.length > 0 && (
-        <>
-          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Muscle Fatigue</Text>
-          <Card>
-            <FatigueHeatMapOverlay
-              scores={fatigueScores}
-              onMuscleGroupPress={onFatigueGroupPress}
-            />
-          </Card>
-        </>
+      <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Muscle Fatigue</Text>
+      {fatigueScores.length > 0 ? (
+        <Card>
+          <FatigueHeatMapOverlay
+            scores={fatigueScores}
+            onMuscleGroupPress={onFatigueGroupPress}
+          />
+        </Card>
+      ) : (
+        <Card>
+          <EmptyState
+            icon={<Icon name="brain" />}
+            title="No fatigue data yet"
+            description="Log 2+ weeks of training to see fatigue analysis"
+          />
+        </Card>
       )}
 
       <FatigueBreakdownModal
@@ -220,7 +226,16 @@ export function TrainingTabContent({
       </Card>
 
       {/* e1RM Trend, Strength Standards, Strength Leaderboard */}
-      {!isLoading && (
+      {isLoading ? (
+        <>
+          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>e1RM Trend</Text>
+          <Card><ChartSkeleton /></Card>
+          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Strength Standards</Text>
+          <Card><ChartSkeleton /></Card>
+          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Strength Leaderboard</Text>
+          <Card><ChartSkeleton /></Card>
+        </>
+      ) : (
         <>
           <Text style={[styles.sectionTitle, { color: c.text.primary }]}>e1RM Trend</Text>
           <Card>

@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { VolumePills } from '../../components/training/VolumePills';
@@ -70,6 +70,7 @@ export function ActiveWorkoutBody({
   const styles = getStyles(c);
 
   return (
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{flex: 1}}>
     <ScrollView
       style={styles.scroll}
       contentContainerStyle={styles.scrollContent}
@@ -171,6 +172,7 @@ export function ActiveWorkoutBody({
       {/* Bottom spacer for sticky bars */}
       <View style={styles.bottomSpacer} />
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

@@ -15,6 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { radius, spacing, typography, motion } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 import type { PersonalRecordResponse } from '../../types/training';
 import { useHaptics } from '../../hooks/useHaptics';
 import { haptic } from '../../utils/haptics';
@@ -109,7 +110,7 @@ export function PRCelebration({
     <TouchableWithoutFeedback onPress={handleTap} accessibilityRole="alert">
       <Animated.View style={[styles.overlay, animatedOverlay]}>
         <Animated.View style={[styles.banner, animatedBanner]} accessibilityRole="alert" accessibilityLabel={`${prs.length === 1 ? 'New personal record' : `${prs.length} new personal records`}`}>
-          <Text style={styles.trophy}>🏆</Text>
+          <Icon name="trophy" size={48} color={c.premium.gold} />
           <GoldParticleBurst />
           <Text style={[styles.title, { color: c.premium.gold }]}>
             {prs.length === 1 ? 'New PR!' : `${prs.length} New PRs!`}

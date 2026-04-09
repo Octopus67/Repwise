@@ -47,6 +47,8 @@ export const colors = {
     cautionSubtle: 'rgba(249,115,22,0.12)',
     overTarget: '#6B8FBF',
     overTargetSubtle: 'rgba(107,143,191,0.15)',
+    info: '#0EA5E9',
+    infoSubtle: 'rgba(14,165,233,0.10)',
   },
 
   premium: {
@@ -63,10 +65,10 @@ export const colors = {
   gradientArrays: {
     primary: ['#06B6D4', '#0E7490'],     // cyan accent
     premium: ['#D4AF37', '#B8860B'],     // gold
-    calories: ['#EF4444', '#F97316'],    // red → orange
-    protein: ['#3B82F6', '#6366F1'],     // blue → indigo
-    carbs: ['#F59E0B', '#F97316'],       // amber → orange
-    fat: ['#EC4899', '#F43F5E'],         // pink → rose
+    calories: ['#06B6D4', '#0E7490'],    // cyan → dark cyan
+    protein: ['#22C55E', '#16A34A'],     // green → dark green
+    carbs: ['#F59E0B', '#D97706'],       // amber → dark amber
+    fat: ['#EF4444', '#DC2626'],         // red → dark red
     success: ['#10B981', '#34D399'],     // emerald
   },
 
@@ -85,8 +87,8 @@ export const colors = {
     proteinSubtle: 'rgba(34,197,94,0.10)',
     carbs: '#F59E0B',
     carbsSubtle: 'rgba(245,158,11,0.10)',
-    fat: '#F472B6',
-    fatSubtle: 'rgba(244,114,182,0.10)',
+    fat: '#EF4444',
+    fatSubtle: 'rgba(239,68,68,0.10)',
   },
 
   // Convenience aliases for semantic colors
@@ -142,6 +144,7 @@ export const typography = {
     xl: 20,
     '2xl': 24,
     '3xl': 32,
+    '4xl': 48,
     '5xl': 64,
   },
 
@@ -158,6 +161,7 @@ export const typography = {
     xl: 26,    // 20 * 1.3
     '2xl': 32, // 24 * 1.33
     '3xl': 42, // 32 * 1.31
+    '4xl': 62, // 48 * 1.29
     '5xl': 84, // 64 * 1.31
   },
 
@@ -166,7 +170,7 @@ export const typography = {
   },
 } as const;
 
-// ─── Spacing (8px grid) ─────────────────────────────────────────────────────
+// ─── Spacing (4px grid) ─────────────────────────────────────────────────────
 
 export const spacing = {
   0: 0,
@@ -190,7 +194,7 @@ export const radius = {
   sm: 8,
   md: 12,
   lg: 16,
-  xl: 16,
+  xl: 20,
   full: 9999,
 } as const;
 
@@ -226,9 +230,11 @@ export const letterSpacing = {
 // ─── Shadows (React Native format) ──────────────────────────────────────────
 
 export const shadows = {
+  xs: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 1, elevation: 1 },
   sm: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 3, elevation: 2 },
   md: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
   lg: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 8 },
+  xl: { shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.5, shadowRadius: 24, elevation: 12 },
 } as const;
 
 /** Creates a glow shadow style for a given color. Use for accent highlights. */

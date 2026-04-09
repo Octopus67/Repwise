@@ -1,23 +1,25 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, type ThemeColors } from '../../hooks/useThemeColors';
+import { Icon, type IconName } from '../common/Icon';
 import { ReactionButton } from './ReactionButton';
 
 export interface FeedEvent {
   id: string;
   user: { id: string; display_name: string; avatar_url: string | null };
-  event_type: 'workout_completed' | 'pr_achieved' | 'streak_milestone';
+  event_type: 'workout_completed' | 'pr_achieved' | 'streak_milestone' | 'post';
   summary: string;
   created_at: string;
   reaction_count: number;
   user_reacted: boolean;
 }
 
-const EVENT_ICONS: Record<FeedEvent['event_type'], string> = {
-  workout_completed: '🏋️',
-  pr_achieved: '🏆',
-  streak_milestone: '🔥',
+const EVENT_ICONS: Record<FeedEvent['event_type'], IconName> = {
+  workout_completed: 'dumbbell',
+  pr_achieved: 'trophy',
+  streak_milestone: 'flame',
+  post: 'message-circle',
 };
 
 function timeAgo(iso: string): string {
@@ -38,6 +40,7 @@ interface FeedCardProps {
 export function FeedCard({ event, onPress }: FeedCardProps) {
   const c = useThemeColors();
   const s = styles(c);
+  const [avatarError, setAvatarError] = useState(false);
 
   const initials = event.user.display_name
     .split(' ')
@@ -56,7 +59,11 @@ export function FeedCard({ event, onPress }: FeedCardProps) {
     >
       <View style={s.row}>
         <View style={s.avatar}>
-          <Text style={s.avatarText}>{initials}</Text>
+          {event.user?.avatar_url && !avatarError ? (
+            <Image source={{ uri: event.user.avatar_url }} style={s.avatarImage} onError={() => setAvatarError(true)} />
+          ) : (
+            <Text style={s.avatarText}>{initials}</Text>
+          )}
         </View>
         <View style={s.body}>
           <View style={s.headerRow}>
@@ -64,7 +71,7 @@ export function FeedCard({ event, onPress }: FeedCardProps) {
             <Text style={s.time}>{timeAgo(event.created_at)}</Text>
           </View>
           <View style={s.eventRow}>
-            <Text style={s.icon}>{EVENT_ICONS[event.event_type] ?? '📋'}</Text>
+            <Icon name={EVENT_ICONS[event.event_type] ?? 'clipboard'} size={16} color={c.accent.primary} />
             <Text style={s.summary} numberOfLines={2}>{event.summary}</Text>
           </View>
         </View>
@@ -104,6 +111,11 @@ const styles = (c: ThemeColors) =>
       fontSize: typography.size.sm,
       fontWeight: typography.weight.semibold,
       lineHeight: typography.lineHeight.sm,
+    },
+    avatarImage: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
     },
     body: { flex: 1 },
     headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

@@ -76,7 +76,8 @@ export function ExerciseHistoryScreen({ route, navigation }: ExerciseHistoryScre
       if (e1rmRes.status === 'rejected' && strengthRes.status === 'rejected') {
         setError('Failed to load exercise history');
       }
-    } catch {
+    } catch (err) {
+      console.error('[ExerciseHistory] Load failed:', err);
       setError('Failed to load exercise history');
     } finally {
       setLoading(false);
@@ -89,6 +90,13 @@ export function ExerciseHistoryScreen({ route, navigation }: ExerciseHistoryScre
     date: p.date,
     value: unitSystem === 'metric' ? p.e1rm_kg : convertWeight(p.e1rm_kg, unitSystem),
   }));
+
+  // Compute PR indices (where value is highest seen so far)
+  const prIndices: number[] = [];
+  let maxSoFar = -Infinity;
+  chartData.forEach((p, i) => {
+    if (p.value > maxSoFar) { maxSoFar = p.value; prIndices.push(i); }
+  });
 
   const renderSession = ({ item }: { item: StrengthPoint }) => {
     const displayWeight = convertWeight(item.best_weight_kg, unitSystem);
@@ -172,6 +180,7 @@ export function ExerciseHistoryScreen({ route, navigation }: ExerciseHistoryScre
                 color={c.accent.primary}
                 suffix={` ${unitLabel}`}
                 emptyMessage="No e1RM data for this period"
+                prIndices={prIndices}
               />
             </Card>
             <View style={styles.rangeRow}>

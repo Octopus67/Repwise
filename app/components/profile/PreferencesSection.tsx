@@ -6,6 +6,7 @@ import {
   Switch,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
@@ -89,6 +90,7 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
   const setTheme = useThemeStore((s) => s.setTheme);
   const [savingUnit, setSavingUnit] = useState(false);
   const [savingCoaching, setSavingCoaching] = useState(false);
+  const [savingTimer, setSavingTimer] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Auto-detect timezone on first load if null
@@ -122,6 +124,7 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
         const mapped = mapProfileResponse(data);
         store.setUnitSystem(newSystem as 'metric' | 'imperial');
         store.setProfile(mapped);
+        Alert.alert('Saved');
       } catch {
         setError("Couldn't save unit preference.");
       } finally {
@@ -139,6 +142,7 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
         const { data } = await api.put('users/profile', { timezone: newValue });
         const mapped = mapProfileResponse(data);
         store.setProfile(mapped);
+        Alert.alert('Saved');
       } catch {
         throw new Error("Couldn't save timezone.");
       }
@@ -157,6 +161,7 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
         const mapped = mapProfileResponse(data);
         store.setCoachingMode(mode);
         store.setProfile(mapped);
+        Alert.alert('Saved');
       } catch {
         setError("Couldn't save coaching mode.");
       } finally {
@@ -171,6 +176,26 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
     // Reset to true to show tooltip again
     useWorkoutPreferencesStore.setState({ showRpeRirTooltip: true });
   }, []);
+
+  // ── Rest Timer change ──
+  const compoundSeconds = profile.preferences?.rest_timer?.compound_seconds ?? 180;
+  const isolationSeconds = profile.preferences?.rest_timer?.isolation_seconds ?? 90;
+
+  const handleTimerChange = useCallback(
+    async (compound: number, isolation: number) => {
+      setSavingTimer(true); setError(null);
+      try {
+        const existingPrefs = profile.preferences ?? {};
+        const { data } = await api.put('users/profile', {
+          preferences: { ...existingPrefs, rest_timer: { compound_seconds: compound, isolation_seconds: isolation } },
+        });
+        store.setProfile(mapProfileResponse(data));
+        Alert.alert('Saved');
+      } catch { setError("Couldn't save rest timer."); }
+      finally { setSavingTimer(false); }
+    },
+    [profile, store],
+  );
 
   const timezoneDisplay = profile.timezone ?? detectTimezone();
 
@@ -187,8 +212,8 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
           ) : (
             <SegmentedControl
               options={[
-                { value: 'metric', label: 'Metric' },
-                { value: 'imperial', label: 'Imperial' },
+                { value: 'metric', label: 'Metric (kg, cm)' },
+                { value: 'imperial', label: 'Imperial (lbs, ft)' },
               ]}
               selected={unitSystem}
               onChange={handleUnitChange}
@@ -226,6 +251,35 @@ export function PreferencesSection({ profile, unitSystem, coachingMode }: Prefer
           trackColor={{ false: c.border.default, true: c.accent.primaryMuted }}
           thumbColor={simpleMode ? c.accent.primary : c.text.muted}
           accessibilityLabel="Toggle simple mode"
+        />
+      </View>
+
+      {/* Rest Timer */}
+      <View style={[styles.row, { borderBottomColor: c.border.subtle }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.rowLabel, { color: c.text.muted }]}>Rest Timer (Compound)</Text>
+          <Text style={{ color: c.text.muted, fontSize: typography.size.xs, marginTop: 2 }}>
+            Squats, bench, deadlifts, rows
+          </Text>
+        </View>
+        <SegmentedControl
+          options={[{ value: '120', label: '2m' }, { value: '180', label: '3m' }, { value: '240', label: '4m' }, { value: '300', label: '5m' }]}
+          selected={String(compoundSeconds)}
+          onChange={(v) => handleTimerChange(Number(v), isolationSeconds)}
+        />
+        {savingTimer && <ActivityIndicator size="small" color={c.accent.primary} style={{ marginLeft: spacing[2] }} />}
+      </View>
+      <View style={[styles.row, { borderBottomColor: c.border.subtle }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.rowLabel, { color: c.text.muted }]}>Rest Timer (Isolation)</Text>
+          <Text style={{ color: c.text.muted, fontSize: typography.size.xs, marginTop: 2 }}>
+            Curls, laterals, extensions
+          </Text>
+        </View>
+        <SegmentedControl
+          options={[{ value: '60', label: '1m' }, { value: '90', label: '1.5m' }, { value: '120', label: '2m' }, { value: '180', label: '3m' }]}
+          selected={String(isolationSeconds)}
+          onChange={(v) => handleTimerChange(compoundSeconds, Number(v))}
         />
       </View>
 

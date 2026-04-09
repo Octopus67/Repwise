@@ -44,7 +44,7 @@ export function ProgressBar({
   }));
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: target || 100, now: value }}>
       <View style={styles.barRow}>
         <View style={[styles.track, { height, backgroundColor: trackColor }]}>
           <Animated.View

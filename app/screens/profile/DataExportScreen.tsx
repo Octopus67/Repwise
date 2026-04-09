@@ -56,8 +56,8 @@ export function DataExportScreen() {
     try {
       const res = await api.get('export/history');
       setHistory(res.data);
-    } catch {
-      // silent
+    } catch (err) {
+      console.error('[DataExport] History load failed:', err);
     }
   }, []);
 
@@ -118,7 +118,8 @@ export function DataExportScreen() {
           Alert.alert('Error', 'Download failed. Please try again.');
         }
       }
-    } catch {
+    } catch (err) {
+      console.error('[DataExport] Download failed:', err);
       Alert.alert('Error', 'Could not download export.');
     }
   };
@@ -136,7 +137,8 @@ export function DataExportScreen() {
             try {
               await api.delete(`export/${exportId}`);
               await fetchHistory();
-            } catch {
+            } catch (err) {
+              console.error('[DataExport] Delete failed:', err);
               Alert.alert('Error', 'Could not delete export.');
             }
           },

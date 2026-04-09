@@ -141,6 +141,19 @@ export function VolumeTrendChart({ trend, landmarks }: VolumeTrendChartProps) {
             {v}
           </SvgText>
         ))}
+        {/* Y-axis title */}
+        <SvgText
+          x={8}
+          y={PAD.top + PLOT_H / 2}
+          textAnchor="middle"
+          fill={c.text.muted}
+          fontSize={7}
+          rotation={-90}
+          originX={8}
+          originY={PAD.top + PLOT_H / 2}
+        >
+          Sets / week
+        </SvgText>
       </Svg>
     </View>
   );

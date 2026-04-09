@@ -8,6 +8,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useReduceMotion } from '../../hooks/useReduceMotion';
 import { motion } from '../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 
@@ -30,6 +31,7 @@ export function Skeleton({
   const styles = getThemedStyles(c);
   const resolvedRadius = variant === 'circle' ? height / 2 : borderRadius;
   const isWeb = Platform.OS === 'web';
+  const reduceMotion = useReduceMotion();
 
   const [containerWidth, setContainerWidth] = useState(0);
   const translateX = useSharedValue(0);
@@ -38,6 +40,10 @@ export function Skeleton({
   const onLayout = (e: LayoutChangeEvent) => setContainerWidth(e.nativeEvent.layout.width);
 
   useEffect(() => {
+    if (reduceMotion) {
+      opacity.value = 0.5;
+      return;
+    }
     if (isWeb) {
       opacity.value = withRepeat(withTiming(0.7, { duration: motion.duration.pulse }), -1, true);
       return;
@@ -50,7 +56,7 @@ export function Skeleton({
         false,
       );
     }
-  }, [containerWidth, isWeb]);
+  }, [containerWidth, isWeb, reduceMotion]);
 
   const shimmerStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],

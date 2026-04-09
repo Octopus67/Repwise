@@ -147,6 +147,10 @@ export function NotificationSettingsScreen() {
   };
 
   const handleSendTest = async () => {
+    if (Platform.OS === 'web') {
+      Alert.alert('Web Limitation', 'Push notifications require the Repwise mobile app. Download on iOS or Android to enable notifications.');
+      return;
+    }
     setSendingTest(true);
     try {
       await Notifications.scheduleNotificationAsync({

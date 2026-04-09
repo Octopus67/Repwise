@@ -13,6 +13,7 @@ import type { OverloadSuggestion, UnitSystem } from '../../types/training';
 import { convertWeight } from '../../utils/unitConversion';
 import { typography, spacing, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 
 export interface OverloadBadgeProps {
   suggestion: OverloadSuggestion | null;
@@ -49,7 +50,7 @@ export const OverloadBadge = React.memo<OverloadBadgeProps>(({
     >
       <View style={[styles.dot, { backgroundColor: dotColor }]} />
       <Text style={styles.text}>
-        💡 Try {displayWeight}{unit} × {suggestion.suggested_reps}
+        <Icon name="lightbulb" size={14} color={c.text.secondary} /> Try {displayWeight}{unit} × {suggestion.suggested_reps}
       </Text>
     </TouchableOpacity>
   );

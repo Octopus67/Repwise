@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { typography, spacing } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../../components/common/Icon';
 import api from '../../services/api';
 import { extractApiError } from '../../utils/extractApiError';
 import type { ProfileScreenProps } from '../../types/navigation';
@@ -160,7 +161,7 @@ export function PrepSundayFlow({ navigation }: ProfileScreenProps<'PrepSunday'>)
 
       {step === 'confirm' && (
         <View style={styles.confirmView}>
-          <Text style={[styles.confirmText, { color: c.text.primary }]}>Plan saved! 🎉</Text>
+          <Text style={[styles.confirmText, { color: c.text.primary }]}>Plan saved! <Icon name="trophy" size={14} color={c.accent.primary} /></Text>
           <TouchableOpacity
             style={[styles.nextBtn, { backgroundColor: c.accent.primary }]}
             onPress={() => navigation?.navigate?.('MealPlan')}

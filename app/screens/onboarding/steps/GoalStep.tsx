@@ -155,7 +155,7 @@ export function GoalStep({ onNext }: Props) {
             <Text style={[styles.errorText, { color: c.semantic.negative }]}>Target weight must be between 30-300 kg</Text>
           )}
           {targetDirectionWarning && targetWeightValid && (
-            <Text style={[styles.warningHint, { color: c.semantic.warning }]}>⚠ {targetDirectionWarning}</Text>
+            <Text style={[styles.warningHint, { color: c.semantic.warning }]}><Icon name="alert-triangle" size={14} color={c.semantic.warning} /> {targetDirectionWarning}</Text>
           )}
         </View>
       )}

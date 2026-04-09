@@ -2,7 +2,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Skeleton } from '../common/Skeleton';
-import { MUSCLE_REGIONS, BODY_OUTLINES } from './anatomicalPaths';
+import { MUSCLE_REGIONS, BODY_OUTLINES, COMPOSITE_MUSCLE_MAP } from './anatomicalPathsV2';
 import { BodySilhouette } from './BodySilhouette';
 import { HeatMapLegend } from './HeatMapLegend';
 import type { MuscleGroupVolume } from '../../types/analytics';
@@ -12,16 +12,30 @@ interface BodyHeatMapProps {
   onMusclePress: (muscleGroup: string) => void;
   isLoading?: boolean;
   error?: string | null;
+  isWNS?: boolean;
 }
 
-export function BodyHeatMap({ muscleVolumes, onMusclePress, isLoading, error }: BodyHeatMapProps) {
+export function BodyHeatMap({ muscleVolumes, onMusclePress, isLoading, error, isWNS }: BodyHeatMapProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const safeVolumes = Array.isArray(muscleVolumes) ? muscleVolumes : [];
   const volumeMap = new Map<string, MuscleGroupVolume>(
     safeVolumes.map((v) => [v.muscle_group, v]),
   );
-  const hasData = safeVolumes.length > 0 && safeVolumes.some((v) => v.effective_sets > 0);
+
+  // Distribute composite muscles (e.g. 'back' → lats, traps, erectors)
+  for (const [composite, targets] of Object.entries(COMPOSITE_MUSCLE_MAP)) {
+    const compositeVol = volumeMap.get(composite);
+    if (compositeVol) {
+      for (const target of targets) {
+        if (!volumeMap.has(target)) {
+          volumeMap.set(target, { ...compositeVol, muscle_group: target });
+        }
+      }
+    }
+  }
+
+  const hasData = safeVolumes.length > 0 && safeVolumes.some((v) => v.effective_sets > 0 || (v.hypertrophy_units ?? 0) > 0);
 
   // Show skeleton only on initial load with no data
   if (isLoading && safeVolumes.length === 0) {
@@ -60,6 +74,7 @@ export function BodyHeatMap({ muscleVolumes, onMusclePress, isLoading, error }: 
             outline={frontOutline}
             volumeMap={volumeMap}
             onRegionPress={onMusclePress}
+            isWNS={isWNS}
           />
         </View>
         <View style={styles.diagramCol}>
@@ -70,6 +85,7 @@ export function BodyHeatMap({ muscleVolumes, onMusclePress, isLoading, error }: 
             outline={backOutline}
             volumeMap={volumeMap}
             onRegionPress={onMusclePress}
+            isWNS={isWNS}
           />
         </View>
       </View>

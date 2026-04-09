@@ -203,7 +203,7 @@ export function ProfileScreen() {
         <Animated.View style={featuresAnim}>
           <SectionHeader title="Features" />
           <Card>
-            <FeatureNavItem icon={<Icon name="target" size={22} color={c.text.secondary} />} label="Coaching" description="AI-powered training guidance" onPress={() => navigation.navigate('Coaching')} />
+            <FeatureNavItem icon={<Icon name="target" size={22} color={c.text.secondary} />} label="Coaching" description={premium ? "AI-powered training guidance" : "Premium — Unlock 1:1 coaching"} onPress={() => premium ? navigation.navigate('Coaching') : setShowUpgrade(true)} />
             <FeatureNavItem icon={<Icon name="chat" size={22} color={c.text.secondary} />} label="Community" description="Connect with other lifters" onPress={() => navigation.navigate('Community')} />
             <FeatureNavItem icon={<Icon name="dumbbell" size={22} color={c.text.secondary} />} label="Founder's Story" description="The story behind Repwise" onPress={() => navigation.navigate('FounderStory')} />
 
@@ -226,14 +226,16 @@ export function ProfileScreen() {
             <View style={styles.subRow}>
               <Text style={[styles.subLabel, { color: c.text.secondary }]}>Status</Text>
               <Text style={[styles.subValue, premium && styles.subActive]}>
-                {store.subscription?.status ?? 'Free'}
+                {(store.subscription?.status ?? 'Free').replace(/^\w/, (ch: string) => ch.toUpperCase())}
               </Text>
             </View>
             {store.subscription?.currentPeriodEnd && (
               <View style={styles.subRow}>
-                <Text style={[styles.subLabel, { color: c.text.secondary }]}>Renews</Text>
+                <Text style={[styles.subLabel, { color: c.text.secondary }]}>
+                  {store.subscription.status === 'active' ? 'Renews' : 'Expires'}
+                </Text>
                 <Text style={[styles.subValue, { color: c.text.primary }]}>
-                  {new Date(store.subscription.currentPeriodEnd).toLocaleDateString()}
+                  {new Date(store.subscription.currentPeriodEnd).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                 </Text>
               </View>
             )}

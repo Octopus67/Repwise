@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity
 import { ModalContainer } from '../common/ModalContainer';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 import { getVolumeStatusColor, getVolumeStatusLabel } from '../../utils/muscleVolumeLogic';
 import { HUExplainerSheet } from '../education/HUExplainerSheet';
 import api from '../../services/api';
@@ -130,7 +131,7 @@ export function DrillDownModal({ visible, muscleGroup, weekStart, onClose, wnsVo
       <ScrollView style={styles.scroll}>
         {error && (
           <View style={[styles.errorBanner, { backgroundColor: c.semantic.warningSubtle }]}>
-            <Text style={[styles.errorText, { color: c.semantic.warning }]}>⚠️ {error}</Text>
+            <Text style={[styles.errorText, { color: c.semantic.warning }]}><Icon name="alert-triangle" size={14} color={c.semantic.warning} /> {error}</Text>
           </View>
         )}
         {loading ? (

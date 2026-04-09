@@ -85,6 +85,7 @@ export function HeatMapCard() {
             muscleVolumes={volumes}
             onMusclePress={handleMusclePress}
             isLoading={false}
+            isWNS={isWNS}
           />
 
           {/* Frequency summary */}
@@ -152,7 +153,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    backgroundColor: c.bg.overlay,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1,

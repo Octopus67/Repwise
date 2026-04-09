@@ -14,11 +14,12 @@ interface Props {
 function BarRow({ label, value }: { label: string; value: number }) {
   const c = useThemeColors();
   const pct = Math.min(value * 100, 100);
+  const barColor = pct <= 30 ? c.semantic.positive : pct <= 60 ? c.semantic.warning : c.semantic.negative;
   return (
     <View style={getStyles().barRow}>
       <Text style={[getStyles().barLabel, { color: c.text.secondary }]}>{label}</Text>
       <View style={[getStyles().barTrack, { backgroundColor: c.bg.surfaceRaised }]}>
-        <View style={[getStyles().barFill, { width: `${pct}%` }]} />
+        <View style={[getStyles().barFill, { width: `${pct}%`, backgroundColor: barColor }]} />
       </View>
       <Text style={[getStyles().barValue, { color: c.text.secondary }]}>{(value * 100).toFixed(0)}%</Text>
     </View>

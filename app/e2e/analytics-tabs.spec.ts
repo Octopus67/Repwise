@@ -24,14 +24,10 @@ test.describe('Analytics Tabs', () => {
     await expect(trainingTab).toBeVisible({ timeout: 5000 });
     await expect(bodyTab).toBeVisible({ timeout: 5000 });
 
-    // Also verify the text content
-    const nutritionText = page.getByText('Nutrition').first();
-    const trainingText = page.getByText('Training').first();
-    const bodyText = page.getByText('Body').first();
-
-    await expect(nutritionText).toBeVisible({ timeout: 3000 });
-    await expect(trainingText).toBeVisible({ timeout: 3000 });
-    await expect(bodyText).toBeVisible({ timeout: 3000 });
+    // Also verify the text content within each tab
+    await expect(nutritionTab.getByText('Nutrition')).toBeVisible({ timeout: 3000 });
+    await expect(trainingTab.getByText('Training')).toBeVisible({ timeout: 3000 });
+    await expect(bodyTab.getByText('Body')).toBeVisible({ timeout: 3000 });
   });
 
   test('can switch to training tab', async ({ page }) => {

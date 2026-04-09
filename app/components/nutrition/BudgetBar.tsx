@@ -43,7 +43,7 @@ export function BudgetBar({ consumed, targets }: BudgetBarProps) {
       {/* Remaining calories */}
       <View style={getStyles().calorieRow}>
         <Text style={[getStyles().calorieNumber, { color: calorieColor }]}>
-          {Math.round(remaining.calories)}
+          {Math.abs(Math.round(remaining.calories))}
         </Text>
         <Text style={[getStyles().calorieLabel, { color: c.text.secondary }]}>
           {isOver ? 'kcal over' : 'kcal remaining'}
@@ -82,11 +82,12 @@ function MacroChip({ label, value, unit, consumed, target }: {
 }) {
   const c = useThemeColors();
   const chipColor = getOverTargetColor(consumed, target, c.text.secondary);
+  const isOver = value < 0;
   return (
     <View style={getStyles().macroChip}>
       <Text style={[getStyles().macroLabel, { color: c.text.muted }]}>{label}</Text>
       <Text style={[getStyles().macroValue, { color: chipColor }]}>
-        {Math.round(value)}{unit}
+        {Math.abs(Math.round(value))}{unit}{isOver ? ' over' : ''}
       </Text>
     </View>
   );

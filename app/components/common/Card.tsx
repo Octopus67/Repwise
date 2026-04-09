@@ -85,6 +85,7 @@ export function Card({
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       activeOpacity={0.8}
+      accessibilityRole="button"
       style={[cardStyles, hoverBorder, style]}
       {...hoverProps}
     >

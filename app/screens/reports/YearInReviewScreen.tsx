@@ -59,7 +59,7 @@ export function YearInReviewScreen({ navigation }: ProfileScreenProps<'YearInRev
     if (!report) return;
     try {
       await Share.share({
-        message: `${report.year} Year in Review — ${report.total_workouts} workouts, ${Math.round(report.training.total_volume)}kg volume, ${report.total_prs} PRs, ${report.longest_streak}-day streak 💪`,
+        message: `${report.year} Year in Review — ${report.total_workouts} workouts, ${Math.round(report.training.total_volume)}kg volume, ${report.total_prs} PRs, ${report.longest_streak}-day streak`,
       });
     } catch {
       Alert.alert('Error', 'Could not share report');

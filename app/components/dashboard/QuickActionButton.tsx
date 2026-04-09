@@ -47,7 +47,7 @@ export const QuickActionButton = React.memo(function QuickActionButton({
           <Text style={[styles.label, { color: c.text.secondary }]}>{label}</Text>
           {completed && (
             <View style={[styles.badge, { backgroundColor: c.semantic.positive }]} testID="checkmark-badge">
-              <Icon name="check" size={12} color={c.semantic.positive} />
+              <Icon name="check" size={12} color={'#FFFFFF'} />
             </View>
           )}
         </Card>

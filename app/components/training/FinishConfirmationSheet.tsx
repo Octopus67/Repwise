@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform, Modal, 
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 import type { WorkoutSummaryResult } from '../../utils/workoutSummary';
 import type { PersonalRecordResponse } from '../../types/training';
 
@@ -71,7 +72,7 @@ export function FinishConfirmationSheet({
       {/* PRs */}
       {prs.length > 0 && (
         <View style={styles.prSection}>
-          <Text style={[styles.prTitle, { color: c.premium.gold }]}>🏆 Personal Records</Text>
+          <Text style={[styles.prTitle, { color: c.premium.gold }]}><Icon name="trophy" size={16} color={c.premium.gold} /> Personal Records</Text>
           <ScrollView style={styles.prList} nestedScrollEnabled>
             {prs.map((pr, i) => (
               <Text key={`${pr.exercise_name}-${i}`} style={[styles.prItem, { color: c.text.secondary }]}>

@@ -2,6 +2,7 @@ import React, { forwardRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 
 interface ReportCardProps {
   report: {
@@ -31,7 +32,7 @@ export const ReportCard = forwardRef<View, ReportCardProps>(({ report }, ref) =>
         <StatBox label="Compliance" value={compliancePct != null ? `${compliancePct.toFixed(0)}%` : '—'} />
         <StatBox label="Weight Δ" value={trendStr} />
       </View>
-      {topRec ? <Text style={getStyles().rec}>💡 {topRec}</Text> : null}
+      {topRec ? <Text style={getStyles().rec}><Icon name="lightbulb" size={14} color={getThemeColors().text.secondary} /> {topRec}</Text> : null}
       <Text style={getStyles().brand}>Repwise</Text>
     </View>
   );

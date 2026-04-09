@@ -85,6 +85,8 @@ export function FilterPill({ label, active, onPress }: FilterPillProps) {
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
       style={[styles.pill, animatedStyle, pressStyle, hoverBorderStyle]}
       {...hoverProps}
     >

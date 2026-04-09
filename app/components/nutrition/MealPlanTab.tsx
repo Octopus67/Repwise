@@ -107,7 +107,7 @@ export function MealPlanTab({ onSelectPlan, onFavoriteSaved }: Props) {
               onPress={() => handleSelectPlan(meal)} onLongPress={() => handleDeletePlan(meal)} activeOpacity={0.7}>
               <View style={styles.planCardHeader}>
                 <Text style={[styles.planCardName, { color: c.text.primary }]} numberOfLines={1}>{meal.name}</Text>
-                <TouchableOpacity onPress={() => handleFavoritePlan(meal)} activeOpacity={0.7}><Text style={styles.planFavIcon}>⭐</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => handleFavoritePlan(meal)} activeOpacity={0.7}><Icon name="star" size={16} color={c.accent.primary} /></TouchableOpacity>
               </View>
               <Text style={[styles.planCardMacros, { color: c.text.muted }]}>
                 {Math.round(meal.calories)} kcal · {Math.round(meal.protein_g)}g P · {Math.round(meal.carbs_g)}g C · {Math.round(meal.fat_g)}g F

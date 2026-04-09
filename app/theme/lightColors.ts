@@ -45,6 +45,8 @@ export const lightColors = {
     cautionSubtle: 'rgba(234,88,12,0.10)',
     overTarget: '#4B6A9B',
     overTargetSubtle: 'rgba(75,106,155,0.12)',
+    info: '#0EA5E9',
+    infoSubtle: 'rgba(14,165,233,0.10)',
   },
 
   premium: {
@@ -53,9 +55,19 @@ export const lightColors = {
   },
 
   gradient: {
-    premiumCta: ['#0369A1', '#0369A1'] as const,
+    premiumCta: ['#0369A1', '#075985'] as const,
     start: '#0369A1',
     end: '#0369A1',
+  },
+
+  gradientArrays: {
+    primary: ['#0891B2', '#0E7490'],
+    premium: ['#0369A1', '#075985'],
+    calories: ['#0891B2', '#0E7490'],
+    protein: ['#16A34A', '#15803D'],
+    carbs: ['#D97706', '#B45309'],
+    fat: ['#DC2626', '#B91C1C'],
+    volume: ['#8B5CF6', '#7C3AED'],
   },
 
   chart: {
@@ -71,13 +83,13 @@ export const lightColors = {
 
   macro: {
     calories: '#0369A1',
-    caloriesSubtle: 'rgba(2,132,199,0.10)',
+    caloriesSubtle: 'rgba(3,105,161,0.10)',
     protein: '#15803D',
     proteinSubtle: 'rgba(21,128,61,0.10)',
     carbs: '#B45309',
     carbsSubtle: 'rgba(180,83,9,0.10)',
-    fat: '#DB2777',
-    fatSubtle: 'rgba(219,39,119,0.10)',
+    fat: '#DC2626',
+    fatSubtle: 'rgba(220,38,38,0.10)',
   },
 
   error: '#DC2626',

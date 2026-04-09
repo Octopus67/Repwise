@@ -58,7 +58,8 @@ export function PRHistoryScreen({ navigation }: { navigation: { goBack: () => vo
       const items: PRRecord[] = Array.isArray(data) ? data : data.items ?? [];
       setRecords((prev) => offset === 0 ? items : [...prev, ...items]);
       setHasMore(items.length >= PAGE_SIZE);
-    } catch {
+    } catch (err) {
+      console.error('[PRHistory] Load failed:', err);
       setError('Failed to load personal records');
     } finally {
       setLoading(false);
@@ -137,7 +138,7 @@ export function PRHistoryScreen({ navigation }: { navigation: { goBack: () => vo
       <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']}>
         {header}
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyEmoji}>🏆</Text>
+          <Text style={styles.emptyEmoji}><Icon name="trophy" size={40} color={c.accent.primary} /></Text>
           <Text style={[styles.emptyText, { color: c.text.muted }]}>
             Hit the gym and set your first PR!
           </Text>

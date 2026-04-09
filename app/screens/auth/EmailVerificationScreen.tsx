@@ -60,7 +60,7 @@ export function EmailVerificationScreen({ email, onVerified, onBack }: EmailVeri
     verifyLimiter.recordAttempt();
     try {
       await api.post('auth/verify-email', { code: verificationCode });
-      Alert.alert('Email Verified! ✅', 'Your email has been verified successfully.', [
+      Alert.alert('Email Verified!', 'Your email has been verified successfully.', [
         { text: 'Continue', onPress: onVerified },
       ]);
     } catch (err: unknown) {

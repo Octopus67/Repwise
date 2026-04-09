@@ -13,6 +13,7 @@ import Animated from 'react-native-reanimated';
 import { ModalContainer } from '../common/ModalContainer';
 import { spacing, typography, radius, colors } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 import { getVolumeStatus, type VolumeLandmarks, type VolumeStatus } from '../../utils/wnsRecommendations';
 import { formatMuscle } from '../../utils/formatting';
 import { haptic } from '../../utils/haptics';
@@ -31,8 +32,8 @@ export interface WorkoutSummaryModalProps {
 }
 
 const STATUS_LABEL: Record<VolumeStatus, { label: string; emoji: string }> = {
-  below_mev: { label: 'Below threshold', emoji: '⚠️' },
-  optimal: { label: 'Optimal', emoji: '✅' },
+  below_mev: { label: 'Below threshold', emoji: 'alert-triangle' },
+  optimal: { label: 'Optimal', emoji: 'check' },
   approaching_mrv: { label: 'Near limit', emoji: '🟠' },
   above_mrv: { label: 'Over limit', emoji: '🔴' },
 };
@@ -70,7 +71,7 @@ export function WorkoutSummaryModal({
   }, [visible]);
 
   return (
-    <ModalContainer visible={visible} onClose={onClose} title="Workout Complete! 💪">
+    <ModalContainer visible={visible} onClose={onClose} title={<><Text>Workout Complete! </Text><Icon name="muscle" size={16} color={c.accent.primary} /></>}>
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Summary stats with staggered entrance */}
         <View style={styles.statsRow}>
@@ -95,7 +96,9 @@ export function WorkoutSummaryModal({
                       {hu.toFixed(1)} HU
                     </Text>
                     <Text style={styles.muscleStatus}>
-                      {statusInfo.emoji} {statusInfo.label}
+                      {statusInfo.emoji === 'alert-triangle' ? <Icon name="alert-triangle" size={14} color={c.semantic.warning} /> :
+                       statusInfo.emoji === 'check' ? <Icon name="check" size={14} color={c.semantic.success} /> :
+                       statusInfo.emoji} {statusInfo.label}
                     </Text>
                   </View>
                 </View>

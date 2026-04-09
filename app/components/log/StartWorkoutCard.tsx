@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { spacing, typography, radius, letterSpacing as ls } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 import type { WorkoutTemplateResponse } from '../../types/training';
 
 // ─── 5.1: Props Interface ────────────────────────────────────────────────────
@@ -42,7 +43,7 @@ export function StartWorkoutCard({
   return (
     <View style={[styles.card, { backgroundColor: c.accent.primaryMuted }]}>
       {/* 5.2: Title */}
-      <Text style={[styles.title, { color: c.text.primary }]}>🏋️ Start Workout</Text>
+      <Text style={[styles.title, { color: c.text.primary }]}><Icon name="dumbbell" size={16} color={c.accent.primary} /> Start Workout</Text>
 
       {/* 5.3 / 5.5: Buttons */}
       <View style={styles.buttonRow}>

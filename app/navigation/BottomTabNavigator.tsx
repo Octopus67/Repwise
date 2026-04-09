@@ -28,9 +28,11 @@ const CoachingScreen = React.lazy(() => import('../screens/coaching/CoachingScre
 const CommunityScreen = React.lazy(() => import('../screens/community/CommunityScreen').then(m => ({ default: m.CommunityScreen })));
 const FeedScreen = React.lazy(() => import('../screens/social/FeedScreen').then(m => ({ default: m.FeedScreen })));
 const LeaderboardScreen = React.lazy(() => import('../screens/social/LeaderboardScreen').then(m => ({ default: m.LeaderboardScreen })));
+const DiscoverScreen = React.lazy(() => import('../screens/social/DiscoverScreen').then(m => ({ default: m.DiscoverScreen })));
 const FounderStoryScreen = React.lazy(() => import('../screens/founder/FounderStoryScreen').then(m => ({ default: m.FounderStoryScreen })));
 const NutritionReportScreen = React.lazy(() => import('../screens/nutrition/NutritionReportScreen').then(m => ({ default: m.NutritionReportScreen })));
 const ExerciseHistoryScreen = React.lazy(() => import('../screens/training/ExerciseHistoryScreen').then(m => ({ default: m.ExerciseHistoryScreen })));
+const HUExplainerScreen = React.lazy(() => import('../screens/analytics/HUExplainerScreen').then(m => ({ default: m.HUExplainerScreen })));
 const WeeklyReportScreen = React.lazy(() => import('../screens/reports/WeeklyReportScreen').then(m => ({ default: m.WeeklyReportScreen })));
 const MonthlyReportScreen = React.lazy(() => import('../screens/reports/MonthlyReportScreen').then(m => ({ default: m.MonthlyReportScreen })));
 const YearInReviewScreen = React.lazy(() => import('../screens/reports/YearInReviewScreen').then(m => ({ default: m.YearInReviewScreen })));
@@ -125,6 +127,7 @@ export type ProfileStackParamList = {
   Community: undefined;
   Feed: undefined;
   Leaderboard: undefined;
+  Discover: undefined;
   FounderStory: undefined;
   ProgressPhotos: undefined;
   Measurements: undefined;
@@ -136,7 +139,6 @@ export type ProfileStackParamList = {
   PRHistory: undefined;
   YearInReview: undefined;
   ImportData: undefined;
-  MetricsHistory: undefined; // Audit fix 7.7 — typed navigation
 };
 
 export type BottomTabParamList = {
@@ -150,7 +152,7 @@ export type BottomTabParamList = {
 
 export const TAB_NAMES: (keyof BottomTabParamList)[] = ['Home', 'Log', 'Analytics', 'Profile'];
 export const PROFILE_STACK_ROUTES: (keyof ProfileStackParamList)[] = [
-  'ProfileHome', 'Learn', 'ArticleDetail', 'Coaching', 'Community', 'Feed', 'Leaderboard', 'FounderStory', 'ProgressPhotos', 'Measurements', 'MealPlan', 'ShoppingList', 'PrepSunday', 'NotificationSettings', 'DataExport', 'PRHistory', 'YearInReview', 'ImportData',
+  'ProfileHome', 'Learn', 'ArticleDetail', 'Coaching', 'Community', 'Feed', 'Leaderboard', 'Discover', 'FounderStory', 'ProgressPhotos', 'Measurements', 'MealPlan', 'ShoppingList', 'PrepSunday', 'NotificationSettings', 'DataExport', 'PRHistory', 'YearInReview', 'ImportData',
 ];
 
 // ─── Stack navigators ────────────────────────────────────────────────────────
@@ -260,6 +262,7 @@ function AnalyticsStackScreen() {
       <AnalyticsStack.Screen name="WeeklyReport" component={withSuspense(WeeklyReportScreen)} />
       <AnalyticsStack.Screen name="MonthlyReport" component={withSuspense(MonthlyReportScreen)} />
       <AnalyticsStack.Screen name="ExerciseHistory" component={withSuspense(ExerciseHistoryScreen)} options={{ headerShown: false }} />
+      <AnalyticsStack.Screen name="HUExplainer" component={withSuspense(HUExplainerScreen)} options={{ title: 'Hypertrophy Units' }} />
     </AnalyticsStack.Navigator>
     </ErrorBoundary>
   );
@@ -301,6 +304,7 @@ function ProfileStackScreen() {
       <ProfileStack.Screen name="Community" component={withSuspense(CommunityScreen)} />
       <ProfileStack.Screen name="Feed" component={withSuspense(FeedScreen)} />
       <ProfileStack.Screen name="Leaderboard" component={withSuspense(LeaderboardScreen)} />
+      <ProfileStack.Screen name="Discover" component={withSuspense(DiscoverScreen)} />
       <ProfileStack.Screen name="FounderStory" component={withSuspense(FounderStoryScreen)} />
 
       <ProfileStack.Screen name="ProgressPhotos" component={withSuspense(ProgressPhotosScreen)} />
@@ -320,7 +324,13 @@ function ProfileStackScreen() {
 
 // ─── SVG Tab Icons ───────────────────────────────────────────────────────────
 
-function TabSvgIcon({ name, color }: { name: keyof BottomTabParamList; color: string }) {
+function TabBadge() {
+  return (
+    <View style={{ position: 'absolute', top: -2, right: -4, width: 8, height: 8, borderRadius: 4, backgroundColor: 'red' }} />
+  );
+}
+
+function TabSvgIcon({ name, color, showBadge }: { name: keyof BottomTabParamList; color: string; showBadge?: boolean }) {
   const size = 22;
   const sw = 1.8;
   switch (name) {
@@ -352,10 +362,13 @@ function TabSvgIcon({ name, color }: { name: keyof BottomTabParamList; color: st
       );
     case 'Profile':
       return (
-        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-          <Circle cx="12" cy="8" r="4" stroke={color} strokeWidth={sw} />
-          <Path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" stroke={color} strokeWidth={sw} strokeLinecap="round" />
-        </Svg>
+        <View>
+          <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+            <Circle cx="12" cy="8" r="4" stroke={color} strokeWidth={sw} />
+            <Path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" stroke={color} strokeWidth={sw} strokeLinecap="round" />
+          </Svg>
+          {showBadge && <TabBadge />}
+        </View>
       );
     default:
       return null;
@@ -381,6 +394,7 @@ export function BottomTabNavigator() {
             <TabSvgIcon
               name={route.name as keyof BottomTabParamList}
               color={focused ? themeColors.accent.primary : themeColors.text.muted}
+              showBadge={route.name === 'Profile'}
             />
           </View>
         ),

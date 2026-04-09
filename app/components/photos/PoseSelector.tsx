@@ -7,6 +7,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 import { PoseType, POSE_TYPES } from '../../utils/progressPhotoTypes';
 
 interface PoseSelectorProps {
@@ -24,7 +25,7 @@ const POSE_LABELS: Record<PoseType, string> = {
 
 const POSE_ICONS: Record<PoseType, string> = {
   front_relaxed: '🧍',
-  front_double_bicep: '💪',
+  front_double_bicep: 'muscle',
   side: '🚶',
   back: '🔙',
 };
@@ -47,7 +48,7 @@ export function PoseSelector({ visible, onSelect, onCancel }: PoseSelectorProps)
                 onPress={() => onSelect(pose)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.icon}>{POSE_ICONS[pose]}</Text>
+                {POSE_ICONS[pose] === 'muscle' ? <Icon name="muscle" size={32} color={c.accent.primary} /> : <Text style={styles.icon}>{POSE_ICONS[pose]}</Text>}
                 <Text style={[styles.label, { color: c.text.primary }]}>{POSE_LABELS[pose]}</Text>
               </TouchableOpacity>
             ))}

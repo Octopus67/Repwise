@@ -32,11 +32,11 @@ describe('Token Baseline', () => {
     expect(Math.max(...actualKeys)).toBe(16);
   });
 
-  test('(c) typography.size has 9 entries', () => {
+  test('(c) typography.size has 10 entries', () => {
     const sizeKeys = Object.keys(typography.size);
-    expect(sizeKeys).toHaveLength(9);
+    expect(sizeKeys).toHaveLength(10);
     expect(sizeKeys.sort()).toEqual(
-      ['xs', 'sm', 'base', 'md', 'lg', 'xl', '2xl', '3xl', '5xl'].sort()
+      ['xs', 'sm', 'base', 'md', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl'].sort()
     );
   });
 

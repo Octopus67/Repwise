@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Switch } from 'react-native';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../common/Icon';
 import {
   shouldShowReminder,
   setLightingReminderDismissed,
@@ -54,7 +55,7 @@ export function LightingReminder({ visible, onDismiss, onDontShowAgain }: Lighti
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleDismiss}>
       <View style={[styles.backdrop, { backgroundColor: c.bg.overlay }]}>
         <View style={[styles.card, { backgroundColor: c.bg.surface }]}>
-          <Text style={styles.icon}>💡</Text>
+          <Icon name="lightbulb" size={40} color={c.text.secondary} />
           <Text style={[styles.title, { color: c.text.primary }]}>Lighting Tip</Text>
           <Text style={[styles.body, { color: c.text.secondary }]}>
             For the best comparison results, try to use the same room, same time of day, and prefer
