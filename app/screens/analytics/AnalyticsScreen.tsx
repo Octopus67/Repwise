@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'; // Audit fix 7.3
 import { getLocalDateString } from '../../utils/localDate';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, letterSpacing } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
@@ -368,6 +368,16 @@ export function AnalyticsScreen() {
             </TouchableOpacity>
 
             {/* Calorie trend */}
+            {/* TDEE Card */}
+            {adaptiveTarget && (
+              <Card>
+                <Text style={[styles.sectionTitle, { color: c.text.muted, marginTop: 0 }]}>Estimated TDEE</Text>
+                <Text style={{ color: c.text.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, lineHeight: typography.lineHeight['2xl'] }}>
+                  {adaptiveTarget.calories} kcal
+                </Text>
+              </Card>
+            )}
+
             <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Calorie Trend</Text>
             <View testID="analytics-calorie-chart">
             <Card>
@@ -460,28 +470,33 @@ export function AnalyticsScreen() {
               <>
                 <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Dietary Gaps</Text>
                 <Card>
-                  {gaps.map((gap) => (
-                    <View key={gap.nutrient} style={styles.gapRow}>
-                      <Text style={[styles.gapNutrient, { color: c.text.secondary }]}>{gap.nutrient}</Text>
-                      <View style={[styles.gapBar, { backgroundColor: c.bg.surfaceRaised }]}>
-                        <View
-                          style={[
-                            styles.gapFill,
-                            {
-                              width: `${Math.min((gap.average / gap.recommended) * 100, 100)}%`,
-                              backgroundColor:
-                                gap.deficit_pct > 30
-                                  ? c.semantic.negative
-                                  : gap.deficit_pct > 10
-                                    ? c.semantic.warning
-                                    : c.semantic.positive,
-                            },
-                          ]}
-                        />
+                  <FlatList
+                    data={gaps}
+                    keyExtractor={(gap: DietaryGap) => gap.nutrient}
+                    scrollEnabled={false}
+                    renderItem={({ item: gap }: { item: DietaryGap }) => (
+                      <View style={styles.gapRow}>
+                        <Text style={[styles.gapNutrient, { color: c.text.secondary }]}>{gap.nutrient}</Text>
+                        <View style={[styles.gapBar, { backgroundColor: c.bg.surfaceRaised }]}>
+                          <View
+                            style={[
+                              styles.gapFill,
+                              {
+                                width: `${Math.min((gap.average / gap.recommended) * 100, 100)}%`,
+                                backgroundColor:
+                                  gap.deficit_pct > 30
+                                    ? c.semantic.negative
+                                    : gap.deficit_pct > 10
+                                      ? c.semantic.warning
+                                      : c.semantic.positive,
+                              },
+                            ]}
+                          />
+                        </View>
+                        <Text style={[styles.gapPct, { color: c.semantic.negative }]}>-{Math.round(gap.deficit_pct)}%</Text>
                       </View>
-                      <Text style={[styles.gapPct, { color: c.semantic.negative }]}>-{Math.round(gap.deficit_pct)}%</Text>
-                    </View>
-                  ))}
+                    )}
+                  />
                 </Card>
               </>
             )}
@@ -593,16 +608,20 @@ export function AnalyticsScreen() {
                 description="Start logging workouts to see your volume landmarks"
               />
             ) : (
-              volumeLandmarks.map((mg) => (
-                <VolumeLandmarksCard
-                  key={mg.muscle_group}
-                  muscleGroup={mg.muscle_group}
-                  currentVolume={mg.hypertrophy_units ?? mg.net_stimulus ?? 0}
-                  landmarks={mg.landmarks}
-                  trend={mg.trend?.map((t) => ({ week: t.week, volume: t.volume })) ?? []}
-                  status={mg.status}
-                />
-              ))
+              <FlatList
+                data={volumeLandmarks}
+                keyExtractor={(mg: WNSMuscleVolume) => mg.muscle_group}
+                renderItem={({ item: mg }: { item: WNSMuscleVolume }) => (
+                  <VolumeLandmarksCard
+                    muscleGroup={mg.muscle_group}
+                    currentVolume={mg.hypertrophy_units ?? mg.net_stimulus ?? 0}
+                    landmarks={mg.landmarks}
+                    trend={mg.trend?.map((t) => ({ week: t.week, volume: t.volume })) ?? []}
+                    status={mg.status}
+                  />
+                )}
+                scrollEnabled={false}
+              />
             )}
           </>
         )}

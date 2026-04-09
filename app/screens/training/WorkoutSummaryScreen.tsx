@@ -11,6 +11,7 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
+  FlatList,
   StyleSheet,
   Alert,
 } from 'react-native';
@@ -103,7 +104,7 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
     // Navigate back to session detail with share modal open
     // For now, show a prompt that the feature is available from session detail
     Alert.alert(
-      'Share Your Workout 💪',
+      'Share Your Workout',
       'You can share a branded workout card from the Session Detail screen. Tap the share icon in the header!',
       [{ text: 'Got it', style: 'default' }],
     );
@@ -117,109 +118,117 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
     return `${Math.round(kg)}kg`;
   };
 
+  const renderExerciseItem = useCallback(({ item: exercise, index }: { item: typeof exerciseBreakdown[number]; index: number }) => (
+    <View
+      style={[
+        getStyles().exerciseItem,
+        index === exerciseBreakdown.length - 1 && getStyles().exerciseItemLast,
+      ]}
+    >
+      <View style={getStyles().exerciseHeader}>
+        <Text style={[getStyles().exerciseName, { color: c.text.primary }]}>{exercise.exerciseName}</Text>
+        <Text style={[getStyles().setsCount, { color: c.text.secondary }]}>{exercise.setsCompleted} sets</Text>
+      </View>
+      {exercise.bestSet && (
+        <Text style={[getStyles().bestSet, { color: c.text.muted }]}>
+          Best: {exercise.bestSet.weight}kg × {exercise.bestSet.reps}
+        </Text>
+      )}
+    </View>
+  ), [exerciseBreakdown.length, c]);
+
   return (
     <SafeAreaView style={[getStyles().container, { backgroundColor: c.bg.base }]} edges={['top']}>
-      <ScrollView style={getStyles().scroll} contentContainerStyle={getStyles().scrollContent}>
-        {/* Header */}
-        <View style={getStyles().header}>
-          <CheckmarkIcon />
-          <Text style={[getStyles().title, { color: c.text.primary }]}>Workout Complete</Text>
-        </View>
+      <FlatList
+        data={exerciseBreakdown}
+        keyExtractor={(_, index) => index.toString()}
+        renderItem={renderExerciseItem}
+        style={getStyles().scroll}
+        contentContainerStyle={getStyles().scrollContent}
+        ListHeaderComponent={
+          <>
+            {/* Header */}
+            <View style={getStyles().header}>
+              <CheckmarkIcon />
+              <Text style={[getStyles().title, { color: c.text.primary }]}>Workout Complete</Text>
+            </View>
 
-        {/* Stats Row */}
-        <View style={getStyles().statsRow}>
-          <StatCard label="Duration" value={formatDuration(duration)} />
-          <StatCard label="Exercises" value={summary.exerciseCount.toString()} />
-          <StatCard label="Sets" value={summary.setCount.toString()} />
-          <StatCard label="Volume" value={formatVolume(summary.totalVolumeKg)} />
-        </View>
+            {/* Stats Row */}
+            <View style={getStyles().statsRow}>
+              <StatCard label="Duration" value={formatDuration(duration)} />
+              <StatCard label="Exercises" value={summary.exerciseCount.toString()} />
+              <StatCard label="Sets" value={summary.setCount.toString()} />
+              <StatCard label="Volume" value={formatVolume(summary.totalVolumeKg)} />
+            </View>
 
-        {/* Exercise Breakdown */}
-        <View style={getStyles().section}>
-          <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Exercise Breakdown</Text>
-          <View style={[getStyles().sectionContent, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}>
-            {exerciseBreakdown.map((exercise, index) => (
-              <View
-                key={index}
-                style={[
-                  getStyles().exerciseItem,
-                  index === exerciseBreakdown.length - 1 && getStyles().exerciseItemLast,
-                ]}
-              >
-                <View style={getStyles().exerciseHeader}>
-                  <Text style={[getStyles().exerciseName, { color: c.text.primary }]}>{exercise.exerciseName}</Text>
-                  <Text style={[getStyles().setsCount, { color: c.text.secondary }]}>{exercise.setsCompleted} sets</Text>
+            {/* Exercise Breakdown header */}
+            <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Exercise Breakdown</Text>
+          </>
+        }
+        ListFooterComponent={
+          <>
+            {/* Personal Records */}
+            {personalRecords.length > 0 && (
+              <View style={getStyles().section}>
+                <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Personal Records</Text>
+                <View style={[getStyles().sectionContent, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}>
+                  {personalRecords.map((pr, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        getStyles().prItem,
+                        index === personalRecords.length - 1 && getStyles().prItemLast,
+                      ]}
+                    >
+                      <View style={getStyles().prHeader}>
+                        <Text style={[getStyles().prExercise, { color: c.text.primary }]}>{pr.exercise_name}</Text>
+                        <Text style={[getStyles().prImprovement, { color: c.accent.primary }]}>
+                          {pr.previous_weight_kg
+                            ? `+${(pr.new_weight_kg - pr.previous_weight_kg).toFixed(1)}kg`
+                            : 'New PR!'}
+                        </Text>
+                      </View>
+                      <Text style={[getStyles().prDetails, { color: c.text.secondary }]}>
+                        {pr.new_weight_kg}kg × {pr.reps} reps
+                      </Text>
+                    </View>
+                  ))}
                 </View>
-                {exercise.bestSet && (
-                  <Text style={[getStyles().bestSet, { color: c.text.muted }]}>
-                    Best: {exercise.bestSet.weight}kg × {exercise.bestSet.reps}
-                  </Text>
-                )}
               </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Personal Records */}
-        {personalRecords.length > 0 && (
-          <View style={getStyles().section}>
-            <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Personal Records</Text>
-            <View style={[getStyles().sectionContent, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}>
-              {personalRecords.map((pr, index) => (
-                <View
-                  key={index}
-                  style={[
-                    getStyles().prItem,
-                    index === personalRecords.length - 1 && getStyles().prItemLast,
-                  ]}
-                >
-                  <View style={getStyles().prHeader}>
-                    <Text style={[getStyles().prExercise, { color: c.text.primary }]}>{pr.exercise_name}</Text>
-                    <Text style={[getStyles().prImprovement, { color: c.accent.primary }]}>
-                      {pr.previous_weight_kg
-                        ? `+${(pr.new_weight_kg - pr.previous_weight_kg).toFixed(1)}kg`
-                        : 'New PR!'}
-                    </Text>
-                  </View>
-                  <Text style={[getStyles().prDetails, { color: c.text.secondary }]}>
-                    {pr.new_weight_kg}kg × {pr.reps} reps
+            )}
+            {/* Share Prompt — shown when PRs exist and sharing enabled */}
+            {sharingEnabled && personalRecords.length > 0 && !sharePromptDismissed && (
+              <TouchableOpacity
+                style={[getStyles().sharePrompt, { backgroundColor: c.accent.primaryMuted, borderColor: c.accent.primary }]}
+                onPress={handleShareWorkout}
+                accessibilityLabel="Share your personal records"
+                accessibilityRole="button"
+                testID="share-pr-prompt"
+              >
+                <Icon name="share" size={20} color={c.accent.primary} />
+                <View style={getStyles().sharePromptText}>
+                  <Text style={[getStyles().sharePromptTitle, { color: c.text.primary }]}>
+                    New PR{personalRecords.length > 1 ? 's' : ''}! Share your achievement?
+                  </Text>
+                  <Text style={[getStyles().sharePromptSub, { color: c.text.secondary }]}>
+                    Create a branded card to share with friends
                   </Text>
                 </View>
-              ))}
-            </View>
-          </View>
-        )}
-        {/* Share Prompt — shown when PRs exist and sharing enabled */}
-        {sharingEnabled && personalRecords.length > 0 && !sharePromptDismissed && (
-          <TouchableOpacity
-            style={[getStyles().sharePrompt, { backgroundColor: c.accent.primaryMuted, borderColor: c.accent.primary }]}
-            onPress={handleShareWorkout}
-            accessibilityLabel="Share your personal records"
-            accessibilityRole="button"
-            testID="share-pr-prompt"
-          >
-            <Icon name="share" size={20} color={c.accent.primary} />
-            <View style={getStyles().sharePromptText}>
-              <Text style={[getStyles().sharePromptTitle, { color: c.text.primary }]}>
-                New PR{personalRecords.length > 1 ? 's' : ''}! Share your achievement?
-              </Text>
-              <Text style={[getStyles().sharePromptSub, { color: c.text.secondary }]}>
-                Create a branded card to share with friends
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
+              </TouchableOpacity>
+            )}
 
-        {/* Stimulus Summary — shown when simpleMode is ON */}
-        {simpleMode && muscleData.length > 0 && (
-          <View style={getStyles().section}>
-            <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Muscle Stimulus</Text>
-            <View style={[getStyles().sectionContent, { backgroundColor: c.bg.surface, borderColor: c.border.default, padding: spacing[3] }]}>
-              <StimulusSummary muscleData={muscleData} />
-            </View>
-          </View>
-        )}
-      </ScrollView>
+            {/* Stimulus Summary — shown when simpleMode is ON */}
+            {simpleMode && muscleData.length > 0 && (
+              <View style={getStyles().section}>
+                <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Muscle Stimulus</Text>
+                <View style={[getStyles().sectionContent, { backgroundColor: c.bg.surface, borderColor: c.border.default, padding: spacing[3] }]}>
+                  <StimulusSummary muscleData={muscleData} />
+                </View>
+              </View>
+            )}
+          </>
+        }
+      />
 
       {/* Discovery Modal */}
       <SimpleModeDiscoveryModal visible={discoveryVisible} onClose={() => setDiscoveryVisible(false)} />

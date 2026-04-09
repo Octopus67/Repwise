@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { Icon } from '../../components/common/Icon';
 import { useMicroDashboard, NutrientSummary, DeficiencyAlert } from '../../hooks/useMicroDashboard';
 import {
   getNutrientStatusColor,
@@ -147,74 +148,81 @@ export function MicronutrientDashboardScreen() {
   const scoreLabel = getScoreLabel(data.nutrient_score);
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]} contentContainerStyle={styles.content}>
-      {/* Week Navigator */}
-      <View style={styles.weekNav}>
-        <TouchableOpacity onPress={() => setWeekStart(getAdjacentWeek(weekStart, 'prev'))}>
-          <Text style={[styles.navArrow, { color: c.accent.primary }]}>‹</Text>
-        </TouchableOpacity>
-        <Text style={[styles.weekLabel, { color: c.text.primary }]}>{formatWeekRange(weekStart)}</Text>
-        <TouchableOpacity
-          onPress={() => setWeekStart(getAdjacentWeek(weekStart, 'next'))}
-          disabled={isCurrentOrFutureWeek(getAdjacentWeek(weekStart, 'next'))}
-        >
-          <Text style={[styles.navArrow, isCurrentOrFutureWeek(getAdjacentWeek(weekStart, 'next')) && styles.navDisabled]}>›</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Score Card */}
-      <View style={[styles.scoreCard, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
-        <View style={[styles.scoreRing, { borderColor: scoreColor }]}>
-          <Text style={[styles.scoreNumber, { color: scoreColor }]}>{data.nutrient_score.toFixed(0)}</Text>
-        </View>
-        <View style={styles.scoreInfo}>
-          <Text style={[styles.scoreLabel, { color: scoreColor }]}>{scoreLabel}</Text>
-          <Text style={[styles.scoreSubtext, { color: c.text.muted }]}>
-            Nutrient Quality Score · {data.days_with_data}/{data.days_tracked} days tracked
-            {data.nutrients_with_data != null && ` · ${data.nutrients_with_data}/${data.total_nutrients} nutrients tracked`}
-          </Text>
-        </View>
-      </View>
-
-      {/* Deficiency Alerts */}
-      {data.deficiencies.length > 0 && (
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>⚠️ Deficiency Alerts</Text>
-          {data.deficiencies.slice(0, 5).map(a => (
-            <DeficiencyCard key={a.key} alert={a} />
-          ))}
-        </View>
+    <SectionList
+      sections={sections}
+      keyExtractor={(n: NutrientSummary) => n.key}
+      style={[styles.container, { backgroundColor: c.bg.base }]}
+      contentContainerStyle={styles.content}
+      stickySectionHeadersEnabled={false}
+      renderSectionHeader={({ section }) => (
+        <Text style={[styles.groupTitle, { color: c.text.muted }]}>{section.title}</Text>
       )}
+      renderItem={({ item }: { item: NutrientSummary }) => <NutrientRow nutrient={item} />}
+      ListHeaderComponent={
+        <>
+          {/* Week Navigator */}
+          <View style={styles.weekNav}>
+            <TouchableOpacity onPress={() => setWeekStart(getAdjacentWeek(weekStart, 'prev'))}>
+              <Text style={[styles.navArrow, { color: c.accent.primary }]}>‹</Text>
+            </TouchableOpacity>
+            <Text style={[styles.weekLabel, { color: c.text.primary }]}>{formatWeekRange(weekStart)}</Text>
+            <TouchableOpacity
+              onPress={() => setWeekStart(getAdjacentWeek(weekStart, 'next'))}
+              disabled={isCurrentOrFutureWeek(getAdjacentWeek(weekStart, 'next'))}
+            >
+              <Text style={[styles.navArrow, isCurrentOrFutureWeek(getAdjacentWeek(weekStart, 'next')) && styles.navDisabled]}>›</Text>
+            </TouchableOpacity>
+          </View>
 
-      {/* Top & Worst */}
-      <View style={styles.topWorstRow}>
-        <View style={[styles.topWorstCol, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
-          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>✅ Best</Text>
-          {data.top_nutrients.map(n => (
-            <Text key={n.key} style={[styles.topWorstItem, { color: c.text.secondary }]}>
-              {n.label}: {n.rda_pct.toFixed(0)}%
-            </Text>
-          ))}
-        </View>
-        <View style={[styles.topWorstCol, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
-          <Text style={[styles.sectionTitle, { color: c.text.primary }]}>🔻 Needs Work</Text>
-          {data.worst_nutrients.map(n => (
-            <Text key={n.key} style={[styles.topWorstItem, { color: c.text.secondary }]}>
-              {n.label}: {n.rda_pct.toFixed(0)}%
-            </Text>
-          ))}
-        </View>
-      </View>
+          {/* Score Card */}
+          <View style={[styles.scoreCard, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
+            <View style={[styles.scoreRing, { borderColor: scoreColor }]}>
+              <Text style={[styles.scoreNumber, { color: scoreColor }]}>{data.nutrient_score.toFixed(0)}</Text>
+            </View>
+            <View style={styles.scoreInfo}>
+              <Text style={[styles.scoreLabel, { color: scoreColor }]}>{scoreLabel}</Text>
+              <Text style={[styles.scoreSubtext, { color: c.text.muted }]}>
+                Nutrient Quality Score · {data.days_with_data}/{data.days_tracked} days tracked
+                {data.nutrients_with_data != null && ` · ${data.nutrients_with_data}/${data.total_nutrients} nutrients tracked`}
+              </Text>
+            </View>
+          </View>
 
-      {/* Full Breakdown */}
-      <Text style={[styles.sectionTitle, { marginTop: spacing[4] }]}>Full Breakdown</Text>
-      {sections.map(section => (
-        <View key={section.title} style={styles.groupSection}>
-          <Text style={[styles.groupTitle, { color: c.text.muted }]}>{section.title}</Text>
-          {section.data.map(n => <NutrientRow key={n.key} nutrient={n} />)}
-        </View>
-      ))}
-    </ScrollView>
+          {/* Deficiency Alerts */}
+          {data.deficiencies.length > 0 && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: c.text.primary }]}><Icon name="alert-triangle" size={14} color={c.semantic.warning} /> Deficiency Alerts</Text>
+              {data.deficiencies.slice(0, 5).map(a => (
+                <DeficiencyCard key={a.key} alert={a} />
+              ))}
+            </View>
+          )}
+
+          {/* Top & Worst */}
+          <View style={styles.topWorstRow}>
+            <View style={[styles.topWorstCol, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
+              <Text style={[styles.sectionTitle, { color: c.text.primary }]}><Icon name="check" size={14} color={c.semantic.success} /> Best</Text>
+              {data.top_nutrients.map(n => (
+                <Text key={n.key} style={[styles.topWorstItem, { color: c.text.secondary }]}>
+                  {n.label}: {n.rda_pct.toFixed(0)}%
+                </Text>
+              ))}
+            </View>
+            <View style={[styles.topWorstCol, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}>
+              <Text style={[styles.sectionTitle, { color: c.text.primary }]}>🔻 Needs Work</Text>
+              {data.worst_nutrients.map(n => (
+                <Text key={n.key} style={[styles.topWorstItem, { color: c.text.secondary }]}>
+                  {n.label}: {n.rda_pct.toFixed(0)}%
+                </Text>
+              ))}
+            </View>
+          </View>
+
+          {/* Full Breakdown header */}
+          <Text style={[styles.sectionTitle, { marginTop: spacing[4] }]}>Full Breakdown</Text>
+        </>
+      }
+    />
   );
 }
 

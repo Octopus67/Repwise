@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { getLocalDateString } from '../../utils/localDate';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Share, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, TouchableOpacity, ActivityIndicator, Share, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { captureRef } from 'react-native-view-shot';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../../components/common/Card';
@@ -83,10 +84,10 @@ function getGoalMultiplier(goalType: string, rate: number | null): number {
 function getWNSStatusInfo(status: WNSMuscleVolume['status']): { label: string; color: string } {
   const c = getThemeColors();
   switch (status) {
-    case 'optimal': return { label: '✅ Optimal', color: c.semantic.positive };
-    case 'below_mev': return { label: '⬇️ Below MEV', color: c.semantic.warning };
-    case 'approaching_mrv': return { label: '⚠️ Near MRV', color: c.semantic.warning };
-    case 'above_mrv': return { label: '🔴 Above MRV', color: c.semantic.negative };
+    case 'optimal': return { label: 'Optimal', color: c.semantic.positive };
+    case 'below_mev': return { label: 'Below MEV', color: c.semantic.warning };
+    case 'approaching_mrv': return { label: 'Near MRV', color: c.semantic.warning };
+    case 'above_mrv': return { label: 'Above MRV', color: c.semantic.negative };
     default: return { label: status, color: c.text.secondary };
   }
 }
@@ -177,6 +178,18 @@ export function WeeklyReportScreen({ navigation }: AnalyticsScreenProps<'WeeklyR
     if (!report) return;
     try {
       const message = `Week ${report.week}, ${report.year} — ${report.training.session_count} sessions, ${Math.round(report.training.total_volume)}kg volume, ${report.nutrition.compliance_pct}% compliance`;
+
+      // Try image capture first (native only)
+      if (Platform.OS !== 'web' && reportCardRef.current) {
+        try {
+          const uri = await captureRef(reportCardRef, { format: 'png', quality: 0.9 });
+          await Share.share({ message, url: uri });
+          return;
+        } catch {
+          // Fall through to text-only share
+        }
+      }
+
       await Share.share({ message });
     } catch {
       Alert.alert('Error', 'Could not share report');
@@ -189,56 +202,27 @@ export function WeeklyReportScreen({ navigation }: AnalyticsScreenProps<'WeeklyR
     fetchReport(year, week).finally(() => setIsLoading(false));
   };
 
-  return (
-    <SafeAreaView style={[getStyles().safe, { backgroundColor: c.bg.base }]} edges={['top']}>
-      <ScrollView style={getStyles().container} contentContainerStyle={getStyles().content}>
-        {/* Header */}
-        <View style={getStyles().header}>
-          <TouchableOpacity onPress={() => navigation?.goBack?.()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={[getStyles().backBtn, { color: c.accent.primary }]}>‹ Back</Text>
-          </TouchableOpacity>
-          <Text style={[getStyles().title, { color: c.text.primary }]}>Weekly Report</Text>
-          <TouchableOpacity onPress={handleShare} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Icon name="share" size={20} color={c.accent.primary} />
-          </TouchableOpacity>
-        </View>
+  // Build report sections as FlatList data
+  type ReportSection = { key: string };
+  const reportSections = useMemo<ReportSection[]>(() => {
+    if (!report) return [];
+    const items: ReportSection[] = [
+      { key: 'training' },
+      { key: 'nutrition' },
+      { key: 'body' },
+      { key: 'recommendations' },
+    ];
+    if (isWNS && topMuscles.length > 0) items.push({ key: 'volume' });
+    items.push({ key: 'reportCard' });
+    return items;
+  }, [report, isWNS, topMuscles]);
 
-        {/* Week Selector */}
-        <View style={getStyles().weekSelector}>
-          <TouchableOpacity onPress={() => changeWeek(-1)} style={getStyles().weekArrow}>
-            <Text style={[getStyles().arrowText, { color: c.accent.primary }]}>‹</Text>
-          </TouchableOpacity>
-          <Text style={[getStyles().weekLabel, { color: c.text.primary }]}>Week {week}, {year}</Text>
-          <TouchableOpacity
-            onPress={() => changeWeek(1)}
-            style={[getStyles().weekArrow, isCurrentWeek && getStyles().weekArrowDisabled]}
-            disabled={isCurrentWeek}
-          >
-            <Text style={[getStyles().arrowText, isCurrentWeek && getStyles().arrowDisabled]}>›</Text>
-          </TouchableOpacity>
-        </View>
-
-        {isLoading ? (
-          <View style={getStyles().skeletons}>
-            <Skeleton width="100%" height={120} borderRadius={8} />
-            <Skeleton width="100%" height={120} borderRadius={8} />
-            <Skeleton width="100%" height={80} borderRadius={8} />
-            <Skeleton width="100%" height={100} borderRadius={8} />
-          </View>
-        ) : error ? (
-          <View style={getStyles().errorContainer}>
-            <Icon name="alert-circle" size={40} color={c.semantic.negative} />
-            <Text style={[getStyles().errorTitle, { color: c.text.primary }]}>Something went wrong</Text>
-            <Text style={[getStyles().errorMessage, { color: c.text.secondary }]}>{error}</Text>
-            <TouchableOpacity style={[getStyles().retryButton, { backgroundColor: c.accent.primary }]} onPress={handleRetry}>
-              <Text style={[getStyles().retryText, { color: c.text.inverse }]}>Try Again</Text>
-            </TouchableOpacity>
-          </View>
-        ) : !report ? (
-          <EmptyState icon={<Icon name="chart" />} title="No report data" description="No data available for this week. Start logging to see your weekly report." />
-        ) : (
+  const renderReportSection = useCallback(({ item }: { item: ReportSection }) => {
+    if (!report) return null;
+    switch (item.key) {
+      case 'training':
+        return (
           <>
-            {/* Training Section */}
             <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Training</Text>
             <Card>
               {report.training.session_count === 0 ? (
@@ -251,13 +235,16 @@ export function WeeklyReportScreen({ navigation }: AnalyticsScreenProps<'WeeklyR
                     <MetricItem key={mg} label={mg} value={`${Math.round(vol)} kg`} />
                   ))}
                   {report.training.personal_records.map((pr, i) => (
-                    <Text key={i} style={[getStyles().prText, { color: c.semantic.positive }]}>🏆 {pr.exercise_name}: {pr.new_weight_kg}kg × {pr.reps}</Text>
+                    <Text key={i} style={[getStyles().prText, { color: c.semantic.positive }]}><Icon name="trophy" size={14} color={c.accent.primary} /> {pr.exercise_name}: {pr.new_weight_kg}kg × {pr.reps}</Text>
                   ))}
                 </View>
               )}
             </Card>
-
-            {/* Nutrition Section */}
+          </>
+        );
+      case 'nutrition':
+        return (
+          <>
             <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Nutrition</Text>
             <Card>
               {report.nutrition.days_logged === 0 ? (
@@ -277,8 +264,11 @@ export function WeeklyReportScreen({ navigation }: AnalyticsScreenProps<'WeeklyR
                 </View>
               )}
             </Card>
-
-            {/* Body Section */}
+          </>
+        );
+      case 'body':
+        return (
+          <>
             <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Body</Text>
             <Card>
               {report.body.start_weight_kg == null && report.body.end_weight_kg == null ? (
@@ -293,8 +283,11 @@ export function WeeklyReportScreen({ navigation }: AnalyticsScreenProps<'WeeklyR
                 </View>
               )}
             </Card>
-
-            {/* Recommendations Section */}
+          </>
+        );
+      case 'recommendations':
+        return (
+          <>
             <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Recommendations</Text>
             <Card>
               {report.recommendations.length === 0 ? (
@@ -302,61 +295,134 @@ export function WeeklyReportScreen({ navigation }: AnalyticsScreenProps<'WeeklyR
               ) : (
                 report.recommendations.map((rec, i) => (
                   <View key={i} style={getStyles().recRow}>
-                    <Text style={getStyles().recBullet}>💡</Text>
+                    <Text style={getStyles().recBullet}><Icon name="lightbulb" size={14} color={c.text.secondary} /></Text>
                     <Text style={[getStyles().recText, { color: c.text.primary }]}>{rec}</Text>
                   </View>
                 ))
               )}
             </Card>
-
-            {/* Volume Intelligence Section */}
-            {isWNS && topMuscles.length > 0 && (
-              <>
-                <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Volume Intelligence</Text>
-                <Card>
-                  {goals && (
-                    <>
-                      <Text style={[getStyles().goalText, { color: c.text.primary }]}>
-                        Your goal: {GOAL_LABELS[goals.goalType] ?? goals.goalType}
-                        {goals.goalRatePerWeek ? ` (${goals.goalRatePerWeek > 0 ? '+' : ''}${goals.goalRatePerWeek} kg/week)` : ''}
-                      </Text>
-                      {(() => {
-                        const mult = getGoalMultiplier(goals.goalType, goals.goalRatePerWeek);
-                        if (mult === 1.0) return null;
-                        const pct = Math.round(Math.abs(1 - mult) * 100);
-                        return (
-                          <Text style={[getStyles().adjustmentText, { color: c.text.secondary }]}>
-                            Volume adjustment: {mult < 1 ? `-${pct}%` : `+${pct}%`} (recovery capacity {mult < 1 ? 'reduced' : 'enhanced'})
-                          </Text>
-                        );
-                      })()}
-                    </>
-                  )}
-                  {topMuscles.map(m => {
-                    const { label, color } = getWNSStatusInfo(m.status);
-                    const insight = getMuscleInsight(m);
-                    return (
-                      <View key={m.muscle_group} style={[getStyles().muscleRow, { borderTopColor: c.border.subtle }]}>
-                        <View style={getStyles().muscleHeader}>
-                          <Text style={[getStyles().muscleName, { color: c.text.primary }]}>{m.muscle_group}</Text>
-                          <Text style={[getStyles().muscleStatus, { color }]}>{label}</Text>
-                        </View>
-                        <Text style={[getStyles().muscleHU, { color: c.text.secondary }]}>
-                          {m.hypertrophy_units.toFixed(1)} / {m.landmarks.mav_high.toFixed(1)} HU
-                        </Text>
-                        {insight && <Text style={[getStyles().insight, { color: c.text.secondary }]}>💡 {insight}</Text>}
-                      </View>
-                    );
-                  })}
-                </Card>
-              </>
-            )}
-
-            {/* Shareable Report Card */}
-            <ReportCard ref={reportCardRef} report={report} />
           </>
-        )}
-      </ScrollView>
+        );
+      case 'volume':
+        return (
+          <>
+            <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Volume Intelligence</Text>
+            <Card>
+              {goals && (
+                <>
+                  <Text style={[getStyles().goalText, { color: c.text.primary }]}>
+                    Your goal: {GOAL_LABELS[goals.goalType] ?? goals.goalType}
+                    {goals.goalRatePerWeek ? ` (${goals.goalRatePerWeek > 0 ? '+' : ''}${goals.goalRatePerWeek} kg/week)` : ''}
+                  </Text>
+                  {(() => {
+                    const mult = getGoalMultiplier(goals.goalType, goals.goalRatePerWeek);
+                    if (mult === 1.0) return null;
+                    const pct = Math.round(Math.abs(1 - mult) * 100);
+                    return (
+                      <Text style={[getStyles().adjustmentText, { color: c.text.secondary }]}>
+                        Volume adjustment: {mult < 1 ? `-${pct}%` : `+${pct}%`} (recovery capacity {mult < 1 ? 'reduced' : 'enhanced'})
+                      </Text>
+                    );
+                  })()}
+                </>
+              )}
+              {topMuscles.map(m => {
+                const { label, color } = getWNSStatusInfo(m.status);
+                const insight = getMuscleInsight(m);
+                return (
+                  <View key={m.muscle_group} style={[getStyles().muscleRow, { borderTopColor: c.border.subtle }]}>
+                    <View style={getStyles().muscleHeader}>
+                      <Text style={[getStyles().muscleName, { color: c.text.primary }]}>{m.muscle_group}</Text>
+                      <Text style={[getStyles().muscleStatus, { color }]}>
+                        {m.status === 'optimal' && <Icon name="check" size={14} color={c.semantic.positive} />}
+                        {m.status === 'approaching_mrv' && <Icon name="alert-triangle" size={14} color={c.semantic.warning} />}
+                        {' '}{label}
+                      </Text>
+                    </View>
+                    <Text style={[getStyles().muscleHU, { color: c.text.secondary }]}>
+                      {m.hypertrophy_units.toFixed(1)} / {m.landmarks.mav_high.toFixed(1)} HU
+                    </Text>
+                    {insight && <Text style={[getStyles().insight, { color: c.text.secondary }]}><Icon name="lightbulb" size={14} color={c.text.secondary} /> {insight}</Text>}
+                  </View>
+                );
+              })}
+            </Card>
+          </>
+        );
+      case 'reportCard':
+        return <ReportCard ref={reportCardRef} report={report} />;
+      default:
+        return null;
+    }
+  }, [report, c, goals, topMuscles, isWNS, reportCardRef]);
+
+  return (
+    <SafeAreaView style={[getStyles().safe, { backgroundColor: c.bg.base }]} edges={['top']}>
+      <FlatList
+        data={isLoading ? [] : error ? [] : !report ? [] : reportSections}
+        keyExtractor={(item) => item.key}
+        renderItem={renderReportSection}
+        style={getStyles().container}
+        contentContainerStyle={getStyles().content}
+        ListHeaderComponent={
+          <>
+            {/* Header */}
+            <View style={getStyles().header}>
+              <TouchableOpacity onPress={() => navigation?.goBack?.()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Text style={[getStyles().backBtn, { color: c.accent.primary }]}>‹ Back</Text>
+              </TouchableOpacity>
+              <Text style={[getStyles().title, { color: c.text.primary }]}>Weekly Report</Text>
+              <TouchableOpacity onPress={handleShare} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Icon name="share" size={20} color={c.accent.primary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Week Selector */}
+            <View style={getStyles().weekSelector}>
+              <TouchableOpacity onPress={() => changeWeek(-1)} style={getStyles().weekArrow}>
+                <Text style={[getStyles().arrowText, { color: c.accent.primary }]}>‹</Text>
+              </TouchableOpacity>
+              <View style={{ alignItems: 'center' }}>
+                <Text style={[getStyles().weekLabel, { color: c.text.primary }]}>Week {week}, {year}</Text>
+                {report?.week_start && report?.week_end && (
+                  <Text style={{ color: c.text.muted, fontSize: typography.size.sm, marginTop: 2 }}>
+                    {new Date(report.week_start + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {' – '}
+                    {new Date(report.week_end + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </Text>
+                )}
+              </View>
+              <TouchableOpacity
+                onPress={() => changeWeek(1)}
+                style={[getStyles().weekArrow, isCurrentWeek && getStyles().weekArrowDisabled]}
+                disabled={isCurrentWeek}
+              >
+                <Text style={[getStyles().arrowText, isCurrentWeek && getStyles().arrowDisabled]}>›</Text>
+              </TouchableOpacity>
+            </View>
+
+            {isLoading ? (
+              <View style={getStyles().skeletons}>
+                <Skeleton width="100%" height={120} borderRadius={8} />
+                <Skeleton width="100%" height={120} borderRadius={8} />
+                <Skeleton width="100%" height={80} borderRadius={8} />
+                <Skeleton width="100%" height={100} borderRadius={8} />
+              </View>
+            ) : error ? (
+              <View style={getStyles().errorContainer}>
+                <Icon name="alert-circle" size={40} color={c.semantic.negative} />
+                <Text style={[getStyles().errorTitle, { color: c.text.primary }]}>Something went wrong</Text>
+                <Text style={[getStyles().errorMessage, { color: c.text.secondary }]}>{error}</Text>
+                <TouchableOpacity style={[getStyles().retryButton, { backgroundColor: c.accent.primary }]} onPress={handleRetry}>
+                  <Text style={[getStyles().retryText, { color: c.text.inverse }]}>Try Again</Text>
+                </TouchableOpacity>
+              </View>
+            ) : !report ? (
+              <EmptyState icon={<Icon name="chart" />} title="No report data" description="No data available for this week. Start logging to see your weekly report." />
+            ) : null}
+          </>
+        }
+      />
     </SafeAreaView>
   );
 }

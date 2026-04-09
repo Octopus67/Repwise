@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   FlatList,
+  SectionList,
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
@@ -460,117 +461,106 @@ export function LogsScreen() {
           <SkeletonCards />
         </View>
       ) : tab === 'nutrition' ? (
-        <ScrollView
+        <SectionList
+          sections={mealSlots.map((slot) => ({ key: slot.name, name: slot.name, totals: slot.totals, data: slot.entries }))}
+          keyExtractor={(entry) => entry.id}
           style={styles.list}
           contentContainerStyle={styles.listContent}
-          removeClippedSubviews={true}
+          stickySectionHeadersEnabled={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.accent.primary} />}
-        >
-          {/* 1. Quick Re-log row at top */}
-          <QuickRelogRow
-            items={quickRelogItems}
-            onTapItem={handleQuickRelogTap}
-            loading={quickRelogLoading}
-          />
-
-          {/* 2. BudgetBar (unchanged) */}
-          <BudgetBar consumed={consumed} targets={targets} />
-
-          {/* 3. Inline meal-slot rendering with swipe-to-delete */}
-          {mealSlots.map((slot) => (
-            <View key={slot.name} style={[styles.slotContainer, { backgroundColor: c.bg.surface }]}>
-              {/* Slot header */}
+          ListHeaderComponent={
+            <>
+              <QuickRelogRow items={quickRelogItems} onTapItem={handleQuickRelogTap} loading={quickRelogLoading} />
+              <BudgetBar consumed={consumed} targets={targets} />
+            </>
+          }
+          renderSectionHeader={({ section }) => (
+            <View style={[styles.slotContainer, { backgroundColor: c.bg.surface }]}>
               <View style={[styles.slotHeader, { backgroundColor: c.bg.surfaceRaised }]}>
-                <Text style={[styles.slotName, { color: c.text.primary }]}>{slot.name}</Text>
+                <Text style={[styles.slotName, { color: c.text.primary }]}>{section.name}</Text>
                 <Text style={[styles.slotCalories, { color: c.text.secondary }]}>
-                  {Math.round(slot.totals.calories)} kcal
+                  {Math.round(section.totals.calories)} kcal
                 </Text>
               </View>
-
-              {/* Entries with swipe-to-delete */}
-              {slot.entries.length > 0 ? (
-                slot.entries.map((entry) => {
-                  const idx = cardIndex++;
-                  return (
-                    <Animated.View key={entry.id} entering={FadeInDown.duration(200)} exiting={FadeOutUp.duration(150)}>
-                    <StaggeredCard index={idx}>
-                      <SwipeableRow onDelete={() => handleDeleteNutrition(entry.id)}>
-                        <Card style={styles.entryCard}>
-                          <View style={styles.entryHeader}>
-                            <View style={styles.entryNameRow}>
-                              <Text style={[styles.entryName, { color: c.text.primary }]}>{entry.food_name || entry.meal_name || 'Unnamed entry'}</Text>
-                              {entry.created_at && (
-                                <Text style={[styles.entryTimestamp, { color: c.text.muted }]}>
-                                  {formatEntryTime(entry.created_at)}
-                                </Text>
-                              )}
-                            </View>
-                          </View>
-                          <View style={styles.macroRow}>
-                            <MacroPill label="Cal" value={entry.calories} color={c.chart.calories} />
-                            <MacroPill label="P" value={entry.protein_g} color={c.semantic.positive} />
-                            <MacroPill label="C" value={entry.carbs_g} color={c.semantic.warning} />
-                            <MacroPill label="F" value={entry.fat_g} color={c.semantic.negative} />
-                          </View>
-                        </Card>
-                      </SwipeableRow>
-                    </StaggeredCard>
-                    </Animated.View>
-                  );
-                })
-              ) : null}
-
-              {/* Add button for slot — always visible */}
-              <TouchableOpacity
-                style={[styles.slotAddButton, { borderTopColor: c.border.subtle }]}
-                onPress={() => handleAddToSlot(slot.name)}
-                activeOpacity={0.7}
-                accessibilityLabel={`Add to ${slot.name}`} // Audit fix 7.10
-                accessibilityRole="button" // Audit fix 7.10
-              >
-                <Text style={[styles.slotAddText, { color: c.accent.primary }]}>+ Add to {slot.name}</Text>
-              </TouchableOpacity>
             </View>
-          ))}
-
-          {/* 4. Favorites section — collapsed if Quick Re-log has ≥3 items */}
-          <CollapsibleSection
-            title="★ Favorites"
-            defaultExpanded={quickRelogItems.length < 3}
-          >
-            {favorites.length > 0 ? (
-              <View style={styles.templateGap}>
-                {favorites.map((fav) => (
-                  <TouchableOpacity
-                    key={fav.id}
-                    style={[styles.favoriteRow, { borderBottomColor: c.border.subtle }]}
-                    onPress={() => {
-                      setPrefilledMealName(fav.name);
-                      setShowNutritionModal(true);
-                    }}
-                    activeOpacity={0.7}
-                    accessibilityLabel={`Log ${fav.name}`} // Audit fix 7.10
-                    accessibilityRole="button" // Audit fix 7.10
-                  >
-                    <View style={styles.flexOne}>
-                      <Text style={[styles.favoriteName, { color: c.text.primary }]}>{fav.name}</Text>
-                      <Text style={[styles.favoriteMacros, { color: c.text.secondary }]}>
-                        {Math.round(fav.calories)} kcal
-                      </Text>
-                    </View>
-                    <Text style={[styles.favoriteLogBtn, { color: c.accent.primary }]}>Log</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ) : (
-              <Text style={[styles.emptyFavText, { color: c.text.muted }]}>
-                Star foods when logging to save them here
-              </Text>
-            )}
-          </CollapsibleSection>
-
-
-        </ScrollView>
+          )}
+          renderItem={({ item: entry }) => {
+            const idx = cardIndex++;
+            return (
+              <Animated.View key={entry.id} entering={FadeInDown.duration(200)} exiting={FadeOutUp.duration(150)}>
+                <StaggeredCard index={idx}>
+                  <SwipeableRow onDelete={() => handleDeleteNutrition(entry.id)}>
+                    <Card style={styles.entryCard}>
+                      <View style={styles.entryHeader}>
+                        <View style={styles.entryNameRow}>
+                          <Text style={[styles.entryName, { color: c.text.primary }]}>{entry.food_name || entry.meal_name || 'Unnamed entry'}</Text>
+                          {entry.created_at && (
+                            <Text style={[styles.entryTimestamp, { color: c.text.muted }]}>
+                              {formatEntryTime(entry.created_at)}
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+                      <View style={styles.macroRow}>
+                        <MacroPill label="Cal" value={entry.calories} color={c.chart.calories} />
+                        <MacroPill label="P" value={entry.protein_g} color={c.semantic.positive} />
+                        <MacroPill label="C" value={entry.carbs_g} color={c.semantic.warning} />
+                        <MacroPill label="F" value={entry.fat_g} color={c.semantic.negative} />
+                      </View>
+                    </Card>
+                  </SwipeableRow>
+                </StaggeredCard>
+              </Animated.View>
+            );
+          }}
+          renderSectionFooter={({ section }) => (
+            <TouchableOpacity
+              style={[styles.slotAddButton, { borderTopColor: c.border.subtle }]}
+              onPress={() => handleAddToSlot(section.name as MealSlotName)}
+              activeOpacity={0.7}
+              accessibilityLabel={`Add to ${section.name}`}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.slotAddText, { color: c.accent.primary }]}>+ Add to {section.name}</Text>
+            </TouchableOpacity>
+          )}
+          ListFooterComponent={
+            <CollapsibleSection
+              title="★ Favorites"
+              defaultExpanded={quickRelogItems.length < 3}
+            >
+              {favorites.length > 0 ? (
+                <View style={styles.templateGap}>
+                  {favorites.map((fav) => (
+                    <TouchableOpacity
+                      key={fav.id}
+                      style={[styles.favoriteRow, { borderBottomColor: c.border.subtle }]}
+                      onPress={() => {
+                        setPrefilledMealName(fav.name);
+                        setShowNutritionModal(true);
+                      }}
+                      activeOpacity={0.7}
+                      accessibilityLabel={`Log ${fav.name}`}
+                      accessibilityRole="button"
+                    >
+                      <View style={styles.flexOne}>
+                        <Text style={[styles.favoriteName, { color: c.text.primary }]}>{fav.name}</Text>
+                        <Text style={[styles.favoriteMacros, { color: c.text.secondary }]}>
+                          {Math.round(fav.calories)} kcal
+                        </Text>
+                      </View>
+                      <Text style={[styles.favoriteLogBtn, { color: c.accent.primary }]}>Log</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : (
+                <Text style={[styles.emptyFavText, { color: c.text.muted }]}>
+                  Star foods when logging to save them here
+                </Text>
+              )}
+            </CollapsibleSection>
+          }
+        />
       ) : (
         /* ── Training Tab ──────────────────────────────────────────────── */
         groupedTraining.length === 0 && userTemplates.length === 0 ? (
