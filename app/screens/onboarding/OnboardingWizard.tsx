@@ -19,6 +19,7 @@ import { TDEERevealStep } from './steps/TDEERevealStep';
 import { GoalStep } from './steps/GoalStep';
 import { DietStyleStep } from './steps/DietStyleStep';
 import { FoodDNAStep } from './steps/FoodDNAStep';
+import { HealthDisclaimerStep } from './steps/HealthDisclaimerStep';
 import { SummaryStep } from './steps/SummaryStep';
 
 import { ONBOARDING_STEPS, TOTAL_STEPS, DISPLAY_TOTAL_STEPS } from './stepConstants';
@@ -41,9 +42,9 @@ export function OnboardingWizard({ onComplete }: Props) {
   const goNext = useCallback(() => {
     if (currentStep < TOTAL_STEPS) {
       impact('light');
-      // Skip FOOD_DNA (step 9) — go straight from DIET_STYLE to SUMMARY
+      // Skip FOOD_DNA (step 9) — go straight from DIET_STYLE to HEALTH_DISCLAIMER
       const next = currentStep === ONBOARDING_STEPS.DIET_STYLE
-        ? ONBOARDING_STEPS.SUMMARY
+        ? ONBOARDING_STEPS.HEALTH_DISCLAIMER
         : currentStep + 1;
       setStep(next);
     }
@@ -52,8 +53,8 @@ export function OnboardingWizard({ onComplete }: Props) {
   const goBack = useCallback(() => {
     if (currentStep <= 1) return;
     impact('light');
-    // Skip FOOD_DNA (step 9) when going back from SUMMARY
-    const prev = currentStep === ONBOARDING_STEPS.SUMMARY
+    // Skip FOOD_DNA (step 9) when going back from HEALTH_DISCLAIMER
+    const prev = currentStep === ONBOARDING_STEPS.HEALTH_DISCLAIMER
       ? ONBOARDING_STEPS.DIET_STYLE
       : currentStep - 1;
     setStep(prev);
@@ -84,6 +85,7 @@ export function OnboardingWizard({ onComplete }: Props) {
       case ONBOARDING_STEPS.GOAL: return <GoalStep onNext={goNext} onBack={goBack} />;
       case ONBOARDING_STEPS.DIET_STYLE: return <DietStyleStep onNext={goNext} onBack={goBack} />;
       case ONBOARDING_STEPS.FOOD_DNA: return <FoodDNAStep onNext={goNext} onBack={goBack} onSkip={goNext} />;
+      case ONBOARDING_STEPS.HEALTH_DISCLAIMER: return <HealthDisclaimerStep onNext={goNext} onBack={goBack} />;
       case ONBOARDING_STEPS.SUMMARY: return <SummaryStep onComplete={handleComplete} onBack={goBack} onEditStep={jumpToStep} />;
       default: return null;
     }

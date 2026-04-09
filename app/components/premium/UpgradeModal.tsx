@@ -195,6 +195,9 @@ export function UpgradeModal({ visible, onClose, trialEligible, onStartTrial }: 
               variant="ghost"
               style={styles.trialCta}
             />
+            <Text style={[styles.disclosure, { color: c.text.muted }]}>
+              Subscription auto-renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in your device's subscription settings.
+            </Text>
             <TouchableOpacity onPress={handleDismiss} style={styles.cancelBtn}>
               <Text style={[styles.cancelText, { color: c.text.muted }]}>
                 Maybe later
@@ -311,5 +314,12 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     color: c.text.muted,
     fontSize: typography.size.base,
     lineHeight: typography.lineHeight.base,
+  },
+  disclosure: {
+    fontSize: typography.size.xs,
+    lineHeight: typography.lineHeight.sm,
+    textAlign: 'center',
+    paddingHorizontal: spacing[4],
+    marginBottom: spacing[2],
   },
 });

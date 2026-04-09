@@ -12,7 +12,8 @@ export const ONBOARDING_STEPS = {
   GOAL: 7,
   DIET_STYLE: 8,
   FOOD_DNA: 9, // Temporarily skipped for v1 — see OnboardingWizard.tsx
-  SUMMARY: 10,
+  HEALTH_DISCLAIMER: 10,
+  SUMMARY: 11,
 } as const;
 
 export type OnboardingStepName = keyof typeof ONBOARDING_STEPS;

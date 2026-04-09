@@ -60,6 +60,18 @@ By using Repwise, you agree to the collection and use of information as describe
 | Analytics events | Understanding app usage, improving features, tracking engagement | Processed by PostHog analytics |
 | Crash reports | Identifying and fixing bugs, improving app stability | Processed by Sentry |
 
+### 2.7 Apple Health & Google Health Connect
+
+With your explicit permission, Repwise may read the following data from Apple HealthKit (iOS) or Google Health Connect (Android):
+
+| Data Type | Purpose | Storage |
+|-----------|---------|---------|
+| Heart Rate Variability (HRV) | Readiness scoring, recovery recommendations | Stored locally on device and encrypted at rest on our servers |
+| Resting Heart Rate | Readiness scoring, fatigue detection | Stored locally on device and encrypted at rest on our servers |
+| Sleep Duration | Recovery analysis, readiness scoring | Stored locally on device and encrypted at rest on our servers |
+
+**Important:** Repwise only **reads** health data — we never write to Apple Health or Health Connect. This data is used solely to improve your readiness and recovery recommendations within the App. We do **not** sell, share, or transfer your health data to third parties for advertising or data brokerage purposes. Health data is never used for purposes unrelated to your fitness and wellness experience in the App.
+
 ## 3. How We Use Your Information
 
 We use the information we collect to:

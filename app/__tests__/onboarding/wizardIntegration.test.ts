@@ -66,14 +66,14 @@ describe('20.1 Wizard Navigation', () => {
     expect(getState().currentStep).toBe(1);
   });
 
-  test('step stays at 10 maximum (setStep(10) works, setStep(11) clamps)', () => {
-    getState().setStep(9);
-    expect(getState().currentStep).toBe(9);
+  test('step stays at 11 maximum (setStep(11) works, setStep(12) clamps)', () => {
     getState().setStep(10);
     expect(getState().currentStep).toBe(10);
-    // Store now clamps to 1-10 range
     getState().setStep(11);
-    expect(getState().currentStep).toBe(10);
+    expect(getState().currentStep).toBe(11);
+    // Store now clamps to 1-11 range
+    getState().setStep(12);
+    expect(getState().currentStep).toBe(11);
   });
 
   test('reset() returns all state to initial values', () => {
