@@ -65,3 +65,7 @@ dev.db.bak
 .kiro/YOLO-REPWISE-DEV-GUIDE.md
 uv.lock
 *.log
+# Website subdir
+repwise-website/
+# Backup data
+src/modules/training/exercises_data.backup.json
