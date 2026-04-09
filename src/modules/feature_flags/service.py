@@ -71,11 +71,14 @@ def _put_cached(flag_name: str, flag: Optional[FeatureFlag]) -> None:
 
 
 def invalidate_cache(flag_name: Optional[str] = None) -> None:
-    """Invalidate a single flag or the entire cache."""
+    """Invalidate a single flag or the entire cache (both DB and PostHog)."""
     if flag_name is None:
         _cache.clear()
     else:
         _cache.pop(flag_name, None)
+    # Cross-invalidate PostHog evaluation cache
+    from src.services.feature_flags import invalidate_posthog_cache
+    invalidate_posthog_cache(flag_name)
 
 
 # ---------------------------------------------------------------------------

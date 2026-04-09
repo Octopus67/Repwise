@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -11,6 +11,13 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from src.shared.sanitize import strip_html  # Audit fix 2.4 — HTML sanitization
 from src.shared.validators import validate_json_size
 from src.shared.types import ActivityLevel, GoalType
+
+
+def _ensure_tz_aware(v: datetime | None) -> datetime | None:
+    """Assume UTC if datetime is naive."""
+    if v is not None and v.tzinfo is None:
+        return v.replace(tzinfo=timezone.utc)
+    return v
 
 
 # ---------------------------------------------------------------------------
@@ -57,6 +64,11 @@ class UserProfileResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+    @field_validator("created_at", "updated_at", mode="after")
+    @classmethod
+    def ensure_tz_aware(cls, v: datetime | None) -> datetime | None:
+        return _ensure_tz_aware(v)
+
 
 # ---------------------------------------------------------------------------
 # UserMetrics schemas
@@ -65,11 +77,20 @@ class UserProfileResponse(BaseModel):
 class UserMetricCreate(BaseModel):
     """Payload for logging a new physiological metrics snapshot."""
 
-    height_cm: Optional[float] = Field(None, gt=0)
-    weight_kg: Optional[float] = Field(None, gt=0)
+    height_cm: Optional[float] = Field(None, gt=0, le=300)
+    weight_kg: Optional[float] = Field(None, gt=0, le=500)
     body_fat_pct: Optional[float] = Field(None, ge=0, le=100)
     activity_level: Optional[ActivityLevel] = None
     additional_metrics: Optional[dict[str, Any]] = None
+
+    @model_validator(mode="after")
+    def check_metric_units(self) -> "UserMetricCreate":
+        """Reject values that look like imperial units sent without conversion."""
+        if self.height_cm is not None and self.height_cm < 50:
+            raise ValueError(
+                f"height_cm={self.height_cm} looks like feet/inches — send metric (cm)"
+            )
+        return self
 
     @field_validator("additional_metrics")
     @classmethod
@@ -93,6 +114,11 @@ class UserMetricResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+    @field_validator("recorded_at", "created_at", "updated_at", mode="after")
+    @classmethod
+    def ensure_tz_aware(cls, v: datetime | None) -> datetime | None:
+        return _ensure_tz_aware(v)
+
 
 # ---------------------------------------------------------------------------
 # BodyweightLog schemas
@@ -101,8 +127,16 @@ class UserMetricResponse(BaseModel):
 class BodyweightLogCreate(BaseModel):
     """Payload for logging a bodyweight entry."""
 
-    weight_kg: float = Field(..., gt=0)
+    weight_kg: float = Field(..., gt=0, le=500)
     recorded_date: date
+
+    @field_validator("recorded_date")
+    @classmethod
+    def no_far_future_dates(cls, v: date) -> date:
+        from datetime import timedelta
+        if v > date.today() + timedelta(days=1):
+            raise ValueError("recorded_date cannot be more than 1 day in the future")
+        return v
 
 
 class BodyweightLogResponse(BaseModel):
@@ -117,6 +151,11 @@ class BodyweightLogResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+    @field_validator("created_at", "updated_at", mode="after")
+    @classmethod
+    def ensure_tz_aware(cls, v: datetime | None) -> datetime | None:
+        return _ensure_tz_aware(v)
+
 
 # ---------------------------------------------------------------------------
 # UserGoals schemas
@@ -126,9 +165,9 @@ class UserGoalSet(BaseModel):
     """Payload for setting / updating user goals."""
 
     goal_type: GoalType
-    target_weight_kg: Optional[float] = Field(None, gt=0)
+    target_weight_kg: Optional[float] = Field(None, gt=0, le=500)
     target_body_fat_pct: Optional[float] = Field(None, ge=0, le=100)
-    goal_rate_per_week: Optional[float] = None
+    goal_rate_per_week: Optional[float] = Field(None, ge=-2.0, le=2.0)
     additional_goals: Optional[dict[str, Any]] = None
 
     @field_validator("additional_goals")
@@ -151,6 +190,11 @@ class UserGoalResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_validator("created_at", "updated_at", mode="after")
+    @classmethod
+    def ensure_tz_aware(cls, v: datetime | None) -> datetime | None:
+        return _ensure_tz_aware(v)
 
 
 # ---------------------------------------------------------------------------

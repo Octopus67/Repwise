@@ -37,6 +37,16 @@ def _put_cached(flag_name: str, user_id: str, value: bool) -> None:
     _cache[(flag_name, user_id)] = (value, time.monotonic() + _CACHE_TTL)
 
 
+def invalidate_posthog_cache(flag_name: Optional[str] = None) -> None:
+    """Clear PostHog flag cache entries. Called on flag updates for cross-cache consistency."""
+    if flag_name is None:
+        _cache.clear()
+    else:
+        to_remove = [k for k in _cache if k[0] == flag_name]
+        for k in to_remove:
+            del _cache[k]
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------

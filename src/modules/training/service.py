@@ -208,7 +208,6 @@ class TrainingService:
     ) -> TrainingSessionResponse:
         """Update a training session with audit trail (Requirement 6.3)."""
         training = await self._get_or_404(user_id, session_id)
-        expected_version = training.version
 
         changes: dict[str, dict] = {}
         pr_responses: list[PersonalRecordResponse] = []
@@ -225,6 +224,11 @@ class TrainingService:
             changes["exercises"]["new"] = training.exercises
 
             # Re-run PR detection on updated exercises
+            # Clear old PRs for this session to prevent duplicates
+            from sqlalchemy import delete
+            await self.session.execute(
+                delete(PersonalRecord).where(PersonalRecord.session_id == session_id)
+            )
             pr_detector = PRDetector(self.session)
             prs = await pr_detector.detect_prs(user_id, data.exercises)
             for pr in prs:
@@ -278,7 +282,7 @@ class TrainingService:
                 changes=changes,
             )
 
-        training.version = expected_version + 1
+        # version_id_col auto-increments on flush
         await self.session.flush()
 
         return TrainingSessionResponse.from_orm_model(training, personal_records=pr_responses)
@@ -288,7 +292,6 @@ class TrainingService:
     ) -> None:
         """Soft-delete a training session (Requirement 6.4)."""
         training = await self._get_or_404(user_id, session_id)
-        expected_version = training.version
 
         training.deleted_at = datetime.now(timezone.utc)
 
@@ -299,7 +302,7 @@ class TrainingService:
             entity_id=session_id,
         )
 
-        training.version = expected_version + 1
+        # version_id_col auto-increments on flush
         await self.session.flush()
 
     # ------------------------------------------------------------------
@@ -357,7 +360,7 @@ class TrainingService:
             .distinct()
         )
         stmt = TrainingSession.not_deleted(stmt)
-        stmt = stmt.order_by(TrainingSession.session_date.desc())
+        stmt = stmt.order_by(TrainingSession.session_date.desc()).limit(365)
         result = await self.session.execute(stmt)
         dates = [row[0] for row in result.all()]
 

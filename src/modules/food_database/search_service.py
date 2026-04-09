@@ -221,13 +221,13 @@ class SearchService:
             params["category"] = category
 
         # Step 1: Prefix match with BM25 ranking
-        fts_sql = text(f"""
-            SELECT fts.rowid
-            FROM food_items_fts fts
-            WHERE fts.name MATCH :match_expr{fts_filter}
-            ORDER BY bm25(food_items_fts)
-            LIMIT :limit OFFSET :offset
-        """)
+        # Build SQL string separately — never use f-string inside text()
+        fts_query = (
+            "SELECT fts.rowid FROM food_items_fts fts"
+            " WHERE fts.name MATCH :match_expr" + fts_filter
+            + " ORDER BY bm25(food_items_fts) LIMIT :limit OFFSET :offset"
+        )
+        fts_sql = text(fts_query)
         result = await self.db.execute(fts_sql, params)
         rowids = [r[0] for r in result.fetchall()]
 
@@ -250,24 +250,20 @@ class SearchService:
 
         # Step 3: Fetch full rows by rowid using parameterized query
         # Audit fix 10.3 — filter soft-deleted rows
+        # Build placeholder string from integer indices only (safe)
         ph = ",".join(f":rowid_{i}" for i in range(len(rowids)))
-        fetch_sql = text(f"""
-            SELECT id, name, category, region, serving_size, serving_unit,
-                   calories, protein_g, carbs_g, fat_g, micro_nutrients,
-                   is_recipe, source, barcode, description, total_servings,
-                   created_by, deleted_at, created_at, updated_at
-            FROM food_items WHERE rowid IN ({ph}) AND deleted_at IS NULL
-        """)
+        _FETCH_COLS = (
+            "id, name, category, region, serving_size, serving_unit,"
+            " calories, protein_g, carbs_g, fat_g, micro_nutrients,"
+            " is_recipe, source, barcode, description, total_servings,"
+            " created_by, deleted_at, created_at, updated_at"
+        )
+        fetch_query = f"SELECT {_FETCH_COLS} FROM food_items WHERE rowid IN ({ph}) AND deleted_at IS NULL"
         params = {f"rowid_{i}": rowid for i, rowid in enumerate(rowids)}
         if region:
-            fetch_sql = text(f"""
-                SELECT id, name, category, region, serving_size, serving_unit,
-                       calories, protein_g, carbs_g, fat_g, micro_nutrients,
-                       is_recipe, source, barcode, description, total_servings,
-                       created_by, deleted_at, created_at, updated_at
-                FROM food_items WHERE rowid IN ({ph}) AND deleted_at IS NULL AND region = :region
-            """)
+            fetch_query += " AND region = :region"
             params["region"] = region
+        fetch_sql = text(fetch_query)
         fetch_result = await self.db.execute(fetch_sql, params)
         rows = fetch_result.fetchall()
 

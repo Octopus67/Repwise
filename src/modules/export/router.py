@@ -2,19 +2,24 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from fastapi.responses import FileResponse, Response
+from sqlalchemy import update as sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
 from src.middleware.authenticate import get_current_user
 from src.middleware.rate_limiter import check_user_endpoint_rate_limit
 from src.modules.auth.models import User
+from src.modules.export.models import ExportRequest
 from src.modules.export.schemas import ExportRequestCreate, ExportRequestResponse
 from src.modules.export.service import ExportService, EXPORTS_DIR
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -31,16 +36,31 @@ async def request_export(
     service: ExportService = Depends(_get_service),
 ) -> ExportRequestResponse:
     """Request a data export (JSON, CSV, or PDF). Rate limited to 1 per 24h."""
-    check_user_endpoint_rate_limit(str(user.id), "export:request", 5, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "export:request", 5, 60)
     export = await service.request_export(user.id, body.format)
 
     # Schedule background generation
     async def _run_export():
         from src.config.database import async_session_factory
-        async with async_session_factory() as session:
-            svc = ExportService(session)
-            await svc.generate_export(export.id)
-            await session.commit()
+
+        try:
+            async with async_session_factory() as session:
+                svc = ExportService(session)
+                await svc.generate_export(export.id)
+                await session.commit()
+        except Exception:
+            logger.exception("Background export %s failed", export.id)
+            try:
+                async with async_session_factory() as err_session:
+                    stmt = (
+                        sa_update(ExportRequest)
+                        .where(ExportRequest.id == export.id)
+                        .values(status="failed", error_message="Internal error during export")
+                    )
+                    await err_session.execute(stmt)
+                    await err_session.commit()
+            except Exception:
+                logger.exception("Failed to mark export %s as failed", export.id)
 
     background_tasks.add_task(_run_export)
 
@@ -83,16 +103,18 @@ async def download_export(
     service: ExportService = Depends(_get_service),
 ):
     """Download a completed export file."""
-    check_user_endpoint_rate_limit(str(user.id), "export:download", 5, 60)
+    await check_user_endpoint_rate_limit(str(user.id), "export:download", 5, 60)
     export = await service.mark_downloaded(export_id, user.id)
 
     path = Path(export.download_url).resolve()
     exports_root = EXPORTS_DIR.resolve()
     if not str(path).startswith(str(exports_root)):
         from src.shared.errors import NotFoundError
+
         raise NotFoundError("Export file not found on disk")
     if not path.exists():
         from src.shared.errors import NotFoundError
+
         raise NotFoundError("Export file not found on disk")
 
     media_types = {
@@ -111,9 +133,11 @@ async def download_export(
 async def get_export_history(
     user: User = Depends(get_current_user),
     service: ExportService = Depends(_get_service),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
 ) -> list[ExportRequestResponse]:
     """List all export requests for the current user."""
-    exports = await service.get_history(user.id)
+    exports = await service.get_history(user.id, limit=limit, offset=offset)
     return [
         ExportRequestResponse(
             id=str(e.id),

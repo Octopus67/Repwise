@@ -261,7 +261,18 @@ class NutritionService:
         """Duplicate all non-deleted entries from source_date to target_date.
 
         Idempotent: skips copy if target_date already has entries.
+        Uses advisory lock to prevent TOCTOU race on concurrent requests.
         """
+        from sqlalchemy import text as sa_text
+
+        # Advisory lock on user_id + target_date to prevent concurrent copies (PostgreSQL only)
+        dialect = self.session.bind.dialect.name if self.session.bind else ""
+        if dialect == "postgresql":
+            import hashlib
+            raw = f"{user_id}:{target_date}".encode()
+            lock_key = int(hashlib.sha256(raw).hexdigest(), 16) % (2**31)
+            await self.session.execute(sa_text("SELECT pg_advisory_xact_lock(:key)").bindparams(key=lock_key))
+
         # Check if target date already has entries (idempotency guard)
         existing = await self.get_entries(
             user_id=user_id,
