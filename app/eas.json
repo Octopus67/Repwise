@@ -1,5 +1,4 @@
 {
-  "_comment_sentry": "Audit fix 10.13 — Configure Sentry allowed domains in Sentry dashboard (Settings > Security > Allowed Domains) to restrict DSN usage to app origins only",
   "cli": { "version": ">= 13.0.0" },
   "build": {
     "development": {
@@ -21,7 +20,7 @@
         "EXPO_PUBLIC_API_URL": "https://api.repwise.app",
         "EXPO_PUBLIC_POSTHOG_KEY": "$EXPO_PUBLIC_POSTHOG_KEY",
         "EXPO_PUBLIC_SENTRY_DSN": "$EXPO_PUBLIC_SENTRY_DSN",
-        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+        "SENTRY_DISABLE_AUTO_UPLOAD": "false"
       }
     }
   },
