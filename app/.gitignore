@@ -17,3 +17,5 @@ google-play-service-account.json
 # Auto-generated API types
 types/api/openapi.json
 types/api/generated.ts
+# Backend environment secrets
+.env.backend
