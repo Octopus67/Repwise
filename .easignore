@@ -1,0 +1,38 @@
+# Git
+.git/
+
+# Backend (not needed for mobile builds)
+src/
+tests/
+alembic/
+scripts/
+data/
+static/
+exports/
+*.ctl
+*.sock
+*.pid
+.venv/
+__pycache__/
+*.pyc
+Dockerfile
+docker-compose*.yml
+requirements*.txt
+pyproject.toml
+gunicorn.conf.py
+
+# Dev/tooling artifacts
+.kiro/
+.yolo-sisyphus/
+.pytest_cache/
+.hypothesis/
+.ruff_cache/
+.github/
+coverage/
+htmlcov/
+.coverage
+
+# Other top-level dirs not needed for app
+repwise-website/
+docs/
+tasks/
