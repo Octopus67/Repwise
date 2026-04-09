@@ -1,11 +1,14 @@
 /**
  * Health data hook — platform-branched.
  * Gracefully returns null values when permissions denied or packages unavailable.
+ *
+ * NOTE: react-native-health (iOS) and expo-health-connect (Android) are not
+ * currently installed. This hook returns stub data until those packages are
+ * added to package.json. The original platform-specific fetch logic is
+ * preserved below (commented out) for easy re-enablement.
  */
 
 import { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
-import { getErrorMessage } from '../utils/errors';
 
 export interface HealthData {
   hrv_ms: number | null;
@@ -29,31 +32,26 @@ export function useHealthData(): HealthData {
   const [data, setData] = useState<HealthData>({ ...NULL_DATA, loading: true });
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function fetchHealthData() {
-      try {
-        if (Platform.OS === 'android') {
-          await fetchAndroid(cancelled, setData);
-        } else if (Platform.OS === 'ios') {
-          await fetchIOS(cancelled, setData);
-        } else {
-          // Web or unsupported platform
-          if (!cancelled) setData(NULL_DATA);
-        }
-      } catch (err: unknown) {
-        if (!cancelled) {
-          setData({ ...NULL_DATA, error: getErrorMessage(err) || 'Health data unavailable' });
-        }
-      }
-    }
-
-    fetchHealthData();
-    return () => { cancelled = true; };
+    // Health packages not installed — return stub data immediately.
+    console.warn(
+      '[useHealthData] react-native-health / expo-health-connect not installed. Returning stub data.',
+    );
+    setData(NULL_DATA);
   }, []);
 
   return data;
 }
+
+// ---------------------------------------------------------------------------
+// Original platform fetch functions preserved for re-enablement.
+// To restore: install the health packages, uncomment the code below,
+// re-import Platform and getErrorMessage, and update useHealthData's useEffect
+// to call fetchAndroid / fetchIOS based on Platform.OS.
+// ---------------------------------------------------------------------------
+
+/*
+import { Platform } from 'react-native';
+import { getErrorMessage } from '../utils/errors';
 
 async function fetchAndroid(
   cancelled: boolean,
@@ -173,3 +171,4 @@ async function fetchIOS(
     if (!cancelled) setData(NULL_DATA);
   }
 }
+*/
