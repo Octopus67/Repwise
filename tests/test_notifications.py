@@ -319,7 +319,7 @@ def _auth_headers(user_id: uuid.UUID) -> dict:
     import jwt
     from src.config.settings import settings
     token = jwt.encode(
-        {"sub": str(user_id), "type": "access", "jti": str(uuid.uuid4())},
+        {"sub": str(user_id), "type": "access", "jti": str(uuid.uuid4()), "iss": "repwise", "aud": "repwise-api"},
         settings.JWT_SECRET,
         algorithm=settings.JWT_ALGORITHM,
     )

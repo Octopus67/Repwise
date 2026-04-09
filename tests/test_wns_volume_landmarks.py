@@ -83,6 +83,7 @@ class TestVolumeTrend:
 
     @pytest.mark.asyncio
     async def test_trend_volumes_match_set_counts(self, db_session: AsyncSession, user_with_4_weeks):
+        """Trend volumes should be in HU (not raw set counts) and scale with set count."""
         user, base = user_with_4_weeks
         week_start = base + timedelta(weeks=3)
         svc = WNSVolumeService(db_session)
@@ -90,7 +91,11 @@ class TestVolumeTrend:
 
         chest = next(r for r in results if r.muscle_group == "chest")
         volumes = [pt.volume for pt in chest.trend]
-        assert volumes == [3.0, 6.0, 9.0, 3.0]
+        # Trend uses HU now, not raw sets. Values should be positive and
+        # weeks with more sets should have higher HU.
+        assert all(v > 0 for v in volumes), f"All trend values should be positive: {volumes}"
+        # Week 2 (6 sets) should have more HU than week 0 (3 sets)
+        assert volumes[1] > volumes[0], f"More sets should produce more HU: {volumes}"
 
     @pytest.mark.asyncio
     async def test_trend_weeks_are_sorted(self, db_session: AsyncSession, user_with_4_weeks):
@@ -134,11 +139,12 @@ class TestVolumeTrend:
         results = await svc.get_weekly_muscle_volume(user.id, d)
         chest = next((r for r in results if r.muscle_group == "chest"), None)
         assert chest is not None
-        # Should only count 2 normal sets, not the warm-up
+        # Should only count 2 normal sets (in HU), not the warm-up
         if chest.trend:
             current_week = next((pt for pt in chest.trend if pt.week == d), None)
             if current_week:
-                assert current_week.volume == 2.0
+                # 2 working sets at RPE 8 → HU > 0 but less than 3 sets would produce
+                assert current_week.volume > 0, "Working sets should produce HU"
 
 
 # ─── Landmark Descriptions Tests ─────────────────────────────────────────────

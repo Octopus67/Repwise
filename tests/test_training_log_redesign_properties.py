@@ -96,8 +96,8 @@ class TestTrainingSessionCreateValidation:
     """
 
     def test_future_session_date_raises(self):
-        """TrainingSessionCreate with future session_date raises ValidationError."""
-        future_date = date.today() + timedelta(days=1)
+        """TrainingSessionCreate with future session_date >1 day raises ValidationError."""
+        future_date = date.today() + timedelta(days=2)
         with pytest.raises(ValidationError) as exc_info:
             TrainingSessionCreate(
                 session_date=future_date,

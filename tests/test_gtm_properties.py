@@ -21,7 +21,7 @@ DB_URL = "sqlite+aiosqlite:///test.db"
 def test_jwt_secret_short_strings_raise_when_not_debug(secret: str):
     """Short JWT secrets (< 32 chars) must raise ValueError when DEBUG=False."""
     with pytest.raises(ValidationError):
-        Settings(JWT_SECRET=secret, DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS="https://app.repwise.app", ALLOWED_HOSTS="api.repwise.app")
+        Settings(JWT_SECRET=secret, DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS="https://app.repwise.app", ALLOWED_HOSTS="api.repwise.app", ENVIRONMENT="production")
 
 
 @given(secret=st.text(min_size=32, max_size=200))
@@ -29,14 +29,14 @@ def test_jwt_secret_short_strings_raise_when_not_debug(secret: str):
 def test_jwt_secret_long_strings_succeed_when_not_debug(secret: str):
     """Strings >= 32 chars and != default must succeed when DEBUG=False."""
     assume(secret != "change-me-in-production")
-    s = Settings(JWT_SECRET=secret, DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS="https://app.repwise.app", ALLOWED_HOSTS="api.repwise.app")
+    s = Settings(JWT_SECRET=secret, DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS="https://app.repwise.app", ALLOWED_HOSTS="api.repwise.app", ENVIRONMENT="production")
     assert s.JWT_SECRET == secret
 
 
 def test_jwt_secret_default_always_raises():
     """The default string 'change-me-in-production' always raises when DEBUG=False."""
     with pytest.raises(ValidationError):
-        Settings(JWT_SECRET="change-me-in-production", DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS="https://app.repwise.app", ALLOWED_HOSTS="api.repwise.app")
+        Settings(JWT_SECRET="change-me-in-production", DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS="https://app.repwise.app", ALLOWED_HOSTS="api.repwise.app", ENVIRONMENT="production")
 
 
 # --- Property 3: Pre-signed URL user scoping ---
@@ -95,6 +95,7 @@ def test_structured_log_completeness(status_code, method, path, caplog):
     mock_request.method = method
     mock_url = MagicMock()
     mock_url.path = f"/{path}"
+    mock_url.query = ""
     mock_request.url = mock_url
     mock_request.state = MagicMock(spec=[])  # no user_id attribute
 

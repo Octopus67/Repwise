@@ -288,6 +288,8 @@ class TestProperty24TokenExpiration:
             tokens.access_token,
             settings.JWT_SECRET,
             algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise",
+            audience="repwise-api",
         )
 
         exp = datetime.fromtimestamp(decoded["exp"], tz=timezone.utc)
@@ -316,6 +318,8 @@ class TestProperty24TokenExpiration:
             tokens.refresh_token,
             settings.JWT_SECRET,
             algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise",
+            audience="repwise-api",
         )
 
         exp = datetime.fromtimestamp(decoded["exp"], tz=timezone.utc)
@@ -341,6 +345,8 @@ class TestProperty24TokenExpiration:
             tokens.access_token,
             settings.JWT_SECRET,
             algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise",
+            audience="repwise-api",
         )
         assert decoded["type"] == "access"
         assert decoded["sub"] == str(user_id)
@@ -357,6 +363,8 @@ class TestProperty24TokenExpiration:
             tokens.refresh_token,
             settings.JWT_SECRET,
             algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise",
+            audience="repwise-api",
         )
         assert decoded["type"] == "refresh"
         assert decoded["sub"] == str(user_id)

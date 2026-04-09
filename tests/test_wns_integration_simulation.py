@@ -119,10 +119,10 @@ class TestConsistentFullBody:
         assert quads is not None
         assert quads.gross_stimulus > 0
 
-        # Row → back (direct 1.0), biceps (0.5)
-        back = by_muscle.get("back")
-        assert back is not None
-        assert back.gross_stimulus > 0
+        # Row → lats (direct 1.0), biceps (0.5)
+        lats = by_muscle.get("lats")
+        assert lats is not None
+        assert lats.gross_stimulus > 0
 
     async def test_warmup_sets_excluded(self, db_session: AsyncSession, setup):
         user, base_monday = setup

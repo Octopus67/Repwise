@@ -139,7 +139,8 @@ class TestVerifyEmailEndpoint:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise", audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 
@@ -177,7 +178,8 @@ class TestVerifyEmailEndpoint:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise", audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 
@@ -209,7 +211,8 @@ class TestVerifyEmailEndpoint:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise", audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 
@@ -260,7 +263,8 @@ class TestVerifyEmailEndpoint:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise", audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 
@@ -325,7 +329,8 @@ class TestResendVerificationEndpoint:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise", audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 
@@ -351,7 +356,8 @@ class TestResendVerificationEndpoint:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise", audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 
@@ -390,7 +396,8 @@ class TestRegistrationSendsVerification:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise", audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 
@@ -434,7 +441,8 @@ class TestOTPSecurity:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise", audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 

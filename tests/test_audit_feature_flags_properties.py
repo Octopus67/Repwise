@@ -148,8 +148,11 @@ class TestProperty17AuditLoggingCompleteness:
         # The NutritionService.create_entry doesn't write audit via AuditLogMixin
         # directly (only update/delete do), so we verify update and delete audits.
 
-        # --- UPDATE ---
-        update_data = NutritionEntryUpdate(calories=update_calories)
+        # --- UPDATE --- (ensure calories differ from created value after rounding)
+        rounded_update = round(update_calories, 1)
+        if rounded_update == entry.calories:
+            rounded_update = round(entry.calories + 1.0, 1)
+        update_data = NutritionEntryUpdate(calories=rounded_update)
         await service.update_entry(user_id=user_id, entry_id=entry_id, data=update_data)
         await db_session.commit()
 

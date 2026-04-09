@@ -287,4 +287,6 @@ class TestCoachingPremiumGating:
             data=CoachingRequestCreate(goals=goals),
         )
         assert result.status == CoachingRequestStatus.PENDING
-        assert result.goals == goals
+        # goals are HTML-sanitized on input
+        from src.shared.sanitize import strip_html
+        assert result.goals == strip_html(goals)

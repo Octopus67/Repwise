@@ -297,9 +297,9 @@ import re
 # ---------------------------------------------------------------------------
 
 _ALL_MUSCLE_GROUPS = [
-    "chest", "back", "lats", "shoulders", "biceps", "triceps",
+    "chest", "lats", "erectors", "shoulders", "biceps", "triceps",
     "quads", "hamstrings", "glutes", "calves", "abs",
-    "traps", "forearms", "full_body",
+    "traps", "forearms", "adductors",
 ]
 
 _KEBAB_CASE_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")

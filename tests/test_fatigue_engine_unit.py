@@ -434,5 +434,5 @@ class TestMRVConstants:
             assert v > 0, f"MRV for {mg} should be positive"
 
     def test_expected_muscle_groups_present(self):
-        expected = {"chest", "back", "shoulders", "quads", "hamstrings", "biceps", "triceps"}
+        expected = {"chest", "lats", "shoulders", "quads", "hamstrings", "biceps", "triceps"}
         assert expected.issubset(set(MRV_SETS_PER_WEEK.keys()))

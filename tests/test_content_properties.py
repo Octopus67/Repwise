@@ -92,6 +92,8 @@ def _make_token(user_id: uuid.UUID, role: str = UserRole.USER) -> str:
         "jti": str(uuid.uuid4()),
         "role": role,
         "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+        "iss": "repwise",
+        "aud": "repwise-api",
     }
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
