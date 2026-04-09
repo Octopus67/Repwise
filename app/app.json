@@ -138,6 +138,7 @@
         }
       ],
       "expo-apple-authentication",
+      "expo-sharing",
       [
         "@sentry/react-native/expo",
         {
