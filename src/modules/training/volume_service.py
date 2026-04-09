@@ -12,6 +12,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.training.exercise_mapping import get_muscle_group
+from src.modules.training.exercise_coefficients import get_muscle_coefficients
+from src.modules.training.exercises import is_mobility_exercise, get_all_exercises
 from src.modules.training.volume_schemas import (
     ExerciseVolumeDetail,
     MuscleGroupDetail,
@@ -26,7 +28,6 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_LANDMARKS: dict[str, tuple[int, int, int]] = {
     "chest": (10, 16, 22),
-    "back": (10, 18, 24),
     "lats": (10, 18, 24),
     "erectors": (6, 12, 18),
     "adductors": (4, 10, 16),
@@ -138,15 +139,29 @@ class VolumeCalculatorService:
         volume: dict[str, float] = defaultdict(float)
         sessions_per_group: dict[str, set[date]] = defaultdict(set)
 
+        # Build exercise catalog lookup for secondary muscles
+        _catalog = {ex["name"].lower().strip(): ex for ex in get_all_exercises()}
+
+        def _coefficients(name: str) -> dict[str, float]:
+            ex = _catalog.get(name.lower().strip())
+            if ex:
+                return get_muscle_coefficients(name, ex["muscle_group"], ex.get("secondary_muscles", []))
+            mg = get_muscle_group(name)
+            return {mg: 1.0} if mg and mg != "Other" else {}
+
         for session_date, exercises in rows:
             for ex in exercises:
-                mg = get_muscle_group(ex.get("exercise_name", ""))
+                ex_name = ex.get("exercise_name", "")
+                if is_mobility_exercise(ex_name):
+                    continue
+                coefficients = _coefficients(ex_name)
                 for s in ex.get("sets", []):
                     if s.get("set_type", "normal") == "warm-up":
                         continue
                     effort = compute_effort(s.get("rpe"))
-                    volume[mg] += effort
-                sessions_per_group[mg].add(session_date)
+                    for mg, coeff in coefficients.items():
+                        volume[mg] += effort * coeff
+                        sessions_per_group[mg].add(session_date)
 
         # Get landmarks
         try:

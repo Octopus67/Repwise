@@ -67,57 +67,60 @@ async def run_export_worker(session: AsyncSession | None = None) -> int:
     sentry_sdk.set_tag('job_name', 'export_worker')
     owns_session = session is None
     if owns_session:
-        session = async_session_factory()
-
-    try:
-        # Reset stale exports before processing
-        reset_count = await _reset_stale_exports(session)
-        if reset_count:
-            logger.info("Reset %d stale exports to pending", reset_count)
-
-        stmt = select(ExportRequest).where(
-            and_(
-                ExportRequest.status == "pending",
-                ExportRequest.retry_count < MAX_RETRIES,
-            )
-        )
-        result = await session.execute(stmt)
-        pending = list(result.scalars().all())
-
-        processed = 0
-        service = ExportService(session)
-        for export in pending:
+        async with async_session_factory() as session:
             try:
-                export.status = "processing"
-                await session.flush()
-
-                await service.generate_export(export.id)
-                processed += 1
+                processed = await _process_exports(session)
+                await session.commit()
+                elapsed = time.monotonic() - start
+                logger.info("Export worker complete: %d processed in %.1fs", processed, elapsed)
+                return processed
             except (SQLAlchemyError, OSError, ValueError):
-                logger.exception("Failed to process export %s", export.id)
-                export.retry_count = (export.retry_count or 0) + 1
-                if export.retry_count >= MAX_RETRIES:
-                    export.status = "failed"
-                    export.error_message = "Export failed after maximum retries"
-                else:
-                    export.status = "pending"
-                    export.error_message = "Export processing failed, will retry"
-                await session.flush()
-
-        if owns_session:
-            await session.commit()
-
+                await session.rollback()
+                sentry_sdk.capture_exception()
+                raise
+    else:
+        processed = await _process_exports(session)
         elapsed = time.monotonic() - start
-        logger.info("Export worker complete: %d/%d processed in %.1fs", processed, len(pending), elapsed)
+        logger.info("Export worker complete: %d processed in %.1fs", processed, elapsed)
         return processed
-    except (SQLAlchemyError, OSError, ValueError):
-        if owns_session:
-            await session.rollback()
-        sentry_sdk.capture_exception()
-        raise
-    finally:
-        if owns_session:
-            await session.close()
+
+
+async def _process_exports(session: AsyncSession) -> int:
+    """Core export processing logic."""
+    reset_count = await _reset_stale_exports(session)
+    if reset_count:
+        logger.info("Reset %d stale exports to pending", reset_count)
+
+    stmt = select(ExportRequest).where(
+        and_(
+            ExportRequest.status == "pending",
+            ExportRequest.retry_count < MAX_RETRIES,
+        )
+    )
+    result = await session.execute(stmt)
+    pending = list(result.scalars().all())
+
+    processed = 0
+    service = ExportService(session)
+    for export in pending:
+        try:
+            export.status = "processing"
+            await session.flush()
+
+            await service.generate_export(export.id)
+            processed += 1
+        except (SQLAlchemyError, OSError, ValueError):
+            logger.exception("Failed to process export %s", export.id)
+            export.retry_count = (export.retry_count or 0) + 1
+            if export.retry_count >= MAX_RETRIES:
+                export.status = "failed"
+                export.error_message = "Export failed after maximum retries"
+            else:
+                export.status = "pending"
+                export.error_message = "Export processing failed, will retry"
+            await session.flush()
+
+    return processed
 
 
 if __name__ == "__main__":

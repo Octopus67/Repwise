@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Index, String, Text
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Index, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.shared.base_model import Base
@@ -44,6 +44,7 @@ class BodyMeasurement(SoftDeleteMixin, Base):  # Audit fix 8.6
         Index("ix_body_measurements_user_id", "user_id"),
         # Audit fix 8.5 — composite index for user measurement history queries
         Index("ix_body_measurements_user_measured", "user_id", "measured_at"),
+        Index("ix_body_measurements_not_deleted", "id", postgresql_where=text("deleted_at IS NULL")),
     )
 
 

@@ -51,6 +51,8 @@ class TrainingSession(SoftDeleteMixin, AuditLogMixin, Base):
     end_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     version: Mapped[int] = mapped_column(default=1, server_default="1")
 
+    __mapper_args__ = {"version_id_col": version}
+
     __table_args__ = (
         Index(
             "ix_training_sessions_user_date",

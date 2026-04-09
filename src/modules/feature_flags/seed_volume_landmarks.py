@@ -8,6 +8,9 @@ Usage:
 from __future__ import annotations
 
 import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 from sqlalchemy import JSON, select
 from sqlalchemy.dialects.postgresql import JSONB
@@ -53,7 +56,7 @@ async def seed() -> None:
         existing = result.scalar_one_or_none()
 
         if existing is not None:
-            print(f"Flag '{FLAG_NAME}' already exists (is_enabled={existing.is_enabled}). Skipping.")
+            logger.info(f"Flag '{FLAG_NAME}' already exists (is_enabled={existing.is_enabled}). Skipping.")
             return
 
         flag = FeatureFlag(
@@ -63,7 +66,7 @@ async def seed() -> None:
         )
         session.add(flag)
         await session.commit()
-        print(f"Inserted flag '{FLAG_NAME}' (is_enabled=False).")
+        logger.info(f"Inserted flag '{FLAG_NAME}' (is_enabled=False).")
 
 
 if __name__ == "__main__":

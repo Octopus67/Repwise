@@ -12,6 +12,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.training.exercise_coefficients import get_muscle_coefficients
+from src.modules.training.exercises import is_mobility_exercise
 from src.modules.training.volume_schemas import (
     VolumeStatus,
     WNSExerciseContribution,
@@ -20,6 +21,7 @@ from src.modules.training.volume_schemas import (
     WNSWeeklyTrendPoint,
 )
 from src.modules.training.wns_engine import (
+    DEFAULT_RIR,
     atrophy_between_sessions,
     diminishing_returns,
     rir_from_rpe,
@@ -33,7 +35,6 @@ logger = logging.getLogger(__name__)
 DEFAULT_WNS_LANDMARKS: dict[str, dict[str, float]] = {
     "chest":      {"mv": 3, "mev": 8,  "mav_low": 16, "mav_high": 24, "mrv": 35},
     "lats":       {"mv": 3, "mev": 8,  "mav_low": 16, "mav_high": 26, "mrv": 38},
-    "back":       {"mv": 3, "mev": 8,  "mav_low": 16, "mav_high": 26, "mrv": 38},
     "erectors":   {"mv": 2, "mev": 5,  "mav_low": 10, "mav_high": 16, "mrv": 25},
     "shoulders":  {"mv": 2, "mev": 6,  "mav_low": 12, "mav_high": 20, "mrv": 28},
     "quads":      {"mv": 3, "mev": 7,  "mav_low": 14, "mav_high": 22, "mrv": 32},
@@ -134,17 +135,50 @@ class WNSVolumeService:
         svc = TrainingAnalyticsService(self.session)
         rows = await svc._fetch_sessions(user_id, trend_start, trend_end)
 
-        # Aggregate hard sets per (iso_week_monday, muscle_group)
-        weekly: dict[str, dict[date, int]] = defaultdict(lambda: defaultdict(int))
+        # Aggregate HU per (iso_week_monday, muscle_group)
+        # Collect stim_reps per muscle per week, then apply diminishing returns
+        weekly_stim: dict[str, dict[date, list[float]]] = defaultdict(lambda: defaultdict(list))
+
+        # Build exercise lookup for coefficients
+        from src.modules.training.exercises import get_all_exercises
+        catalog = {ex["name"].lower().strip(): ex for ex in get_all_exercises()}
+
+        def _get_coefficients(name: str) -> dict[str, float]:
+            ex = catalog.get(name.lower().strip())
+            if ex:
+                return get_muscle_coefficients(name, ex["muscle_group"], ex.get("secondary_muscles", []))
+            mg = get_muscle_group(name)
+            return {mg: 1.0} if mg and mg != "Other" else {}
+
         for session_date, exercises in rows:
             week_monday = session_date - timedelta(days=session_date.weekday())
+
             for ex in exercises:
-                mg = get_muscle_group(ex.get("exercise_name", ""))
-                if not mg:
+                ex_name = ex.get("exercise_name", "")
+                if is_mobility_exercise(ex_name):
                     continue
+                coefficients = _get_coefficients(ex_name)
+                if not coefficients:
+                    continue
+
                 for s in ex.get("sets", []):
-                    if s.get("set_type", "normal") != "warm-up":
-                        weekly[mg][week_monday] += 1
+                    if s.get("set_type", "normal") == "warm-up":
+                        continue
+                    rpe = s.get("rpe")
+                    rir_val = s.get("rir")
+                    if rir_val is None and rpe is not None:
+                        rir_val = rir_from_rpe(rpe)
+                    if rir_val is None:
+                        rir_val = DEFAULT_RIR
+                    stim = stimulating_reps_per_set(s.get("reps", 0), rir_val, None)
+                    for mg, coeff in coefficients.items():
+                        weekly_stim[mg][week_monday].append(stim * coeff)
+
+        # Apply diminishing returns per muscle per week
+        weekly: dict[str, dict[date, float]] = defaultdict(dict)
+        for mg, week_data in weekly_stim.items():
+            for wk, stim_list in week_data.items():
+                weekly[mg][wk] = diminishing_returns(stim_list)
 
         # Build sorted trend lists for each muscle
         result: dict[str, list[WNSWeeklyTrendPoint]] = {}
@@ -203,6 +237,8 @@ class WNSVolumeService:
 
             for ex in exercises:
                 ex_name = ex.get("exercise_name", "")
+                if is_mobility_exercise(ex_name):
+                    continue
                 coefficients = _get_coefficients(ex_name)
 
                 for s in ex.get("sets", []):
@@ -215,8 +251,13 @@ class WNSVolumeService:
                         rir_val = rir_from_rpe(rpe)
 
                     reps = s.get("reps", 0)
-                    # Estimate intensity_pct — we don't have e1rm readily, use None
+                    weight = s.get("weight")
+                    # Estimate intensity_pct from weight/reps via Epley e1RM
                     intensity_pct = None
+                    if weight and reps and reps > 0:
+                        e1rm = weight * (1 + reps / 30.0)
+                        if e1rm > 0:
+                            intensity_pct = weight / e1rm
 
                     stim_reps = stimulating_reps_per_set(reps, rir_val, intensity_pct)
 
@@ -318,36 +359,38 @@ class WNSVolumeService:
                 )
             )
 
-        # --- Volume warning notifications (Phase 4) ---
-        above_mrv_muscles = [r.muscle_group for r in results if r.status == "above_mrv"]
-        if above_mrv_muscles:
-            try:
-                from sqlalchemy import select, text, cast, String
-                from src.modules.notifications.models import NotificationLog
-                from src.modules.notifications.service import NotificationService
-
-                notif_svc = NotificationService(self.session)
-                for muscle in above_mrv_muscles:
-                    # Deduplicate: skip if volume_warning sent for this muscle in past 7 days
-                    stmt = select(NotificationLog.id).where(
-                        NotificationLog.user_id == user_id,
-                        NotificationLog.type == "volume_warning",
-                        cast(NotificationLog.data["muscle"], String) == muscle,
-                        NotificationLog.sent_at > text("NOW() - INTERVAL '7 days'"),
-                    ).limit(1)
-                    recent = (await self.session.execute(stmt)).scalar_one_or_none()
-                    if recent is not None:
-                        continue
-
-                    await notif_svc.send_push(
-                        user_id=user_id,
-                        title="Volume Warning",
-                        body=f"Your {muscle} volume is above MRV",
-                        notification_type="volume_warning",
-                        data={"screen": "Analytics", "muscle": muscle},
-                    )
-            except (ImportError, RuntimeError, ValueError):
-                # Non-critical — volume warning notification failure must not break results
-                logger.exception("Volume warning notification failed")
-
         return results
+
+
+async def send_volume_warnings(
+    session: AsyncSession, user_id: uuid.UUID, results: list
+) -> None:
+    """Send push notifications for muscles above MRV. Fire-and-forget."""
+    above_mrv_muscles = [r.muscle_group for r in results if r.status == "above_mrv"]
+    if not above_mrv_muscles:
+        return
+    try:
+        from sqlalchemy import select, text, cast, String
+        from src.modules.notifications.models import NotificationLog
+        from src.modules.notifications.service import NotificationService
+
+        notif_svc = NotificationService(session)
+        for muscle in above_mrv_muscles:
+            stmt = select(NotificationLog.id).where(
+                NotificationLog.user_id == user_id,
+                NotificationLog.type == "volume_warning",
+                cast(NotificationLog.data["muscle"], String) == muscle,
+                NotificationLog.sent_at > text("NOW() - INTERVAL '7 days'"),
+            ).limit(1)
+            recent = (await session.execute(stmt)).scalar_one_or_none()
+            if recent is not None:
+                continue
+            await notif_svc.send_push(
+                user_id=user_id,
+                title="Volume Warning",
+                body=f"Your {muscle} volume is above MRV",
+                notification_type="volume_warning",
+                data={"screen": "Analytics", "muscle": muscle},
+            )
+    except (ImportError, RuntimeError, ValueError):
+        logger.exception("Volume warning notification failed")

@@ -51,10 +51,10 @@ class FoodItemCreate(BaseModel):
     region: str = Field(default="IN", max_length=50)
     serving_size: float = Field(default=100.0, gt=0)
     serving_unit: str = Field(default="g", max_length=20)
-    calories: float = Field(ge=0)
-    protein_g: float = Field(ge=0)
-    carbs_g: float = Field(ge=0)
-    fat_g: float = Field(ge=0)
+    calories: float = Field(ge=0, le=50000)
+    protein_g: float = Field(ge=0, le=5000)
+    carbs_g: float = Field(ge=0, le=5000)
+    fat_g: float = Field(ge=0, le=5000)
     micro_nutrients: Optional[dict[str, float]] = None
     is_recipe: bool = False
     source: Literal["usda", "verified", "community", "custom", "off"] = "custom"
@@ -76,10 +76,10 @@ class FoodItemUpdate(BaseModel):
     region: Optional[str] = Field(default=None, max_length=50)
     serving_size: Optional[float] = Field(default=None, gt=0)
     serving_unit: Optional[str] = Field(default=None, max_length=20)
-    calories: Optional[float] = Field(default=None, ge=0)
-    protein_g: Optional[float] = Field(default=None, ge=0)
-    carbs_g: Optional[float] = Field(default=None, ge=0)
-    fat_g: Optional[float] = Field(default=None, ge=0)
+    calories: Optional[float] = Field(default=None, ge=0, le=50000)
+    protein_g: Optional[float] = Field(default=None, ge=0, le=5000)
+    carbs_g: Optional[float] = Field(default=None, ge=0, le=5000)
+    fat_g: Optional[float] = Field(default=None, ge=0, le=5000)
     micro_nutrients: Optional[dict[str, float]] = None
 
     @field_validator('micro_nutrients')

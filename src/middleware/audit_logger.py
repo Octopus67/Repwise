@@ -40,8 +40,9 @@ class _AuditEntry:
 
 
 # ContextVar holds the list of audit entries for the current request
-_pending_audits: ContextVar[list[_AuditEntry]] = ContextVar(
-    "_pending_audits", default=[]
+# NOTE: default=None, create new list on first access to avoid shared mutable state
+_pending_audits: ContextVar[list[_AuditEntry] | None] = ContextVar(
+    "_pending_audits", default=None
 )
 
 
@@ -60,6 +61,8 @@ def record_audit(
     persist all queued entries before the response is sent.
     """
     entries = _pending_audits.get()
+    if entries is None:
+        entries = []
     entries.append(
         _AuditEntry(
             user_id=user_id,

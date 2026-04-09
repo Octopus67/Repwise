@@ -18,10 +18,10 @@ from src.shared.errors import NotFoundError
 # ---------------------------------------------------------------------------
 
 VALID_MUSCLE_GROUPS = frozenset([
-    "chest", "back", "lats", "erectors", "adductors",
+    "chest", "lats", "erectors", "adductors",
     "shoulders", "biceps", "triceps",
     "quads", "hamstrings", "glutes", "calves", "abs",
-    "traps", "forearms", "full_body",
+    "traps", "forearms",
 ])
 
 VALID_EQUIPMENT = frozenset([
@@ -125,12 +125,12 @@ class CustomExerciseService:
         return exercise
 
     async def list_user_custom_exercises(
-        self, user_id: uuid.UUID
+        self, user_id: uuid.UUID, limit: int = 50, offset: int = 0
     ) -> list[CustomExercise]:
         """Return all non-deleted custom exercises for a user."""
         stmt = select(CustomExercise).where(CustomExercise.user_id == user_id)
         stmt = CustomExercise.not_deleted(stmt)
-        stmt = stmt.order_by(CustomExercise.created_at.desc())
+        stmt = stmt.order_by(CustomExercise.created_at.desc()).limit(limit).offset(offset)
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 

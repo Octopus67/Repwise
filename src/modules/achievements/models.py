@@ -34,6 +34,7 @@ class UserAchievement(SoftDeleteMixin, AuditLogMixin, Base):
     __table_args__ = (
         UniqueConstraint("user_id", "achievement_id", name="uq_user_achievement"),
         Index("ix_user_achievements_user_id", "user_id"),
+        Index("ix_user_achievements_not_deleted", "id", postgresql_where=text("deleted_at IS NULL")),
     )
 
 

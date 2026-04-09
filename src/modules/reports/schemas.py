@@ -65,3 +65,6 @@ class ReportContext:
     days_logged_nutrition: int = 0
     days_logged_training: int = 0
     nutrient_score: Optional[float] = None
+    # Previous week data for progressive overload comparison
+    prev_sets_by_muscle_group: dict[str, int] = field(default_factory=dict)
+    prev_session_count: int = 0

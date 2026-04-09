@@ -31,7 +31,7 @@ APPLE_ISSUER = "https://appleid.apple.com"
 _apple_jwk_client = PyJWKClient(APPLE_JWKS_URL, cache_keys=True, lifespan=86400)
 
 # Pre-compute a dummy hash to use for timing normalization
-DUMMY_HASH = bcrypt.hashpw(b'dummy_password_for_timing', bcrypt.gensalt()).decode('utf-8')
+DUMMY_HASH = bcrypt.hashpw(b'dummy_password_for_timing', bcrypt.gensalt(rounds=12)).decode('utf-8')
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,10 @@ class AuthService:
         existing = await self._get_user_by_email(email)
         if existing is not None:
             from src.services.email_service import EmailService
-            EmailService().send_account_exists_notification(email)
+            try:
+                EmailService().send_account_exists_notification(email)
+            except Exception:
+                logger.exception("Failed to send account-exists notification")
             return None
 
         hashed = _hash_password(password)
@@ -339,20 +342,23 @@ class AuthService:
         user = await self._get_user_by_email(email)
         if user is None:
             # Dummy bcrypt to normalize timing (prevent user enumeration)
-            bcrypt.hashpw(b"dummy", bcrypt.gensalt())
+            bcrypt.hashpw(b"dummy", bcrypt.gensalt(rounds=12))
             return
 
         # 5.7: OAuth users without a password cannot reset — send helpful email instead
         if user.hashed_password is None:
             from src.services.email_service import EmailService
             provider = user.auth_provider or "OAuth"
-            EmailService().send_oauth_password_reset_notice(email, provider)
+            try:
+                EmailService().send_oauth_password_reset_notice(email, provider)
+            except Exception:
+                logger.exception("Failed to send OAuth password reset notice")
             return
 
         from src.services.email_service import EmailService, generate_otp
 
         code = generate_otp()
-        code_hash = bcrypt.hashpw(code.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        code_hash = bcrypt.hashpw(code.encode("utf-8"), bcrypt.gensalt(rounds=12)).decode("utf-8")
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
 
         # Invalidate all existing unused reset codes for this user
@@ -370,7 +376,10 @@ class AuthService:
         self.session.add(reset_code)
         await self.session.flush()
 
-        EmailService().send_password_reset_code(user.email, code)
+        try:
+            EmailService().send_password_reset_code(user.email, code)
+        except Exception:
+            logger.exception("Failed to send password reset code")
 
     async def reset_password(self, email: str, code: str, new_password: str, ip: str = "") -> bool:
         """Reset a user's password using a valid 6-digit OTP.
@@ -418,7 +427,7 @@ class AuthService:
         from src.services.email_service import EmailService, generate_otp
 
         code = generate_otp()
-        code_hash = bcrypt.hashpw(code.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        code_hash = bcrypt.hashpw(code.encode("utf-8"), bcrypt.gensalt(rounds=12)).decode("utf-8")
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
 
         # Invalidate all existing unused verification codes for this user
@@ -436,7 +445,10 @@ class AuthService:
         self.session.add(verification)
         await self.session.flush()
 
-        EmailService().send_verification_code(user.email, code)
+        try:
+            EmailService().send_verification_code(user.email, code)
+        except Exception:
+            logger.exception("Failed to send verification email to %s — user registered but code not delivered", user.email[:3] + "***")
 
     async def verify_email(self, user_id: uuid.UUID, code: str) -> bool:
         """Verify the OTP code and mark the user's email as verified."""
@@ -508,7 +520,7 @@ class AuthService:
 
 def _hash_password(password: str) -> str:
     """Hash password using bcrypt."""
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(rounds=12)).decode('utf-8')
 
 
 def _normalize_email(email: str) -> str:
@@ -541,6 +553,8 @@ def _generate_tokens(user_id: uuid.UUID) -> AuthTokens:
         "jti": access_jti,
         "exp": access_exp,
         "iat": now,
+        "iss": "repwise",
+        "aud": "repwise-api",
     }
     refresh_payload = {
         "sub": str(user_id),
@@ -548,6 +562,8 @@ def _generate_tokens(user_id: uuid.UUID) -> AuthTokens:
         "jti": refresh_jti,
         "exp": refresh_exp,
         "iat": now,
+        "iss": "repwise",
+        "aud": "repwise-api",
     }
 
     access_token = pyjwt.encode(
@@ -568,7 +584,8 @@ def _decode_token(token: str) -> dict:
     """Decode and validate a JWT. Raises UnauthorizedError on failure."""
     try:
         payload = pyjwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise", audience="repwise-api",
         )
         return payload
     except PyJWTError:

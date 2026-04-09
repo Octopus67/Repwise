@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import secrets
+import socket
 import string
 
 import boto3
@@ -81,7 +82,7 @@ class EmailService:
     @sync_retry(
         max_retries=3,
         base_delay=1.0,
-        retryable_exceptions=(EndpointConnectionError, ConnectTimeoutError),
+        retryable_exceptions=(EndpointConnectionError, ConnectTimeoutError, socket.gaierror, OSError),
     )
     def _send(self, to_email: str, subject: str, body: str) -> bool:
         """Send an email via SES. Returns True on success."""
@@ -95,7 +96,7 @@ class EmailService:
                 },
             )
             return True
-        except (EndpointConnectionError, ConnectTimeoutError):
+        except (EndpointConnectionError, ConnectTimeoutError, socket.gaierror, OSError):
             raise  # let @sync_retry handle transient failures
         except ClientError:
             logger.exception("Failed to send email to %s", to_email[:3] + "***@" + to_email.split("@")[1])

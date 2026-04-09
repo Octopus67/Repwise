@@ -69,9 +69,11 @@ def _check_recalculate_cooldown(user_id: str) -> int | None:
     if elapsed < RECALCULATE_COOLDOWN_SECONDS:
         return int(RECALCULATE_COOLDOWN_SECONDS - elapsed)
     _recalculate_attempts[user_id] = now
-    # Prevent memory leak
-    if len(_recalculate_attempts) > 10000:
-        _recalculate_attempts.clear()
+    # Prevent memory leak: evict oldest half when dict grows too large
+    if len(_recalculate_attempts) > 1000:
+        sorted_keys = sorted(_recalculate_attempts, key=_recalculate_attempts.get)  # type: ignore[arg-type]
+        for k in sorted_keys[: len(sorted_keys) // 2]:
+            del _recalculate_attempts[k]
     return None
 
 
@@ -329,7 +331,10 @@ class UserService:
             goal_rate_per_week = 0.0
         else:
             effective_goals = goals
-            goal_type = GoalType(effective_goals.goal_type)  # type: ignore[union-attr]
+            try:
+                goal_type = GoalType(effective_goals.goal_type)  # type: ignore[union-attr]
+            except (ValueError, KeyError):
+                goal_type = GoalType.MAINTAINING
             goal_rate_per_week = effective_goals.goal_rate_per_week or 0.0  # type: ignore[union-attr]
 
         # Step 5: Fetch bodyweight history (last 90 days)
@@ -385,7 +390,7 @@ class UserService:
             height_cm=latest_metrics.height_cm,
             age_years=age_years,
             sex=sex,
-            activity_level=ActivityLevel(latest_metrics.activity_level or "moderate"),
+            activity_level=ActivityLevel(latest_metrics.activity_level or "moderate") if latest_metrics.activity_level in [e.value for e in ActivityLevel] else ActivityLevel.MODERATE,
             goal_type=goal_type,
             goal_rate_per_week=goal_rate_per_week,
             bodyweight_history=bw_history,
@@ -396,7 +401,10 @@ class UserService:
         )
 
         # Step 8: Compute snapshot
-        output = compute_snapshot(adaptive_input)
+        try:
+            output = compute_snapshot(adaptive_input)
+        except (ZeroDivisionError, ValueError, TypeError) as e:
+            raise ValidationError(f"Could not compute targets: {e}. Check your profile data.")
 
         # Step 9: Persist AdaptiveSnapshot
         snapshot = AdaptiveSnapshot(

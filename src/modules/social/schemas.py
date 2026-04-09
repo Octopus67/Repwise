@@ -8,7 +8,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from src.shared.sanitize import strip_html
+from src.shared.sanitize import clean_text, strip_html
 
 
 class FollowResponse(BaseModel):
@@ -29,6 +29,17 @@ class FeedEventResponse(BaseModel):
     reactions: list[ReactionResponse] = []
 
     model_config = {"from_attributes": True}
+
+
+class PostCreate(BaseModel):
+    """User-created social post."""
+    content: str = Field(..., min_length=1, max_length=500)
+    post_type: str = Field(default="text", pattern="^(text|progress|milestone)$")
+
+    @field_validator("content")
+    @classmethod
+    def sanitize_content(cls, v: str) -> str:
+        return clean_text(v)
 
 
 class ReactionCreate(BaseModel):

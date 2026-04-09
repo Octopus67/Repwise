@@ -94,7 +94,7 @@ class PRDetector:
             TrainingSession.user_id == user_id,
             TrainingSession.deleted_at.is_(None),
             TrainingSession.created_at >= cutoff,
-        )
+        ).order_by(TrainingSession.session_date.desc()).limit(200)
         result = await self.session.execute(stmt)
         sessions = result.scalars().all()
 
@@ -152,7 +152,7 @@ class PRDetector:
                     type_=TrainingSession.exercises.type,
                 )
             ),
-        )
+        ).order_by(TrainingSession.session_date.desc()).limit(100)
         
         result = await self.session.execute(stmt)
         sessions = result.scalars().all()
@@ -178,6 +178,7 @@ class PRDetector:
         """SQLite fallback that loads all sessions (dev only)."""
         stmt = select(TrainingSession).where(TrainingSession.user_id == user_id)
         stmt = TrainingSession.not_deleted(stmt)
+        stmt = stmt.order_by(TrainingSession.session_date.desc()).limit(200)
         result = await self.session.execute(stmt)
         sessions = result.scalars().all()
 

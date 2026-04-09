@@ -6,7 +6,7 @@ Stores metadata only — actual photo files live on-device.
 import uuid
 from datetime import date
 
-from sqlalchemy import Date, Float, ForeignKey, Index, JSON, String, Text
+from sqlalchemy import Date, Float, ForeignKey, Index, JSON, String, Text, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.shared.base_model import Base
@@ -39,4 +39,5 @@ class ProgressPhoto(SoftDeleteMixin, Base):
 
     __table_args__ = (
         Index("ix_progress_photos_user_date", "user_id", "capture_date"),
+        Index("ix_progress_photos_not_deleted", "id", postgresql_where=text("deleted_at IS NULL")),
     )

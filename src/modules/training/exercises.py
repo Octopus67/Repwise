@@ -66,3 +66,17 @@ def search_exercises(
 def get_muscle_groups() -> list[str]:
     """Return sorted list of all muscle group names."""
     return _MUSCLE_GROUPS
+
+
+# Mobility exercise lookup (cached)
+_MOBILITY_SET: frozenset[str] | None = None
+
+
+def is_mobility_exercise(name: str) -> bool:
+    """Return True if the exercise is a stretch/mobility drill that shouldn't count as volume."""
+    global _MOBILITY_SET
+    if _MOBILITY_SET is None:
+        _MOBILITY_SET = frozenset(
+            ex["name"].lower() for ex in EXERCISES if ex.get("is_mobility")
+        )
+    return name.strip().lower() in _MOBILITY_SET

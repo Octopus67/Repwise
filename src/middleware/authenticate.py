@@ -48,6 +48,8 @@ async def get_current_user(
             token,
             settings.JWT_SECRET,
             algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise",
+            audience="repwise-api",
         )
     except PyJWTError:
         raise UnauthorizedError("Invalid or expired token")
@@ -115,6 +117,8 @@ async def get_current_user_optional(
             token,
             settings.JWT_SECRET,
             algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise",
+            audience="repwise-api",
         )
     except PyJWTError:
         return None

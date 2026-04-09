@@ -49,6 +49,15 @@ class NutritionEntryCreate(BaseModel):
         return self
 
     @model_validator(mode='after')
+    def round_macros(self) -> 'NutritionEntryCreate':
+        """Round macro values to 1 decimal to prevent float drift."""
+        self.calories = round(self.calories, 1)
+        self.protein_g = round(self.protein_g, 1)
+        self.carbs_g = round(self.carbs_g, 1)
+        self.fat_g = round(self.fat_g, 1)
+        return self
+
+    @model_validator(mode='after')
     def warn_macro_calorie_mismatch(self) -> 'NutritionEntryCreate':
         computed = self.protein_g * 4 + self.carbs_g * 4 + self.fat_g * 9
         if self.calories > 0 and computed > 0:
@@ -82,6 +91,19 @@ class NutritionEntryUpdate(BaseModel):
     @classmethod
     def sanitize_text(cls, v: str) -> str:
         return strip_html(v) if isinstance(v, str) else v
+
+    @model_validator(mode='after')
+    def round_macros(self) -> 'NutritionEntryUpdate':
+        """Round macro values to 1 decimal to prevent float drift."""
+        if self.calories is not None:
+            self.calories = round(self.calories, 1)
+        if self.protein_g is not None:
+            self.protein_g = round(self.protein_g, 1)
+        if self.carbs_g is not None:
+            self.carbs_g = round(self.carbs_g, 1)
+        if self.fat_g is not None:
+            self.fat_g = round(self.fat_g, 1)
+        return self
 
     @model_validator(mode='after')
     def validate_micro_nutrients(self) -> 'NutritionEntryUpdate':

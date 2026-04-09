@@ -66,13 +66,14 @@ class ExportService:
             raise NotFoundError("Export request not found")
         return export
 
-    async def get_history(self, user_id: uuid.UUID) -> list[ExportRequest]:
+    async def get_history(self, user_id: uuid.UUID, limit: int = 50, offset: int = 0) -> list[ExportRequest]:
         """List all export requests for a user, newest first."""
         stmt = (
             select(ExportRequest)
             .where(ExportRequest.user_id == user_id)
             .order_by(ExportRequest.requested_at.desc())
-            .limit(100)
+            .limit(limit)
+            .offset(offset)
         )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())

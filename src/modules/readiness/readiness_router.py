@@ -53,6 +53,8 @@ async def compute_score(
 async def get_scores(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
 ) -> List[ReadinessScoreResponse]:
     """Return recent readiness scores. Empty list for new users."""
     from datetime import timedelta
@@ -61,7 +63,7 @@ async def get_scores(
     end = date.today()
     start = end - timedelta(days=30)
     history = await service.get_history(user.id, start, end)
-    return history.items
+    return history.items[offset:offset + limit]
 
 
 @router.get("/history", response_model=ReadinessHistoryResponse)

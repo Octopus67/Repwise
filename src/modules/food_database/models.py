@@ -69,6 +69,7 @@ class FoodItem(SoftDeleteMixin, Base):
               postgresql_ops={"name": "gin_trgm_ops"}),
         # B-tree index for filtered browsing by region and category
         Index("ix_food_items_region_category", "region", "category"),
+        Index("ix_food_items_not_deleted", "id", postgresql_where=text("deleted_at IS NULL")),
     )
 
 

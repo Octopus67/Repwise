@@ -3,8 +3,10 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
+
+from src.shared.sanitize import strip_html
 
 
 # ---------------------------------------------------------------------------
@@ -21,6 +23,12 @@ class CustomMealCreate(BaseModel):
     fat_g: float = Field(ge=0, le=5000)
     micro_nutrients: Optional[dict[str, float]] = None
 
+    @field_validator("name", mode="before")
+    @classmethod
+    def sanitize_name(cls, v: str) -> str:
+        """Strip HTML from meal name."""
+        return strip_html(v) if isinstance(v, str) else v
+
 
 class CustomMealUpdate(BaseModel):
     """Payload for updating a custom meal. All fields optional."""
@@ -31,6 +39,12 @@ class CustomMealUpdate(BaseModel):
     carbs_g: Optional[float] = Field(default=None, ge=0, le=5000)
     fat_g: Optional[float] = Field(default=None, ge=0, le=5000)
     micro_nutrients: Optional[dict[str, float]] = None
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def sanitize_name(cls, v: str | None) -> str | None:
+        """Strip HTML from meal name."""
+        return strip_html(v) if isinstance(v, str) else v
 
 
 class CustomMealResponse(BaseModel):
@@ -71,6 +85,12 @@ class MealFavoriteCreate(BaseModel):
     carbs_g: float = Field(ge=0, le=50000)
     fat_g: float = Field(ge=0, le=50000)
     micro_nutrients: Optional[dict[str, float]] = None
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def sanitize_name(cls, v: str) -> str:
+        """Strip HTML from favorite name."""
+        return strip_html(v) if isinstance(v, str) else v
 
 
 class MealFavoriteResponse(BaseModel):

@@ -34,23 +34,22 @@ async def run_trial_expiration(session: AsyncSession | None = None) -> int:
     sentry_sdk.set_tag('job_name', 'trial_expiration')
     owns_session = session is None
     if owns_session:
-        session = async_session_factory()
-
-    try:
+        async with async_session_factory() as session:
+            try:
+                count = await _expire_trials(session)
+                await session.commit()
+                elapsed = time.monotonic() - start
+                logger.info("Trial expiration job complete: %d expired in %.1fs", count, elapsed)
+                return count
+            except (SQLAlchemyError, OSError, ValueError):
+                await session.rollback()
+                sentry_sdk.capture_exception()
+                raise
+    else:
         count = await _expire_trials(session)
-        if owns_session:
-            await session.commit()
         elapsed = time.monotonic() - start
         logger.info("Trial expiration job complete: %d expired in %.1fs", count, elapsed)
         return count
-    except (SQLAlchemyError, OSError, ValueError):
-        if owns_session:
-            await session.rollback()
-        sentry_sdk.capture_exception()
-        raise
-    finally:
-        if owns_session:
-            await session.close()
 
 
 async def _expire_trials(session: AsyncSession) -> int:

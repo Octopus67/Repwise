@@ -8,7 +8,7 @@ from typing import Optional
 
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.training.analytics_schemas import PreviousPerformance
@@ -34,19 +34,19 @@ class PreviousPerformanceResolver:
         if "sqlite" in str(self.session.bind.url):
             return await self._get_previous_performance_sqlite(user_id, exercise_name)
         
-        # PostgreSQL: Filter sessions that contain the exercise using JSONB operators
+        # PostgreSQL: Filter sessions containing the exercise (parameterized, no injection)
         stmt = (
             select(TrainingSession)
             .where(
                 TrainingSession.user_id == user_id,
                 TrainingSession.deleted_at.is_(None),
-                func.jsonb_path_exists(
-                    TrainingSession.exercises,
-                    f'$[*] ? (@.exercise_name like_regex "{exercise_name}" flag "i")'
-                )
+                text(
+                    "EXISTS (SELECT 1 FROM jsonb_array_elements(exercises) AS e "
+                    "WHERE LOWER(e->>'exercise_name') = LOWER(:ex_name))"
+                ).bindparams(ex_name=exercise_name),
             )
             .order_by(TrainingSession.session_date.desc())
-            .limit(10)  # Only check last 10 sessions with this exercise
+            .limit(10)
         )
 
         result = await self.session.execute(stmt)

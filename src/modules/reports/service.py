@@ -43,6 +43,18 @@ class WeeklyReportService:
         body = await self._build_body_metrics(user_id, week_start, week_end)
         goal_type, goal_rate = await self._fetch_goal(user_id)
 
+        # Previous week data for progressive overload comparison
+        prev_start = week_start - timedelta(days=7)
+        prev_end = week_end - timedelta(days=7)
+        try:
+            prev_training = await self._build_training_metrics(user_id, prev_start, prev_end)
+            prev_sets = dict(prev_training.sets_by_muscle_group or {})
+            prev_session_count = prev_training.session_count
+        except Exception:
+            logger.exception("Failed to load previous week training metrics")
+            prev_sets = {}
+            prev_session_count = 0
+
         # Micronutrient score
         nutrient_score: float | None = None
         try:
@@ -74,6 +86,8 @@ class WeeklyReportService:
             days_logged_nutrition=days_logged,
             days_logged_training=training.session_count,
             nutrient_score=nutrient_score,
+            prev_sets_by_muscle_group=prev_sets,
+            prev_session_count=prev_session_count,
         )
         recs = generate_recommendations(ctx)
 

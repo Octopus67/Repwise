@@ -225,11 +225,17 @@ class TrainingAnalyticsService:
 
         bodyweight_kg = float(bw_row)
 
-        # Fetch ALL sessions (no date filter) to find best e1RM ever per supported lift
+        # Fetch recent sessions to find best e1RM per supported lift
+        # Limit to last 365 days and max 200 sessions to prevent OOM
+        from datetime import timedelta
+        cutoff = date.today() - timedelta(days=365)
         all_stmt = select(
             TrainingSession.session_date,
             TrainingSession.exercises,
-        ).where(TrainingSession.user_id == user_id)
+        ).where(
+            TrainingSession.user_id == user_id,
+            TrainingSession.session_date >= cutoff,
+        ).order_by(TrainingSession.session_date.desc()).limit(200)
         all_stmt = TrainingSession.not_deleted(all_stmt)
         result = await self.session.execute(all_stmt)
         all_sessions = [(row.session_date, row.exercises or []) for row in result]

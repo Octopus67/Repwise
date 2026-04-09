@@ -3,13 +3,20 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from src.shared.sanitize import strip_html  # Audit fix 2.4 — HTML sanitization
 from src.shared.validators import validate_json_size
+
+
+def _ensure_tz_aware(v: datetime | None) -> datetime | None:
+    """Assume UTC if datetime is naive."""
+    if v is not None and v.tzinfo is None:
+        return v.replace(tzinfo=timezone.utc)
+    return v
 
 
 class SetEntry(BaseModel):
@@ -67,14 +74,20 @@ class TrainingSessionCreate(BaseModel):
     @field_validator("session_date")
     @classmethod
     def no_future_dates(cls, v: date) -> date:
-        if v > date.today():
-            raise ValueError("session_date cannot be in the future")
+        from datetime import timedelta
+        if v > date.today() + timedelta(days=1):
+            raise ValueError("session_date cannot be more than 1 day in the future")
         return v
 
     @field_validator("metadata")
     @classmethod
     def validate_metadata_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
         return validate_json_size(v)
+
+    @field_validator("start_time", "end_time", mode="after")
+    @classmethod
+    def ensure_tz_aware(cls, v: datetime | None) -> datetime | None:
+        return _ensure_tz_aware(v)
 
     @model_validator(mode='after')
     def check_time_order(self) -> TrainingSessionCreate:
@@ -98,6 +111,11 @@ class TrainingSessionUpdate(BaseModel):
     @classmethod
     def validate_metadata_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
         return validate_json_size(v)
+
+    @field_validator("start_time", "end_time", mode="after")
+    @classmethod
+    def ensure_tz_aware(cls, v: datetime | None) -> datetime | None:
+        return _ensure_tz_aware(v)
 
     @model_validator(mode='after')
     def check_time_order(self) -> 'TrainingSessionUpdate':

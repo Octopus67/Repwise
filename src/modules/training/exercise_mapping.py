@@ -117,10 +117,10 @@ EXERCISE_MUSCLE_MAP: dict[str, str] = {
     "reverse barbell curl": "forearms",
     "dumbbell wrist curl": "forearms",
     # Full Body
-    "clean and press": "full_body",
-    "thruster": "full_body",
-    "burpee": "full_body",
-    "turkish get-up": "full_body",
+    "clean and press": "shoulders",
+    "thruster": "quads",
+    "burpee": "quads",
+    "turkish get-up": "shoulders",
     # Adductors
     "adductor machine": "adductors",
     "cable hip adduction": "adductors",
@@ -188,10 +188,31 @@ COMPOUND_EXERCISES: set[str] = {
 }
 
 
+_CATALOG_LOOKUP: dict[str, str] | None = None
+
+
+def _get_catalog_lookup() -> dict[str, str]:
+    """Lazy-load exercise catalog as name→muscle_group lookup."""
+    global _CATALOG_LOOKUP
+    if _CATALOG_LOOKUP is None:
+        from src.modules.training.exercises import get_all_exercises
+        _CATALOG_LOOKUP = {
+            ex["name"].strip().lower(): ex["muscle_group"]
+            for ex in get_all_exercises()
+        }
+    return _CATALOG_LOOKUP
+
+
 def get_muscle_group(exercise_name: str) -> str:
-    """Return the muscle group for *exercise_name*, or ``"Other"`` if unknown."""
+    """Return the muscle group for *exercise_name*, or ``"Other"`` if unknown.
+
+    Falls back to the exercise catalog if not in the hardcoded map.
+    """
     normalized_name = exercise_name.strip().lower()
-    return EXERCISE_MUSCLE_MAP.get(normalized_name, "Other")
+    result = EXERCISE_MUSCLE_MAP.get(normalized_name)
+    if result is not None:
+        return result
+    return _get_catalog_lookup().get(normalized_name, "Other")
 
 
 def is_compound(exercise_name: str) -> bool:

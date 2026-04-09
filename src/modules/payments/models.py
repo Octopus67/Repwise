@@ -67,7 +67,7 @@ class PaymentTransaction(Base):
 
     __tablename__ = "payment_transactions"
 
-    subscription_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    subscription_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey('subscriptions.id', ondelete='SET NULL'), nullable=True, index=True)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
     provider_name: Mapped[str] = mapped_column(String(50))
     provider_transaction_id: Mapped[Optional[str]] = mapped_column(

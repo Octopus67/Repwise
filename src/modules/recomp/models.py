@@ -3,7 +3,7 @@
 import uuid
 from datetime import date
 
-from sqlalchemy import Date, Float, ForeignKey, Index
+from sqlalchemy import Date, Float, ForeignKey, Index, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.shared.base_model import Base
@@ -26,4 +26,5 @@ class RecompMeasurement(SoftDeleteMixin, Base):  # Audit fix 8.6
 
     __table_args__ = (
         Index("ix_recomp_measurements_user_date", "user_id", "recorded_date"),
+        Index("ix_recomp_measurements_not_deleted", "id", postgresql_where=text("deleted_at IS NULL")),
     )

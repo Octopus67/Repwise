@@ -44,4 +44,32 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
                     status_code=413,
                     content={"detail": f"Request body too large. Maximum: {max_size // (1024 * 1024)}MB"},
                 )
+
+            # Streaming safety net: track actual bytes read in case Content-Length lies
+            original_receive = request._receive
+            bytes_read = 0
+
+            async def _counting_receive():
+                nonlocal bytes_read
+                message = await original_receive()
+                body = message.get("body", b"")
+                bytes_read += len(body)
+                if bytes_read > max_size:
+                    raise _BodyTooLargeError()
+                return message
+
+            request._receive = _counting_receive
+
+            try:
+                return await call_next(request)
+            except _BodyTooLargeError:
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": f"Request body too large. Maximum: {max_size // (1024 * 1024)}MB"},
+                )
+
         return await call_next(request)
+
+
+class _BodyTooLargeError(Exception):
+    """Raised when streaming body exceeds the size limit."""

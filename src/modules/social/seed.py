@@ -28,11 +28,16 @@ OFFICIAL_ACCOUNTS = [
 SEED_FEED_EVENTS = [
     ("coach.alex@repwise.bot", "workout", {"summary": "Push Day — 4 exercises, 45 min", "exercises": 4, "duration_min": 45}),
     ("team@repwise.bot", "share", {"summary": "Shared a new workout template: PPL Beginner"}),
-    ("coach.alex@repwise.bot", "pr", {"summary": "New PR: Bench Press 100kg × 5", "exercise": "Bench Press", "weight_kg": 100, "reps": 5}),
-    ("community@repwise.bot", "challenge", {"summary": "New challenge: 30-Day Consistency Streak 🔥"}),
+    ("coach.alex@repwise.bot", "pr", {"summary": "New PR: Bench Press 100kg x 5", "exercise": "Bench Press", "weight_kg": 100, "reps": 5}),
+    ("community@repwise.bot", "challenge", {"summary": "New challenge: 30-Day Consistency Streak"}),
     ("coach.alex@repwise.bot", "workout", {"summary": "Pull Day — 5 exercises, 50 min", "exercises": 5, "duration_min": 50}),
-    ("team@repwise.bot", "tip", {"summary": "💡 Tip: Track your RPE to auto-regulate volume over time"}),
-    ("community@repwise.bot", "achievement", {"summary": "🏆 100 members hit a new PR this week!"}),
+    ("team@repwise.bot", "tip", {"summary": "Tip: Track your RPE to auto-regulate volume over time"}),
+    ("community@repwise.bot", "achievement", {"summary": "100 members hit a new PR this week!"}),
+    ("coach.alex@repwise.bot", "post", {"content": "Recovery is where gains happen. Sleep 7-9 hours, eat enough protein, and don't skip rest days.", "post_type": "text"}),
+    ("team@repwise.bot", "post", {"content": "New feature: You can now configure your rest timer duration in Settings. Compound and isolation exercises get separate timers.", "post_type": "text"}),
+    ("community@repwise.bot", "post", {"content": "Weekly check-in: What muscle group are you focusing on this week? Drop your split below.", "post_type": "text"}),
+    ("coach.alex@repwise.bot", "pr", {"summary": "New PR: Squat 140kg x 3", "exercise": "Squat", "weight_kg": 140, "reps": 3}),
+    ("coach.alex@repwise.bot", "workout", {"summary": "Leg Day — 6 exercises, 55 min", "exercises": 6, "duration_min": 55}),
 ]
 
 

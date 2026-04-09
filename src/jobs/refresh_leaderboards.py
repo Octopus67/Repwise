@@ -109,14 +109,16 @@ async def refresh_leaderboards() -> None:
                     LeaderboardEntry.period_start == week_start,
                 )
             )
-            for rank, (user_id, score) in enumerate(ranked_volume, 1):
-                session.add(LeaderboardEntry(
+            session.add_all([
+                LeaderboardEntry(
                     board_type="weekly_volume",
                     period_start=week_start,
                     user_id=user_id,
                     score=float(score),
                     rank=rank,
-                ))
+                )
+                for rank, (user_id, score) in enumerate(ranked_volume, 1)
+            ])
 
             # ── Streak ────────────────────────────────────────────
             stmt_all = select(
@@ -146,14 +148,16 @@ async def refresh_leaderboards() -> None:
                     LeaderboardEntry.period_start == week_start,
                 )
             )
-            for rank, (user_id, streak_len) in enumerate(ranked_streaks, 1):
-                session.add(LeaderboardEntry(
+            session.add_all([
+                LeaderboardEntry(
                     board_type="streak",
                     period_start=week_start,
                     user_id=user_id,
                     score=float(streak_len),
                     rank=rank,
-                ))
+                )
+                for rank, (user_id, streak_len) in enumerate(ranked_streaks, 1)
+            ])
 
             await session.commit()
 

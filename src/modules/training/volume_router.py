@@ -27,9 +27,18 @@ from src.shared.errors import NotFoundError
 router = APIRouter()
 
 
-def _default_week_start() -> date:
-    """Return the Monday of the current ISO week."""
-    today = date.today()
+def _default_week_start(tz_name: str | None = None) -> date:
+    """Return the Monday of the current ISO week in the user's timezone."""
+    if tz_name:
+        try:
+            from zoneinfo import ZoneInfo
+            from datetime import datetime
+            now = datetime.now(ZoneInfo(tz_name))
+            today = now.date()
+        except (ImportError, KeyError):
+            today = date.today()
+    else:
+        today = date.today()
     return today - timedelta(days=today.weekday())
 
 
@@ -51,7 +60,7 @@ async def get_muscle_volume(
 ) -> Union[WeeklyVolumeResponse, WNSWeeklyResponse]:
     """Get weekly muscle group volume with landmark comparisons."""
     if week_start is None:
-        week_start = _default_week_start()
+        week_start = _default_week_start(getattr(user, 'timezone', None))
     else:
         week_start = _snap_to_monday(week_start)
 
@@ -73,6 +82,12 @@ async def get_muscle_volume(
 
         wns_svc = WNSVolumeService(db)
         muscle_groups = await wns_svc.get_weekly_muscle_volume(user.id, week_start, goal_type, goal_rate)
+        # Fire-and-forget volume warnings (decoupled from computation)
+        try:
+            from src.modules.training.wns_volume_service import send_volume_warnings
+            await send_volume_warnings(db, user.id, muscle_groups)
+        except Exception:
+            pass  # Non-critical
         return WNSWeeklyResponse(
             week_start=week_start,
             week_end=week_end,
@@ -100,7 +115,7 @@ async def get_muscle_volume_detail(
 ) -> MuscleGroupDetail:
     """Get per-exercise volume breakdown for a muscle group."""
     if week_start is None:
-        week_start = _default_week_start()
+        week_start = _default_week_start(getattr(user, 'timezone', None))
     else:
         week_start = _snap_to_monday(week_start)
 

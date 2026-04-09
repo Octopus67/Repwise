@@ -4,5 +4,11 @@ import re
 
 
 def strip_html(value: str) -> str:
-    """Remove HTML tags from user input. Does NOT escape — Pydantic handles output encoding."""
-    return re.sub(r'<[^>]+>', '', value)
+    """Remove HTML tags and escape remaining entities from user input."""
+    stripped = re.sub(r'<[^>]+>', '', value)
+    return html.escape(stripped, quote=True)
+
+
+def clean_text(value: str) -> str:
+    """Strip HTML tags from user input."""
+    return re.sub(r'<[^>]+>', '', value).strip()

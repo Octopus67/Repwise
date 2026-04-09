@@ -6,13 +6,14 @@ from typing import List, Optional
 import logging
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_db
 from src.middleware.authenticate import get_current_user
 from src.modules.auth.models import User
+from src.shared.errors import ForbiddenError, InternalError, ValidationError
 from src.modules.feature_flags.service import FeatureFlagService
 from src.modules.recomp.schemas import (
     RecompCheckinResponse,
@@ -32,13 +33,13 @@ async def _check_recomp_guards(user: User, db: AsyncSession) -> None:
     """Feature flag + goal type guard. Raises 403 or 400."""
     ff_service = FeatureFlagService(db)
     if not await ff_service.is_feature_enabled("recomp_mode_enabled", user):
-        raise HTTPException(status_code=403, detail="Body recomposition mode is not available")
+        raise ForbiddenError(message="Body recomposition mode is not available")
 
     stmt = select(UserGoal).where(UserGoal.user_id == user.id)
     result = await db.execute(stmt)
     goal = result.scalar_one_or_none()
     if goal is None or goal.goal_type != "recomposition":
-        raise HTTPException(status_code=400, detail="Recomp endpoints require recomposition goal mode")
+        raise ValidationError(message="Recomp endpoints require recomposition goal mode")
 
 
 def _get_service(db: AsyncSession = Depends(get_db)) -> RecompService:
@@ -57,11 +58,12 @@ async def log_measurement(
         entry = await service.log_measurement(user.id, data)
         await db.commit()
         return RecompMeasurementResponse.model_validate(entry)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+    except ValueError:
+        logger.exception("Recomp calculation failed for user %s", user.id)
+        raise ValidationError(message="Invalid recomp calculation input")
     except SQLAlchemyError:
         logger.exception("DB error logging recomp measurement for user %s", user.id)
-        raise HTTPException(status_code=500, detail="Failed to log measurement")
+        raise InternalError(message="Failed to log measurement")
 
 
 @router.get("/measurements", response_model=List[RecompMeasurementResponse])
@@ -89,10 +91,10 @@ async def get_metrics(
         output = await service.get_recomp_metrics(user.id, lookback_days)
     except SQLAlchemyError:
         logger.exception("DB error computing recomp metrics for user %s", user.id)
-        raise HTTPException(status_code=500, detail="Failed to compute metrics")
+        raise InternalError(message="Failed to compute metrics")
     except (ValueError, TypeError, ZeroDivisionError):
         logger.exception("Computation error in recomp metrics for user %s", user.id)
-        raise HTTPException(status_code=500, detail="Failed to compute metrics")
+        raise InternalError(message="Failed to compute metrics")
     return RecompMetricsResponse(
         waist_trend=_trend_to_dict(output.waist_trend),
         arm_trend=_trend_to_dict(output.arm_trend),
@@ -116,10 +118,10 @@ async def get_checkin(
         output = await service.get_weekly_checkin(user.id)
     except SQLAlchemyError:
         logger.exception("DB error computing recomp checkin for user %s", user.id)
-        raise HTTPException(status_code=500, detail="Failed to compute check-in")
+        raise InternalError(message="Failed to compute check-in")
     except (ValueError, TypeError, ZeroDivisionError):
         logger.exception("Computation error in recomp checkin for user %s", user.id)
-        raise HTTPException(status_code=500, detail="Failed to compute check-in")
+        raise InternalError(message="Failed to compute check-in")
     return RecompCheckinResponse(
         recommendation=output.recommendation,
         recomp_score=output.recomp_score,

@@ -61,24 +61,24 @@ class SocialService:
             raise NotFoundError("Follow relationship not found")
 
     async def get_followers(
-        self, user_id: uuid.UUID, cursor: Optional[datetime], limit: int = 20
+        self, user_id: uuid.UUID, cursor: Optional[datetime], limit: int = 50, offset: int = 0
     ) -> list[Follow]:
         """Paginated followers list (cursor = created_at)."""
         stmt = select(Follow).where(Follow.following_id == user_id)
         if cursor:
             stmt = stmt.where(Follow.created_at < cursor)
-        stmt = stmt.order_by(Follow.created_at.desc()).limit(limit)
+        stmt = stmt.order_by(Follow.created_at.desc()).limit(limit).offset(offset)
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
     async def get_following(
-        self, user_id: uuid.UUID, cursor: Optional[datetime], limit: int = 20
+        self, user_id: uuid.UUID, cursor: Optional[datetime], limit: int = 50, offset: int = 0
     ) -> list[Follow]:
         """Paginated following list (cursor = created_at)."""
         stmt = select(Follow).where(Follow.follower_id == user_id)
         if cursor:
             stmt = stmt.where(Follow.created_at < cursor)
-        stmt = stmt.order_by(Follow.created_at.desc()).limit(limit)
+        stmt = stmt.order_by(Follow.created_at.desc()).limit(limit).offset(offset)
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
@@ -276,3 +276,54 @@ class SocialService:
         self.session.add(event)
         await self.session.flush()
         return event
+
+    async def create_post(
+        self,
+        user_id: uuid.UUID,
+        content: str,
+        post_type: str = "text",
+    ) -> FeedEvent:
+        """Create a user-generated social post."""
+        event = FeedEvent(
+            user_id=user_id,
+            event_type="post",
+            ref_id=uuid.uuid4(),
+            metadata_={"content": content, "post_type": post_type},
+        )
+        self.session.add(event)
+        await self.session.commit()
+        await self.session.refresh(event)
+        return event
+
+    async def discover_users(
+        self, current_user_id: uuid.UUID, query: str, limit: int = 20,
+    ) -> list[dict]:
+        """Search users by display name, excluding current user."""
+        from src.modules.user.models import UserProfile
+
+        stmt = (
+            select(UserProfile)
+            .where(UserProfile.user_id != current_user_id)
+        )
+        if query:
+            escaped = query.replace('%', '\\%').replace('_', '\\_')
+            stmt = stmt.where(UserProfile.display_name.ilike(f"%{escaped}%"))
+        stmt = stmt.limit(limit)
+        result = await self.session.execute(stmt)
+        profiles = result.scalars().all()
+
+        # Check follow status in one query
+        following_stmt = select(Follow.following_id).where(
+            Follow.follower_id == current_user_id,
+        )
+        following_result = await self.session.execute(following_stmt)
+        following_ids = {r for r in following_result.scalars().all()}
+
+        return [
+            {
+                "id": str(p.user_id),
+                "display_name": p.display_name or "Anonymous",
+                "is_following": p.user_id in following_ids,
+            }
+            for p in profiles
+        ]

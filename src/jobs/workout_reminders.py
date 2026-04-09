@@ -93,23 +93,22 @@ async def run_workout_reminders(session: AsyncSession | None = None) -> int:
     sentry_sdk.set_tag('job_name', 'workout_reminders')
     owns_session = session is None
     if owns_session:
-        session = async_session_factory()
-
-    try:
+        async with async_session_factory() as session:
+            try:
+                sent = await _send_reminders(session)
+                await session.commit()
+                elapsed = time.monotonic() - start
+                logger.info("Workout reminders job complete: %d sent in %.1fs", sent, elapsed)
+                return sent
+            except (SQLAlchemyError, OSError, ValueError):
+                await session.rollback()
+                sentry_sdk.capture_exception()
+                raise
+    else:
         sent = await _send_reminders(session)
-        if owns_session:
-            await session.commit()
         elapsed = time.monotonic() - start
         logger.info("Workout reminders job complete: %d sent in %.1fs", sent, elapsed)
         return sent
-    except (SQLAlchemyError, OSError, ValueError):
-        if owns_session:
-            await session.rollback()
-        sentry_sdk.capture_exception()
-        raise
-    finally:
-        if owns_session:
-            await session.close()
 
 
 async def _send_reminders(session: AsyncSession) -> int:

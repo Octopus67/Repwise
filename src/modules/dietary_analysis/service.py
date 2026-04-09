@@ -284,6 +284,8 @@ class DietaryAnalysisService:
             if summary is None:
                 continue
             micros = entry.micro_nutrients or {}
+            if not isinstance(micros, dict):
+                continue
             for k, v in micros.items():
                 if not isinstance(v, (int, float)):
                     continue

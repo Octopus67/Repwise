@@ -33,9 +33,9 @@ class Follow(Base):
 
     __tablename__ = "follows"
 
-    # Override inherited Base.id — not used for this table
+    # Override inherited Base.id — not used as PK, but keep server_default for safety
     id: Mapped[Optional[uuid.UUID]] = mapped_column(  # type: ignore[assignment]
-        primary_key=False, default=None, server_default=None, nullable=True
+        primary_key=False, default=uuid.uuid4, nullable=True
     )
 
     follower_id: Mapped[uuid.UUID] = mapped_column(
@@ -79,9 +79,9 @@ class Reaction(Base):
 
     __tablename__ = "reactions"
 
-    # Override inherited Base.id — not used for this table
+    # Override inherited Base.id — not used as PK, but keep default for safety
     id: Mapped[Optional[uuid.UUID]] = mapped_column(  # type: ignore[assignment]
-        primary_key=False, default=None, server_default=None, nullable=True
+        primary_key=False, default=uuid.uuid4, nullable=True
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
