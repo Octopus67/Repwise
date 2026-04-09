@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useThemeColors, type ThemeColors } from '../../../theme/colors';
+import { useThemeColors, type ThemeColors } from '../../../hooks/useThemeColors';
 import { spacing, typography } from '../../../theme/tokens';
 import { Button } from '../../../components/common/Button';
 import { useHaptics } from '../../../hooks/useHaptics';
