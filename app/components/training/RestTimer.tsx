@@ -67,14 +67,13 @@ export function RestTimer({
             clearInterval(intervalRef.current);
             intervalRef.current = null;
           }
-          // Play sound (best-effort, don't crash if expo-av unavailable)
+          // Play sound (best-effort, don't crash if expo-audio unavailable)
           try {
-            const { Audio } = require('expo-av');
-            Audio.Sound.createAsync(
-              require('../../assets/timer-done.mp3'),
-            ).catch(() => {}); // Intentional: audio playback failure is non-critical
+            const { createAudioPlayer } = require('expo-audio');
+            const player = createAudioPlayer(require('../../assets/timer-done.mp3'));
+            player.play();
           } catch {
-            // Intentional: expo-av not available — audio is non-critical
+            // Intentional: expo-audio not available — audio is non-critical
           }
           // Defer onComplete to avoid setState during render
           setTimeout(() => {
