@@ -1,9 +1,9 @@
 # Audit fix 10.10 — exclude non-essential files from Docker build context
 app/
 tests/
+docs/
 .git/
 *.md
-!docs/*.md
 dev.db
 test.db
 node_modules/

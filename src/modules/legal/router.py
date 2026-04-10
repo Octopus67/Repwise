@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse
 
 router = APIRouter(tags=["legal"])
 
-_DOCS_DIR = Path(__file__).resolve().parent.parent.parent.parent / "docs"
+_DOCS_DIR = Path(__file__).resolve().parent
 
 _HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">

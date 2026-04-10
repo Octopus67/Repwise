@@ -10,7 +10,6 @@ COPY pyproject.toml .
 RUN pip install --no-cache-dir .
 
 COPY src/ src/
-COPY docs/ docs/
 COPY alembic.ini .
 
 RUN adduser --disabled-password --gecos '' appuser
