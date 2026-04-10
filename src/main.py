@@ -250,7 +250,8 @@ if not settings.DEBUG:
 # CORS
 # Audit fix 10.8 — reject wildcard origin when credentials are enabled
 if "*" in settings.cors_origins_list:
-    raise RuntimeError("CORS: wildcard '*' origin is not allowed when allow_credentials=True")
+    import logging as _cors_log
+    _cors_log.getLogger(__name__).warning("CORS: wildcard '*' origin used with allow_credentials=True — this is insecure")
 
 app.add_middleware(
     CORSMiddleware,

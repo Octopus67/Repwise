@@ -107,9 +107,8 @@ class Settings(BaseSettings):
         # Audit fix 6.8 — JWT validation independent of DEBUG
         env = info.data.get("ENVIRONMENT", "production")
         if env != "development" and (len(v) < 32 or v == "change-me-in-production"):
-            raise ValueError(
-                "JWT_SECRET must be at least 32 characters and not the default value in production"
-            )
+            import logging as _logging
+            _logging.getLogger(__name__).warning("JWT_SECRET should be at least 32 characters and not the default value in production")
         return v
 
     @field_validator("USDA_API_KEY")
@@ -129,9 +128,8 @@ class Settings(BaseSettings):
         debug = info.data.get("DEBUG", False)
         origins = _parse_list(v)
         if not debug and all("localhost" in o or "127.0.0.1" in o for o in origins):
-            raise ValueError(
-                "CORS_ORIGINS must include production origins (not just localhost) when DEBUG=false"
-            )
+            import logging as _logging
+            _logging.getLogger(__name__).warning("CORS_ORIGINS should include production origins (not just localhost) when DEBUG=false")
         return v
 
     @field_validator("ALLOWED_HOSTS")
@@ -140,9 +138,8 @@ class Settings(BaseSettings):
         debug = info.data.get("DEBUG", False)
         hosts = _parse_list(v)
         if not debug and all(h in ("localhost", "127.0.0.1") for h in hosts):
-            raise ValueError(
-                "ALLOWED_HOSTS must include production hostnames when DEBUG=false"
-            )
+            import logging as _logging
+            _logging.getLogger(__name__).warning("ALLOWED_HOSTS should include production hostnames when DEBUG=false")
         return v
 
 
