@@ -8,9 +8,12 @@ import api from './api';
 
 // ─── Google ──────────────────────────────────────────────────────────────────
 
-// Google OAuth Client IDs - configured from Google Cloud Console
-const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '626243275639-vh8mmvdbnp4ufgihga0bme2gd2j39ghp.apps.googleusercontent.com';
-const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '626243275639-sd7og2jmth1018gtj6eha858o262hf24.apps.googleusercontent.com';
+// Google OAuth Client IDs - read from environment variables (set in .env / EAS secrets)
+const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
+const GOOGLE_IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '';
+
+if (!GOOGLE_WEB_CLIENT_ID) console.warn('[Repwise] Google OAuth: EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID not set');
+if (!GOOGLE_IOS_CLIENT_ID) console.warn('[Repwise] Google OAuth: EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID not set');
 
 let googleConfigured = false;
 
@@ -32,6 +35,9 @@ export async function signInWithGoogle(): Promise<{
   refresh_token: string;
   expires_in: number;
 }> {
+  if (!GOOGLE_WEB_CLIENT_ID || !GOOGLE_IOS_CLIENT_ID) {
+    throw new Error('Google Sign-In is not configured. Please contact support.');
+  }
   ensureGoogleConfigured();
   if (Platform.OS !== 'ios') await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
   const response = await GoogleSignin.signIn();
@@ -55,6 +61,8 @@ export function getGoogleSignInError(error: unknown): string {
         return 'Google sign in failed';
     }
   }
+  const err = error as { response?: unknown; message?: string };
+  if (!err.response && err.message?.includes('Network')) return 'Network error. Check your connection.';
   return (error as Error)?.message ?? 'Google sign in failed';
 }
 
@@ -99,5 +107,7 @@ export async function signInWithApple(): Promise<{
 export function getAppleSignInError(error: unknown): string {
   const code = (error as { code?: string })?.code;
   if (code === 'ERR_REQUEST_CANCELED') return '';
+  const err = error as { response?: unknown; message?: string };
+  if (!err.response && err.message?.includes('Network')) return 'Network error. Check your connection.';
   return (error as Error)?.message ?? 'Apple sign in failed';
 }

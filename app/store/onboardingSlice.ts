@@ -172,7 +172,7 @@ export const useOnboardingStore = create<OnboardingWizardState & OnboardingWizar
     } else {
       set({ _hydrated: true });
     }
-  }).catch(() => {});
+  }).catch(err => console.warn('[Repwise] onboarding state hydration:', err));
 
   return {
     ...initial,

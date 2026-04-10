@@ -15,6 +15,7 @@ import { showAlert } from '../utils/crossPlatformAlert';
 import { computeWorkoutSummary } from '../utils/workoutSummary';
 import { generateRecommendations } from '../utils/wnsRecommendations';
 import { getApiErrorMessage } from '../utils/errors';
+import { isNetworkError, enqueueOfflineWorkout } from '../hooks/useOfflineWorkoutQueue';
 import type { PersonalRecordResponse, UnitSystem } from '../types/training';
 import type { ActiveWorkoutState, ActiveWorkoutActions } from '../types/training';
 import { useWorkoutPreferencesStore } from '../store/workoutPreferencesStore';
@@ -181,7 +182,19 @@ export function useWorkoutSave({
       }
     } catch (error: unknown) {
       const errorMessage = getApiErrorMessage(error, 'Could not save workout. Please try again.');
-      showAlert('Save Failed', errorMessage);
+      // Queue for offline retry if it's a network error (#18)
+      if (isNetworkError(error)) {
+        // The payload was already built and sent to mutateAsync — retrieve from mutation variables
+        const vars = saveWorkoutMutation.variables;
+        if (vars?.payload) {
+          enqueueOfflineWorkout(vars.payload);
+          showAlert('Saved Offline', 'No connection. Your workout will be saved when you reconnect.');
+        } else {
+          showAlert('Save Failed', errorMessage);
+        }
+      } else {
+        showAlert('Save Failed', errorMessage);
+      }
     } finally {
       savingRef.current = false;
     }

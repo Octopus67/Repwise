@@ -71,7 +71,7 @@ export function FoodSearchPanel({ onFoodSelected, onBarcodePress, onManualBarcod
           // Intentional: malformed scan history is non-critical, reset to empty array
         }
       }
-    }).catch(() => {});
+    }).catch(err => console.warn('[Repwise] scan history load:', err));
     // F9: Fetch favorites on mount
     api.get('food/favorites').then((res) => {
       if (mountedRef.current) {

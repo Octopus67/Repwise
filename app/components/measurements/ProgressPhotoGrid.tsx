@@ -6,7 +6,7 @@
 import { useState, useCallback } from 'react';
 import { getLocalDateString } from '../../utils/localDate';
 import {
-  View, Text, TouchableOpacity, StyleSheet, FlatList, Image,
+  View, Text, TouchableOpacity, StyleSheet, FlatList,
   Alert, ActivityIndicator, Dimensions,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { radius, spacing, typography, shadows } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../common/Icon';
+import { FallbackImage } from '../common/FallbackImage';
 
 const PHOTO_DIR = `${documentDirectory ?? ''}measurement_photos/`;
 const STORAGE_KEY = 'measurement_photo_paths';
@@ -139,7 +140,7 @@ export function ProgressPhotoGrid({ photos, onPhotosChange, loading }: ProgressP
       accessibilityLabel={`Progress photo from ${item.date}. Long press to delete.`}
       accessibilityRole="image"
     >
-      <Image source={{ uri: item.uri }} style={[styles.photoImage, { backgroundColor: c.bg.surfaceRaised }]} />
+      <FallbackImage source={{ uri: item.uri }} style={[styles.photoImage, { backgroundColor: c.bg.surfaceRaised }]} />
       <Text style={[styles.photoDate, { color: c.text.secondary }]}>{item.date}</Text>
     </TouchableOpacity>
   );

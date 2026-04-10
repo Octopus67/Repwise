@@ -8,6 +8,8 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Linking,
+  Platform,
 } from 'react-native';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
@@ -16,7 +18,11 @@ import { Button } from '../common/Button';
 import { GradientButton } from '../common/GradientButton';
 import api from '../../services/api';
 import { getApiErrorMessage } from '../../utils/errors';
-import { getOfferings, purchasePackage, restorePurchases } from '../../services/purchases';
+import { showRetryAlert } from '../../utils/alertRetry';
+import { validateApiResponse, PaymentStatusSchema } from '../../schemas/api';
+import { getOfferings, restorePurchases, executePurchase } from '../../services/purchases';
+import { LEGAL_URLS, SUBSCRIPTION_URLS } from '../../constants/urls';
+import { useStore } from '../../store';
 
 interface UpgradeModalProps {
   visible: boolean;
@@ -25,9 +31,19 @@ interface UpgradeModalProps {
   onStartTrial?: () => void;
 }
 
-const PLANS = [
-  { key: 'monthly' as const, label: 'Monthly', price: '$9.99/mo', savings: '' },
-  { key: 'yearly' as const, label: 'Yearly', price: '$79.99/yr', savings: 'Save 33%' },
+const buildPlans = (offerings: { monthly?: { product: { priceString: string } } | null; annual?: { product: { priceString: string } } | null } | null) => [
+  {
+    key: 'monthly' as const,
+    label: 'Monthly',
+    price: offerings?.monthly?.product.priceString ? `${offerings.monthly.product.priceString}/mo` : 'Loading...',
+    savings: '',
+  },
+  {
+    key: 'yearly' as const,
+    label: 'Yearly',
+    price: offerings?.annual?.product.priceString ? `${offerings.annual.product.priceString}/yr` : 'Loading...',
+    savings: 'Save 33%',
+  },
 ];
 
 const FEATURES = [
@@ -45,34 +61,45 @@ export function UpgradeModal({ visible, onClose, trialEligible, onStartTrial }: 
   const [selectedPlan, setSelectedPlan] = React.useState<'monthly' | 'yearly'>('yearly');
   const [loading, setLoading] = React.useState(false);
   const [trialLoading, setTrialLoading] = React.useState(false);
+  const setSubscription = useStore((s) => s.setSubscription);
   const scrollViewRef = useRef<ScrollView>(null);
-  const [rcOfferings, setRcOfferings] = useState<any>(null);
+  const [rcOfferings, setRcOfferings] = useState<Awaited<ReturnType<typeof getOfferings>>>(null);
   const [rcLoading, setRcLoading] = useState(true);
   const [restoreLoading, setRestoreLoading] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
     setRcLoading(true);
-    getOfferings().then(setRcOfferings).catch(() => {}).finally(() => setRcLoading(false));
+    getOfferings().then(setRcOfferings).catch((err) => console.warn('[Repwise] Failed to load offerings:', err)).finally(() => setRcLoading(false));
   }, [visible]);
 
   const handlePurchase = async () => {
     if (!rcOfferings) return;
-    const pkg = selectedPlan === 'yearly'
-      ? rcOfferings.annual ?? rcOfferings.availablePackages?.find((p: { identifier: string }) => p.identifier === '$rc_annual')
-      : rcOfferings.monthly ?? rcOfferings.availablePackages?.find((p: { identifier: string }) => p.identifier === '$rc_monthly');
-    if (!pkg) { Alert.alert('Error', 'Package not available'); return; }
     setLoading(true);
     try {
-      const customerInfo = await purchasePackage(pkg);
-      if (customerInfo.entitlements.active['premium']) {
-        await api.get('payments/status');
-        Alert.alert('Success', 'Subscription activated!');
+      const result = await executePurchase(rcOfferings, selectedPlan);
+      if (result.success) {
+        Alert.alert('Success', 'Welcome to Repwise Pro!');
         onClose();
+        // Sync with backend in background - don't let sync failure affect UX
+        try {
+          const { data } = await api.get('payments/status');
+          if (data) setSubscription(validateApiResponse(PaymentStatusSchema, data, 'payments/status'));
+        } catch {
+          console.warn('[Repwise] Backend sync failed after purchase, will retry');
+          setTimeout(async () => {
+            try {
+              const { data } = await api.get('payments/status');
+              if (data) setSubscription(validateApiResponse(PaymentStatusSchema, data, 'payments/status'));
+            } catch { /* will sync on next app launch */ }
+          }, 5000);
+        }
+      } else if (result.pending) {
+        Alert.alert('Purchase Pending', 'Your purchase is awaiting approval. You\'ll get access once it\'s confirmed.');
       }
-    } catch (e: any) {
-      if (e.userCancelled) return;
-      Alert.alert('Purchase Failed', e.message ?? 'Something went wrong');
+    } catch (e: unknown) {
+      if (e && typeof e === 'object' && 'code' in e && (e as { code: string }).code === '1') return; // PURCHASE_CANCELLED_ERROR
+      showRetryAlert('Purchase Failed', 'Purchase failed. Please try again.', handlePurchase);
     } finally {
       setLoading(false);
     }
@@ -82,15 +109,32 @@ export function UpgradeModal({ visible, onClose, trialEligible, onStartTrial }: 
     setRestoreLoading(true);
     try {
       const info = await restorePurchases();
+      if (info === null) {
+        // SDK not configured
+        Alert.alert('Setup Required', 'Purchase system is initializing. Please try again in a moment.');
+        return;
+      }
       if (info?.entitlements?.active['premium']) {
-        await api.get('payments/status');
         Alert.alert('Restored!', 'Your premium subscription has been restored.');
         onClose();
+        // Background sync - don't let sync failure affect UX
+        try {
+          const { data: subData } = await api.get('payments/status');
+          if (subData) setSubscription(validateApiResponse(PaymentStatusSchema, subData, 'payments/status'));
+        } catch {
+          console.warn('[Repwise] Backend sync failed after restore, will retry');
+          setTimeout(async () => {
+            try {
+              const { data: subData } = await api.get('payments/status');
+              if (subData) setSubscription(validateApiResponse(PaymentStatusSchema, subData, 'payments/status'));
+            } catch { /* will sync on next app launch */ }
+          }, 5000);
+        }
       } else {
         Alert.alert('No Purchases Found', 'No active subscriptions to restore.');
       }
-    } catch (e: any) {
-      Alert.alert('Restore Failed', e.message ?? 'Something went wrong');
+    } catch (e: unknown) {
+      Alert.alert('Restore Failed', e instanceof Error ? e.message : 'Something went wrong');
     } finally {
       setRestoreLoading(false);
     }
@@ -141,7 +185,7 @@ export function UpgradeModal({ visible, onClose, trialEligible, onStartTrial }: 
             </Text>
 
             <View style={styles.plans}>
-              {PLANS.map((plan) => (
+              {buildPlans(rcOfferings).map((plan) => (
                 <TouchableOpacity
                   key={plan.key}
                   style={[
@@ -173,7 +217,7 @@ export function UpgradeModal({ visible, onClose, trialEligible, onStartTrial }: 
               title="Subscribe Now"
               onPress={handlePurchase}
               loading={loading}
-              disabled={rcLoading}
+              disabled={loading || rcLoading || !rcOfferings}
               style={styles.cta}
             />
             {rcLoading && (
@@ -188,6 +232,11 @@ export function UpgradeModal({ visible, onClose, trialEligible, onStartTrial }: 
                 style={styles.trialCta}
               />
             )}
+            {trialEligible && (
+              <Text style={{ color: '#888', fontSize: 11, textAlign: 'center', marginTop: 4 }}>
+                No charge during your 14-day trial. Subscribe after to keep premium features.
+              </Text>
+            )}
             <Button
               title="Restore Purchases"
               onPress={handleRestore}
@@ -196,8 +245,34 @@ export function UpgradeModal({ visible, onClose, trialEligible, onStartTrial }: 
               style={styles.trialCta}
             />
             <Text style={[styles.disclosure, { color: c.text.muted }]}>
-              Subscription auto-renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in your device's subscription settings.
+              {rcOfferings?.annual?.product.priceString
+                ? `${rcOfferings.annual.product.priceString}/year or ${rcOfferings.monthly?.product.priceString ?? ''}/month. `
+                : ''}Subscription auto-renews unless cancelled at least 24 hours before the end of the current period.{' '}
+              <Text
+                style={{ textDecorationLine: 'underline' }}
+                onPress={() => Linking.openURL(
+                  Platform.OS === 'ios'
+                    ? SUBSCRIPTION_URLS.appleManage
+                    : SUBSCRIPTION_URLS.googleManage
+                )}
+              >
+                Manage subscription
+              </Text>
             </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, marginTop: 8 }}>
+              <Text
+                style={{ color: '#888', fontSize: 12, textDecorationLine: 'underline' }}
+                onPress={() => Linking.openURL(LEGAL_URLS.privacy)}
+              >
+                Privacy Policy
+              </Text>
+              <Text
+                style={{ color: '#888', fontSize: 12, textDecorationLine: 'underline' }}
+                onPress={() => Linking.openURL(LEGAL_URLS.terms)}
+              >
+                Terms of Service
+              </Text>
+            </View>
             <TouchableOpacity onPress={handleDismiss} style={styles.cancelBtn}>
               <Text style={[styles.cancelText, { color: c.text.muted }]}>
                 Maybe later

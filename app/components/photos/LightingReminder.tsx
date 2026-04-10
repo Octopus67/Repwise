@@ -37,7 +37,7 @@ export function LightingReminder({ visible, onDismiss, onDontShowAgain }: Lighti
         } else {
           setShouldRender(true);
         }
-      }).catch(() => {});
+      }).catch(err => console.warn('[Repwise] lighting reminder check:', err));
     }
   }, [visible]);
 

@@ -4,6 +4,8 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  Linking,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { secureDelete, TOKEN_KEYS } from '../../utils/secureStorage';
@@ -32,10 +34,13 @@ import { AchievementGrid } from '../../components/achievements/AchievementGrid';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { useStore, isPremium } from '../../store';
 import api from '../../services/api';
+import { SUBSCRIPTION_URLS } from '../../constants/urls';
+import { useTrial } from '../../hooks/useTrial';
 
 async function secureClear() {
   await secureDelete(TOKEN_KEYS.access);
   await secureDelete(TOKEN_KEYS.refresh);
+  await secureDelete('cached_user');
 }
 
 export function ProfileScreen() {
@@ -45,6 +50,7 @@ export function ProfileScreen() {
   const premium = isPremium(store);
   const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>(); // Audit fix 7.7 — typed navigation
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const { eligibility: trialEligibility, startTrial } = useTrial();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -242,13 +248,21 @@ export function ProfileScreen() {
             {!premium && (
               <Button title="Upgrade to Premium" onPress={() => setShowUpgrade(true)} style={styles.upgradeBtn} />
             )}
+            {premium && (
+              <FeatureNavItem
+                icon={<Icon name="gear" size={22} color={c.text.secondary} />}
+                label="Manage Subscription"
+                description="Change or cancel your plan"
+                onPress={() => Linking.openURL(Platform.OS === 'android' ? SUBSCRIPTION_URLS.googleManage : SUBSCRIPTION_URLS.appleManage)}
+              />
+            )}
           </Card>
         </Animated.View>
         <Animated.View style={accountAnim} testID="profile-account">
           <AccountSection onLogout={handleLogout} />
         </Animated.View>
       </ScrollView>
-      <UpgradeModal visible={showUpgrade} onClose={() => setShowUpgrade(false)} />
+      <UpgradeModal visible={showUpgrade} onClose={() => setShowUpgrade(false)} trialEligible={trialEligibility?.eligible} onStartTrial={startTrial} />
     </SafeAreaView>
   );
 }

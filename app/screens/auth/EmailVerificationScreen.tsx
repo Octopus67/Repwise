@@ -18,6 +18,7 @@ import api from '../../services/api';
 import Animated from 'react-native-reanimated';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { createRateLimiter } from '../../utils/rateLimiter';
+import { extractApiError } from '../../utils/extractApiError';
 
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -64,7 +65,7 @@ export function EmailVerificationScreen({ email, onVerified, onBack }: EmailVeri
         { text: 'Continue', onPress: onVerified },
       ]);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Invalid verification code';
+      const msg = extractApiError(err, 'Verification failed');
       setError(msg);
     } finally {
       setLoading(false);
@@ -88,7 +89,7 @@ export function EmailVerificationScreen({ email, onVerified, onBack }: EmailVeri
       await api.post('auth/resend-verification');
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to resend code';
+      const msg = extractApiError(err, 'Failed to resend code');
       setError(msg);
     } finally {
       setResending(false);

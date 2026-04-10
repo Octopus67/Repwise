@@ -1,6 +1,7 @@
 // RevenueCat SDK integration for iOS (Apple IAP) and Android (Google Play)
 // Install: npx expo install react-native-purchases
 import { Platform } from 'react-native';
+import * as Sentry from '@sentry/react-native';
 
 const RC_IOS_KEY = process.env.EXPO_PUBLIC_RC_IOS_KEY ?? '';
 const RC_ANDROID_KEY = process.env.EXPO_PUBLIC_RC_ANDROID_KEY ?? '';
@@ -34,13 +35,6 @@ export async function getOfferings() {
   }
 }
 
-export async function purchasePackage(pkg: { identifier: string; [key: string]: unknown }) {
-  if (!isConfigured) throw new Error('RevenueCat not configured');
-  const { default: Purchases } = await import('react-native-purchases');
-  const { customerInfo } = await Purchases.purchasePackage(pkg as unknown as Parameters<typeof Purchases.purchasePackage>[0]);
-  return customerInfo;
-}
-
 export async function restorePurchases() {
   if (!isConfigured) return null;
   const { default: Purchases } = await import('react-native-purchases');
@@ -51,4 +45,46 @@ export async function getCustomerInfo() {
   if (!isConfigured) return null;
   const { default: Purchases } = await import('react-native-purchases');
   return Purchases.getCustomerInfo();
+}
+
+/**
+ * Execute a purchase for a given package identifier.
+ * Shared helper used by UpgradeModal and TrialExpirationModal.
+ * @returns true if purchase succeeded and premium entitlement is active
+ */
+export async function executePurchase(
+  offerings: import('react-native-purchases').PurchasesOffering | null,
+  planKey: 'monthly' | 'yearly'
+): Promise<{ success: boolean; pending: boolean; customerInfo: import('react-native-purchases').CustomerInfo | null }> {
+  const Purchases = (await import('react-native-purchases')).default;
+  if (!offerings) throw new Error('No offerings available');
+  Sentry.addBreadcrumb({ category: 'purchase', message: `Purchase ${planKey}`, level: 'info' });
+
+  // Resolve package from offerings
+  const pkg = planKey === 'yearly'
+    ? (offerings.annual ?? offerings.availablePackages.find(p => p.identifier === '$rc_annual'))
+    : (offerings.monthly ?? offerings.availablePackages.find(p => p.identifier === '$rc_monthly'));
+
+  if (!pkg) throw new Error(`Package not found for plan: ${planKey}`);
+
+  const { customerInfo } = await Purchases.purchasePackage(pkg);
+  const isActive = !!customerInfo.entitlements.active['premium'];
+  Sentry.addBreadcrumb({ category: 'purchase', message: `Purchase ${planKey} ${isActive ? 'success' : 'pending'}`, level: 'info' });
+
+  // If purchase completed but entitlement not active, it's pending (Ask to Buy)
+  return {
+    success: isActive,
+    pending: !isActive,
+    customerInfo,
+  };
+}
+
+/**
+ * Async fallback to verify premium status directly against RevenueCat entitlements.
+ * Use when the synchronous store-based `isPremium` selector needs server-side confirmation
+ * (e.g., after restore, on paywall gates for critical features).
+ */
+export async function hasActiveEntitlement(): Promise<boolean> {
+  const info = await getCustomerInfo();
+  return !!info?.entitlements.active['premium'];
 }

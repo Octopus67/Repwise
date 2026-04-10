@@ -40,7 +40,7 @@ export function useWatch() {
         }
       });
       unsubscribe = () => sub.remove();
-    }).catch(() => {});
+    }).catch(err => console.warn('[Repwise] watch subscription setup:', err));
 
     return () => unsubscribe?.();
   }, []);

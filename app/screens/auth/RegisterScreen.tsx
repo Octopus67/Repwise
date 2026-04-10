@@ -27,6 +27,9 @@ import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { SocialLoginButtons } from '../../components/auth/SocialLoginButtons';
 import { secureSet, TOKEN_KEYS } from '../../utils/secureStorage';
 import { parseJwtSub } from '../../utils/jwtUtils';
+import { createRateLimiter } from '../../utils/rateLimiter';
+
+const registerLimiter = createRateLimiter(5, 60000);
 
 interface RegisterScreenProps {
   onNavigateLogin: () => void;
@@ -55,6 +58,10 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
   const handleRegister = async () => {
     setError('');
     setEmailError('');
+    if (!registerLimiter.canAttempt()) {
+      setError(`Too many attempts. Try again in ${Math.ceil(registerLimiter.remainingMs() / 1000)}s`);
+      return;
+    }
     const cleanEmail = trimEmail(email);
     if (cleanEmail && !isValidEmail(cleanEmail)) {
       setEmailError('Please enter a valid email address');
@@ -76,6 +83,7 @@ export function RegisterScreen({ onNavigateLogin, onRegisterSuccess }: RegisterS
     }
 
     setLoading(true);
+    registerLimiter.recordAttempt();
     try {
       const { data } = await api.post('auth/register', { email: cleanEmail, password });
       if (data.access_token && data.refresh_token) {

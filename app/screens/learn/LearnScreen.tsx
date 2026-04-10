@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Alert,
   Platform,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -275,6 +276,7 @@ export function LearnScreen() {
         if (isFav) { reverted.add(articleId); } else { reverted.delete(articleId); }
         return reverted;
       });
+      Alert.alert('', 'Could not update favorite. Please try again.', [{ text: 'OK' }]);
     }
   };
 

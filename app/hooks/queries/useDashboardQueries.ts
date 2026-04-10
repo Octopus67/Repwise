@@ -153,8 +153,26 @@ export function useDashboardQueries(date: string) {
   const isError = results.some((r) => r.isError);
   const isFetching = results.some((r) => r.isFetching);
 
+  // Per-section error states for inline error indicators (#17)
+  const sectionErrors = {
+    nutrition: results[Q.NUTRITION].isError,
+    adaptive: results[Q.ADAPTIVE].isError,
+    training: results[Q.TRAINING].isError,
+    articles: results[Q.ARTICLES].isError,
+    bodyweight: results[Q.BODYWEIGHT].isError,
+    streak: results[Q.STREAK].isError,
+    milestones: results[Q.MILESTONES].isError,
+    fatigue: results[Q.FATIGUE].isError,
+    volume: results[Q.VOLUME].isError,
+    challenges: results[Q.CHALLENGES].isError,
+  };
+
   const refetch = () => {
     queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+  };
+
+  const refetchSection = (index: number) => {
+    results[index]?.refetch();
   };
 
   return {
@@ -163,6 +181,8 @@ export function useDashboardQueries(date: string) {
     isLoading,
     isError,
     isFetching,
+    sectionErrors,
     refetch,
+    refetchSection,
   };
 }

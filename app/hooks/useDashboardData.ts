@@ -154,7 +154,7 @@ export function useDashboardData() {
   const { enabled: volumeFlagEnabled } = useFeatureFlag('volume_landmarks');
 
   // ── TanStack Query integration ─────────────────────────────────────────
-  const { results, Q, isLoading: queryLoading, isError: queryError, isFetching, refetch: invalidateAll } = useDashboardQueries(selectedDate);
+  const { results, Q, isLoading: queryLoading, isError: queryError, isFetching, sectionErrors, refetch: invalidateAll, refetchSection } = useDashboardQueries(selectedDate);
 
   // Derive DashboardData from query results (pure computation — no side effects)
   const derivedData = useMemo<DashboardData>(() => {
@@ -285,6 +285,18 @@ export function useDashboardData() {
     invalidateAll();
   }, [invalidateAll]);
 
+  // Per-section refetch helpers for inline error retry (#17)
+  const refetchBySection = useMemo(() => ({
+    nutrition: () => refetchSection(Q.NUTRITION),
+    training: () => refetchSection(Q.TRAINING),
+    articles: () => refetchSection(Q.ARTICLES),
+    bodyweight: () => refetchSection(Q.BODYWEIGHT),
+    milestones: () => refetchSection(Q.MILESTONES),
+    fatigue: () => refetchSection(Q.FATIGUE),
+    volume: () => refetchSection(Q.VOLUME),
+    challenges: () => refetchSection(Q.CHALLENGES),
+  }), [refetchSection, Q]);
+
   const handleDateSelect = useCallback((date: string) => {
     setSelectedDate(date);
     setDateLoading(true);
@@ -343,5 +355,7 @@ export function useDashboardData() {
     consumed,
     volumeFlagEnabled,
     selectedDate,
+    sectionErrors,
+    refetchBySection,
   };
 }

@@ -36,7 +36,7 @@ export function useFeatureFlag(flagName: string): {
         setEnabled(val);
         setLoading(false);
       }
-    }).catch(() => {});
+    }).catch(err => console.warn('[Repwise] feature flag fetch:', err));
     return () => {
       cancelled = true;
     };

@@ -12,6 +12,8 @@ export const queryClient = new QueryClient({
     },
     mutations: {
       gcTime: 1000 * 60 * 60 * 24, // persist mutations 24h for offline replay
+      retry: 1,
+      retryDelay: (attempt: number) => Math.min(1000 * 2 ** attempt, 5000),
     },
   },
 });

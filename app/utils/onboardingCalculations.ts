@@ -376,6 +376,7 @@ export function estimateBodyFat(
   sex: Sex,
 ): BodyFatEstimate {
   const heightM = heightCm / 100;
+  if (heightM <= 0) return { estimate: 0, low: -4, high: 4 };
   const bmi = weightKg / (heightM ** 2);
 
   function lookup(s: 'male' | 'female'): number {

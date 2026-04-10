@@ -1,12 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Alert, View, Text, TextInput, ActivityIndicator } from 'react-native';
-import { secureGet } from './utils/secureStorage';
+import { secureGet, secureSet, secureDelete } from './utils/secureStorage';
 import type { AuthScreenProps } from './types/navigation';
 import { useThemeColors } from './hooks/useThemeColors';
 import { useThemeStore } from './store/useThemeStore';
@@ -35,6 +34,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { queryClient } from './services/queryClient';
 import { mmkvPersister } from './services/mmkvStorage';
 import { setupNetworkManager } from './services/networkManager';
+import { useOfflineWorkoutQueue } from './hooks/useOfflineWorkoutQueue';
 import linking from './navigation/linking'; // Audit fix 4.2 — deep linking configuration
 
 if (process.env.EXPO_PUBLIC_SENTRY_DSN) {
@@ -98,6 +98,8 @@ function AuthNavigator() {
   /** After login, set auth then load profile + subscription + check onboarding. */
   const handleLoginSuccess = async (user: { id: string; email: string; emailVerified?: boolean }, tokens: { accessToken: string; refreshToken: string; expiresIn: number }) => {
     setAuth({ id: user.id, email: user.email, role: 'user', emailVerified: user.emailVerified }, tokens);
+    Sentry.setUser({ id: user.id, email: user.email });
+    Sentry.addBreadcrumb({ category: 'auth', message: 'Logged in', level: 'info' });
 
     // Load profile, subscription, and goals in parallel
     try {
@@ -202,10 +204,8 @@ export default function App() {
 
   useEffect(() => {
     initTokenProvider(clearAuth);
-    // Request App Tracking Transparency before initializing analytics (iOS 14.5+)
-    requestTrackingPermissionsAsync()
-      .then(() => initAnalytics(process.env.EXPO_PUBLIC_POSTHOG_KEY))
-      .catch(() => initAnalytics(process.env.EXPO_PUBLIC_POSTHOG_KEY));
+    // PostHog does not collect IDFA — ATT prompt unnecessary
+    initAnalytics(process.env.EXPO_PUBLIC_POSTHOG_KEY);
     setupNetworkManager();
     restoreSession();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -222,6 +222,10 @@ export default function App() {
           { id: data.id, email: data.email, role: data.role ?? 'user', emailVerified: data.email_verified },
           { accessToken, refreshToken, expiresIn: data.expires_in ?? 3600 },
         );
+        // Cache user data for offline session restore
+        await secureSet('cached_user', JSON.stringify(data)).catch(err => console.warn('[Repwise] cache user data:', err));
+        Sentry.setUser({ id: data.id, email: data.email });
+        Sentry.addBreadcrumb({ category: 'auth', message: 'Session restored', level: 'info' });
 
         // Check if user needs onboarding by fetching goals
         try {
@@ -249,8 +253,27 @@ export default function App() {
           // Non-blocking
         }
       }
-    } catch {
-      // Token invalid or expired — stay on auth screen
+    } catch (error: unknown) {
+      // Offline resilience: if network error and cached user data exists, restore session
+      const isNetworkError = error && typeof error === 'object' &&
+        'message' in error && typeof (error as { message: string }).message === 'string' &&
+        ((error as { message: string }).message.includes('Network Error') || !('response' in error));
+      if (isNetworkError) {
+        try {
+          const accessToken = await secureGet('rw_access_token');
+          const refreshToken = await secureGet('rw_refresh_token');
+          const cachedUser = await secureGet('cached_user');
+          if (cachedUser && accessToken && refreshToken) {
+            const data = JSON.parse(cachedUser);
+            setAuth(
+              { id: data.id, email: data.email, role: data.role ?? 'user', emailVerified: data.email_verified },
+              { accessToken, refreshToken, expiresIn: data.expires_in ?? 3600 },
+            );
+            setNeedsOnboarding(false);
+          }
+        } catch { /* cache read failed — fall through to login */ }
+      }
+      // Non-network error or no cache — stay on auth screen
     } finally {
       setReady(true);
     }
@@ -259,6 +282,9 @@ export default function App() {
   const handleOnboardingComplete = () => {
     setNeedsOnboarding(false);
   };
+
+  // Process offline workout queue on network reconnect (#18)
+  useOfflineWorkoutQueue();
 
   // ── Crash recovery: check for active workout on mount (Task 16.6) ──────
   useEffect(() => {
@@ -309,9 +335,30 @@ export default function App() {
   const user = useStore((s) => s.user);
   useEffect(() => {
     if (!ready || !isAuthenticated || !user?.id) return;
-    configurePurchases(user.id).catch((err: unknown) =>
-      console.warn('[App] RevenueCat config failed:', String(err)),
-    );
+    configurePurchases(user.id)
+      .then(async () => {
+        try {
+          const Purchases = (await import('react-native-purchases')).default;
+          Purchases.addCustomerInfoUpdateListener((info) => {
+            const isPremiumNow = !!info.entitlements.active['premium'];
+            const currentStatus = useStore.getState().subscription?.status;
+            if (isPremiumNow && currentStatus !== 'active') {
+              api.get('payments/status').then(({ data }) => {
+                if (data) useStore.getState().setSubscription(data);
+              }).catch(err => console.warn('[Repwise] payment status sync:', err));
+            } else if (!isPremiumNow && (currentStatus === 'active' || currentStatus === 'past_due')) {
+              api.get('payments/status').then(({ data }) => {
+                if (data) useStore.getState().setSubscription(data);
+              }).catch(err => console.warn('[Repwise] payment status sync:', err));
+            }
+          });
+        } catch {
+          // SDK not available — listener not registered
+        }
+      })
+      .catch((err: unknown) =>
+        console.warn('[App] RevenueCat config failed:', String(err)),
+      );
   }, [ready, isAuthenticated, user?.id]);
 
   // ── Push notifications: listeners + cold-start handler ─────────────────
@@ -349,7 +396,12 @@ export default function App() {
           persistOptions={{ persister: mmkvPersister }}
           onSuccess={() => { queryClient.resumePausedMutations().then(() => {}); }}
         >
-          <NavigationContainer ref={navigationRef} theme={navTheme} linking={ready && isAuthenticated ? linking : undefined}>
+          <NavigationContainer ref={navigationRef} theme={navTheme} linking={ready && isAuthenticated ? linking : undefined} onStateChange={(state) => {
+            const currentRoute = state?.routes[state.index];
+            if (currentRoute) {
+              Sentry.addBreadcrumb({ category: 'navigation', message: `Navigate to ${currentRoute.name}`, level: 'info' });
+            }
+          }}>
             <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
             <ErrorBoundary onError={(error, errorInfo) => {
               console.error('[ErrorBoundary:Root]', error.message);

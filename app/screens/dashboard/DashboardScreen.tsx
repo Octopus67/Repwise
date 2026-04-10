@@ -47,7 +47,10 @@ import { TrendLineChart } from '../../components/charts/TrendLineChart';
 import api from '../../services/api';
 import { haptic } from '../../utils/haptics';
 import { getApiErrorMessage } from '../../utils/errors';
+import { showRetryAlert } from '../../utils/alertRetry';
+import { validateApiResponse, PaymentStatusSchema } from '../../schemas/api';
 import { isPremiumWorkoutLoggerEnabled } from '../../utils/featureFlags';
+import { getOfferings, executePurchase } from '../../services/purchases';
 import { useDashboardData } from '../../hooks/useDashboardData';
 import { useDashboardModals } from '../../hooks/useDashboardModals';
 import { useDashboardNavigation } from '../../hooks/useDashboardNavigation';
@@ -83,6 +86,19 @@ function InfoBanner({ icon, emoji, text, chevronColor, onPress, style, accessibi
 
 const TRIAL_MODAL_DISMISS_KEY = '@repwise:trial_modal_dismissed';
 
+/** Inline per-section error indicator (#17) */
+function SectionError({ label, onRetry }: { label: string; onRetry: () => void }) {
+  const c = useThemeColors();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: spacing[2], gap: spacing[2] }}>
+      <Text style={{ color: c.semantic.negative, fontSize: typography.size.xs }}>Failed to load {label}</Text>
+      <TouchableOpacity onPress={onRetry} accessibilityRole="button" accessibilityLabel={`Retry loading ${label}`}>
+        <Text style={{ color: c.accent.primary, fontSize: typography.size.xs, fontWeight: typography.weight.medium }}>Retry</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardHome'>) {
   const c = useThemeColors();
   const s = getThemedStyles(c);
@@ -103,26 +119,26 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
   useEffect(() => {
     AsyncStorage.getItem('@repwise:verify_dismissed').then(val => {
       if (val && Date.now() - Number(val) < 86_400_000) setVerifyDismissed(true);
-    }).catch(() => {});
+    }).catch(err => console.warn('[Repwise] verify dismissed read:', err));
     AsyncStorage.getItem(TRIAL_MODAL_DISMISS_KEY).then(val => {
       if (val && Date.now() - Number(val) < 86_400_000) setTrialModalDismissed(true);
-    }).catch(() => {});
+    }).catch(err => console.warn('[Repwise] trial modal dismissed read:', err));
     AsyncStorage.getItem('@repwise:nudge_dismissed').then(val => {
       if (val && Date.now() - Number(val) < 86_400_000) setNudgeDismissed(true);
-    }).catch(() => {});
+    }).catch(err => console.warn('[Repwise] nudge dismissed read:', err));
   }, []);
   const dismissVerify = () => {
     setVerifyDismissed(true);
     AsyncStorage.setItem('@repwise:verify_dismissed', Date.now().toString());
   };
 
-  const { data, setData, isLoading, error, setError, refreshing, dateLoading, handleDateSelect, handleRefresh, loadDashboardData, targets, consumed, volumeFlagEnabled, selectedDate } = useDashboardData();
+  const { data, setData, isLoading, error, setError, refreshing, dateLoading, handleDateSelect, handleRefresh, loadDashboardData, targets, consumed, volumeFlagEnabled, selectedDate, sectionErrors, refetchBySection } = useDashboardData();
   const { modals, openNutrition, closeNutrition, openUpgrade, closeUpgrade, openTraining, closeTraining, openBodyweight, closeBodyweight, openQuickAdd, closeQuickAdd, openMealBuilder, closeMealBuilder, openCheckin, closeCheckin } = useDashboardModals();
   const nav = useDashboardNavigation({ navigation, openNutrition, openTraining, openMealBuilder, openBodyweight, openCheckin, openUpgrade });
   const recovery = useRecoveryScore();
   const { enabled: combinedReadinessEnabled } = useFeatureFlag('combined_readiness');
 
-  useEffect(() => { if (trialStatus && !trialStatus.active && trialStatus.has_used_trial && trialStatus.days_remaining === 0 && !trialModalDismissed) { fetchInsights().then(setTrialInsights).catch(() => {}); setShowTrialExpiration(true); } }, [trialStatus, fetchInsights, trialModalDismissed]);
+  useEffect(() => { if (trialStatus && !trialStatus.active && trialStatus.has_used_trial && trialStatus.days_remaining === 0 && !trialModalDismissed) { fetchInsights().then(setTrialInsights).catch(err => console.warn('[Repwise] trial insights fetch:', err)); setShowTrialExpiration(true); } }, [trialStatus, fetchInsights, trialModalDismissed]);
   
   // Load data on mount and when date changes - handled by useDashboardQueries via TanStack Query
   // TanStack Query auto-refetches stale data, no manual useFocusEffect needed
@@ -261,12 +277,14 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
         </Animated.View>
 
         <Animated.View style={bA}>{!isLoading && <BudgetBar consumed={consumed} targets={targets} />}</Animated.View>
+        {sectionErrors.nutrition && <SectionError label="nutrition" onRetry={refetchBySection.nutrition} />}
         <Animated.View style={msA}>{!isLoading && <MealSlotDiary entries={data.nutritionEntries} onAddToSlot={nav.handleAddToSlot} />}</Animated.View>
 
         {!isLoading && !nudgeDismissed && data.nudges.length > 0 && <NudgeCard nudge={data.nudges[0]} onDismiss={async () => { setNudgeDismissed(true); setData(); try { await AsyncStorage.setItem('@repwise:nudge_dismissed', Date.now().toString()); } catch (e) { console.error('[Dashboard] Nudge dismiss save failed:', e); } }} onAction={(a) => { if (a === 'recalculate' || a === 'edit_goals') { navigation.getParent()?.navigate('Profile'); } }} />}
         {showRestDay
           ? <RestDayCard proteinTarget={targets.protein_g} />
           : !isLoading && <TodayWorkoutCard sessions={data.trainingSessions} isWorkoutActive={isWorkoutActive} activeExerciseCount={activeExerciseCount} onPress={nav.handleSessionPress} onResume={nav.handleResumeWorkout} onStartWorkout={nav.handleStartWorkout} />}
+        {sectionErrors.training && <SectionError label="training" onRetry={refetchBySection.training} />}
 
         {!isLoading && <WeeklyChallengeCard challenges={data.challenges} />}
 
@@ -298,12 +316,36 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
       </ScrollView>
 
       <UpgradeModal visible={modals.showUpgrade} onClose={closeUpgrade} trialEligible={trialEligibility?.eligible} onStartTrial={startTrial} />
-      <TrialExpirationModal visible={showTrialExpiration} onClose={dismissTrialModal} onUpgrade={(planId?: string) => {
+      <TrialExpirationModal visible={showTrialExpiration} onClose={dismissTrialModal} onUpgrade={async (planId?: string) => {
           setShowTrialExpiration(false);
           if (planId) {
-            // TODO: payments/subscribe endpoint removed — purchases go through RevenueCat SDK
-            // Once RevenueCat integration is wired, call Purchases.purchasePackage() here
-            Alert.alert('Coming Soon', 'In-app purchase flow is being finalized.');
+            try {
+              const offerings = await getOfferings();
+              if (!offerings) { Alert.alert('Error', 'Unable to load subscription options.'); return; }
+              const planKey = planId?.includes('yearly') ? 'yearly' : 'monthly';
+              const result = await executePurchase(offerings, planKey as 'monthly' | 'yearly');
+              if (result.success) {
+                Alert.alert('Success', 'Welcome to Repwise Pro!');
+                // Sync with backend in background - don't let sync failure affect UX
+                try {
+                  const { data } = await api.get('payments/status');
+                  if (data) useStore.getState().setSubscription(validateApiResponse(PaymentStatusSchema, data, 'payments/status'));
+                } catch {
+                  console.warn('[Repwise] Backend sync failed after purchase, will retry');
+                  setTimeout(async () => {
+                    try {
+                      const { data } = await api.get('payments/status');
+                      if (data) useStore.getState().setSubscription(validateApiResponse(PaymentStatusSchema, data, 'payments/status'));
+                    } catch { /* will sync on next app launch */ }
+                  }, 5000);
+                }
+              } else if (result.pending) {
+                Alert.alert('Purchase Pending', 'Your purchase is awaiting approval.');
+              }
+            } catch (e: unknown) {
+              if (e && typeof e === 'object' && 'code' in e && (e as { code: string }).code === '1') return; // PURCHASE_CANCELLED_ERROR
+              showRetryAlert('Purchase Failed', 'Purchase failed. Please try again.', () => openUpgrade());
+            }
           } else {
             openUpgrade();
           }

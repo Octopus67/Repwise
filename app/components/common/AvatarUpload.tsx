@@ -3,11 +3,11 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   StyleSheet,
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { FallbackImage } from './FallbackImage';
 import * as ImagePicker from 'expo-image-picker';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
@@ -61,7 +61,7 @@ export function AvatarUpload({ avatarUrl, initial, onUpload }: AvatarUploadProps
     >
       <View style={styles.circle}>
         {avatarUrl ? (
-          <Image source={{ uri: avatarUrl }} style={styles.image} />
+          <FallbackImage source={{ uri: avatarUrl }} style={styles.image} />
         ) : (
           <Text style={styles.initial}>{initial}</Text>
         )}

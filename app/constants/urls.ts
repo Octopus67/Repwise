@@ -10,3 +10,8 @@ export const LEGAL_URLS = {
 export const EXTERNAL_URLS = {
   telegram: 'https://t.me/repwiseCommunity',
 } as const;
+
+export const SUBSCRIPTION_URLS = {
+  appleManage: 'https://apps.apple.com/account/subscriptions',
+  googleManage: 'https://play.google.com/store/account/subscriptions',
+} as const;

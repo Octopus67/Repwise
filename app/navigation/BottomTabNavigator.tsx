@@ -8,6 +8,8 @@ import { triggerHaptic } from '../hooks/useHaptics';
 import { haptic } from '../utils/haptics';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { useThemeColors, getThemeColors, ThemeColors } from '../hooks/useThemeColors';
+import { useActiveWorkoutStore } from '../store/activeWorkoutSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Eagerly loaded screens (tab roots + frequently navigated)
 import { DashboardScreen } from '../screens/dashboard/DashboardScreen';
@@ -66,6 +68,42 @@ function withSuspense<P extends object>(LazyComponent: React.LazyExoticComponent
 }
 
 import type { ActiveWorkoutScreenParams } from '../types/training';
+
+/** Reusable error fallback for tab-level ErrorBoundaries (#19) */
+function TabErrorFallback(tabName: string) {
+  return (error: Error, retry: () => void) => {
+    const s = getThemedStyles(getThemeColors());
+    return (
+      <View style={s.errorFallback}>
+        <Text style={s.errorTitle}>{tabName} unavailable</Text>
+        <Text style={s.errorMessage}>{error.message}</Text>
+        <TouchableOpacity style={s.retryButton} onPress={retry}>
+          <Text style={s.retryText}>Try Again</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+}
+
+/** Auto-save workout state on crash, then show ErrorBoundary recovery UI */
+function ActiveWorkoutWithBoundary(props: any) {
+  return (
+    <ErrorBoundary
+      onError={() => {
+        const state = useActiveWorkoutStore.getState();
+        if (state.exercises?.length > 0) {
+          AsyncStorage.setItem('workout_crash_recovery', JSON.stringify({
+            exercises: state.exercises,
+            startedAt: state.startedAt,
+            isActive: state.isActive,
+          })).catch(err => console.warn('[Repwise] workout crash recovery save:', err));
+        }
+      }}
+    >
+      <ActiveWorkoutScreen {...props} />
+    </ErrorBoundary>
+  );
+}
 
 // ─── Param lists ─────────────────────────────────────────────────────────────
 
@@ -176,20 +214,12 @@ function DashboardStackScreen() {
         console.error('[ErrorBoundary:Home] Stack:', error.stack);
         console.error('[ErrorBoundary:Home] Component:', errorInfo.componentStack);
       }}
-      fallback={(error, retry) => (
-        <View style={getStyles().errorFallback}>
-          <Text style={getStyles().errorTitle}>Dashboard unavailable</Text>
-          <Text style={getStyles().errorMessage}>{error.message}</Text>
-          <TouchableOpacity style={getStyles().retryButton} onPress={retry}>
-            <Text style={getStyles().retryText}>Try Again</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      fallback={TabErrorFallback('Dashboard')}
     >
     <DashboardStack.Navigator screenOptions={stackScreenOptions}>
       <DashboardStack.Screen name="DashboardHome" component={DashboardScreen} />
       <DashboardStack.Screen name="ExercisePicker" component={ExercisePickerScreen} />
-      <DashboardStack.Screen name="ActiveWorkout" component={ActiveWorkoutScreen} options={{ headerShown: false }} />
+      <DashboardStack.Screen name="ActiveWorkout" component={ActiveWorkoutWithBoundary} options={{ headerShown: false }} />
       <DashboardStack.Screen name="WorkoutSummary" component={WorkoutSummaryScreen} options={{ headerShown: false }} />
       <DashboardStack.Screen name="WeeklyReport" component={withSuspense(WeeklyReportScreen)} />
       <DashboardStack.Screen name="ArticleDetail">
@@ -217,20 +247,12 @@ function LogsStackScreen() {
         console.error('[ErrorBoundary:Log] Stack:', error.stack);
         console.error('[ErrorBoundary:Log] Component:', errorInfo.componentStack);
       }}
-      fallback={(error, retry) => (
-        <View style={getStyles().errorFallback}>
-          <Text style={getStyles().errorTitle}>Logs unavailable</Text>
-          <Text style={getStyles().errorMessage}>{error.message}</Text>
-          <TouchableOpacity style={getStyles().retryButton} onPress={retry}>
-            <Text style={getStyles().retryText}>Try Again</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      fallback={TabErrorFallback('Logs')}
     >
     <LogsStack.Navigator screenOptions={stackScreenOptions}>
       <LogsStack.Screen name="LogsHome" component={LogsScreen} />
       <LogsStack.Screen name="ExercisePicker" component={ExercisePickerScreen} />
-      <LogsStack.Screen name="ActiveWorkout" component={ActiveWorkoutScreen} options={{ headerShown: false }} />
+      <LogsStack.Screen name="ActiveWorkout" component={ActiveWorkoutWithBoundary} options={{ headerShown: false }} />
       <LogsStack.Screen name="WorkoutSummary" component={WorkoutSummaryScreen} options={{ headerShown: false }} />
       <LogsStack.Screen name="SessionDetail" component={SessionDetailScreen} options={{ headerShown: false }} />
     </LogsStack.Navigator>
@@ -246,15 +268,7 @@ function AnalyticsStackScreen() {
         console.error('[ErrorBoundary:Analytics] Stack:', error.stack);
         console.error('[ErrorBoundary:Analytics] Component:', errorInfo.componentStack);
       }}
-      fallback={(error, retry) => (
-        <View style={getStyles().errorFallback}>
-          <Text style={getStyles().errorTitle}>Analytics unavailable</Text>
-          <Text style={getStyles().errorMessage}>{error.message}</Text>
-          <TouchableOpacity style={getStyles().retryButton} onPress={retry}>
-            <Text style={getStyles().retryText}>Try Again</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      fallback={TabErrorFallback('Analytics')}
     >
     <AnalyticsStack.Navigator screenOptions={stackScreenOptions}>
       <AnalyticsStack.Screen name="AnalyticsHome" component={withSuspense(AnalyticsScreen)} />
@@ -277,15 +291,7 @@ function ProfileStackScreen() {
         console.error('[ErrorBoundary:Profile] Stack:', error.stack);
         console.error('[ErrorBoundary:Profile] Component:', errorInfo.componentStack);
       }}
-      fallback={(error, retry) => (
-        <View style={getStyles().errorFallback}>
-          <Text style={getStyles().errorTitle}>Profile unavailable</Text>
-          <Text style={getStyles().errorMessage}>{error.message}</Text>
-          <TouchableOpacity style={getStyles().retryButton} onPress={retry}>
-            <Text style={getStyles().retryText}>Try Again</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      fallback={TabErrorFallback('Profile')}
     >
     <ProfileStack.Navigator screenOptions={stackScreenOptions}>
       <ProfileStack.Screen name="ProfileHome" component={ProfileScreen} />

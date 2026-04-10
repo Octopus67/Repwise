@@ -39,6 +39,7 @@ export function initTokenProvider(clearAuth: () => void) {
     onRefreshFailed: async () => {
       await secureDelete(TOKEN_KEYS.access);
       await secureDelete(TOKEN_KEYS.refresh);
+      await secureDelete('cached_user');
       clearAuth();
     },
   });

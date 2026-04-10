@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../../components/common/Card';
+import { FallbackImage } from '../../components/common/FallbackImage';
 import api from '../../services/api';
 
 interface FounderContent {
@@ -129,7 +130,7 @@ export function FounderStoryScreen() {
             <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Gallery</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.gallery}>
               {content.media_gallery.map((url, i) => (
-                <Image key={i} source={{ uri: url }} style={[styles.galleryImage, { backgroundColor: c.bg.surface }]} accessibilityLabel={`Gallery photo ${i + 1}`} />
+                <FallbackImage key={i} source={{ uri: url }} style={[styles.galleryImage, { backgroundColor: c.bg.surface }]} accessibilityLabel={`Gallery photo ${i + 1}`} />
               ))}
             </ScrollView>
           </>

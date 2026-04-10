@@ -11,12 +11,12 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  Image,
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { FallbackImage } from '../common/FallbackImage';
 import { PhotoMeta, PhotoPathMap, PoseType, POSE_TYPES } from '../../utils/progressPhotoTypes';
 import { sortPhotosByDate, filterByPoseType, formatPhotoInfo } from '../../utils/timelineLogic';
 
@@ -86,7 +86,7 @@ export function TimelineSlider({
       return (
         <View style={[styles.item, { backgroundColor: c.bg.surface }]}>
           {fileUri ? (
-            <Image source={{ uri: fileUri }} style={[styles.photo, { backgroundColor: c.bg.surfaceRaised }]} resizeMode="cover" />
+            <FallbackImage source={{ uri: fileUri }} style={[styles.photo, { backgroundColor: c.bg.surfaceRaised }]} resizeMode="cover" />
           ) : (
             <View style={[styles.photo, styles.placeholder]}>
               <Text style={[styles.placeholderText, { color: c.text.muted }]}>Photo unavailable</Text>

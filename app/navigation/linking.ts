@@ -1,5 +1,5 @@
 // Audit fix 4.2 — deep linking configuration
-import { LinkingOptions } from '@react-navigation/native';
+import { LinkingOptions, getStateFromPath as defaultGetStateFromPath } from '@react-navigation/native';
 
 const linking: LinkingOptions<any> = {
   prefixes: ['repwise://', 'https://app.repwise.app'],
@@ -41,6 +41,15 @@ const linking: LinkingOptions<any> = {
         },
       },
     },
+  },
+  getStateFromPath(path, options) {
+    try {
+      const state = defaultGetStateFromPath(path, options);
+      if (state) return state;
+    } catch {
+      // Invalid deep link — fall through to home
+    }
+    return { routes: [{ name: 'Home' }] };
   },
 };
 

@@ -9,6 +9,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   ActivityIndicator,
+  Alert,
   type DimensionValue,
 } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
@@ -88,6 +89,7 @@ export function ArticleDetailScreen({ articleId, onBack, onSeeAll }: ArticleDeta
       }
     } catch {
       setIsFavorite(wasActive); // revert on error
+      Alert.alert('', 'Could not update favorite. Please try again.', [{ text: 'OK' }]);
     }
   };
 

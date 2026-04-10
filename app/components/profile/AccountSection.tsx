@@ -23,6 +23,7 @@ import { useActiveWorkoutStore } from '../../store/activeWorkoutSlice';
 import { useTooltipStore } from '../../store/tooltipStore';
 import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
 import { useOnboardingStore } from '../../store/onboardingSlice';
+import * as Sentry from '@sentry/react-native';
 import { useThemeStore } from '../../store/useThemeStore'; // Audit fix 1.1
 import { LEGAL_URLS } from '../../constants/urls';
 
@@ -55,6 +56,8 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
       // Clear local auth state — await onLogout (secureClear) before clearing Zustand
       await onLogout();
       store.clearAuth();
+      Sentry.setUser(null);
+      Sentry.addBreadcrumb({ category: 'auth', message: 'Logged out', level: 'info' });
 
       // ── Cross-user data leak prevention (Audit Task 1.1) ──────────────
       // Every persisted store and cache MUST be wiped on logout so the next

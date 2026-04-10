@@ -7,14 +7,16 @@ import { useCallback, useEffect, useState } from 'react';
 import { getLocalDateString } from '../../utils/localDate';
 import {
   View, Text, StyleSheet, TouchableOpacity, Alert,
-  FlatList, Image, ActivityIndicator, Platform,
+  FlatList, ActivityIndicator, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { documentDirectory, getInfoAsync, makeDirectoryAsync, copyAsync, deleteAsync } from 'expo-file-system/legacy';
+import { FallbackImage } from '../../components/common/FallbackImage';
 import { secureSet, secureGet } from '../../utils/secureStorage'; // Audit fix 6.10 — encrypted photo metadata
 import { saveImageToGallery } from '../../services/sharing';
+import { showRetryAlert } from '../../utils/alertRetry';
 import { radius, spacing, typography, shadows } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../../components/common/Icon';
@@ -51,7 +53,7 @@ export function ProgressPhotosScreen() {
       setPhotos(res.data?.items ?? []);
       setPathMap(stored ? JSON.parse(stored) : {});
     } catch {
-      Alert.alert('Error', 'Failed to load photos');
+      showRetryAlert('Error', 'Failed to load photos', loadData);
     } finally {
       setLoading(false);
     }
@@ -170,7 +172,7 @@ export function ProgressPhotosScreen() {
     return (
       <TouchableOpacity style={[styles.photoCard, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]} onLongPress={() => handleDelete(item)} activeOpacity={0.8}>
         {uri ? (
-          <Image source={{ uri }} style={[styles.photoImage, { backgroundColor: c.bg.surfaceRaised }]} />
+          <FallbackImage source={{ uri }} style={[styles.photoImage, { backgroundColor: c.bg.surfaceRaised }]} />
         ) : (
           <View style={[styles.photoPlaceholder, { backgroundColor: c.bg.surfaceRaised }]}>
             <Text style={[styles.placeholderText, { color: c.text.muted }]}>No local file</Text>

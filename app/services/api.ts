@@ -63,8 +63,15 @@ function doRefresh(): Promise<string> {
     await onTokensRefreshed!(data.access_token, data.refresh_token);
     proactiveRefreshFailed = false;
     return data.access_token as string;
-  })().catch((err) => {
-    onRefreshFailed?.();
+  })().catch((err: unknown) => {
+    // Only force logout when the server explicitly rejects the refresh token
+    const status = err && typeof err === 'object' && 'response' in err
+      ? (err as { response?: { status?: number } }).response?.status
+      : undefined;
+    if (status !== undefined && (status === 401 || status === 403)) {
+      onRefreshFailed?.();
+    }
+    // Network errors (no response) — don't force logout, just let the request fail
     throw err;
   }).finally(() => {
     refreshPromise = null;
@@ -95,11 +102,45 @@ api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   return config;
 });
 
+// ─── Response interceptor — retry transient errors (429/500/503) ─────────────
+
+import * as Sentry from '@sentry/react-native';
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const status = error.response?.status;
+    const config = error.config as InternalAxiosRequestConfig & { _retried?: boolean };
+
+    if (config && !config._retried && config.method === 'get') {
+      if (status === 429) {
+        const retryAfter = parseInt(error.response?.headers?.['retry-after'] ?? '2', 10);
+        config._retried = true;
+        await new Promise(r => setTimeout(r, retryAfter * 1000));
+        return api(config);
+      }
+      if (status === 500 || status === 503) {
+        config._retried = true;
+        await new Promise(r => setTimeout(r, 1000));
+        return api(config);
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
 // ─── Response interceptor — 401 → refresh → retry ───────────────────────────
 
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    Sentry.addBreadcrumb({
+      category: 'http',
+      message: `${error.config?.method?.toUpperCase()} ${error.config?.url} → ${error.response?.status ?? 'network error'}`,
+      level: 'error',
+      data: { status: error.response?.status, url: error.config?.url },
+    });
+
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     if (error.response?.status !== 401 || originalRequest._retry) {
