@@ -19,7 +19,7 @@ pool_kwargs = {} if "sqlite" in settings.DATABASE_URL else {
     "pool_pre_ping": True,
 }
 
-connect_args = {} if "sqlite" in settings.DATABASE_URL else {"timeout": 10}
+connect_args = {} if "sqlite" in settings.DATABASE_URL else {"timeout": 30}
 engine = create_async_engine(settings.DATABASE_URL, echo=settings.DEBUG, connect_args=connect_args, **pool_kwargs)
 
 # --- Slow query logging (attached to sync engine underneath async engine) ---

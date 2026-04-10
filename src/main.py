@@ -174,15 +174,21 @@ async def lifespan(application: FastAPI):
     from sqlalchemy import text as _text
     from src.config.database import async_session_factory as _check_session
 
-    try:
-        async with _check_session() as _sess:
-            await _sess.execute(_text("SELECT 1"))
-        logger.info("Startup DB connectivity check passed")
-    except Exception as exc:
-        logger.critical("Startup DB connectivity check FAILED: %s — exiting", exc)
-        import sys
+    for _attempt in range(1, 4):
+        try:
+            async with _check_session() as _sess:
+                await _sess.execute(_text("SELECT 1"))
+            logger.info("Startup DB connectivity check passed")
+            break
+        except Exception as exc:
+            if _attempt < 3:
+                logger.warning("DB connectivity check attempt %d/3 failed: %s — retrying in 5s", _attempt, exc)
+                await asyncio.sleep(5)
+            else:
+                logger.critical("Startup DB connectivity check FAILED after 3 attempts: %s — exiting", exc)
+                import sys
 
-        sys.exit(1)
+                sys.exit(1)
 
     # Cleanup expired rate limit entries on startup (all backends)
     from src.middleware.db_rate_limiter import cleanup_expired_entries
