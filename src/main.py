@@ -170,22 +170,6 @@ async def lifespan(application: FastAPI):
             except (SQLAlchemyError, OSError, ValueError):
                 logger.exception("Failed to seed social data")
 
-    # Cleanup expired rate limit entries on startup (all backends)
-    from src.middleware.db_rate_limiter import cleanup_expired_entries
-    from src.config.database import async_session_factory as _session_factory
-
-    async with _session_factory() as session:
-        deleted = await cleanup_expired_entries(session)
-        if deleted:
-            logger.info("Cleaned up %d expired rate limit entries", deleted)
-
-    # Scheduler: only one Gunicorn worker becomes the leader via Redis lock
-    from src.config.scheduler import try_acquire_lock, start_scheduler, stop_scheduler
-
-    _is_scheduler_leader = await try_acquire_lock()
-    if _is_scheduler_leader:
-        await start_scheduler()
-
     # Startup DB connectivity check (Phase 3 — F13)
     from sqlalchemy import text as _text
     from src.config.database import async_session_factory as _check_session
@@ -199,6 +183,25 @@ async def lifespan(application: FastAPI):
         import sys
 
         sys.exit(1)
+
+    # Cleanup expired rate limit entries on startup (all backends)
+    from src.middleware.db_rate_limiter import cleanup_expired_entries
+    from src.config.database import async_session_factory as _session_factory
+
+    try:
+        async with _session_factory() as session:
+            deleted = await cleanup_expired_entries(session)
+            if deleted:
+                logger.info("Cleaned up %d expired rate limit entries", deleted)
+    except Exception as exc:
+        logger.warning("Rate limit cleanup failed (non-fatal): %s", exc)
+
+    # Scheduler: only one Gunicorn worker becomes the leader via Redis lock
+    from src.config.scheduler import try_acquire_lock, start_scheduler, stop_scheduler
+
+    _is_scheduler_leader = await try_acquire_lock()
+    if _is_scheduler_leader:
+        await start_scheduler()
 
     yield
 
