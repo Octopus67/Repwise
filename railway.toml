@@ -2,7 +2,7 @@
 builder = "DOCKERFILE"
 
 [deploy]
-startCommand = "alembic upgrade head && gunicorn -w ${WEB_CONCURRENCY:-1} -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000} --forwarded-allow-ips='*' --timeout 120 --graceful-timeout 30 --keep-alive 5 src.main:app"
+startCommand = "for i in 1 2 3; do timeout 30 alembic upgrade head && break || echo \"Alembic attempt $i failed, retrying in 5s...\" && sleep 5; done && gunicorn -w ${WEB_CONCURRENCY:-1} -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000} --forwarded-allow-ips='*' --timeout 120 --graceful-timeout 30 --keep-alive 5 src.main:app"
 healthcheckPath = "/api/v1/health"
 # 120s needed: alembic migration + gunicorn boot + neon cold start
 healthcheckTimeout = 120
