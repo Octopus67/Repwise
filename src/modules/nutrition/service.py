@@ -99,7 +99,7 @@ class NutritionService:
             )
         except (ImportError, RuntimeError, ValueError) as e:
             # Non-critical — achievement failure must not break entry creation
-            logger.warning('[NutritionService] Achievement eval failed: %s', e)
+            logger.warning("[NutritionService] Achievement eval failed: %s", e)
 
         # Attach unlocks to the entry object for the router to pick up
         entry._newly_unlocked = newly_unlocked  # type: ignore[attr-defined]
@@ -233,6 +233,7 @@ class NutritionService:
         newly_unlocked: list = []
         try:
             from src.modules.achievements.engine import AchievementEngine
+
             engine = AchievementEngine(self.session)
             newly_unlocked = await engine.evaluate_nutrition_entry(
                 user_id=user_id,
@@ -240,7 +241,7 @@ class NutritionService:
             )
         except (ImportError, RuntimeError, ValueError) as e:
             # Non-critical — achievement failure must not break entry creation
-            logger.warning('[NutritionService] Achievement eval failed: %s', e)
+            logger.warning("[NutritionService] Achievement eval failed: %s", e)
 
         # Attach to first entry for router to pick up
         if created and newly_unlocked:
@@ -269,9 +270,12 @@ class NutritionService:
         dialect = self.session.bind.dialect.name if self.session.bind else ""
         if dialect == "postgresql":
             import hashlib
+
             raw = f"{user_id}:{target_date}".encode()
             lock_key = int(hashlib.sha256(raw).hexdigest(), 16) % (2**31)
-            await self.session.execute(sa_text("SELECT pg_advisory_xact_lock(:key)").bindparams(key=lock_key))
+            await self.session.execute(
+                sa_text("SELECT pg_advisory_xact_lock(:key)").bindparams(key=lock_key)
+            )
 
         # Check if target date already has entries (idempotency guard)
         existing = await self.get_entries(

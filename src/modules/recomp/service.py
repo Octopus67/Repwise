@@ -31,18 +31,20 @@ class RecompService:
         self.session = session
 
     async def log_measurement(
-        self, user_id: uuid.UUID, data: RecompMeasurementCreate,
+        self,
+        user_id: uuid.UUID,
+        data: RecompMeasurementCreate,
     ) -> RecompMeasurement:
         logger.info("Logging recomp measurement for user %s on %s", user_id, data.recorded_date)
-        
+
         # Validate measurement units (all should be in cm)
         if data.waist_cm is not None and (data.waist_cm < 10 or data.waist_cm > 200):
             raise ValueError("Waist measurement must be between 10-200 cm")
         if data.arm_cm is not None and (data.arm_cm < 5 or data.arm_cm > 80):
-            raise ValueError("Arm measurement must be between 5-80 cm")  
+            raise ValueError("Arm measurement must be between 5-80 cm")
         if data.chest_cm is not None and (data.chest_cm < 20 or data.chest_cm > 200):
             raise ValueError("Chest measurement must be between 20-200 cm")
-        
+
         entry = RecompMeasurement(
             user_id=user_id,
             recorded_date=data.recorded_date,
@@ -56,7 +58,10 @@ class RecompService:
         return entry
 
     async def get_measurements(
-        self, user_id: uuid.UUID, start_date: date, end_date: date,
+        self,
+        user_id: uuid.UUID,
+        start_date: date,
+        end_date: date,
     ) -> list[RecompMeasurement]:
         if start_date > end_date:
             logger.warning("start_date %s > end_date %s, swapping", start_date, end_date)
@@ -76,24 +81,41 @@ class RecompService:
         return list(result.scalars().all())
 
     async def get_recomp_metrics(
-        self, user_id: uuid.UUID, lookback_days: int = 28,
+        self,
+        user_id: uuid.UUID,
+        lookback_days: int = 28,
     ) -> RecompMetricsOutput:
         today = date.today()
         start = today - timedelta(days=lookback_days + 7)  # extra buffer
 
         measurements = await self.get_measurements(user_id, start, today)
 
-        waist = [MeasurementPoint(m.recorded_date, m.waist_cm) for m in measurements if m.waist_cm is not None]
-        arm = [MeasurementPoint(m.recorded_date, m.arm_cm) for m in measurements if m.arm_cm is not None]
-        chest = [MeasurementPoint(m.recorded_date, m.chest_cm) for m in measurements if m.chest_cm is not None]
+        waist = [
+            MeasurementPoint(m.recorded_date, m.waist_cm)
+            for m in measurements
+            if m.waist_cm is not None
+        ]
+        arm = [
+            MeasurementPoint(m.recorded_date, m.arm_cm)
+            for m in measurements
+            if m.arm_cm is not None
+        ]
+        chest = [
+            MeasurementPoint(m.recorded_date, m.chest_cm)
+            for m in measurements
+            if m.chest_cm is not None
+        ]
 
         # Check for insufficient data points
         if len(waist) < 2 and len(arm) < 2 and len(chest) < 2:
-            logger.info("Insufficient measurement data for user %s (need at least 2 points)", user_id)
+            logger.info(
+                "Insufficient measurement data for user %s (need at least 2 points)", user_id
+            )
             from src.modules.recomp.engine import RecompMetricsOutput
+
             return RecompMetricsOutput(
                 waist_trend=None,
-                arm_trend=None, 
+                arm_trend=None,
                 chest_trend=None,
                 weight_trend=None,
                 muscle_gain_indicator=None,
@@ -129,7 +151,10 @@ class RecompService:
         today = date.today()
         bw_stmt = (
             select(BodyweightLog)
-            .where(BodyweightLog.user_id == user_id, BodyweightLog.recorded_date >= today - timedelta(days=14))
+            .where(
+                BodyweightLog.user_id == user_id,
+                BodyweightLog.recorded_date >= today - timedelta(days=14),
+            )
             .order_by(BodyweightLog.recorded_date.asc())
         )
         bw_result = await self.session.execute(bw_stmt)

@@ -31,7 +31,7 @@ APPLE_ISSUER = "https://appleid.apple.com"
 _apple_jwk_client = PyJWKClient(APPLE_JWKS_URL, cache_keys=True, lifespan=86400)
 
 # Pre-compute a dummy hash to use for timing normalization
-DUMMY_HASH = bcrypt.hashpw(b'dummy_password_for_timing', bcrypt.gensalt(rounds=12)).decode('utf-8')
+DUMMY_HASH = bcrypt.hashpw(b"dummy_password_for_timing", bcrypt.gensalt(rounds=12)).decode("utf-8")
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +66,7 @@ class AuthService:
         existing = await self._get_user_by_email(email)
         if existing is not None:
             from src.services.email_service import EmailService
+
             try:
                 EmailService().send_account_exists_notification(email)
             except Exception:
@@ -88,10 +89,13 @@ class AuthService:
         # Auto-follow official bot accounts so feed isn't empty
         try:
             from src.modules.social.seed import auto_follow_official_accounts
+
             await auto_follow_official_accounts(self.session, user.id)
         except (ImportError, SQLAlchemyError) as e:
             # Non-critical — new user can still function without auto-follows
-            logger.warning("Failed to auto-follow official accounts for user %s: %s", user.id, type(e).__name__)
+            logger.warning(
+                "Failed to auto-follow official accounts for user %s: %s", user.id, type(e).__name__
+            )
 
         log_account_event(user_id=str(user.id), action="register", ip=ip)
         return _generate_tokens(user.id)
@@ -121,7 +125,9 @@ class AuthService:
             expires_in=tokens.expires_in,
         )
 
-    async def login_oauth(self, provider: str, token: str, ip: str = "", data: Optional["OAuthCallbackRequest"] = None) -> AuthTokens:
+    async def login_oauth(
+        self, provider: str, token: str, ip: str = "", data: Optional["OAuthCallbackRequest"] = None
+    ) -> AuthTokens:
         """Authenticate or register via OAuth provider.
 
         Creates a new user if no account is linked to the provider id.
@@ -131,7 +137,7 @@ class AuthService:
         if provider == "google":
             if not settings.GOOGLE_CLIENT_ID:
                 raise UnauthorizedError("Google OAuth not configured")
-            
+
             try:
                 # Verify Google ID token
                 idinfo = id_token.verify_oauth2_token(
@@ -157,9 +163,9 @@ class AuthService:
                     issuer=APPLE_ISSUER,
                 )
                 # Audit fix 2.2 — Apple nonce mandatory
-                if not data or not getattr(data, 'nonce', None):
+                if not data or not getattr(data, "nonce", None):
                     raise UnauthorizedError("Nonce is required for Apple Sign-In")
-                expected_nonce = hashlib.sha256(data.nonce.encode('utf-8')).hexdigest()
+                expected_nonce = hashlib.sha256(data.nonce.encode("utf-8")).hexdigest()
                 token_nonce = decoded.get("nonce")
                 if not token_nonce or token_nonce != expected_nonce:
                     raise UnauthorizedError("Invalid nonce")
@@ -200,12 +206,12 @@ class AuthService:
                         for lp in existing.metadata_["linked_providers"]
                     )
                     if not already_linked:
-                        existing.metadata_["linked_providers"].append({
-                            "provider": provider,
-                            "provider_id": provider_user_id
-                        })
+                        existing.metadata_["linked_providers"].append(
+                            {"provider": provider, "provider_id": provider_user_id}
+                        )
                     # Force SQLAlchemy to detect JSONB mutation
                     from sqlalchemy.orm.attributes import flag_modified
+
                     flag_modified(existing, "metadata_")
                     await self.session.flush()
                     log_auth_success(email=email, ip=ip, method=provider)
@@ -213,7 +219,9 @@ class AuthService:
                 else:
                     # Different OAuth provider — treat as generic auth failure
                     # to avoid leaking that the email is registered
-                    log_auth_failure(email=email, ip=ip, reason="oauth_email_conflict", method=provider)
+                    log_auth_failure(
+                        email=email, ip=ip, reason="oauth_email_conflict", method=provider
+                    )
                     raise UnauthorizedError("Authentication failed")
 
             # Create a new user linked to this OAuth provider
@@ -230,10 +238,15 @@ class AuthService:
             # Auto-follow official bot accounts so feed isn't empty
             try:
                 from src.modules.social.seed import auto_follow_official_accounts
+
                 await auto_follow_official_accounts(self.session, user.id)
             except (ImportError, SQLAlchemyError) as e:
                 # Non-critical — new OAuth user can still function without auto-follows
-                logger.warning("Failed to auto-follow official accounts for user %s: %s", user.id, type(e).__name__)
+                logger.warning(
+                    "Failed to auto-follow official accounts for user %s: %s",
+                    user.id,
+                    type(e).__name__,
+                )
 
         log_auth_success(email=email, ip=ip, method=provider)
         return _generate_tokens(user.id)
@@ -283,7 +296,9 @@ class AuthService:
 
         return _generate_tokens(user.id)
 
-    async def logout(self, access_token: str, refresh_token: Optional[str] = None, ip: str = "") -> None:
+    async def logout(
+        self, access_token: str, refresh_token: Optional[str] = None, ip: str = ""
+    ) -> None:
         """Add tokens to blacklist to invalidate them.
 
         Blacklists both access and refresh tokens for complete logout.
@@ -308,7 +323,7 @@ class AuthService:
                     self.session.add(blacklist_entry)
         except (PyJWTError, ValueError) as e:
             logger.warning("Failed to blacklist access token", extra={"error": str(e)})
-        
+
         # Blacklist refresh token if provided
         if refresh_token:
             try:
@@ -322,7 +337,7 @@ class AuthService:
                         self.session.add(blacklist_entry)
             except (PyJWTError, ValueError) as e:
                 logger.warning("Failed to blacklist refresh token", extra={"error": str(e)})
-        
+
         # Use flush instead of commit (let request lifecycle handle commit)
         await self.session.flush()
         if _logout_user_id:
@@ -348,6 +363,7 @@ class AuthService:
         # 5.7: OAuth users without a password cannot reset — send helpful email instead
         if user.hashed_password is None:
             from src.services.email_service import EmailService
+
             provider = user.auth_provider or "OAuth"
             try:
                 EmailService().send_oauth_password_reset_notice(email, provider)
@@ -448,7 +464,10 @@ class AuthService:
         try:
             EmailService().send_verification_code(user.email, code)
         except Exception:
-            logger.exception("Failed to send verification email to %s — user registered but code not delivered", user.email[:3] + "***")
+            logger.exception(
+                "Failed to send verification email to %s — user registered but code not delivered",
+                user.email[:3] + "***",
+            )
 
     async def verify_email(self, user_id: uuid.UUID, code: str) -> bool:
         """Verify the OTP code and mark the user's email as verified."""
@@ -520,7 +539,7 @@ class AuthService:
 
 def _hash_password(password: str) -> str:
     """Hash password using bcrypt."""
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(rounds=12)).decode('utf-8')
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=12)).decode("utf-8")
 
 
 def _normalize_email(email: str) -> str:
@@ -533,7 +552,7 @@ def _verify_password(plain: str, hashed: Optional[str]) -> bool:
     if hashed is None:
         return False
     try:
-        return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))
+        return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
     except (ValueError, TypeError):
         return False
 
@@ -584,8 +603,11 @@ def _decode_token(token: str) -> dict:
     """Decode and validate a JWT. Raises UnauthorizedError on failure."""
     try:
         payload = pyjwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
-            issuer="repwise", audience="repwise-api",
+            token,
+            settings.JWT_SECRET,
+            algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise",
+            audience="repwise-api",
         )
         return payload
     except PyJWTError:

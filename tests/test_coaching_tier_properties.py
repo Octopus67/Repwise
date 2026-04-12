@@ -14,11 +14,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.adaptive.coaching_service import CoachingService, MIN_BODYWEIGHT_ENTRIES
-from src.modules.adaptive.models import AdaptiveSnapshot, CoachingSuggestion
-from src.modules.adaptive.schemas import MacroTargets
+from src.modules.adaptive.models import CoachingSuggestion
 from src.modules.auth.models import User
 from src.modules.user.models import BodyweightLog, UserGoal, UserMetric, UserProfile
-from src.shared.types import GoalType
 
 
 # Common hypothesis settings for DB-backed property tests
@@ -32,6 +30,7 @@ _db_settings = h_settings(
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 async def _create_user(db: AsyncSession) -> uuid.UUID:
     """Create a test user and return its ID."""
     user = User(email=f"test-{uuid.uuid4()}@example.com", hashed_password="hashed")
@@ -41,7 +40,9 @@ async def _create_user(db: AsyncSession) -> uuid.UUID:
 
 
 async def _create_profile(
-    db: AsyncSession, user_id: uuid.UUID, coaching_mode: str = "coached",
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    coaching_mode: str = "coached",
 ) -> UserProfile:
     profile = UserProfile(user_id=user_id, coaching_mode=coaching_mode)
     db.add(profile)
@@ -70,8 +71,10 @@ async def _create_bodyweight_entries(
 
 
 async def _create_goal(
-    db: AsyncSession, user_id: uuid.UUID,
-    goal_type: str = "cutting", rate: float = -0.5,
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    goal_type: str = "cutting",
+    rate: float = -0.5,
 ) -> UserGoal:
     goal = UserGoal(
         user_id=user_id,
@@ -84,8 +87,10 @@ async def _create_goal(
 
 
 async def _create_metrics(
-    db: AsyncSession, user_id: uuid.UUID,
-    height_cm: float = 175.0, activity_level: str = "moderate",
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    height_cm: float = 175.0,
+    activity_level: str = "moderate",
 ) -> UserMetric:
     metric = UserMetric(
         user_id=user_id,
@@ -120,7 +125,10 @@ class TestProperty5CoachedMode:
         base_weight=st.floats(min_value=50.0, max_value=150.0),
     )
     async def test_coached_mode_produces_valid_targets(
-        self, db_session: AsyncSession, num_entries: int, base_weight: float,
+        self,
+        db_session: AsyncSession,
+        num_entries: int,
+        base_weight: float,
     ):
         """Coached mode with sufficient data produces non-null targets with calories >= 1200.
 
@@ -128,7 +136,9 @@ class TestProperty5CoachedMode:
         """
         user_id = await _create_user(db_session)
         await _create_profile(db_session, user_id, coaching_mode="coached")
-        await _create_bodyweight_entries(db_session, user_id, count=num_entries, base_weight=base_weight)
+        await _create_bodyweight_entries(
+            db_session, user_id, count=num_entries, base_weight=base_weight
+        )
         await _create_goal(db_session, user_id)
         await _create_metrics(db_session, user_id)
 
@@ -166,7 +176,10 @@ class TestProperty6CheckinCompleteness:
         daily_change=st.floats(min_value=-0.3, max_value=0.3),
     )
     async def test_checkin_contains_weight_trend_and_explanation(
-        self, db_session: AsyncSession, base_weight: float, daily_change: float,
+        self,
+        db_session: AsyncSession,
+        base_weight: float,
+        daily_change: float,
     ):
         """Check-in response contains weight_trend and explanation with direction keyword.
 
@@ -175,7 +188,11 @@ class TestProperty6CheckinCompleteness:
         user_id = await _create_user(db_session)
         await _create_profile(db_session, user_id, coaching_mode="coached")
         await _create_bodyweight_entries(
-            db_session, user_id, count=10, base_weight=base_weight, daily_change=daily_change,
+            db_session,
+            user_id,
+            count=10,
+            base_weight=base_weight,
+            daily_change=daily_change,
         )
         await _create_goal(db_session, user_id)
         await _create_metrics(db_session, user_id)
@@ -188,9 +205,9 @@ class TestProperty6CheckinCompleteness:
         assert result.explanation != ""
         # Explanation must contain a weight direction keyword
         explanation_lower = result.explanation.lower()
-        assert any(
-            kw in explanation_lower for kw in ["lost", "gained", "maintained"]
-        ), f"Explanation missing direction keyword: {result.explanation}"
+        assert any(kw in explanation_lower for kw in ["lost", "gained", "maintained"]), (
+            f"Explanation missing direction keyword: {result.explanation}"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -251,7 +268,9 @@ class TestProperty8InsufficientData:
     @_db_settings
     @given(num_entries=st.integers(min_value=0, max_value=6))
     async def test_insufficient_data_returns_correct_response(
-        self, db_session: AsyncSession, num_entries: int,
+        self,
+        db_session: AsyncSession,
+        num_entries: int,
     ):
         """<7 days returns has_sufficient_data=false with correct days_remaining.
 

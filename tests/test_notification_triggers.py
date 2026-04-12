@@ -17,7 +17,7 @@ import pytest
 from sqlalchemy import select
 
 from src.modules.auth.models import User
-from src.modules.notifications.models import DeviceToken, NotificationLog, NotificationPreference
+from src.modules.notifications.models import NotificationLog
 from src.modules.notifications.schemas import DeviceTokenCreate
 from src.modules.notifications.service import NotificationService
 
@@ -32,6 +32,7 @@ async def _create_user(session, email: str = "trigger@test.com") -> User:
 async def _setup_push(session, user_id: uuid.UUID) -> None:
     """Register a device token, ensure push is enabled, and enable feature flag."""
     from src.modules.feature_flags.service import FeatureFlagService, invalidate_cache
+
     invalidate_cache()
     ff_svc = FeatureFlagService(session)
     await ff_svc.set_flag("push_notifications", is_enabled=True)
@@ -200,7 +201,10 @@ async def test_volume_warning_notification_sent(db_session):
         exercises=[],
     )
 
-    with _mock_expo(), patch.object(svc, "get_weekly_muscle_volume", wraps=svc.get_weekly_muscle_volume) as _:
+    with (
+        _mock_expo(),
+        patch.object(svc, "get_weekly_muscle_volume", wraps=svc.get_weekly_muscle_volume) as _,
+    ):
         # Directly test the notification logic by calling the real method
         # but we need sessions that produce above_mrv. Instead, test the trigger in isolation.
         pass
@@ -241,21 +245,29 @@ async def test_workout_reminder_sent_to_inactive_user(db_session):
     async def _mock_send_push(self, user_id, title, body, notification_type="general", data=None):
         """Bypass feature flag / Expo and just log the notification."""
         from src.modules.notifications.models import NotificationLog
+
         log = NotificationLog(
-            user_id=user_id, type=notification_type, title=title, body=body,
+            user_id=user_id,
+            type=notification_type,
+            title=title,
+            body=body,
             sent_at=datetime.now(timezone.utc),
         )
         self.session.add(log)
         await self.session.flush()
         return 1
 
-    with patch.object(NotificationService, "send_push", _mock_send_push), patch(
-        "src.jobs.workout_reminders.get_preferred_workout_hour",
-        new_callable=AsyncMock,
-        return_value=(datetime.now(timezone.utc).hour + 1) % 24,
-    ), patch(
-        "src.jobs.workout_reminders.is_in_quiet_hours",
-        return_value=False,
+    with (
+        patch.object(NotificationService, "send_push", _mock_send_push),
+        patch(
+            "src.jobs.workout_reminders.get_preferred_workout_hour",
+            new_callable=AsyncMock,
+            return_value=(datetime.now(timezone.utc).hour + 1) % 24,
+        ),
+        patch(
+            "src.jobs.workout_reminders.is_in_quiet_hours",
+            return_value=False,
+        ),
     ):
         sent = await _send_reminders(db_session)
 
@@ -325,21 +337,29 @@ async def test_workout_reminder_no_duplicate(db_session):
 
     async def _mock_send_push(self, user_id, title, body, notification_type="general", data=None):
         from src.modules.notifications.models import NotificationLog
+
         log = NotificationLog(
-            user_id=user_id, type=notification_type, title=title, body=body,
+            user_id=user_id,
+            type=notification_type,
+            title=title,
+            body=body,
             sent_at=datetime.now(timezone.utc),
         )
         self.session.add(log)
         await self.session.flush()
         return 1
 
-    with patch.object(NotificationService, "send_push", _mock_send_push), patch(
-        "src.jobs.workout_reminders.get_preferred_workout_hour",
-        new_callable=AsyncMock,
-        return_value=(datetime.now(timezone.utc).hour + 1) % 24,
-    ), patch(
-        "src.jobs.workout_reminders.is_in_quiet_hours",
-        return_value=False,
+    with (
+        patch.object(NotificationService, "send_push", _mock_send_push),
+        patch(
+            "src.jobs.workout_reminders.get_preferred_workout_hour",
+            new_callable=AsyncMock,
+            return_value=(datetime.now(timezone.utc).hour + 1) % 24,
+        ),
+        patch(
+            "src.jobs.workout_reminders.is_in_quiet_hours",
+            return_value=False,
+        ),
     ):
         await _send_reminders(db_session)
         await _send_reminders(db_session)  # second run

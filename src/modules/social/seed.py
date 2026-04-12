@@ -26,18 +26,68 @@ OFFICIAL_ACCOUNTS = [
 
 # Seed feed events: (bot email, event_type, metadata)
 SEED_FEED_EVENTS = [
-    ("coach.alex@repwise.bot", "workout", {"summary": "Push Day — 4 exercises, 45 min", "exercises": 4, "duration_min": 45}),
+    (
+        "coach.alex@repwise.bot",
+        "workout",
+        {"summary": "Push Day — 4 exercises, 45 min", "exercises": 4, "duration_min": 45},
+    ),
     ("team@repwise.bot", "share", {"summary": "Shared a new workout template: PPL Beginner"}),
-    ("coach.alex@repwise.bot", "pr", {"summary": "New PR: Bench Press 100kg x 5", "exercise": "Bench Press", "weight_kg": 100, "reps": 5}),
+    (
+        "coach.alex@repwise.bot",
+        "pr",
+        {
+            "summary": "New PR: Bench Press 100kg x 5",
+            "exercise": "Bench Press",
+            "weight_kg": 100,
+            "reps": 5,
+        },
+    ),
     ("community@repwise.bot", "challenge", {"summary": "New challenge: 30-Day Consistency Streak"}),
-    ("coach.alex@repwise.bot", "workout", {"summary": "Pull Day — 5 exercises, 50 min", "exercises": 5, "duration_min": 50}),
-    ("team@repwise.bot", "tip", {"summary": "Tip: Track your RPE to auto-regulate volume over time"}),
+    (
+        "coach.alex@repwise.bot",
+        "workout",
+        {"summary": "Pull Day — 5 exercises, 50 min", "exercises": 5, "duration_min": 50},
+    ),
+    (
+        "team@repwise.bot",
+        "tip",
+        {"summary": "Tip: Track your RPE to auto-regulate volume over time"},
+    ),
     ("community@repwise.bot", "achievement", {"summary": "100 members hit a new PR this week!"}),
-    ("coach.alex@repwise.bot", "post", {"content": "Recovery is where gains happen. Sleep 7-9 hours, eat enough protein, and don't skip rest days.", "post_type": "text"}),
-    ("team@repwise.bot", "post", {"content": "New feature: You can now configure your rest timer duration in Settings. Compound and isolation exercises get separate timers.", "post_type": "text"}),
-    ("community@repwise.bot", "post", {"content": "Weekly check-in: What muscle group are you focusing on this week? Drop your split below.", "post_type": "text"}),
-    ("coach.alex@repwise.bot", "pr", {"summary": "New PR: Squat 140kg x 3", "exercise": "Squat", "weight_kg": 140, "reps": 3}),
-    ("coach.alex@repwise.bot", "workout", {"summary": "Leg Day — 6 exercises, 55 min", "exercises": 6, "duration_min": 55}),
+    (
+        "coach.alex@repwise.bot",
+        "post",
+        {
+            "content": "Recovery is where gains happen. Sleep 7-9 hours, eat enough protein, and don't skip rest days.",
+            "post_type": "text",
+        },
+    ),
+    (
+        "team@repwise.bot",
+        "post",
+        {
+            "content": "New feature: You can now configure your rest timer duration in Settings. Compound and isolation exercises get separate timers.",
+            "post_type": "text",
+        },
+    ),
+    (
+        "community@repwise.bot",
+        "post",
+        {
+            "content": "Weekly check-in: What muscle group are you focusing on this week? Drop your split below.",
+            "post_type": "text",
+        },
+    ),
+    (
+        "coach.alex@repwise.bot",
+        "pr",
+        {"summary": "New PR: Squat 140kg x 3", "exercise": "Squat", "weight_kg": 140, "reps": 3},
+    ),
+    (
+        "coach.alex@repwise.bot",
+        "workout",
+        {"summary": "Leg Day — 6 exercises, 55 min", "exercises": 6, "duration_min": 55},
+    ),
 ]
 
 
@@ -53,9 +103,11 @@ async def seed_social_data(session: AsyncSession) -> None:
     # Create bot accounts
     bot_users: dict[str, User] = {}
     for acct in OFFICIAL_ACCOUNTS:
-        existing = (await session.execute(
-            select(User).where(User.email == acct["email"], User.deleted_at.is_(None))
-        )).scalar_one_or_none()
+        existing = (
+            await session.execute(
+                select(User).where(User.email == acct["email"], User.deleted_at.is_(None))
+            )
+        ).scalar_one_or_none()
         if existing:
             bot_users[acct["email"]] = existing
             continue
@@ -86,7 +138,11 @@ async def seed_social_data(session: AsyncSession) -> None:
     today = date.today()
     period_start = today - timedelta(days=today.weekday())  # Monday of current week
     for rank, (email, score) in enumerate(
-        [("coach.alex@repwise.bot", 1250.0), ("team@repwise.bot", 980.0), ("community@repwise.bot", 870.0)],
+        [
+            ("coach.alex@repwise.bot", 1250.0),
+            ("team@repwise.bot", 980.0),
+            ("community@repwise.bot", 870.0),
+        ],
         start=1,
     ):
         bot = bot_users[email]
@@ -100,8 +156,11 @@ async def seed_social_data(session: AsyncSession) -> None:
         session.add(entry)
 
     await session.commit()
-    logger.info("Seeded %d official bot accounts, %d feed events, 3 leaderboard entries",
-                len(OFFICIAL_ACCOUNTS), len(SEED_FEED_EVENTS))
+    logger.info(
+        "Seeded %d official bot accounts, %d feed events, 3 leaderboard entries",
+        len(OFFICIAL_ACCOUNTS),
+        len(SEED_FEED_EVENTS),
+    )
 
 
 async def get_official_bot_ids(session: AsyncSession) -> list[uuid.UUID]:

@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.food_database.models import FoodItem
 from src.modules.food_database.schemas import RecipeIngredientInput
-from src.modules.food_database.service import FoodDatabaseService, aggregate_recipe_nutrition
+from src.modules.food_database.service import FoodDatabaseService
 from src.shared.pagination import PaginationParams
 
 
@@ -22,25 +22,15 @@ from src.shared.pagination import PaginationParams
 # Strategies
 # ---------------------------------------------------------------------------
 
-_positive_floats = st.floats(
-    min_value=0.1, max_value=5000.0, allow_nan=False, allow_infinity=False
-)
+_positive_floats = st.floats(min_value=0.1, max_value=5000.0, allow_nan=False, allow_infinity=False)
 
-_serving_sizes = st.floats(
-    min_value=1.0, max_value=1000.0, allow_nan=False, allow_infinity=False
-)
+_serving_sizes = st.floats(min_value=1.0, max_value=1000.0, allow_nan=False, allow_infinity=False)
 
-_total_servings = st.floats(
-    min_value=0.5, max_value=100.0, allow_nan=False, allow_infinity=False
-)
+_total_servings = st.floats(min_value=0.5, max_value=100.0, allow_nan=False, allow_infinity=False)
 
-_quantities = st.floats(
-    min_value=1.0, max_value=2000.0, allow_nan=False, allow_infinity=False
-)
+_quantities = st.floats(min_value=1.0, max_value=2000.0, allow_nan=False, allow_infinity=False)
 
-_servings_consumed = st.floats(
-    min_value=0.1, max_value=20.0, allow_nan=False, allow_infinity=False
-)
+_servings_consumed = st.floats(min_value=0.1, max_value=20.0, allow_nan=False, allow_infinity=False)
 
 _food_names = st.text(
     alphabet=st.characters(
@@ -165,18 +155,10 @@ class TestProperty12RecipeNutritionScaling:
         )
 
         # Compute expected totals manually
-        expected_cal = sum(
-            food.calories * (qty / food.serving_size) for food, qty in ingredients
-        )
-        expected_pro = sum(
-            food.protein_g * (qty / food.serving_size) for food, qty in ingredients
-        )
-        expected_carb = sum(
-            food.carbs_g * (qty / food.serving_size) for food, qty in ingredients
-        )
-        expected_fat = sum(
-            food.fat_g * (qty / food.serving_size) for food, qty in ingredients
-        )
+        expected_cal = sum(food.calories * (qty / food.serving_size) for food, qty in ingredients)
+        expected_pro = sum(food.protein_g * (qty / food.serving_size) for food, qty in ingredients)
+        expected_carb = sum(food.carbs_g * (qty / food.serving_size) for food, qty in ingredients)
+        expected_fat = sum(food.fat_g * (qty / food.serving_size) for food, qty in ingredients)
 
         # Per-serving = total / total_servings
         expected_per_serving_cal = expected_cal / total_servings
@@ -212,12 +194,22 @@ class TestProperty12RecipeNutritionScaling:
         """
         # Create a simple 2-ingredient recipe
         food1 = await _create_ingredient_food(
-            db_session, "Rice", calories=130, protein_g=2.7,
-            carbs_g=28.0, fat_g=0.3, serving_size=100.0,
+            db_session,
+            "Rice",
+            calories=130,
+            protein_g=2.7,
+            carbs_g=28.0,
+            fat_g=0.3,
+            serving_size=100.0,
         )
         food2 = await _create_ingredient_food(
-            db_session, "Chicken", calories=165, protein_g=31.0,
-            carbs_g=0.0, fat_g=3.6, serving_size=100.0,
+            db_session,
+            "Chicken",
+            calories=165,
+            protein_g=31.0,
+            carbs_g=0.0,
+            fat_g=3.6,
+            serving_size=100.0,
         )
 
         total_servings = data.draw(_total_servings)
@@ -301,8 +293,13 @@ class TestProperty13RecipeSearchability:
 
         # Create an ingredient food item
         food = await _create_ingredient_food(
-            db_session, "SearchIngredient", calories=100, protein_g=10,
-            carbs_g=20, fat_g=5, serving_size=100.0,
+            db_session,
+            "SearchIngredient",
+            calories=100,
+            protein_g=10,
+            carbs_g=20,
+            fat_g=5,
+            serving_size=100.0,
         )
 
         total_servings = data.draw(_total_servings)

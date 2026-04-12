@@ -29,28 +29,42 @@ async def _onboard(client: LifecycleClient, p: PersonaProfile) -> None:
     await client.get_me()
     await client.update_profile(display_name=p.display_name)
     await client.log_metrics(
-        height_cm=p.height_cm, weight_kg=p.weight_kg,
-        body_fat_pct=p.body_fat_pct, activity_level=p.activity_level,
+        height_cm=p.height_cm,
+        weight_kg=p.weight_kg,
+        body_fat_pct=p.body_fat_pct,
+        activity_level=p.activity_level,
     )
     await client.set_goals(goal_type=p.goal_type, goal_rate_per_week=p.goal_rate_per_week)
     await client.log_bodyweight(p.weight_kg, SIM_START)
-    await client.create_snapshot({
-        "weight_kg": p.weight_kg, "height_cm": p.height_cm,
-        "age_years": p.age_years, "sex": p.sex,
-        "activity_level": p.activity_level, "goal_type": p.goal_type,
-        "goal_rate_per_week": p.goal_rate_per_week,
-        "bodyweight_history": [{"date": SIM_START.isoformat(), "weight_kg": p.weight_kg}],
-        "training_load_score": 0.0,
-    })
+    await client.create_snapshot(
+        {
+            "weight_kg": p.weight_kg,
+            "height_cm": p.height_cm,
+            "age_years": p.age_years,
+            "sex": p.sex,
+            "activity_level": p.activity_level,
+            "goal_type": p.goal_type,
+            "goal_rate_per_week": p.goal_rate_per_week,
+            "bodyweight_history": [{"date": SIM_START.isoformat(), "weight_kg": p.weight_kg}],
+            "training_load_score": 0.0,
+        }
+    )
 
 
 async def _simulate_day(
-    client: LifecycleClient, persona: PersonaProfile, day_num: int,
+    client: LifecycleClient,
+    persona: PersonaProfile,
+    day_num: int,
 ) -> dict:
     gen = DAILY_PLAN_GENERATORS[persona.name]
     plan = gen(day_num)
     sim_date = SIM_START + timedelta(days=day_num)
-    result = {"date": sim_date.isoformat(), "meals_logged": 0, "training_logged": False, "bw_logged": False}
+    result = {
+        "date": sim_date.isoformat(),
+        "meals_logged": 0,
+        "training_logged": False,
+        "bw_logged": False,
+    }
 
     for meal in plan.meals:
         await client.log_food(
@@ -60,7 +74,9 @@ async def _simulate_day(
             carbs_g=meal["carbs_g"],
             fat_g=meal["fat_g"],
             entry_date=sim_date,
-            micro_nutrients={"water_ml": plan.water_ml / max(len(plan.meals), 1)} if plan.water_ml > 0 else None,
+            micro_nutrients={"water_ml": plan.water_ml / max(len(plan.meals), 1)}
+            if plan.water_ml > 0
+            else None,
         )
         result["meals_logged"] += 1
 
@@ -84,7 +100,6 @@ async def _simulate_day(
 
 
 class TestDailyTotalsNoOrphanedEntries:
-
     @pytest.mark.asyncio
     async def test_daily_totals_no_orphaned_entries(self, override_get_db):
         """Every nutrition entry belongs to a valid date within the 28-day range."""
@@ -96,7 +111,9 @@ class TestDailyTotalsNoOrphanedEntries:
 
             sim_end = SIM_START + timedelta(days=27)
             entries = await c.get_nutrition_entries(
-                start_date=SIM_START, end_date=sim_end, limit=100,
+                start_date=SIM_START,
+                end_date=sim_end,
+                limit=100,
             )
 
             for entry in entries["items"]:
@@ -114,7 +131,6 @@ class TestDailyTotalsNoOrphanedEntries:
 
 
 class TestWeeklyTotalsExactMatch:
-
     @pytest.mark.asyncio
     async def test_weekly_totals_exact_match(self, override_get_db):
         """Sum daily entries per week; each week total matches sum of dailies."""
@@ -129,7 +145,9 @@ class TestWeeklyTotalsExactMatch:
                 week_end = week_start + timedelta(days=6)
 
                 entries = await c.get_nutrition_entries(
-                    start_date=week_start, end_date=week_end, limit=100,
+                    start_date=week_start,
+                    end_date=week_end,
+                    limit=100,
                 )
 
                 # Sum daily entries for the week
@@ -154,7 +172,6 @@ class TestWeeklyTotalsExactMatch:
 
 
 class TestAchievementAuditAllJustified:
-
     @pytest.mark.asyncio
     async def test_achievement_audit_all_justified(self, override_get_db):
         """Every unlocked achievement for Persona A after 28 days is justified."""
@@ -173,9 +190,10 @@ class TestAchievementAuditAllJustified:
                 if ach_id == "streak_7":
                     # Persona A logs every day → streak >= 7 at some point
                     streak = await c.get_streak()
-                    assert streak["current_streak"] >= 7 or streak.get("longest_streak", streak["current_streak"]) >= 7, (
-                        "streak_7 unlocked but streak never reached 7"
-                    )
+                    assert (
+                        streak["current_streak"] >= 7
+                        or streak.get("longest_streak", streak["current_streak"]) >= 7
+                    ), "streak_7 unlocked but streak never reached 7"
 
                 elif ach_id == "volume_10k":
                     # Persona A does light cardio with bodyweight exercises
@@ -200,9 +218,7 @@ class TestAchievementAuditAllJustified:
                         for ex in sess["exercises"]:
                             for s in ex["sets"]:
                                 max_weight = max(max_weight, s["weight_kg"])
-                    assert max_weight > 0, (
-                        f"{ach_id} unlocked but no weight lifted"
-                    )
+                    assert max_weight > 0, f"{ach_id} unlocked but no weight lifted"
         finally:
             await c.close()
 
@@ -213,7 +229,6 @@ class TestAchievementAuditAllJustified:
 
 
 class TestNoUnearnedAchievements:
-
     @pytest.mark.asyncio
     async def test_no_unearned_achievements(self, override_get_db):
         """Persona D (only 2 active days) should NOT have streak achievements."""
@@ -224,9 +239,7 @@ class TestNoUnearnedAchievements:
                 await _simulate_day(c, PERSONA_D, day)
 
             achievements = await c.get_achievements()
-            unlocked_ids = [
-                a["definition"]["id"] for a in achievements if a.get("unlocked")
-            ]
+            unlocked_ids = [a["definition"]["id"] for a in achievements if a.get("unlocked")]
 
             streak_achievements = [aid for aid in unlocked_ids if aid.startswith("streak_")]
             assert len(streak_achievements) == 0, (
@@ -242,7 +255,6 @@ class TestNoUnearnedAchievements:
 
 
 class TestTrainingHistoryCompleteness:
-
     @pytest.mark.asyncio
     async def test_training_history_completeness(self, override_get_db):
         """Every logged session for Persona B appears in training history."""
@@ -282,7 +294,6 @@ class TestTrainingHistoryCompleteness:
 
 
 class TestProfileAccuracyAfterUpdates:
-
     @pytest.mark.asyncio
     async def test_profile_accuracy_after_updates(self, override_get_db):
         """Latest bodyweight in history matches the last logged value."""

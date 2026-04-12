@@ -70,13 +70,10 @@ def is_in_quiet_hours(prefs: NotificationPreference, user_tz: str | None) -> boo
 async def get_preferred_workout_hour(session: AsyncSession, user_id) -> int:
     """Return the most common start hour from the last 30 days of sessions (default 9)."""
     cutoff = datetime.now(timezone.utc) - timedelta(days=SESSION_LOOKBACK_DAYS)
-    stmt = (
-        select(extract("hour", TrainingSession.start_time))
-        .where(
-            TrainingSession.user_id == user_id,
-            TrainingSession.start_time.isnot(None),
-            TrainingSession.session_date >= cutoff.date(),
-        )
+    stmt = select(extract("hour", TrainingSession.start_time)).where(
+        TrainingSession.user_id == user_id,
+        TrainingSession.start_time.isnot(None),
+        TrainingSession.session_date >= cutoff.date(),
     )
     result = await session.execute(stmt)
     hours = [int(row[0]) for row in result.all()]
@@ -89,8 +86,8 @@ async def run_workout_reminders(session: AsyncSession | None = None) -> int:
     """Send workout reminders to eligible users. Returns count of notifications sent."""
     start = time.monotonic()
     logger.info("Workout reminders job started")
-    sentry_sdk.set_tag('component', 'job')
-    sentry_sdk.set_tag('job_name', 'workout_reminders')
+    sentry_sdk.set_tag("component", "job")
+    sentry_sdk.set_tag("job_name", "workout_reminders")
     owns_session = session is None
     if owns_session:
         async with async_session_factory() as session:
@@ -162,7 +159,9 @@ async def _send_reminders(session: AsyncSession) -> int:
             reminder_hour = (preferred_hour - REMINDER_LEAD_HOURS) % 24
             tz = _safe_tz(user_tz)
             current_hour = datetime.now(tz).hour
-            hour_diff = min(abs(current_hour - reminder_hour), 24 - abs(current_hour - reminder_hour))
+            hour_diff = min(
+                abs(current_hour - reminder_hour), 24 - abs(current_hour - reminder_hour)
+            )
             if hour_diff > 1:
                 continue
 

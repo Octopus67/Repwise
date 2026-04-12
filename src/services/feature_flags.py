@@ -84,5 +84,7 @@ def is_feature_enabled(
         _put_cached(flag_name, user_id, enabled)
         return enabled
     except (ImportError, OSError, ValueError) as exc:
-        logger.warning("PostHog unreachable for flag '%s' (%s) — failing open", flag_name, type(exc).__name__)
+        logger.warning(
+            "PostHog unreachable for flag '%s' (%s) — failing open", flag_name, type(exc).__name__
+        )
         return True

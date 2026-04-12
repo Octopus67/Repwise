@@ -4,6 +4,7 @@ Revision ID: r2a1_weekly_challenges
 Revises: r5a1_unlocked_by_achievement
 Create Date: 2026-06-15 10:00:00.000000
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -29,14 +30,28 @@ def upgrade() -> None:
         sa.Column("week_end", sa.Date(), nullable=False),
         sa.Column("completed", sa.Boolean(), nullable=False, server_default="false"),
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("user_id", "week_start", "challenge_type", name="uq_challenge_user_week_type"),
+        sa.UniqueConstraint(
+            "user_id", "week_start", "challenge_type", name="uq_challenge_user_week_type"
+        ),
     )
     op.create_index("ix_weekly_challenges_user_id", "weekly_challenges", ["user_id"])
-    op.create_index("ix_weekly_challenges_user_week", "weekly_challenges", ["user_id", "week_start"])
+    op.create_index(
+        "ix_weekly_challenges_user_week", "weekly_challenges", ["user_id", "week_start"]
+    )
 
 
 def downgrade() -> None:

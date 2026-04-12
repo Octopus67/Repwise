@@ -16,7 +16,7 @@ depends_on = None
 def upgrade() -> None:
     conn = op.get_bind()
     # Constraint/index may not exist on fresh PostgreSQL databases
-    if conn.dialect.name == 'postgresql':
+    if conn.dialect.name == "postgresql":
         op.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS uq_users_email")
         op.execute("DROP INDEX IF EXISTS ix_users_email")
     else:

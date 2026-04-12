@@ -36,7 +36,9 @@ class UserProfile(Base):
     region: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     preferences: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True, default=None)
     coaching_mode: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="coached",
+        String(20),
+        nullable=False,
+        default="coached",
     )
 
 
@@ -64,9 +66,7 @@ class UserMetric(Base):
         default=None,
     )
 
-    __table_args__ = (
-        Index("ix_user_metrics_user_recorded", "user_id", recorded_at.desc()),
-    )
+    __table_args__ = (Index("ix_user_metrics_user_recorded", "user_id", recorded_at.desc()),)
 
 
 class BodyweightLog(Base):

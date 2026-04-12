@@ -33,9 +33,7 @@ def _patch_jsonb_for_sqlite() -> None:
                 column.type = JSON()
             if column.server_default is not None:
                 default_text = (
-                    str(column.server_default.arg)
-                    if hasattr(column.server_default, "arg")
-                    else ""
+                    str(column.server_default.arg) if hasattr(column.server_default, "arg") else ""
                 )
                 if "::jsonb" in default_text:
                     column.server_default = None
@@ -57,7 +55,9 @@ async def seed() -> None:
         existing = result.scalar_one_or_none()
 
         if existing is not None:
-            logger.info(f"Flag '{FLAG_NAME}' already exists (is_enabled={existing.is_enabled}). Skipping.")
+            logger.info(
+                f"Flag '{FLAG_NAME}' already exists (is_enabled={existing.is_enabled}). Skipping."
+            )
             return
 
         flag = FeatureFlag(

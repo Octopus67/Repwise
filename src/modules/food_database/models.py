@@ -42,9 +42,7 @@ class FoodItem(SoftDeleteMixin, Base):
     source: Mapped[str] = mapped_column(
         String(20), nullable=False, default="community", index=True
     )  # valid: usda, verified, community, custom
-    barcode: Mapped[Optional[str]] = mapped_column(
-        String(50), nullable=True, unique=True
-    )
+    barcode: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, unique=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     total_servings: Mapped[Optional[float]] = mapped_column(
         Float, nullable=True, default=1.0
@@ -52,7 +50,9 @@ class FoodItem(SoftDeleteMixin, Base):
 
     # Owner tracking for user-created recipes
     created_by: Mapped[Optional[uuid.UUID]] = mapped_column(
-        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True,  # Audit fix 8.1
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,  # Audit fix 8.1
     )
 
     # Relationship to recipe ingredients (only populated when is_recipe=True)
@@ -65,8 +65,12 @@ class FoodItem(SoftDeleteMixin, Base):
 
     __table_args__ = (
         # GIN index for fuzzy text search on name (pg_trgm)
-        Index("ix_food_items_name_gin", "name", postgresql_using="gin",
-              postgresql_ops={"name": "gin_trgm_ops"}),
+        Index(
+            "ix_food_items_name_gin",
+            "name",
+            postgresql_using="gin",
+            postgresql_ops={"name": "gin_trgm_ops"},
+        ),
         # B-tree index for filtered browsing by region and category
         Index("ix_food_items_region_category", "region", "category"),
         Index("ix_food_items_not_deleted", "id", postgresql_where=text("deleted_at IS NULL")),
@@ -125,7 +129,9 @@ class UserFoodFrequency(Base):
         ForeignKey("food_items.id", ondelete="CASCADE"), nullable=False
     )
     log_count: Mapped[int] = mapped_column(default=0, server_default=text("0"))
-    last_logged_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_logged_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     is_favorite: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
 
     __table_args__ = (
@@ -142,13 +148,9 @@ class BarcodeCache(Base):
 
     __tablename__ = "barcode_cache"
 
-    barcode: Mapped[str] = mapped_column(
-        String(50), unique=True, nullable=False
-    )
+    barcode: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     food_item_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("food_items.id", ondelete="CASCADE"), nullable=False
     )
-    source_api: Mapped[str] = mapped_column(
-        String(20), nullable=False
-    )  # "off" or "usda"
+    source_api: Mapped[str] = mapped_column(String(20), nullable=False)  # "off" or "usda"
     raw_response: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)

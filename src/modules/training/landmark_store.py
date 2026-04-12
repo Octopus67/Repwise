@@ -65,9 +65,7 @@ class LandmarkStore:
             self.session.add(row)
 
         await self.session.flush()
-        return VolumeLandmark(
-            muscle_group=muscle_group, mev=mev, mav=mav, mrv=mrv, is_custom=True
-        )
+        return VolumeLandmark(muscle_group=muscle_group, mev=mev, mav=mav, mrv=mrv, is_custom=True)
 
     async def delete_landmark(self, user_id: uuid.UUID, muscle_group: str) -> None:
         """Delete a user's custom landmark, reverting to defaults."""

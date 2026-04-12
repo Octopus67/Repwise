@@ -70,7 +70,13 @@ def make_nutrition_entry(**overrides) -> dict:
 
 def make_set(reps: int = 8, weight_kg: float = 80.0, **overrides) -> dict:
     """Generate a single set entry."""
-    defaults = {"reps": reps, "weight_kg": weight_kg, "rpe": None, "rir": None, "set_type": "normal"}
+    defaults = {
+        "reps": reps,
+        "weight_kg": weight_kg,
+        "rpe": None,
+        "rir": None,
+        "set_type": "normal",
+    }
     return {**defaults, **overrides}
 
 

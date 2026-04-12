@@ -45,7 +45,9 @@ class NotificationService:
     # ------------------------------------------------------------------
 
     async def register_device(
-        self, user_id: uuid.UUID, data: DeviceTokenCreate,
+        self,
+        user_id: uuid.UUID,
+        data: DeviceTokenCreate,
     ) -> DeviceToken:
         """Insert or update a device token (upsert on token value).
 
@@ -80,11 +82,14 @@ class NotificationService:
         return result.scalar_one()
 
     async def unregister_device(
-        self, user_id: uuid.UUID, token_id: uuid.UUID,
+        self,
+        user_id: uuid.UUID,
+        token_id: uuid.UUID,
     ) -> None:
         """Delete a device token owned by the given user."""
         stmt = select(DeviceToken).where(
-            DeviceToken.id == token_id, DeviceToken.user_id == user_id,
+            DeviceToken.id == token_id,
+            DeviceToken.user_id == user_id,
         )
         result = await self.session.execute(stmt)
         device = result.scalar_one_or_none()
@@ -121,7 +126,9 @@ class NotificationService:
         return prefs
 
     async def update_preferences(
-        self, user_id: uuid.UUID, data: NotificationPreferenceUpdate,
+        self,
+        user_id: uuid.UUID,
+        data: NotificationPreferenceUpdate,
     ) -> NotificationPreference:
         """Partial update of notification preferences."""
         prefs = await self.get_preferences(user_id)
@@ -135,7 +142,9 @@ class NotificationService:
     # ------------------------------------------------------------------
 
     async def get_notification_history(
-        self, user_id: uuid.UUID, pagination: PaginationParams,
+        self,
+        user_id: uuid.UUID,
+        pagination: PaginationParams,
     ) -> PaginatedResult:
         """Return paginated notification history, newest first."""
         base = select(NotificationLog).where(NotificationLog.user_id == user_id)
@@ -160,7 +169,9 @@ class NotificationService:
         )
 
     async def mark_as_read(
-        self, user_id: uuid.UUID, notification_ids: list[uuid.UUID],
+        self,
+        user_id: uuid.UUID,
+        notification_ids: list[uuid.UUID],
     ) -> int:
         """Mark notifications as read. Returns count of updated rows."""
         now = datetime.now(timezone.utc)

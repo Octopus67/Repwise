@@ -150,6 +150,7 @@ async def delete_goals(
     await db.execute(sql_delete(AdaptiveSnapshot).where(AdaptiveSnapshot.user_id == user.id))
     await db.commit()
 
+
 # ------------------------------------------------------------------
 # Recalculate
 # ------------------------------------------------------------------
@@ -163,4 +164,3 @@ async def recalculate(
 ) -> RecalculateResponse:
     """Save metrics/goals and return updated adaptive targets."""
     return await service.recalculate(user.id, data)
-

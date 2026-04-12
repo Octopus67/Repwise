@@ -32,40 +32,46 @@ class RecipeService:
     # ------------------------------------------------------------------
 
     async def _has_circular_reference(
-        self, recipe_id: uuid.UUID, ingredient_id: uuid.UUID, visited: Optional[set] = None, depth: int = 0
+        self,
+        recipe_id: uuid.UUID,
+        ingredient_id: uuid.UUID,
+        visited: Optional[set] = None,
+        depth: int = 0,
     ) -> bool:
         """Check if adding ingredient_id to recipe_id would create a circular reference."""
         if depth > 10:  # Prevent infinite recursion
             return True
-        
+
         if visited is None:
             visited = set()
-        
+
         if ingredient_id in visited:
             return True
-        
+
         # Check if the ingredient is a recipe
         stmt = select(FoodItem).where(FoodItem.id == ingredient_id, FoodItem.is_recipe.is_(True))
         stmt = FoodItem.not_deleted(stmt)
         result = await self.db.execute(stmt)
         ingredient_recipe = result.scalar_one_or_none()
-        
+
         if ingredient_recipe is None:
             return False  # Not a recipe, no circular reference possible
-        
+
         # If the ingredient recipe contains our original recipe, it's circular
         if ingredient_id == recipe_id:
             return True
-        
+
         # Check all ingredients of this recipe recursively
         visited.add(ingredient_id)
         ing_stmt = select(RecipeIngredient).where(RecipeIngredient.recipe_id == ingredient_id)
         ing_result = await self.db.execute(ing_stmt)
-        
+
         for ing in ing_result.scalars().all():
-            if await self._has_circular_reference(recipe_id, ing.food_item_id, visited.copy(), depth + 1):
+            if await self._has_circular_reference(
+                recipe_id, ing.food_item_id, visited.copy(), depth + 1
+            ):
                 return True
-        
+
         return False
 
     # ------------------------------------------------------------------
@@ -228,9 +234,7 @@ class RecipeService:
         # Replace ingredients if provided
         if ingredients is not None:
             # Delete existing ingredients
-            existing_stmt = select(RecipeIngredient).where(
-                RecipeIngredient.recipe_id == recipe_id
-            )
+            existing_stmt = select(RecipeIngredient).where(RecipeIngredient.recipe_id == recipe_id)
             existing_result = await self.db.execute(existing_stmt)
             for old_ing in existing_result.scalars().all():
                 await self.db.delete(old_ing)
@@ -250,7 +254,9 @@ class RecipeService:
 
                 # Check for circular references recursively
                 if await self._has_circular_reference(recipe_id, ing.food_item_id):
-                    raise ValidationError("Adding this ingredient would create a circular reference")
+                    raise ValidationError(
+                        "Adding this ingredient would create a circular reference"
+                    )
 
                 food = food_lookup.get(ing.food_item_id)
                 if food is None:
@@ -315,7 +321,9 @@ class RecipeService:
     # Recipe with nutritional aggregation
     # ------------------------------------------------------------------
 
-    async def get_recipe(self, recipe_id: uuid.UUID, user_id: uuid.UUID | None = None) -> RecipeDetailResponse:
+    async def get_recipe(
+        self, recipe_id: uuid.UUID, user_id: uuid.UUID | None = None
+    ) -> RecipeDetailResponse:
         """Retrieve a recipe with its ingredients and aggregated nutrition.
 
         Nutritional aggregation: for each ingredient, scale its per-serving
@@ -350,7 +358,9 @@ class RecipeService:
                 food_item_id=ing.food_item_id,
                 quantity=ing.quantity,
                 unit=ing.unit,
-                food_item=FoodItemResponse.model_validate(ing.food_item) if ing.food_item and ing.food_item.deleted_at is None else None,
+                food_item=FoodItemResponse.model_validate(ing.food_item)
+                if ing.food_item and ing.food_item.deleted_at is None
+                else None,
             )
             for ing in recipe.ingredients
         ]

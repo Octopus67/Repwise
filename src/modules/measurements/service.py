@@ -86,7 +86,10 @@ class MeasurementService:
         )
 
     async def update(
-        self, user_id: uuid.UUID, measurement_id: uuid.UUID, data: MeasurementUpdate,
+        self,
+        user_id: uuid.UUID,
+        measurement_id: uuid.UUID,
+        data: MeasurementUpdate,
     ) -> BodyMeasurement:
         measurement = await self.get(user_id, measurement_id)
         for field, value in data.model_dump(exclude_unset=True).items():

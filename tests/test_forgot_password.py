@@ -53,6 +53,7 @@ async def _forgot_password(client, email="forgot@example.com"):
 # 1. Forgot password returns 200 for existing email
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_forgot_password_returns_200_for_existing_email(client, override_get_db, mock_ses):
     await _register_user(client)
@@ -66,6 +67,7 @@ async def test_forgot_password_returns_200_for_existing_email(client, override_g
 # 2. Forgot password returns 200 for nonexistent email
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_forgot_password_returns_200_for_nonexistent_email(client, override_get_db, mock_ses):
     resp = await _forgot_password(client, email="nobody@example.com")
@@ -78,6 +80,7 @@ async def test_forgot_password_returns_200_for_nonexistent_email(client, overrid
 # 3. Reset password with valid OTP code
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_reset_password_with_valid_token(client, override_get_db, mock_ses):
     await _register_user(client)
@@ -87,7 +90,11 @@ async def test_reset_password_with_valid_token(client, override_get_db, mock_ses
 
     reset_resp = await client.post(
         "/api/v1/auth/reset-password",
-        json={"email": "forgot@example.com", "code": KNOWN_OTP, "new_password": "NewSecurePass456!"},
+        json={
+            "email": "forgot@example.com",
+            "code": KNOWN_OTP,
+            "new_password": "NewSecurePass456!",
+        },
     )
     assert reset_resp.status_code == 200
     assert reset_resp.json()["message"] == "Password has been reset"
@@ -105,6 +112,7 @@ async def test_reset_password_with_valid_token(client, override_get_db, mock_ses
 # 4. Reset password with invalid code
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_reset_password_with_invalid_token(client, override_get_db, mock_ses):
     resp = await client.post(
@@ -117,6 +125,7 @@ async def test_reset_password_with_invalid_token(client, override_get_db, mock_s
 # ------------------------------------------------------------------
 # 5. Reset password code is single-use
 # ------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_reset_password_token_single_use(client, override_get_db, mock_ses):
@@ -135,13 +144,19 @@ async def test_reset_password_token_single_use(client, override_get_db, mock_ses
     # Second use — should fail
     resp2 = await client.post(
         "/api/v1/auth/reset-password",
-        json={"email": "forgot@example.com", "code": KNOWN_OTP, "new_password": "SecondNewPass456!"},
+        json={
+            "email": "forgot@example.com",
+            "code": KNOWN_OTP,
+            "new_password": "SecondNewPass456!",
+        },
     )
     assert resp2.status_code == 400
+
 
 # ------------------------------------------------------------------
 # 6. Reset password validates minimum length
 # ------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_reset_password_validates_min_length(client, override_get_db, mock_ses):

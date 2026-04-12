@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import io
 import uuid
 from datetime import datetime, timezone
 
 import pytest
-from httpx import ASGITransport, AsyncClient
 
 from src.modules.measurements.navy_calculator import navy_body_fat
 
@@ -50,15 +48,23 @@ class TestNavyCalculator:
 
     def test_male_formula_precision(self):
         import math
+
         waist, neck, height = 85.0, 37.0, 178.0
-        expected = 495 / (1.0324 - 0.19077 * math.log10(waist - neck) + 0.15456 * math.log10(height)) - 450
+        expected = (
+            495 / (1.0324 - 0.19077 * math.log10(waist - neck) + 0.15456 * math.log10(height)) - 450
+        )
         bf = navy_body_fat("male", waist_cm=waist, neck_cm=neck, height_cm=height)
         assert abs(bf - round(max(expected, 0), 2)) < 0.01
 
     def test_female_formula_precision(self):
         import math
+
         waist, neck, height, hips = 75.0, 32.0, 165.0, 95.0
-        expected = 495 / (1.29579 - 0.35004 * math.log10(waist + hips - neck) + 0.22100 * math.log10(height)) - 450
+        expected = (
+            495
+            / (1.29579 - 0.35004 * math.log10(waist + hips - neck) + 0.22100 * math.log10(height))
+            - 450
+        )
         bf = navy_body_fat("female", waist_cm=waist, neck_cm=neck, height_cm=height, hips_cm=hips)
         assert abs(bf - round(max(expected, 0), 2)) < 0.01
 
@@ -109,7 +115,9 @@ class TestMeasurementService:
         svc = MeasurementService(db_session)
 
         now = datetime.now(timezone.utc)
-        await svc.create(user_id, MeasurementCreate(measured_at=now - timedelta(days=1), weight_kg=79.0))
+        await svc.create(
+            user_id, MeasurementCreate(measured_at=now - timedelta(days=1), weight_kg=79.0)
+        )
         m2 = await svc.create(user_id, MeasurementCreate(measured_at=now, weight_kg=80.0))
 
         latest = await svc.get_latest(user_id)
@@ -134,9 +142,13 @@ class TestMeasurementService:
         user_id = await _create_user(db_session)
         svc = MeasurementService(db_session)
 
-        m = await svc.create(user_id, MeasurementCreate(
-            measured_at=datetime.now(timezone.utc), weight_kg=80.0,
-        ))
+        m = await svc.create(
+            user_id,
+            MeasurementCreate(
+                measured_at=datetime.now(timezone.utc),
+                weight_kg=80.0,
+            ),
+        )
         updated = await svc.update(user_id, m.id, MeasurementUpdate(weight_kg=82.0))
         assert updated.weight_kg == 82.0
 
@@ -149,9 +161,13 @@ class TestMeasurementService:
         user_id = await _create_user(db_session)
         svc = MeasurementService(db_session)
 
-        m = await svc.create(user_id, MeasurementCreate(
-            measured_at=datetime.now(timezone.utc), weight_kg=80.0,
-        ))
+        m = await svc.create(
+            user_id,
+            MeasurementCreate(
+                measured_at=datetime.now(timezone.utc),
+                weight_kg=80.0,
+            ),
+        )
         await svc.delete(user_id, m.id)
 
         with pytest.raises(NotFoundError):
@@ -168,10 +184,13 @@ class TestMeasurementService:
 
         now = datetime.now(timezone.utc)
         for i in range(5):
-            await svc.create(user_id, MeasurementCreate(
-                measured_at=now - timedelta(days=i),
-                weight_kg=80.0 - i,
-            ))
+            await svc.create(
+                user_id,
+                MeasurementCreate(
+                    measured_at=now - timedelta(days=i),
+                    weight_kg=80.0 - i,
+                ),
+            )
 
         trend = await svc.get_trend(user_id, days=90)
         assert len(trend) == 5
@@ -190,10 +209,13 @@ class TestMeasurementService:
 
         now = datetime.now(timezone.utc)
         for i in range(5):
-            await svc.create(user_id, MeasurementCreate(
-                measured_at=now - timedelta(days=i),
-                weight_kg=80.0,
-            ))
+            await svc.create(
+                user_id,
+                MeasurementCreate(
+                    measured_at=now - timedelta(days=i),
+                    weight_kg=80.0,
+                ),
+            )
 
         result = await svc.list(user_id, PaginationParams(page=1, limit=2))
         assert result.total_count == 5
@@ -220,6 +242,7 @@ class TestPhotoService:
     @pytest.mark.asyncio
     async def test_upload_and_get(self, db_session, tmp_path, monkeypatch):
         import src.modules.measurements.photo_service as ps
+
         monkeypatch.setattr(ps, "UPLOAD_ROOT", str(tmp_path))
 
         from src.modules.measurements.photo_service import PhotoService
@@ -228,9 +251,13 @@ class TestPhotoService:
 
         user_id = await _create_user(db_session)
         m_svc = MeasurementService(db_session)
-        m = await m_svc.create(user_id, MeasurementCreate(
-            measured_at=datetime.now(timezone.utc), weight_kg=80.0,
-        ))
+        m = await m_svc.create(
+            user_id,
+            MeasurementCreate(
+                measured_at=datetime.now(timezone.utc),
+                weight_kg=80.0,
+            ),
+        )
 
         p_svc = PhotoService(db_session)
         photo = await p_svc.upload(
@@ -253,6 +280,7 @@ class TestPhotoService:
     async def test_delete_removes_file(self, db_session, tmp_path, monkeypatch):
         import os
         import src.modules.measurements.photo_service as ps
+
         monkeypatch.setattr(ps, "UPLOAD_ROOT", str(tmp_path))
 
         from src.modules.measurements.photo_service import PhotoService
@@ -262,9 +290,13 @@ class TestPhotoService:
 
         user_id = await _create_user(db_session)
         m_svc = MeasurementService(db_session)
-        m = await m_svc.create(user_id, MeasurementCreate(
-            measured_at=datetime.now(timezone.utc), weight_kg=80.0,
-        ))
+        m = await m_svc.create(
+            user_id,
+            MeasurementCreate(
+                measured_at=datetime.now(timezone.utc),
+                weight_kg=80.0,
+            ),
+        )
 
         p_svc = PhotoService(db_session)
         photo = await p_svc.upload(
@@ -290,6 +322,7 @@ class TestPhotoService:
     @pytest.mark.asyncio
     async def test_upload_rejects_oversized_file(self, db_session, tmp_path, monkeypatch):
         import src.modules.measurements.photo_service as ps
+
         monkeypatch.setattr(ps, "UPLOAD_ROOT", str(tmp_path))
 
         from src.modules.measurements.photo_service import PhotoService
@@ -299,15 +332,21 @@ class TestPhotoService:
 
         user_id = await _create_user(db_session)
         m_svc = MeasurementService(db_session)
-        m = await m_svc.create(user_id, MeasurementCreate(
-            measured_at=datetime.now(timezone.utc), weight_kg=80.0,
-        ))
+        m = await m_svc.create(
+            user_id,
+            MeasurementCreate(
+                measured_at=datetime.now(timezone.utc),
+                weight_kg=80.0,
+            ),
+        )
 
         p_svc = PhotoService(db_session)
         oversized = b"\xff\xd8\xff" + b"\x00" * (6 * 1024 * 1024)
         with pytest.raises(ValidationError, match="maximum size"):
             await p_svc.upload(
-                user_id=user_id, measurement_id=m.id, file_bytes=oversized,
+                user_id=user_id,
+                measurement_id=m.id,
+                file_bytes=oversized,
                 metadata=PhotoUpload(photo_type="front", taken_at=datetime.now(timezone.utc)),
                 content_type="image/jpeg",
             )
@@ -315,6 +354,7 @@ class TestPhotoService:
     @pytest.mark.asyncio
     async def test_upload_rejects_bad_content_type(self, db_session, tmp_path, monkeypatch):
         import src.modules.measurements.photo_service as ps
+
         monkeypatch.setattr(ps, "UPLOAD_ROOT", str(tmp_path))
 
         from src.modules.measurements.photo_service import PhotoService
@@ -324,14 +364,20 @@ class TestPhotoService:
 
         user_id = await _create_user(db_session)
         m_svc = MeasurementService(db_session)
-        m = await m_svc.create(user_id, MeasurementCreate(
-            measured_at=datetime.now(timezone.utc), weight_kg=80.0,
-        ))
+        m = await m_svc.create(
+            user_id,
+            MeasurementCreate(
+                measured_at=datetime.now(timezone.utc),
+                weight_kg=80.0,
+            ),
+        )
 
         p_svc = PhotoService(db_session)
         with pytest.raises(ValidationError, match="not allowed"):
             await p_svc.upload(
-                user_id=user_id, measurement_id=m.id, file_bytes=b"GIF89a" + b"\x00" * 100,
+                user_id=user_id,
+                measurement_id=m.id,
+                file_bytes=b"GIF89a" + b"\x00" * 100,
                 metadata=PhotoUpload(photo_type="front", taken_at=datetime.now(timezone.utc)),
                 content_type="image/gif",
             )
@@ -339,6 +385,7 @@ class TestPhotoService:
     @pytest.mark.asyncio
     async def test_upload_rejects_magic_byte_mismatch(self, db_session, tmp_path, monkeypatch):
         import src.modules.measurements.photo_service as ps
+
         monkeypatch.setattr(ps, "UPLOAD_ROOT", str(tmp_path))
 
         from src.modules.measurements.photo_service import PhotoService
@@ -348,15 +395,20 @@ class TestPhotoService:
 
         user_id = await _create_user(db_session)
         m_svc = MeasurementService(db_session)
-        m = await m_svc.create(user_id, MeasurementCreate(
-            measured_at=datetime.now(timezone.utc), weight_kg=80.0,
-        ))
+        m = await m_svc.create(
+            user_id,
+            MeasurementCreate(
+                measured_at=datetime.now(timezone.utc),
+                weight_kg=80.0,
+            ),
+        )
 
         p_svc = PhotoService(db_session)
         # Claims JPEG but has PNG magic bytes
         with pytest.raises(ValidationError, match="does not match"):
             await p_svc.upload(
-                user_id=user_id, measurement_id=m.id,
+                user_id=user_id,
+                measurement_id=m.id,
                 file_bytes=b"\x89PNG\r\n\x1a\n" + b"\x00" * 100,
                 metadata=PhotoUpload(photo_type="front", taken_at=datetime.now(timezone.utc)),
                 content_type="image/jpeg",
@@ -365,6 +417,7 @@ class TestPhotoService:
     @pytest.mark.asyncio
     async def test_upload_png_accepted(self, db_session, tmp_path, monkeypatch):
         import src.modules.measurements.photo_service as ps
+
         monkeypatch.setattr(ps, "UPLOAD_ROOT", str(tmp_path))
 
         from src.modules.measurements.photo_service import PhotoService
@@ -373,13 +426,18 @@ class TestPhotoService:
 
         user_id = await _create_user(db_session)
         m_svc = MeasurementService(db_session)
-        m = await m_svc.create(user_id, MeasurementCreate(
-            measured_at=datetime.now(timezone.utc), weight_kg=80.0,
-        ))
+        m = await m_svc.create(
+            user_id,
+            MeasurementCreate(
+                measured_at=datetime.now(timezone.utc),
+                weight_kg=80.0,
+            ),
+        )
 
         p_svc = PhotoService(db_session)
         photo = await p_svc.upload(
-            user_id=user_id, measurement_id=m.id,
+            user_id=user_id,
+            measurement_id=m.id,
             file_bytes=b"\x89PNG\r\n\x1a\n" + b"\x00" * 100,
             metadata=PhotoUpload(photo_type="front", taken_at=datetime.now(timezone.utc)),
             content_type="image/png",
@@ -540,6 +598,7 @@ class TestMeasurementEndpoints:
 class TestSchemaValidation:
     def test_measurement_create_valid(self):
         from src.modules.measurements.schemas import MeasurementCreate
+
         m = MeasurementCreate(
             measured_at=datetime.now(timezone.utc),
             weight_kg=80.0,
@@ -550,37 +609,44 @@ class TestSchemaValidation:
 
     def test_measurement_create_rejects_negative_weight(self):
         from src.modules.measurements.schemas import MeasurementCreate
+
         with pytest.raises(Exception):
             MeasurementCreate(measured_at=datetime.now(timezone.utc), weight_kg=-1)
 
     def test_measurement_create_rejects_bf_over_100(self):
         from src.modules.measurements.schemas import MeasurementCreate
+
         with pytest.raises(Exception):
             MeasurementCreate(measured_at=datetime.now(timezone.utc), body_fat_pct=101)
 
     def test_measurement_create_rejects_negative_cm(self):
         from src.modules.measurements.schemas import MeasurementCreate
+
         with pytest.raises(Exception):
             MeasurementCreate(measured_at=datetime.now(timezone.utc), waist_cm=-5)
 
     def test_photo_upload_valid_types(self):
         from src.modules.measurements.schemas import PhotoUpload
+
         for t in ("front", "side", "back", "other"):
             p = PhotoUpload(photo_type=t, taken_at=datetime.now(timezone.utc))
             assert p.photo_type == t
 
     def test_photo_upload_invalid_type(self):
         from src.modules.measurements.schemas import PhotoUpload
+
         with pytest.raises(Exception):
             PhotoUpload(photo_type="top", taken_at=datetime.now(timezone.utc))
 
     def test_navy_bf_request_female_requires_hips(self):
         from src.modules.measurements.schemas import NavyBFRequest
+
         with pytest.raises(Exception):
             NavyBFRequest(sex="female", waist_cm=75, neck_cm=32, height_cm=165)
 
     def test_navy_bf_request_male_no_hips(self):
         from src.modules.measurements.schemas import NavyBFRequest
+
         r = NavyBFRequest(sex="male", waist_cm=85, neck_cm=37, height_cm=178)
         assert r.hips_cm is None
 

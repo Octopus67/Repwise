@@ -7,7 +7,7 @@ graceful handling without food_item_id, and last_logged_at updates.
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date
 
 import pytest
 from sqlalchemy import select
@@ -24,6 +24,7 @@ from src.shared.pagination import PaginationParams
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 async def _create_user(db: AsyncSession) -> User:
     user = User(
@@ -58,7 +59,9 @@ async def _create_food_item(db: AsyncSession, name: str = "Chicken Breast") -> F
     return item
 
 
-def _entry(food_item_id: uuid.UUID | None = None, food_name: str = "Chicken") -> NutritionEntryCreate:
+def _entry(
+    food_item_id: uuid.UUID | None = None, food_name: str = "Chicken"
+) -> NutritionEntryCreate:
     return NutritionEntryCreate(
         meal_name="Lunch",
         food_name=food_name,
@@ -77,7 +80,6 @@ def _entry(food_item_id: uuid.UUID | None = None, food_name: str = "Chicken") ->
 
 
 class TestFoodFrequencyTracking:
-
     @pytest.mark.asyncio
     async def test_food_item_id_included_in_post(self, db_session: AsyncSession):
         """Logging with food_item_id creates a UserFoodFrequency record."""

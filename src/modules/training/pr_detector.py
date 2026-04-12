@@ -89,12 +89,18 @@ class PRDetector:
 
         # Single query: load sessions from the last 365 days (prevents memory issues for power users)
         from datetime import datetime, timedelta, timezone
+
         cutoff = datetime.now(timezone.utc) - timedelta(days=365)
-        stmt = select(TrainingSession).where(
-            TrainingSession.user_id == user_id,
-            TrainingSession.deleted_at.is_(None),
-            TrainingSession.created_at >= cutoff,
-        ).order_by(TrainingSession.session_date.desc()).limit(200)
+        stmt = (
+            select(TrainingSession)
+            .where(
+                TrainingSession.user_id == user_id,
+                TrainingSession.deleted_at.is_(None),
+                TrainingSession.created_at >= cutoff,
+            )
+            .order_by(TrainingSession.session_date.desc())
+            .limit(200)
+        )
         result = await self.session.execute(stmt)
         sessions = result.scalars().all()
 
@@ -129,37 +135,45 @@ class PRDetector:
         instead of loading all sessions into memory.
         """
         from sqlalchemy import func
-        
+
         # For SQLite (dev), fall back to loading sessions
         from src.config.settings import settings
+
         if "sqlite" in settings.DATABASE_URL:
             return await self._get_historical_bests_sqlite(user_id, exercise_name)
-        
+
         # PostgreSQL: Use JSONB operators to extract sets directly
         # Query: SELECT reps, MAX(weight_kg) FROM training_sessions
         #        WHERE user_id = ? AND deleted_at IS NULL
         #        AND exercises @> '[{"exercise_name": "?"}]'
         #        GROUP BY reps
-        
+
         # Use @> containment operator with parameterized JSON to avoid SQL injection.
         # Python-side loop below does case-insensitive exact matching.
-        stmt = select(TrainingSession).where(
-            TrainingSession.user_id == user_id,
-            TrainingSession.deleted_at.is_(None),
-            TrainingSession.exercises.op("@>")(
-                func.cast(
-                    func.jsonb_build_array(func.jsonb_build_object("exercise_name", exercise_name)),
-                    type_=TrainingSession.exercises.type,
-                )
-            ),
-        ).order_by(TrainingSession.session_date.desc()).limit(100)
-        
+        stmt = (
+            select(TrainingSession)
+            .where(
+                TrainingSession.user_id == user_id,
+                TrainingSession.deleted_at.is_(None),
+                TrainingSession.exercises.op("@>")(
+                    func.cast(
+                        func.jsonb_build_array(
+                            func.jsonb_build_object("exercise_name", exercise_name)
+                        ),
+                        type_=TrainingSession.exercises.type,
+                    )
+                ),
+            )
+            .order_by(TrainingSession.session_date.desc())
+            .limit(100)
+        )
+
         result = await self.session.execute(stmt)
         sessions = result.scalars().all()
-        
+
         bests: dict[int, float] = {}
         lower_name = exercise_name.lower()
-        
+
         for session in sessions:
             for exercise_data in session.exercises or []:
                 if exercise_data.get("exercise_name", "").lower() == lower_name:
@@ -169,9 +183,9 @@ class PRDetector:
                         if reps is not None and weight is not None:
                             if reps not in bests or weight > bests[reps]:
                                 bests[reps] = weight
-        
+
         return bests
-    
+
     async def _get_historical_bests_sqlite(
         self, user_id: uuid.UUID, exercise_name: str
     ) -> dict[int, float]:

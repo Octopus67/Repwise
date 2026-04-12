@@ -29,7 +29,9 @@ _set_entry = st.builds(
     SetEntry,
     reps=st.integers(min_value=1, max_value=100),
     weight_kg=st.floats(min_value=0.0, max_value=500.0, allow_nan=False, allow_infinity=False),
-    rpe=st.one_of(st.none(), st.floats(min_value=0.0, max_value=10.0, allow_nan=False, allow_infinity=False)),
+    rpe=st.one_of(
+        st.none(), st.floats(min_value=0.0, max_value=10.0, allow_nan=False, allow_infinity=False)
+    ),
 )
 
 _exercise_entry = st.builds(
@@ -83,9 +85,7 @@ class TestProperty1EntityCreationRoundTrip:
     @pytest.mark.asyncio
     @_fixture_settings
     @given(data=_training_session_create)
-    async def test_create_and_retrieve_round_trip(
-        self, data: TrainingSessionCreate, db_session
-    ):
+    async def test_create_and_retrieve_round_trip(self, data: TrainingSessionCreate, db_session):
         """Create a random training session and verify retrieval returns equivalent data.
 
         **Validates: Requirements 6.1**
@@ -203,8 +203,7 @@ class TestProperty2DateRangeFiltering:
         # All returned sessions must be within the range
         for session in result.items:
             assert start_date <= session.session_date <= end_date, (
-                f"Session date {session.session_date} outside range "
-                f"[{start_date}, {end_date}]"
+                f"Session date {session.session_date} outside range [{start_date}, {end_date}]"
             )
 
         # Count how many input dates fall within the range
@@ -222,9 +221,17 @@ class TestProperty2DateRangeFiltering:
 from src.modules.training.exercises import EXERCISES, search_exercises
 
 _REQUIRED_FIELDS = {
-    "id", "name", "muscle_group", "secondary_muscles",
-    "equipment", "category", "image_url", "animation_url",
-    "description", "instructions", "tips",
+    "id",
+    "name",
+    "muscle_group",
+    "secondary_muscles",
+    "equipment",
+    "category",
+    "image_url",
+    "animation_url",
+    "description",
+    "instructions",
+    "tips",
 }
 
 
@@ -245,8 +252,7 @@ class TestPhase1ExerciseSchemaExtension:
         for ex in EXERCISES:
             missing = _REQUIRED_FIELDS - set(ex.keys())
             assert not missing, (
-                f"Exercise '{ex.get('name', ex.get('id', '???'))}' "
-                f"is missing fields: {missing}"
+                f"Exercise '{ex.get('name', ex.get('id', '???'))}' is missing fields: {missing}"
             )
 
     def test_search_bench_barbell_returns_only_barbell(self):
@@ -290,6 +296,7 @@ class TestPhase1ExerciseSchemaExtension:
                 f"expected a list"
             )
 
+
 import re
 
 # ---------------------------------------------------------------------------
@@ -297,9 +304,20 @@ import re
 # ---------------------------------------------------------------------------
 
 _ALL_MUSCLE_GROUPS = [
-    "chest", "lats", "erectors", "shoulders", "biceps", "triceps",
-    "quads", "hamstrings", "glutes", "calves", "abs",
-    "traps", "forearms", "adductors",
+    "chest",
+    "lats",
+    "erectors",
+    "shoulders",
+    "biceps",
+    "triceps",
+    "quads",
+    "hamstrings",
+    "glutes",
+    "calves",
+    "abs",
+    "traps",
+    "forearms",
+    "adductors",
 ]
 
 _KEBAB_CASE_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
@@ -319,9 +337,7 @@ class TestPhase2ExerciseDatabaseExpansion:
 
         **Validates: Requirements 16.3**
         """
-        assert len(EXERCISES) >= 400, (
-            f"Expected >= 400 exercises, got {len(EXERCISES)}"
-        )
+        assert len(EXERCISES) >= 400, f"Expected >= 400 exercises, got {len(EXERCISES)}"
 
     def test_all_13_muscle_groups_have_at_least_10_exercises(self):
         """Every muscle group must have at least 10 exercises.
@@ -329,11 +345,11 @@ class TestPhase2ExerciseDatabaseExpansion:
         **Validates: Requirements 16.3**
         """
         from collections import Counter
+
         counts = Counter(ex["muscle_group"] for ex in EXERCISES)
         for mg in _ALL_MUSCLE_GROUPS:
             assert counts.get(mg, 0) >= 10, (
-                f"Muscle group '{mg}' has only {counts.get(mg, 0)} exercises, "
-                f"expected >= 10"
+                f"Muscle group '{mg}' has only {counts.get(mg, 0)} exercises, expected >= 10"
             )
 
     def test_at_least_95_percent_have_image_url(self):
@@ -346,9 +362,7 @@ class TestPhase2ExerciseDatabaseExpansion:
         """
         with_image = sum(1 for ex in EXERCISES if ex.get("image_url") is not None)
         pct = with_image / len(EXERCISES) * 100
-        assert pct >= 85.0, (
-            f"Only {pct:.1f}% of exercises have image_url, expected >= 85%"
-        )
+        assert pct >= 85.0, f"Only {pct:.1f}% of exercises have image_url, expected >= 85%"
 
     def test_at_least_90_percent_have_animation_url(self):
         """Exercises with animation_url should have valid (non-fabricated) URLs.
@@ -359,9 +373,7 @@ class TestPhase2ExerciseDatabaseExpansion:
         """
         with_anim = sum(1 for ex in EXERCISES if ex.get("animation_url") is not None)
         pct = with_anim / len(EXERCISES) * 100
-        assert pct >= 85.0, (
-            f"Only {pct:.1f}% of exercises have animation_url, expected >= 85%"
-        )
+        assert pct >= 85.0, f"Only {pct:.1f}% of exercises have animation_url, expected >= 85%"
 
     def test_no_fabricated_image_urls(self):
         """All non-None image/animation URLs must point to valid Title_Case paths.
@@ -370,6 +382,7 @@ class TestPhase2ExerciseDatabaseExpansion:
         Valid paths start with uppercase (e.g., /exercises/Barbell_Bench_Press/).
         """
         import re
+
         bad = []
         for ex in EXERCISES:
             for field in ("image_url", "animation_url"):
@@ -393,9 +406,7 @@ class TestPhase2ExerciseDatabaseExpansion:
             if eid in seen:
                 duplicates.append(eid)
             seen.add(eid)
-        assert not duplicates, (
-            f"Found duplicate exercise IDs: {duplicates}"
-        )
+        assert not duplicates, f"Found duplicate exercise IDs: {duplicates}"
 
     def test_all_exercise_ids_are_valid_kebab_case(self):
         """All exercise IDs must be valid kebab-case strings
@@ -403,12 +414,8 @@ class TestPhase2ExerciseDatabaseExpansion:
 
         **Validates: Requirements 16.3**
         """
-        invalid = [
-            ex["id"] for ex in EXERCISES
-            if not _KEBAB_CASE_RE.match(ex["id"])
-        ]
+        invalid = [ex["id"] for ex in EXERCISES if not _KEBAB_CASE_RE.match(ex["id"])]
         assert not invalid, (
             f"Found {len(invalid)} exercise IDs that are not valid kebab-case: "
             f"{invalid[:10]}{'...' if len(invalid) > 10 else ''}"
         )
-

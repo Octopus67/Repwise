@@ -29,28 +29,42 @@ async def _onboard(client: LifecycleClient, p: PersonaProfile) -> None:
     await client.get_me()
     await client.update_profile(display_name=p.display_name)
     await client.log_metrics(
-        height_cm=p.height_cm, weight_kg=p.weight_kg,
-        body_fat_pct=p.body_fat_pct, activity_level=p.activity_level,
+        height_cm=p.height_cm,
+        weight_kg=p.weight_kg,
+        body_fat_pct=p.body_fat_pct,
+        activity_level=p.activity_level,
     )
     await client.set_goals(goal_type=p.goal_type, goal_rate_per_week=p.goal_rate_per_week)
     await client.log_bodyweight(p.weight_kg, SIM_START)
-    await client.create_snapshot({
-        "weight_kg": p.weight_kg, "height_cm": p.height_cm,
-        "age_years": p.age_years, "sex": p.sex,
-        "activity_level": p.activity_level, "goal_type": p.goal_type,
-        "goal_rate_per_week": p.goal_rate_per_week,
-        "bodyweight_history": [{"date": SIM_START.isoformat(), "weight_kg": p.weight_kg}],
-        "training_load_score": 0.0,
-    })
+    await client.create_snapshot(
+        {
+            "weight_kg": p.weight_kg,
+            "height_cm": p.height_cm,
+            "age_years": p.age_years,
+            "sex": p.sex,
+            "activity_level": p.activity_level,
+            "goal_type": p.goal_type,
+            "goal_rate_per_week": p.goal_rate_per_week,
+            "bodyweight_history": [{"date": SIM_START.isoformat(), "weight_kg": p.weight_kg}],
+            "training_load_score": 0.0,
+        }
+    )
 
 
 async def _simulate_day(
-    client: LifecycleClient, persona: PersonaProfile, day_num: int,
+    client: LifecycleClient,
+    persona: PersonaProfile,
+    day_num: int,
 ) -> dict:
     gen = DAILY_PLAN_GENERATORS[persona.name]
     plan = gen(day_num)
     sim_date = SIM_START + timedelta(days=day_num)
-    result = {"date": sim_date.isoformat(), "meals_logged": 0, "training_logged": False, "bw_logged": False}
+    result = {
+        "date": sim_date.isoformat(),
+        "meals_logged": 0,
+        "training_logged": False,
+        "bw_logged": False,
+    }
 
     for meal in plan.meals:
         await client.log_food(
@@ -60,7 +74,9 @@ async def _simulate_day(
             carbs_g=meal["carbs_g"],
             fat_g=meal["fat_g"],
             entry_date=sim_date,
-            micro_nutrients={"water_ml": plan.water_ml / max(len(plan.meals), 1)} if plan.water_ml > 0 else None,
+            micro_nutrients={"water_ml": plan.water_ml / max(len(plan.meals), 1)}
+            if plan.water_ml > 0
+            else None,
         )
         result["meals_logged"] += 1
 
@@ -84,7 +100,6 @@ async def _simulate_day(
 
 
 class TestFoodLoggingStreakAchievement:
-
     @pytest.mark.asyncio
     async def test_food_logging_triggers_streak_achievement(self, override_get_db):
         """Log food for 7 consecutive days → streak_7 achievement unlocked."""
@@ -96,9 +111,7 @@ class TestFoodLoggingStreakAchievement:
                 await _simulate_day(c, PERSONA_A, day)
 
             achievements = await c.get_achievements()
-            streak_7 = next(
-                (a for a in achievements if a["definition"]["id"] == "streak_7"), None
-            )
+            streak_7 = next((a for a in achievements if a["definition"]["id"] == "streak_7"), None)
             assert streak_7 is not None, "streak_7 achievement not found"
             assert streak_7["unlocked"] is True, "streak_7 should be unlocked after 7 days"
         finally:
@@ -111,7 +124,6 @@ class TestFoodLoggingStreakAchievement:
 
 
 class TestTrainingVolumeAchievement:
-
     @pytest.mark.asyncio
     async def test_training_volume_triggers_achievement(self, override_get_db):
         """Log enough training volume to trigger volume_10k achievement.
@@ -130,9 +142,7 @@ class TestTrainingVolumeAchievement:
                 await _simulate_day(c, PERSONA_B, day)
 
             achievements = await c.get_achievements()
-            vol_10k = next(
-                (a for a in achievements if a["definition"]["id"] == "volume_10k"), None
-            )
+            vol_10k = next((a for a in achievements if a["definition"]["id"] == "volume_10k"), None)
             assert vol_10k is not None, "volume_10k achievement not found"
             assert vol_10k["unlocked"] is True, (
                 "volume_10k should be unlocked after a week of heavy training"
@@ -147,7 +157,6 @@ class TestTrainingVolumeAchievement:
 
 
 class TestBodyweightHistory:
-
     @pytest.mark.asyncio
     async def test_bodyweight_update_reflected_in_history(self, override_get_db):
         """Log bodyweight, verify it appears in history."""
@@ -175,7 +184,6 @@ class TestBodyweightHistory:
 
 
 class TestDeleteEntryRecalculation:
-
     @pytest.mark.asyncio
     async def test_delete_entry_updates_daily_total(self, override_get_db):
         """Log 3 meals, delete one, verify daily total recalculates."""
@@ -186,9 +194,27 @@ class TestDeleteEntryRecalculation:
             day = SIM_START
             # Log 3 meals manually
             meals = [
-                {"meal_name": "Breakfast", "calories": 400, "protein_g": 30, "carbs_g": 40, "fat_g": 12},
-                {"meal_name": "Lunch", "calories": 600, "protein_g": 45, "carbs_g": 55, "fat_g": 20},
-                {"meal_name": "Dinner", "calories": 500, "protein_g": 35, "carbs_g": 45, "fat_g": 18},
+                {
+                    "meal_name": "Breakfast",
+                    "calories": 400,
+                    "protein_g": 30,
+                    "carbs_g": 40,
+                    "fat_g": 12,
+                },
+                {
+                    "meal_name": "Lunch",
+                    "calories": 600,
+                    "protein_g": 45,
+                    "carbs_g": 55,
+                    "fat_g": 20,
+                },
+                {
+                    "meal_name": "Dinner",
+                    "calories": 500,
+                    "protein_g": 35,
+                    "carbs_g": 45,
+                    "fat_g": 18,
+                },
             ]
             entry_ids = []
             for m in meals:
@@ -227,7 +253,6 @@ class TestDeleteEntryRecalculation:
 
 
 class TestInactiveUserReentry:
-
     @pytest.mark.asyncio
     async def test_inactive_user_clean_reentry(self, override_get_db):
         """Persona D goes inactive for 14 days, then logs again on day 16.
@@ -254,10 +279,12 @@ class TestInactiveUserReentry:
             )
             await c.log_training(
                 session_date=reentry_date,
-                exercises=[{
-                    "exercise_name": "bodyweight squat",
-                    "sets": [{"reps": 15, "weight_kg": 0, "set_type": "normal"}],
-                }],
+                exercises=[
+                    {
+                        "exercise_name": "bodyweight squat",
+                        "sets": [{"reps": 15, "weight_kg": 0, "set_type": "normal"}],
+                    }
+                ],
             )
 
             # Verify streak resets to 1 (only day 16 is active after long gap)
@@ -268,7 +295,8 @@ class TestInactiveUserReentry:
 
             # Verify data is clean — day 16 has entries
             entries = await c.get_nutrition_entries(
-                start_date=reentry_date, end_date=reentry_date,
+                start_date=reentry_date,
+                end_date=reentry_date,
             )
             assert entries["total_count"] == 1
 
@@ -289,7 +317,6 @@ class TestInactiveUserReentry:
 
 
 class TestTrainingPRDetection:
-
     @pytest.mark.asyncio
     async def test_training_pr_detection(self, override_get_db):
         """Log progressively heavier weights across sessions.
@@ -307,21 +334,25 @@ class TestTrainingPRDetection:
                 weight = 60 + session_num * 5  # 60, 65, 70, 75 kg
                 resp = await c.log_training(
                     session_date=session_date,
-                    exercises=[{
-                        "exercise_name": "barbell bench press",
-                        "sets": [
-                            {"reps": 5, "weight_kg": weight, "set_type": "normal"},
-                            {"reps": 5, "weight_kg": weight, "set_type": "normal"},
-                            {"reps": 5, "weight_kg": weight, "set_type": "normal"},
-                        ],
-                    }],
+                    exercises=[
+                        {
+                            "exercise_name": "barbell bench press",
+                            "sets": [
+                                {"reps": 5, "weight_kg": weight, "set_type": "normal"},
+                                {"reps": 5, "weight_kg": weight, "set_type": "normal"},
+                                {"reps": 5, "weight_kg": weight, "set_type": "normal"},
+                            ],
+                        }
+                    ],
                 )
                 # Check if any PR was detected in the response
                 if resp.get("personal_records"):
                     pr_detected = True
 
             # After progressive overload, at least one PR should be detected
-            assert pr_detected, "Expected at least one PR to be detected across progressive sessions"
+            assert pr_detected, (
+                "Expected at least one PR to be detected across progressive sessions"
+            )
 
         finally:
             await c.close()

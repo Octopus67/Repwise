@@ -17,17 +17,37 @@ from src.shared.errors import NotFoundError
 # Pure validation helpers (testable without DB)
 # ---------------------------------------------------------------------------
 
-VALID_MUSCLE_GROUPS = frozenset([
-    "chest", "lats", "erectors", "adductors",
-    "shoulders", "biceps", "triceps",
-    "quads", "hamstrings", "glutes", "calves", "abs",
-    "traps", "forearms",
-])
+VALID_MUSCLE_GROUPS = frozenset(
+    [
+        "chest",
+        "lats",
+        "erectors",
+        "adductors",
+        "shoulders",
+        "biceps",
+        "triceps",
+        "quads",
+        "hamstrings",
+        "glutes",
+        "calves",
+        "abs",
+        "traps",
+        "forearms",
+    ]
+)
 
-VALID_EQUIPMENT = frozenset([
-    "barbell", "dumbbell", "cable", "machine",
-    "bodyweight", "band", "kettlebell", "smith_machine",
-])
+VALID_EQUIPMENT = frozenset(
+    [
+        "barbell",
+        "dumbbell",
+        "cable",
+        "machine",
+        "bodyweight",
+        "band",
+        "kettlebell",
+        "smith_machine",
+    ]
+)
 
 VALID_CATEGORIES = frozenset(["compound", "isolation"])
 
@@ -101,16 +121,16 @@ class CustomExerciseService:
         # Check for duplicate name (case-insensitive)
         name_trimmed = name.strip()
         stmt = select(CustomExercise).where(
-            CustomExercise.user_id == user_id,
-            CustomExercise.name.ilike(name_trimmed)
+            CustomExercise.user_id == user_id, CustomExercise.name.ilike(name_trimmed)
         )
         stmt = CustomExercise.not_deleted(stmt)
         result = await self.session.execute(stmt)
         existing = result.scalar_one_or_none()
         if existing:
             from src.shared.errors import ConflictError
+
             raise ConflictError("Exercise with this name already exists")
-        
+
         exercise = CustomExercise(
             user_id=user_id,
             name=name_trimmed,
@@ -134,9 +154,7 @@ class CustomExerciseService:
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
-    async def list_user_custom_exercises_as_dicts(
-        self, user_id: uuid.UUID
-    ) -> list[dict]:
+    async def list_user_custom_exercises_as_dicts(self, user_id: uuid.UUID) -> list[dict]:
         """Return custom exercises formatted to match the system exercise dict shape."""
         exercises = await self.list_user_custom_exercises(user_id)
         return [format_custom_exercise_as_dict(ex) for ex in exercises]
@@ -172,17 +190,13 @@ class CustomExerciseService:
         await self.session.flush()
         return exercise
 
-    async def delete_custom_exercise(
-        self, user_id: uuid.UUID, exercise_id: uuid.UUID
-    ) -> None:
+    async def delete_custom_exercise(self, user_id: uuid.UUID, exercise_id: uuid.UUID) -> None:
         """Soft-delete a custom exercise."""
         exercise = await self._get_or_404(user_id, exercise_id)
         exercise.deleted_at = datetime.now(timezone.utc)
         await self.session.flush()
 
-    async def _get_or_404(
-        self, user_id: uuid.UUID, exercise_id: uuid.UUID
-    ) -> CustomExercise:
+    async def _get_or_404(self, user_id: uuid.UUID, exercise_id: uuid.UUID) -> CustomExercise:
         """Fetch a non-deleted custom exercise or raise NotFoundError."""
         stmt = select(CustomExercise).where(
             CustomExercise.id == exercise_id,

@@ -52,9 +52,7 @@ def generate_recommendations(ctx: ReportContext) -> list[str]:
         best_mg = max(ctx.wns_hypertrophy_units, key=ctx.wns_hypertrophy_units.get)  # type: ignore[arg-type]
         best_hu = ctx.wns_hypertrophy_units[best_mg]
         neglected = [
-            mg for mg in MEV_SETS
-            if ctx.wns_hypertrophy_units.get(mg, 0) == 0
-            and MEV_SETS[mg] >= 6
+            mg for mg in MEV_SETS if ctx.wns_hypertrophy_units.get(mg, 0) == 0 and MEV_SETS[mg] >= 6
         ]
         if neglected:
             mg = neglected[0]

@@ -5,7 +5,7 @@ import uuid
 import pytest
 
 from src.modules.auth.models import User
-from src.modules.social.models import FeedEvent, Follow
+from src.modules.social.models import FeedEvent
 from src.modules.social.service import SocialService
 from src.modules.training.models import WorkoutTemplate
 from src.shared.errors import ConflictError, NotFoundError
@@ -26,6 +26,7 @@ async def _feed_event(session, user_id) -> FeedEvent:
 
 
 # --- Follow / Unfollow ---
+
 
 @pytest.mark.asyncio
 async def test_follow_creates_relationship(db_session):
@@ -65,6 +66,7 @@ async def test_duplicate_follow_raises(db_session):
 
 # --- Feed ---
 
+
 @pytest.mark.asyncio
 async def test_feed_returns_followed_users_events(db_session):
     a, b, c = await _user(db_session), await _user(db_session), await _user(db_session)
@@ -78,6 +80,7 @@ async def test_feed_returns_followed_users_events(db_session):
 
 
 # --- Reactions ---
+
 
 @pytest.mark.asyncio
 async def test_add_and_remove_reaction(db_session):
@@ -102,6 +105,7 @@ async def test_reaction_upsert(db_session):
 
 
 # --- Share code ---
+
 
 @pytest.mark.asyncio
 async def test_share_code_generated(db_session):

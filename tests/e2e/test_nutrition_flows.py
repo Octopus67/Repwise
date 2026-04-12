@@ -146,27 +146,45 @@ async def test_log_without_auth(client: AsyncClient, override_get_db):
 @pytest.mark.asyncio
 async def test_create_custom_meal_and_prefill(client: AsyncClient, override_get_db):
     c = await setup_user(client)
-    meal_resp = await c.post(f"{MEALS_URL}/custom", json={
-        "name": "Post-Workout Shake", "calories": 500,
-        "protein_g": 50, "carbs_g": 40, "fat_g": 10,
-    })
+    meal_resp = await c.post(
+        f"{MEALS_URL}/custom",
+        json={
+            "name": "Post-Workout Shake",
+            "calories": 500,
+            "protein_g": 50,
+            "carbs_g": 40,
+            "fat_g": 10,
+        },
+    )
     assert meal_resp.status_code == 201
     meal_id = meal_resp.json()["id"]
     prefill = await c.get(f"{MEALS_URL}/custom/{meal_id}/prefill")
     assert prefill.status_code == 200
-    entry = await _create_entry(c, source_meal_id=meal_id, meal_name=prefill.json()["meal_name"],
-                                calories=prefill.json()["calories"], protein_g=prefill.json()["protein_g"],
-                                carbs_g=prefill.json()["carbs_g"], fat_g=prefill.json()["fat_g"])
+    entry = await _create_entry(
+        c,
+        source_meal_id=meal_id,
+        meal_name=prefill.json()["meal_name"],
+        calories=prefill.json()["calories"],
+        protein_g=prefill.json()["protein_g"],
+        carbs_g=prefill.json()["carbs_g"],
+        fat_g=prefill.json()["fat_g"],
+    )
     assert entry["source_meal_id"] == meal_id
 
 
 @pytest.mark.asyncio
 async def test_favorite_meal_appears_in_list(client: AsyncClient, override_get_db):
     c = await setup_user(client)
-    fav_resp = await c.post(f"{MEALS_URL}/favorites", json={
-        "name": "Fav Oats", "calories": 400,
-        "protein_g": 30, "carbs_g": 50, "fat_g": 8,
-    })
+    fav_resp = await c.post(
+        f"{MEALS_URL}/favorites",
+        json={
+            "name": "Fav Oats",
+            "calories": 400,
+            "protein_g": 30,
+            "carbs_g": 50,
+            "fat_g": 8,
+        },
+    )
     assert fav_resp.status_code == 201
     listing = await c.get(f"{MEALS_URL}/favorites")
     assert any(f["name"] == "Fav Oats" for f in listing.json()["items"])

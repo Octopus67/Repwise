@@ -40,9 +40,7 @@ MICRO_KEYS = [
 # Strategies
 # ---------------------------------------------------------------------------
 
-_micro_values = st.floats(
-    min_value=0.01, max_value=5000.0, allow_nan=False, allow_infinity=False
-)
+_micro_values = st.floats(min_value=0.01, max_value=5000.0, allow_nan=False, allow_infinity=False)
 
 _micro_nutrients_dict = st.dictionaries(
     keys=st.sampled_from(MICRO_KEYS),
@@ -61,9 +59,7 @@ _meal_names = st.text(
     max_size=100,
 ).filter(lambda s: s.strip() != "")
 
-_positive_floats = st.floats(
-    min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False
-)
+_positive_floats = st.floats(min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False)
 
 
 # ---------------------------------------------------------------------------

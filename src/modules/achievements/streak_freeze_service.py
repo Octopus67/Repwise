@@ -17,9 +17,13 @@ FREEZES_PER_MONTH = 2
 
 async def get_available_freezes(session: AsyncSession, user_id: uuid.UUID, month_str: str) -> int:
     """Return remaining freezes for the given YYYY-MM month."""
-    stmt = select(func.count()).select_from(StreakFreeze).where(
-        StreakFreeze.user_id == user_id,
-        StreakFreeze.month == month_str,
+    stmt = (
+        select(func.count())
+        .select_from(StreakFreeze)
+        .where(
+            StreakFreeze.user_id == user_id,
+            StreakFreeze.month == month_str,
+        )
     )
     used = (await session.execute(stmt)).scalar_one()
     return max(0, FREEZES_PER_MONTH - used)

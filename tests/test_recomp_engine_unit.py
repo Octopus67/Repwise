@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import List, Optional
+from typing import Optional
 
 import math
 import pytest
@@ -12,7 +12,6 @@ from src.modules.recomp.engine import (
     MIN_CALORIES,
     MIN_CARBS_G,
     MIN_FAT_G,
-    CARB_SHIFT_RATIO,
     MeasurementPoint,
     RecompCheckinInput,
     RecompDailyInput,
@@ -30,6 +29,7 @@ from src.modules.recomp.engine import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_points(values: list[float], start: Optional[date] = None) -> list[MeasurementPoint]:
     """Build measurement points from a list of values, one per day."""
@@ -75,6 +75,7 @@ def _make_metrics_output(
 # compute_trend
 # ===========================================================================
 
+
 class TestComputeTrend:
     def test_returns_none_for_empty_list(self):
         assert compute_trend([]) is None
@@ -116,17 +117,17 @@ class TestComputeTrend:
 
     def test_nan_values_filtered(self):
         """NaN values should be filtered out."""
-        pts = _make_points([80.0, float('nan'), 81.0, float('nan'), 82.0])
+        pts = _make_points([80.0, float("nan"), 81.0, float("nan"), 82.0])
         result = compute_trend(pts)
         assert result is not None
         assert result.data_points == 3  # only finite values counted
 
     def test_all_nan_returns_none(self):
-        pts = [MeasurementPoint(date=date(2024, 1, i + 1), value=float('nan')) for i in range(5)]
+        pts = [MeasurementPoint(date=date(2024, 1, i + 1), value=float("nan")) for i in range(5)]
         assert compute_trend(pts) is None
 
     def test_inf_values_filtered(self):
-        pts = _make_points([80.0, float('inf'), 81.0])
+        pts = _make_points([80.0, float("inf"), 81.0])
         result = compute_trend(pts)
         assert result is not None
         assert result.data_points == 2
@@ -149,6 +150,7 @@ class TestComputeTrend:
 # _filter_lookback
 # ===========================================================================
 
+
 class TestFilterLookback:
     def test_empty_list(self):
         assert _filter_lookback([], 28) == []
@@ -170,6 +172,7 @@ class TestFilterLookback:
 # ===========================================================================
 # compute_recomp_score
 # ===========================================================================
+
 
 class TestComputeRecompScore:
     def test_empty_inputs_insufficient_data(self):
@@ -261,8 +264,13 @@ class TestComputeRecompScore:
         """Points outside lookback window should be excluded."""
         old_start = date(2024, 1, 1)
         recent_start = date(2024, 3, 1)
-        old_pts = [MeasurementPoint(date=old_start + timedelta(days=i), value=100.0 - i) for i in range(5)]
-        recent_pts = [MeasurementPoint(date=recent_start + timedelta(days=i), value=90.0 + i * 0.1) for i in range(5)]
+        old_pts = [
+            MeasurementPoint(date=old_start + timedelta(days=i), value=100.0 - i) for i in range(5)
+        ]
+        recent_pts = [
+            MeasurementPoint(date=recent_start + timedelta(days=i), value=90.0 + i * 0.1)
+            for i in range(5)
+        ]
         all_pts = old_pts + recent_pts
 
         inp = RecompMetricsInput(
@@ -281,6 +289,7 @@ class TestComputeRecompScore:
 # ===========================================================================
 # compute_recomp_daily_targets
 # ===========================================================================
+
 
 class TestComputeRecompDailyTargets:
     def test_training_day_surplus(self):
@@ -367,6 +376,7 @@ class TestComputeRecompDailyTargets:
 # ===========================================================================
 # compute_recomp_checkin
 # ===========================================================================
+
 
 class TestComputeRecompCheckin:
     def test_insufficient_data_recommendation(self):
@@ -457,6 +467,7 @@ class TestComputeRecompCheckin:
 # ===========================================================================
 # Edge cases
 # ===========================================================================
+
 
 class TestEdgeCases:
     def test_zero_body_fat_indicator(self):

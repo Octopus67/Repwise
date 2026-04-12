@@ -4171,9 +4171,9 @@ COMMON_FOOD_ITEMS: list[dict] = [
             "vitamin_a_mcg": 74.0,
             "iron_mg": 2.3,
             "_serving_options": [
-                {"label": "1 slice (14\" pizza)", "grams": 107.0, "is_default": True},
+                {"label": '1 slice (14" pizza)', "grams": 107.0, "is_default": True},
                 {"label": "2 slices", "grams": 214.0},
-                {"label": "1 slice (12\" pizza)", "grams": 85.0},
+                {"label": '1 slice (12" pizza)', "grams": 85.0},
             ],
         },
     },
@@ -4267,9 +4267,9 @@ COMMON_FOOD_ITEMS: list[dict] = [
             "sodium_mg": 388.0,
             "folate_mcg": 22.0,
             "_serving_options": [
-                {"label": "1 medium (6\" dia)", "grams": 77.0, "is_default": True},
+                {"label": '1 medium (6" dia)', "grams": 77.0, "is_default": True},
                 {"label": "2 pancakes", "grams": 154.0},
-                {"label": "1 small (4\" dia)", "grams": 38.0},
+                {"label": '1 small (4" dia)', "grams": 38.0},
             ],
         },
     },

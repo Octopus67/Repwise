@@ -54,7 +54,7 @@ class AdaptiveService:
     ) -> SnapshotResponse:
         """Compute a new adaptive snapshot and persist it (Requirements 7.1, 7.2)."""
         # Check for recent body fat measurement (< 30 days)
-        body_fat_pct = getattr(data, 'body_fat_pct', None)
+        body_fat_pct = getattr(data, "body_fat_pct", None)
         if not body_fat_pct:
             body_fat_pct = await self._get_recent_body_fat(user_id)
 
@@ -67,12 +67,10 @@ class AdaptiveService:
             activity_level=data.activity_level,
             goal_type=data.goal_type,
             goal_rate_per_week=data.goal_rate_per_week,
-            bodyweight_history=[
-                (entry.date, entry.weight_kg) for entry in data.bodyweight_history
-            ],
+            bodyweight_history=[(entry.date, entry.weight_kg) for entry in data.bodyweight_history],
             training_load_score=data.training_load_score,
-            diet_style=getattr(data, 'diet_style', None),
-            protein_per_kg_override=getattr(data, 'protein_per_kg_override', None),
+            diet_style=getattr(data, "diet_style", None),
+            protein_per_kg_override=getattr(data, "protein_per_kg_override", None),
             body_fat_pct=body_fat_pct,
         )
 
@@ -114,9 +112,7 @@ class AdaptiveService:
 
         return SnapshotResponse.model_validate(snapshot)
 
-    async def get_latest_snapshot(
-        self, user_id: uuid.UUID
-    ) -> SnapshotResponse | None:
+    async def get_latest_snapshot(self, user_id: uuid.UUID) -> SnapshotResponse | None:
         """Return the most recent adaptive snapshot for a user, or None."""
         stmt = (
             select(AdaptiveSnapshot)
@@ -199,9 +195,7 @@ class AdaptiveService:
         if current_ema is not None:
             ema_diff = abs(current_ema - last_snapshot.ema_current)
             if ema_diff > 1.0:
-                reasons.append(
-                    f"EMA changed by {ema_diff:.2f} kg (>1.0)"
-                )
+                reasons.append(f"EMA changed by {ema_diff:.2f} kg (>1.0)")
 
         # Trigger 2: significant training load change
         if current_training_load is not None:
@@ -209,9 +203,7 @@ class AdaptiveService:
             prev_load = input_params.get("training_load_score", 0)
             load_diff = abs(current_training_load - prev_load)
             if load_diff > 20:
-                reasons.append(
-                    f"Training load changed by {load_diff:.1f} (>20)"
-                )
+                reasons.append(f"Training load changed by {load_diff:.1f} (>20)")
 
         # Trigger 4: goal change
         if current_goal_type is not None or current_goal_rate is not None:

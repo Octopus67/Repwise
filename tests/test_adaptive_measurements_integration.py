@@ -20,6 +20,7 @@ from src.shared.types import ActivityLevel, GoalType
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 async def _create_user(session) -> uuid.UUID:
     from src.modules.auth.models import User
 
@@ -85,7 +86,9 @@ class TestAdaptiveServiceBodyFatIntegration:
         mifflin_tdee = 1767.5 * 1.55
 
         # Snapshot calories should be closer to Katch-McArdle TDEE
-        assert abs(snapshot.target_calories - katch_tdee) < abs(snapshot.target_calories - mifflin_tdee)
+        assert abs(snapshot.target_calories - katch_tdee) < abs(
+            snapshot.target_calories - mifflin_tdee
+        )
 
     @pytest.mark.asyncio
     async def test_snapshot_ignores_old_body_fat(self, db_session):
@@ -118,7 +121,6 @@ class TestAdaptiveServiceBodyFatIntegration:
     async def test_snapshot_explicit_body_fat_takes_precedence(self, db_session):
         """If SnapshotRequest already has body_fat_pct, don't override from measurements."""
         from src.modules.adaptive.service import AdaptiveService
-        from src.modules.adaptive.schemas import SnapshotRequest, BodyweightEntry
 
         user_id = await _create_user(db_session)
         # Measurement says 30%, but request says 15%
@@ -128,20 +130,30 @@ class TestAdaptiveServiceBodyFatIntegration:
 
         # We need to add body_fat_pct to the request — use engine directly to verify
         inp_15 = AdaptiveInput(
-            weight_kg=80.0, height_cm=178.0, age_years=30, sex="male",
-            activity_level=ActivityLevel.MODERATE, goal_type=GoalType.MAINTAINING,
+            weight_kg=80.0,
+            height_cm=178.0,
+            age_years=30,
+            sex="male",
+            activity_level=ActivityLevel.MODERATE,
+            goal_type=GoalType.MAINTAINING,
             goal_rate_per_week=0.0,
             bodyweight_history=[(date.today(), 80.0)],
-            training_load_score=50.0, body_fat_pct=15.0,
+            training_load_score=50.0,
+            body_fat_pct=15.0,
         )
         out_15 = compute_snapshot(inp_15)
 
         inp_30 = AdaptiveInput(
-            weight_kg=80.0, height_cm=178.0, age_years=30, sex="male",
-            activity_level=ActivityLevel.MODERATE, goal_type=GoalType.MAINTAINING,
+            weight_kg=80.0,
+            height_cm=178.0,
+            age_years=30,
+            sex="male",
+            activity_level=ActivityLevel.MODERATE,
+            goal_type=GoalType.MAINTAINING,
             goal_rate_per_week=0.0,
             bodyweight_history=[(date.today(), 80.0)],
-            training_load_score=50.0, body_fat_pct=30.0,
+            training_load_score=50.0,
+            body_fat_pct=30.0,
         )
         out_30 = compute_snapshot(inp_30)
 
@@ -232,8 +244,12 @@ class TestEngineBodyFat:
     def test_katch_mcardle_produces_different_bmr(self):
         """With body_fat_pct, engine uses Katch-McArdle formula."""
         base = dict(
-            weight_kg=80.0, height_cm=178.0, age_years=30, sex="male",
-            activity_level=ActivityLevel.MODERATE, goal_type=GoalType.MAINTAINING,
+            weight_kg=80.0,
+            height_cm=178.0,
+            age_years=30,
+            sex="male",
+            activity_level=ActivityLevel.MODERATE,
+            goal_type=GoalType.MAINTAINING,
             goal_rate_per_week=0.0,
             bodyweight_history=[(date.today(), 80.0)],
             training_load_score=50.0,
@@ -246,11 +262,16 @@ class TestEngineBodyFat:
     def test_katch_mcardle_formula_values(self):
         """Verify Katch-McArdle: BMR = 370 + 21.6 * lean_mass."""
         inp = AdaptiveInput(
-            weight_kg=80.0, height_cm=178.0, age_years=30, sex="male",
-            activity_level=ActivityLevel.MODERATE, goal_type=GoalType.MAINTAINING,
+            weight_kg=80.0,
+            height_cm=178.0,
+            age_years=30,
+            sex="male",
+            activity_level=ActivityLevel.MODERATE,
+            goal_type=GoalType.MAINTAINING,
             goal_rate_per_week=0.0,
             bodyweight_history=[(date.today(), 80.0)],
-            training_load_score=50.0, body_fat_pct=20.0,
+            training_load_score=50.0,
+            body_fat_pct=20.0,
         )
         bmr = _compute_bmr(inp)
         lean_mass = 80.0 * 0.80

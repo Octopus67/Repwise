@@ -15,13 +15,13 @@ from __future__ import annotations
 
 import math
 
-import pytest
 from hypothesis import given, settings as h_settings, strategies as st
 
 
 # ---------------------------------------------------------------------------
 # Pure function under test (mirrors the TypeScript scaleMacros export)
 # ---------------------------------------------------------------------------
+
 
 def scale_macros(
     base_calories: float,
@@ -52,13 +52,17 @@ _macro_value = st.floats(min_value=0.0, max_value=5000.0, allow_nan=False, allow
 
 # Positive multiplier within the app's allowed range (0, 20]
 _positive_multiplier = st.floats(
-    min_value=0.01, max_value=20.0, allow_nan=False, allow_infinity=False,
+    min_value=0.01,
+    max_value=20.0,
+    allow_nan=False,
+    allow_infinity=False,
 )
 
 
 # ---------------------------------------------------------------------------
 # Property 5: Serving multiplier scales macros linearly
 # ---------------------------------------------------------------------------
+
 
 class TestServingMultiplierScaling:
     """Feature: tier1-retention-features, Property 5: Serving multiplier scales macros linearly"""
@@ -139,7 +143,9 @@ class TestServingMultiplierScaling:
         Associativity: scaling by m1 then m2 should equal scaling by m1*m2.
         """
         step1 = scale_macros(base_cal, base_pro, base_carb, base_fat, m1)
-        step2 = scale_macros(step1["calories"], step1["protein_g"], step1["carbs_g"], step1["fat_g"], m2)
+        step2 = scale_macros(
+            step1["calories"], step1["protein_g"], step1["carbs_g"], step1["fat_g"], m2
+        )
         direct = scale_macros(base_cal, base_pro, base_carb, base_fat, m1 * m2)
 
         for key in ("calories", "protein_g", "carbs_g", "fat_g"):

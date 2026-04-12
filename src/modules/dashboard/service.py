@@ -21,17 +21,15 @@ class DashboardService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
-    async def get_summary(
-        self, user_id: uuid.UUID, target_date: str
-    ) -> DashboardSummaryResponse:
+    async def get_summary(self, user_id: uuid.UUID, target_date: str) -> DashboardSummaryResponse:
         """Fetch all dashboard data in parallel."""
         from asyncio import gather
-        
+
         nutrition_svc = NutritionService(self.db)
         adaptive_svc = AdaptiveService(self.db)
         training_svc = TrainingService(self.db)
         user_svc = UserService(self.db)
-        
+
         # Parallel fetch
         (
             nutrition_entries,
@@ -40,18 +38,20 @@ class DashboardService:
             bodyweight_history,
             streak_count,
         ) = await gather(
-            nutrition_svc.get_entries(user_id, DateRangeFilter(start_date=target_date, end_date=target_date)),
+            nutrition_svc.get_entries(
+                user_id, DateRangeFilter(start_date=target_date, end_date=target_date)
+            ),
             adaptive_svc.get_latest_snapshot(user_id),
             training_svc.get_sessions_for_date(user_id, target_date),
             user_svc.get_bodyweight_history(user_id, PaginationParams(limit=30)),
             training_svc.get_streak_count(user_id),
             return_exceptions=True,
         )
-        
+
         # Handle exceptions from gather
         if isinstance(nutrition_entries, Exception):
             nutrition_entries = []
-        elif hasattr(nutrition_entries, 'items'):
+        elif hasattr(nutrition_entries, "items"):
             nutrition_entries = nutrition_entries.items
         if isinstance(adaptive_snapshot, Exception):
             adaptive_snapshot = None
@@ -59,17 +59,17 @@ class DashboardService:
             training_sessions = []
         if isinstance(bodyweight_history, Exception):
             bodyweight_history = []
-        elif hasattr(bodyweight_history, 'items'):
+        elif hasattr(bodyweight_history, "items"):
             bodyweight_history = bodyweight_history.items
         if isinstance(streak_count, Exception):
             streak_count = 0
-        
+
         # Calculate KPIs from nutrition entries
         total_calories = sum(e.calories for e in nutrition_entries) if nutrition_entries else 0
         total_protein = sum(e.protein_g for e in nutrition_entries) if nutrition_entries else 0
         total_carbs = sum(e.carbs_g for e in nutrition_entries) if nutrition_entries else 0
         total_fat = sum(e.fat_g for e in nutrition_entries) if nutrition_entries else 0
-        
+
         return DashboardSummaryResponse(
             date=target_date,
             nutrition={

@@ -45,13 +45,15 @@ async def get_shared_workout(
     if ref:
         try:
             referrer_id = uuid.UUID(ref)
-            visitor_ip = request.client.host if request and request.client else None  # Audit fix 10.2
+            visitor_ip = (
+                request.client.host if request and request.client else None
+            )  # Audit fix 10.2
             user_agent = request.headers.get("user-agent") if request else None
             await service.track_referral(referrer_id, visitor_ip, user_agent)
         except ValueError:
             logger.warning("Invalid referral UUID: %s", ref)
 
-    safe_display_name = html_mod.escape(workout['user_display_name'])
+    safe_display_name = html_mod.escape(workout["user_display_name"])
     title = f"{safe_display_name}'s Workout — Repwise"
     description = (
         f"{workout['exercise_count']} exercises · "
@@ -68,8 +70,7 @@ async def get_shared_workout(
     og_image = "https://repwise.app/og-workout.png"
 
     exercises_html = "".join(
-        f"<li>{html_mod.escape(ex['name'])} — {ex['sets']} sets</li>"
-        for ex in workout["exercises"]
+        f"<li>{html_mod.escape(ex['name'])} — {ex['sets']} sets</li>" for ex in workout["exercises"]
     )
 
     html = f"""<!DOCTYPE html>
@@ -102,11 +103,11 @@ async def get_shared_workout(
 </head>
 <body>
     <h1>🏋️ {safe_display_name}'s Workout</h1>
-    <p style="color:#94A3B8">{workout['session_date']}</p>
+    <p style="color:#94A3B8">{workout["session_date"]}</p>
     <div class="stats">
-        <div class="stat"><div class="stat-value">{workout['exercise_count']}</div><div class="stat-label">Exercises</div></div>
-        <div class="stat"><div class="stat-value">{workout['total_sets']}</div><div class="stat-label">Sets</div></div>
-        <div class="stat"><div class="stat-value">{workout['total_volume_kg']:,}kg</div><div class="stat-label">Volume</div></div>
+        <div class="stat"><div class="stat-value">{workout["exercise_count"]}</div><div class="stat-label">Exercises</div></div>
+        <div class="stat"><div class="stat-value">{workout["total_sets"]}</div><div class="stat-label">Sets</div></div>
+        <div class="stat"><div class="stat-value">{workout["total_volume_kg"]:,}kg</div><div class="stat-label">Volume</div></div>
     </div>
     <ul>{exercises_html}</ul>
     <a class="cta" href="https://repwise.app">Try Repwise Free</a>

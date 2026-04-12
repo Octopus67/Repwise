@@ -7,13 +7,12 @@ Operates at the service level using the db_session fixture.
 from __future__ import annotations
 
 import uuid
-from datetime import date, timedelta
+from datetime import date
 
 import pytest
 from hypothesis import HealthCheck, given, settings as h_settings, strategies as st
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.progress_photos.models import ProgressPhoto
 from src.modules.progress_photos.schemas import PhotoCreate
 from src.modules.progress_photos.service import ProgressPhotoService
 from src.modules.user.models import BodyweightLog
@@ -30,7 +29,10 @@ VALID_POSE_TYPES = ["front_relaxed", "front_double_bicep", "side", "back"]
 _pose_types = st.sampled_from(VALID_POSE_TYPES)
 
 _positive_weights = st.floats(
-    min_value=30.0, max_value=300.0, allow_nan=False, allow_infinity=False,
+    min_value=30.0,
+    max_value=300.0,
+    allow_nan=False,
+    allow_infinity=False,
 )
 
 _dates = st.dates(
@@ -58,6 +60,7 @@ _fixture_settings = h_settings(
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 async def _create_test_user(db: AsyncSession) -> User:
     """Create a minimal test user and return it."""
     user = User(
@@ -71,7 +74,10 @@ async def _create_test_user(db: AsyncSession) -> User:
 
 
 async def _create_bodyweight_log(
-    db: AsyncSession, user_id: uuid.UUID, weight_kg: float, recorded_date: date,
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    weight_kg: float,
+    recorded_date: date,
 ) -> BodyweightLog:
     """Create a bodyweight log entry."""
     log = BodyweightLog(
@@ -156,7 +162,10 @@ class TestProperty25ProgressPhotoMetadataTagging:
 
         # Create a bodyweight log entry
         await _create_bodyweight_log(
-            db_session, user.id, weight_kg, capture_date,
+            db_session,
+            user.id,
+            weight_kg,
+            capture_date,
         )
 
         service = ProgressPhotoService(db_session)
@@ -324,7 +333,9 @@ class TestProperty26ProgressPhotoChronologicalOrdering:
         # List with filter
         pagination = PaginationParams(page=1, limit=100)
         result = await service.list_photos(
-            user_id=user.id, pagination=pagination, pose_type=target_pose,
+            user_id=user.id,
+            pagination=pagination,
+            pose_type=target_pose,
         )
 
         # All returned items should have the target pose type

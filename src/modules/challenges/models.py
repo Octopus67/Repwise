@@ -17,7 +17,9 @@ class WeeklyChallenge(Base):
 
     __tablename__ = "weekly_challenges"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     challenge_type: Mapped[str] = mapped_column(String(50), nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str] = mapped_column(String(500), nullable=False)
@@ -31,5 +33,7 @@ class WeeklyChallenge(Base):
     __table_args__ = (
         Index("ix_weekly_challenges_user_id", "user_id"),
         Index("ix_weekly_challenges_user_week", "user_id", "week_start"),
-        UniqueConstraint("user_id", "week_start", "challenge_type", name="uq_challenge_user_week_type"),
+        UniqueConstraint(
+            "user_id", "week_start", "challenge_type", name="uq_challenge_user_week_type"
+        ),
     )

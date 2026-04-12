@@ -7,7 +7,6 @@ and edge cases for all 4 personas.
 from __future__ import annotations
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.lifecycle.api_client import LifecycleClient
 from tests.lifecycle.personas import (
@@ -23,6 +22,7 @@ from tests.lifecycle.personas import (
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 async def client(override_get_db) -> LifecycleClient:
@@ -65,21 +65,24 @@ async def _onboard_persona(client: LifecycleClient, p: PersonaProfile) -> dict:
 
     # 6. Log initial bodyweight
     from datetime import date
+
     bw = await client.log_bodyweight(p.weight_kg, date.today())
     assert abs(bw["weight_kg"] - p.weight_kg) < 0.01
 
     # 7. Create initial adaptive snapshot
-    snapshot = await client.create_snapshot({
-        "weight_kg": p.weight_kg,
-        "height_cm": p.height_cm,
-        "age_years": p.age_years,
-        "sex": p.sex,
-        "activity_level": p.activity_level,
-        "goal_type": p.goal_type,
-        "goal_rate_per_week": p.goal_rate_per_week,
-        "bodyweight_history": [{"date": date.today().isoformat(), "weight_kg": p.weight_kg}],
-        "training_load_score": 0.0,
-    })
+    snapshot = await client.create_snapshot(
+        {
+            "weight_kg": p.weight_kg,
+            "height_cm": p.height_cm,
+            "age_years": p.age_years,
+            "sex": p.sex,
+            "activity_level": p.activity_level,
+            "goal_type": p.goal_type,
+            "goal_rate_per_week": p.goal_rate_per_week,
+            "bodyweight_history": [{"date": date.today().isoformat(), "weight_kg": p.weight_kg}],
+            "training_load_score": 0.0,
+        }
+    )
     assert snapshot["target_calories"] > 0
     assert snapshot["target_protein_g"] > 0
 
@@ -255,10 +258,7 @@ class TestProfileIntegrity:
             await _onboard_persona(c, PERSONA_B)
             history = await c.get_bodyweight_history()
             assert history["total_count"] >= 1
-            assert any(
-                abs(item["weight_kg"] - 88.0) < 0.01
-                for item in history["items"]
-            )
+            assert any(abs(item["weight_kg"] - 88.0) < 0.01 for item in history["items"])
         finally:
             await c.close()
 

@@ -4,6 +4,7 @@ Revision ID: r5a1_unlocked_by_achievement
 Revises: f9a1_is_favorite
 Create Date: 2026-05-01 10:00:00.000000
 """
+
 from typing import Sequence, Union
 
 from alembic import op

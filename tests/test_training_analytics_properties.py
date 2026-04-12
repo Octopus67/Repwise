@@ -8,16 +8,11 @@ from __future__ import annotations
 
 import uuid
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import date
 
 import pytest
 from hypothesis import HealthCheck, given, settings as h_settings, strategies as st
 
-from src.modules.training.analytics_schemas import (
-    MuscleGroupFrequency,
-    StrengthProgressionPoint,
-    VolumeTrendPoint,
-)
 from src.modules.training.analytics_service import TrainingAnalyticsService, _iso_week_start
 from src.modules.training.exercise_mapping import (
     COMPOUND_EXERCISES,
@@ -63,6 +58,7 @@ _session_list_st = st.lists(
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 async def _seed_sessions(
     db_session, user_id: uuid.UUID, sessions: list[tuple[date, list[ExerciseEntry]]]

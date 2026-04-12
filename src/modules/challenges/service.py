@@ -47,13 +47,17 @@ async def generate_weekly_challenges(
     week_start, week_end = _current_week_range()
 
     existing = (
-        await session.execute(
-            select(WeeklyChallenge).where(
-                WeeklyChallenge.user_id == user_id,
-                WeeklyChallenge.week_start == week_start,
+        (
+            await session.execute(
+                select(WeeklyChallenge).where(
+                    WeeklyChallenge.user_id == user_id,
+                    WeeklyChallenge.week_start == week_start,
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     if existing:
         return list(existing)
@@ -107,6 +111,7 @@ async def update_progress(
     challenge = result.scalar_one_or_none()
     if challenge is None:
         from src.shared.errors import NotFoundError
+
         raise NotFoundError("Challenge not found")
 
     challenge.current_value = value

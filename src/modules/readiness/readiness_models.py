@@ -16,15 +16,15 @@ class RecoveryCheckin(Base):
 
     __tablename__ = "recovery_checkins"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True, nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     soreness: Mapped[int] = mapped_column(Integer, nullable=False)
     stress: Mapped[int] = mapped_column(Integer, nullable=False)
     sleep_quality: Mapped[int] = mapped_column(Integer, nullable=False)
     checkin_date: Mapped[date] = mapped_column(Date, nullable=False)
 
-    __table_args__ = (
-        UniqueConstraint("user_id", "checkin_date", name="uq_checkin_user_date"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "checkin_date", name="uq_checkin_user_date"),)
 
 
 class ReadinessScore(Base):
@@ -32,7 +32,9 @@ class ReadinessScore(Base):
 
     __tablename__ = "readiness_scores"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True, nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     score_date: Mapped[date] = mapped_column(Date, nullable=False)
     hrv_ms: Mapped[Optional[float]] = mapped_column(Float, nullable=True)

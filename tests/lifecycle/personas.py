@@ -6,14 +6,14 @@ body stats, and behavioral patterns over a 28-day simulation.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import date, timedelta
+from dataclasses import dataclass
 from typing import Optional
 
 
 @dataclass(frozen=True)
 class PersonaProfile:
     """Static profile data used during onboarding."""
+
     name: str
     email: str
     password: str
@@ -31,6 +31,7 @@ class PersonaProfile:
 @dataclass(frozen=True)
 class DailyPlan:
     """What a persona does on a given day."""
+
     meals: list[dict]  # list of {meal_name, calories, protein_g, carbs_g, fat_g}
     training: Optional[dict]  # None = rest day, else {exercises: [...]}
     water_ml: int  # total water for the day
@@ -120,6 +121,7 @@ ALL_PERSONAS = [PERSONA_A, PERSONA_B, PERSONA_C, PERSONA_D]
 # Meal templates per persona goal
 # ---------------------------------------------------------------------------
 
+
 def cutting_meals() -> list[dict]:
     return [
         {"meal_name": "Breakfast", "calories": 350, "protein_g": 30, "carbs_g": 35, "fat_g": 10},
@@ -150,11 +152,17 @@ def maintenance_meals() -> list[dict]:
 def light_cardio_session(day_num: int) -> dict:
     return {
         "exercises": [
-            {"exercise_name": "treadmill walk", "sets": [{"reps": 1, "weight_kg": 0, "set_type": "normal"}]},
-            {"exercise_name": "bodyweight squat", "sets": [
-                {"reps": 15, "weight_kg": 0, "set_type": "normal"},
-                {"reps": 15, "weight_kg": 0, "set_type": "normal"},
-            ]},
+            {
+                "exercise_name": "treadmill walk",
+                "sets": [{"reps": 1, "weight_kg": 0, "set_type": "normal"}],
+            },
+            {
+                "exercise_name": "bodyweight squat",
+                "sets": [
+                    {"reps": 15, "weight_kg": 0, "set_type": "normal"},
+                    {"reps": 15, "weight_kg": 0, "set_type": "normal"},
+                ],
+            },
         ]
     }
 
@@ -163,21 +171,30 @@ def heavy_resistance_session(day_num: int) -> dict:
     base_weight = 60 + (day_num // 7) * 2.5  # progressive overload
     return {
         "exercises": [
-            {"exercise_name": "barbell back squat", "sets": [
-                {"reps": 5, "weight_kg": base_weight + 40, "set_type": "normal"},
-                {"reps": 5, "weight_kg": base_weight + 40, "set_type": "normal"},
-                {"reps": 5, "weight_kg": base_weight + 40, "set_type": "normal"},
-            ]},
-            {"exercise_name": "barbell bench press", "sets": [
-                {"reps": 5, "weight_kg": base_weight, "set_type": "normal"},
-                {"reps": 5, "weight_kg": base_weight, "set_type": "normal"},
-                {"reps": 5, "weight_kg": base_weight, "set_type": "normal"},
-            ]},
-            {"exercise_name": "barbell row", "sets": [
-                {"reps": 8, "weight_kg": base_weight - 10, "set_type": "normal"},
-                {"reps": 8, "weight_kg": base_weight - 10, "set_type": "normal"},
-                {"reps": 8, "weight_kg": base_weight - 10, "set_type": "normal"},
-            ]},
+            {
+                "exercise_name": "barbell back squat",
+                "sets": [
+                    {"reps": 5, "weight_kg": base_weight + 40, "set_type": "normal"},
+                    {"reps": 5, "weight_kg": base_weight + 40, "set_type": "normal"},
+                    {"reps": 5, "weight_kg": base_weight + 40, "set_type": "normal"},
+                ],
+            },
+            {
+                "exercise_name": "barbell bench press",
+                "sets": [
+                    {"reps": 5, "weight_kg": base_weight, "set_type": "normal"},
+                    {"reps": 5, "weight_kg": base_weight, "set_type": "normal"},
+                    {"reps": 5, "weight_kg": base_weight, "set_type": "normal"},
+                ],
+            },
+            {
+                "exercise_name": "barbell row",
+                "sets": [
+                    {"reps": 8, "weight_kg": base_weight - 10, "set_type": "normal"},
+                    {"reps": 8, "weight_kg": base_weight - 10, "set_type": "normal"},
+                    {"reps": 8, "weight_kg": base_weight - 10, "set_type": "normal"},
+                ],
+            },
         ]
     }
 
@@ -185,14 +202,20 @@ def heavy_resistance_session(day_num: int) -> dict:
 def casual_session(day_num: int) -> dict:
     return {
         "exercises": [
-            {"exercise_name": "dumbbell bench press", "sets": [
-                {"reps": 10, "weight_kg": 20, "set_type": "normal"},
-                {"reps": 10, "weight_kg": 20, "set_type": "normal"},
-            ]},
-            {"exercise_name": "lat pulldown", "sets": [
-                {"reps": 12, "weight_kg": 40, "set_type": "normal"},
-                {"reps": 12, "weight_kg": 40, "set_type": "normal"},
-            ]},
+            {
+                "exercise_name": "dumbbell bench press",
+                "sets": [
+                    {"reps": 10, "weight_kg": 20, "set_type": "normal"},
+                    {"reps": 10, "weight_kg": 20, "set_type": "normal"},
+                ],
+            },
+            {
+                "exercise_name": "lat pulldown",
+                "sets": [
+                    {"reps": 12, "weight_kg": 40, "set_type": "normal"},
+                    {"reps": 12, "weight_kg": 40, "set_type": "normal"},
+                ],
+            },
         ]
     }
 

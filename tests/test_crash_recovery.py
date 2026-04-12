@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, UTC
 @pytest.fixture(autouse=True)
 def _clear_rate_limits():
     from src.middleware.rate_limiter import clear_all
+
     clear_all()
     yield
     clear_all()
@@ -51,6 +52,7 @@ def _make_workout_payload(start_time: str, end_time: str) -> dict:
 
 # ── 6.2.1 Crash recovery preserves state ────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_workout_crash_recovery_preserves_state(client, override_get_db):
     """A saved workout can be retrieved after save — simulates crash-then-resume
@@ -76,6 +78,7 @@ async def test_workout_crash_recovery_preserves_state(client, override_get_db):
 
 
 # ── 6.2.2 Crash recovery duration accuracy ──────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_crash_recovery_duration_accurate(client, override_get_db):
@@ -104,6 +107,7 @@ async def test_crash_recovery_duration_accurate(client, override_get_db):
 
 # ── 6.2.3 Finish workout resets state — no stale workout on resume ───────────
 
+
 @pytest.mark.asyncio
 async def test_finish_workout_resets_state(client, override_get_db):
     """After finishing a workout, starting a new one should not carry over
@@ -126,7 +130,15 @@ async def test_finish_workout_resets_state(client, override_get_db):
             {
                 "exercise_name": "Squat",
                 "order_index": 0,
-                "sets": [{"set_number": 1, "weight_kg": 100, "reps": 5, "rpe": None, "set_type": "normal"}],
+                "sets": [
+                    {
+                        "set_number": 1,
+                        "weight_kg": 100,
+                        "reps": 5,
+                        "rpe": None,
+                        "set_type": "normal",
+                    }
+                ],
             }
         ],
     }

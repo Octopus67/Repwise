@@ -30,8 +30,8 @@ async def run_trial_expiration(session: AsyncSession | None = None) -> int:
     """Expire trial subscriptions past their end date. Returns count expired."""
     start = time.monotonic()
     logger.info("Trial expiration job started")
-    sentry_sdk.set_tag('component', 'job')
-    sentry_sdk.set_tag('job_name', 'trial_expiration')
+    sentry_sdk.set_tag("component", "job")
+    sentry_sdk.set_tag("job_name", "trial_expiration")
     owns_session = session is None
     if owns_session:
         async with async_session_factory() as session:
@@ -56,14 +56,11 @@ async def _expire_trials(session: AsyncSession) -> int:
     """Find and downgrade expired trial subscriptions with per-item isolation."""
     now = datetime.now(timezone.utc)
 
-    stmt = (
-        select(Subscription)
-        .where(
-            Subscription.is_trial.is_(True),
-            Subscription.status == SubscriptionStatus.ACTIVE,
-            Subscription.current_period_end <= now,
-            Subscription.deleted_at.is_(None),
-        )
+    stmt = select(Subscription).where(
+        Subscription.is_trial.is_(True),
+        Subscription.status == SubscriptionStatus.ACTIVE,
+        Subscription.current_period_end <= now,
+        Subscription.deleted_at.is_(None),
     )
     result = await session.execute(stmt)
     expired = result.scalars().all()

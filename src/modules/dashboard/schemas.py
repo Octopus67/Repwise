@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 class DashboardSummaryResponse(BaseModel):
     """Consolidated dashboard data."""
-    
+
     date: str
     nutrition: dict[str, Any]
     adaptive_targets: Optional[Any]

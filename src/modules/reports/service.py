@@ -39,7 +39,9 @@ class WeeklyReportService:
         week_start, week_end = _iso_week_to_date_range(year, week)
 
         training = await self._build_training_metrics(user_id, week_start, week_end)
-        nutrition, target_cal, days_logged = await self._build_nutrition_metrics(user_id, week_start, week_end)
+        nutrition, target_cal, days_logged = await self._build_nutrition_metrics(
+            user_id, week_start, week_end
+        )
         body = await self._build_body_metrics(user_id, week_start, week_end)
         goal_type, goal_rate = await self._fetch_goal(user_id)
 
@@ -59,6 +61,7 @@ class WeeklyReportService:
         nutrient_score: float | None = None
         try:
             from src.modules.nutrition.micro_dashboard_service import MicronutrientDashboardService
+
             micro_svc = MicronutrientDashboardService(self.session)
             dashboard = await micro_svc.get_dashboard(user_id, week_start, week_end)
             if dashboard.days_with_data > 0:
@@ -111,7 +114,9 @@ class WeeklyReportService:
         try:
             sessions = await analytics._fetch_sessions(user_id, week_start, week_end)
         except SQLAlchemyError as e:
-            logger.exception("Failed to fetch training sessions for user=%s: %s", user_id, type(e).__name__)
+            logger.exception(
+                "Failed to fetch training sessions for user=%s: %s", user_id, type(e).__name__
+            )
             # Partial report OK — return empty training metrics
             return TrainingMetrics()
 
@@ -139,11 +144,13 @@ class WeeklyReportService:
         wns_data: dict[str, float] = {}
         try:
             from src.modules.feature_flags.service import FeatureFlagService
+
             ff = FeatureFlagService(self.session)
             # Check flag without user context (system-level)
             flag = await ff._get_flag("wns_engine")
             if flag and flag.is_enabled:
                 from src.modules.training.wns_volume_service import WNSVolumeService
+
                 wns_svc = WNSVolumeService(self.session)
                 wns_results = await wns_svc.get_weekly_muscle_volume(user_id, week_start)
                 for r in wns_results:
@@ -151,7 +158,9 @@ class WeeklyReportService:
                         wns_data[r.muscle_group] = r.hypertrophy_units
         except (ImportError, AttributeError) as e:
             # Partial report OK — WNS engine may not be deployed; fall back to legacy volume
-            logger.debug("WNS data unavailable for report, using legacy volume: %s", type(e).__name__)
+            logger.debug(
+                "WNS data unavailable for report, using legacy volume: %s", type(e).__name__
+            )
         except SQLAlchemyError as e:
             # Partial report OK — DB issue fetching WNS data
             logger.warning("WNS DB query failed for report user=%s: %s", user_id, e)
@@ -170,19 +179,18 @@ class WeeklyReportService:
     ) -> tuple[NutritionMetrics, float, int]:
         """Aggregate nutrition data. Returns (metrics, target_cal, days_logged)."""
         try:
-            stmt = (
-                select(NutritionEntry)
-                .where(
-                    NutritionEntry.user_id == user_id,
-                    NutritionEntry.entry_date >= week_start,
-                    NutritionEntry.entry_date <= week_end,
-                )
+            stmt = select(NutritionEntry).where(
+                NutritionEntry.user_id == user_id,
+                NutritionEntry.entry_date >= week_start,
+                NutritionEntry.entry_date <= week_end,
             )
             stmt = NutritionEntry.not_deleted(stmt)
             result = await self.session.execute(stmt)
             entries = list(result.scalars().all())
         except SQLAlchemyError as e:
-            logger.exception("Failed to fetch nutrition entries for user=%s: %s", user_id, type(e).__name__)
+            logger.exception(
+                "Failed to fetch nutrition entries for user=%s: %s", user_id, type(e).__name__
+            )
             # Partial report OK — return empty nutrition metrics
             return NutritionMetrics(), 0.0, 0
 
@@ -222,7 +230,9 @@ class WeeklyReportService:
                 tdee_delta = round(target_cal - snapshots[1].target_calories, 2)
         except SQLAlchemyError as e:
             # Partial report OK — target calories unavailable, compliance will be 0
-            logger.exception("Failed to fetch adaptive snapshots for user=%s: %s", user_id, type(e).__name__)
+            logger.exception(
+                "Failed to fetch adaptive snapshots for user=%s: %s", user_id, type(e).__name__
+            )
 
         # Compliance
         compliant_days = 0
@@ -261,7 +271,9 @@ class WeeklyReportService:
             bw_result = await self.session.execute(bw_stmt)
             bw_logs = list(bw_result.scalars().all())
         except SQLAlchemyError as e:
-            logger.exception("Failed to fetch bodyweight logs for user=%s: %s", user_id, type(e).__name__)
+            logger.exception(
+                "Failed to fetch bodyweight logs for user=%s: %s", user_id, type(e).__name__
+            )
             # Partial report OK — return empty body metrics
             return BodyMetrics()
 
@@ -285,7 +297,10 @@ class WeeklyReportService:
             goal_stmt = select(UserGoal).where(UserGoal.user_id == user_id)
             goal_result = await self.session.execute(goal_stmt)
             goal = goal_result.scalar_one_or_none()
-            return (goal.goal_type if goal else "maintaining", goal.goal_rate_per_week if goal else None)
+            return (
+                goal.goal_type if goal else "maintaining",
+                goal.goal_rate_per_week if goal else None,
+            )
         except SQLAlchemyError as e:
             logger.exception("Failed to fetch user goal for user=%s: %s", user_id, type(e).__name__)
             # Partial report OK — default to "maintaining" with no rate

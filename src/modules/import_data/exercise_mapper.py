@@ -41,7 +41,11 @@ def map_exercises(imported_names: list[str], db_exercises: list[dict]) -> dict:
                 best_score, best_match = score, ex
 
         if best_score >= MATCH_THRESHOLD and best_match:
-            result[name] = {"matched": best_match["name"], "confidence": round(best_score, 3), "db_id": best_match["id"]}
+            result[name] = {
+                "matched": best_match["name"],
+                "confidence": round(best_score, 3),
+                "db_id": best_match["id"],
+            }
         else:
             result[name] = {"matched": None, "create_as_custom": True}
 

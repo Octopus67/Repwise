@@ -63,7 +63,7 @@ async def get_scores(
     end = date.today()
     start = end - timedelta(days=30)
     history = await service.get_history(user.id, start, end)
-    return history.items[offset:offset + limit]
+    return history.items[offset : offset + limit]
 
 
 @router.get("/history", response_model=ReadinessHistoryResponse)
@@ -91,6 +91,7 @@ async def get_combined_recovery(
     flag_service = FeatureFlagService(db)
     if not await flag_service.is_feature_enabled("combined_readiness", user):
         from src.shared.errors import NotFoundError
+
         raise NotFoundError("Combined readiness endpoint not available")
 
     from src.modules.readiness.readiness_schemas import HealthMetricsRequest
@@ -100,9 +101,7 @@ async def get_combined_recovery(
     # Get readiness score (use defaults for health metrics if none provided)
     readiness_service = ReadinessService(db)
     try:
-        readiness_resp = await readiness_service.compute_score(
-            user.id, HealthMetricsRequest()
-        )
+        readiness_resp = await readiness_service.compute_score(user.id, HealthMetricsRequest())
         readiness_score = readiness_resp.score
     except (SQLAlchemyError, ValueError):
         readiness_score = None

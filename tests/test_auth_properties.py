@@ -49,6 +49,7 @@ _fixture_settings = h_settings(
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture(autouse=True)
 def _clear_rate_limits():
     """Reset rate-limit state between tests."""
@@ -73,9 +74,7 @@ class TestProperty4InputValidation:
     @pytest.mark.asyncio
     @_fixture_settings
     @given(password=_short_passwords)
-    async def test_short_password_rejected(
-        self, password: str, client, override_get_db
-    ):
+    async def test_short_password_rejected(self, password: str, client, override_get_db):
         """Passwords shorter than 8 characters must be rejected.
 
         **Validates: Requirements 1.6, 14.2**
@@ -92,9 +91,7 @@ class TestProperty4InputValidation:
     @pytest.mark.asyncio
     @_fixture_settings
     @given(email=_malformed_emails)
-    async def test_malformed_email_rejected(
-        self, email: str, client, override_get_db
-    ):
+    async def test_malformed_email_rejected(self, email: str, client, override_get_db):
         """Malformed email addresses must be rejected.
 
         **Validates: Requirements 1.6, 14.2**
@@ -169,15 +166,12 @@ class TestProperty18JWTEnforcement:
     @_fixture_settings
     @given(
         random_string=st.text(
-            alphabet=st.characters(whitelist_categories=("L", "N", "P", "S"),
-                                   max_codepoint=127),
+            alphabet=st.characters(whitelist_categories=("L", "N", "P", "S"), max_codepoint=127),
             min_size=1,
             max_size=200,
         )
     )
-    async def test_invalid_token_returns_401(
-        self, random_string: str, client, override_get_db
-    ):
+    async def test_invalid_token_returns_401(self, random_string: str, client, override_get_db):
         """Random ASCII strings as Bearer tokens must get 401.
 
         **Validates: Requirements 16.1, 16.2**

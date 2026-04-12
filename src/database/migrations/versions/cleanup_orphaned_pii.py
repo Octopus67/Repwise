@@ -7,10 +7,9 @@ Revises: 28c15b684365
 Create Date: 2026-04-05 05:00:00.000000
 
 """
+
 from typing import Sequence, Union
 
-from alembic import op
-from sqlalchemy import text
 
 # revision identifiers, used by Alembic.
 revision: str = "cleanup_orphaned_pii"

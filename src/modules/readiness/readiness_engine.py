@@ -42,8 +42,8 @@ class HealthMetrics:
 
 @dataclass(frozen=True)
 class UserCheckin:
-    soreness: Optional[int] = None       # 1-5 (1=none, 5=very sore)
-    stress: Optional[int] = None         # 1-5 (1=none, 5=very stressed)
+    soreness: Optional[int] = None  # 1-5 (1=none, 5=very sore)
+    stress: Optional[int] = None  # 1-5 (1=none, 5=very stressed)
     sleep_quality: Optional[int] = None  # 1-5 (1=poor, 5=excellent)
 
 
@@ -68,7 +68,7 @@ class ReadinessWeights:
 @dataclass(frozen=True)
 class FactorScore:
     name: str
-    normalized: float       # 0.0-1.0 (1.0 = optimal)
+    normalized: float  # 0.0-1.0 (1.0 = optimal)
     weight: float
     effective_weight: float
     present: bool
@@ -76,7 +76,7 @@ class FactorScore:
 
 @dataclass(frozen=True)
 class ReadinessResult:
-    score: Optional[int]       # 0-100, None if all factors absent
+    score: Optional[int]  # 0-100, None if all factors absent
     factors: List[FactorScore]
     factors_present: int
     factors_total: int
@@ -105,7 +105,10 @@ def compute_baselines(
 
     logger.debug(
         "Baselines computed: hrv_mean=%s (%d days), rhr_mean=%s (%d days)",
-        hrv_mean, len(hrv_vals), rhr_mean, len(rhr_vals),
+        hrv_mean,
+        len(hrv_vals),
+        rhr_mean,
+        len(rhr_vals),
     )
 
     return Baselines(
@@ -169,10 +172,7 @@ def redistribute_weights(
     total_present = sum(w for k, w in weight_map.items() if present.get(k, False))
     if total_present <= 0:
         return {k: 0.0 for k in weight_map}
-    return {
-        k: (w / total_present if present.get(k, False) else 0.0)
-        for k, w in weight_map.items()
-    }
+    return {k: (w / total_present if present.get(k, False) else 0.0) for k, w in weight_map.items()}
 
 
 def compute_readiness(
@@ -201,12 +201,18 @@ def compute_readiness(
         and baselines.resting_hr_data_days >= MIN_BASELINE_DAYS
     )
     presence["resting_hr_trend"] = rhr_present
-    rhr_norm = normalize_resting_hr_factor(health.resting_hr_bpm, baselines.resting_hr_mean) if rhr_present else 0.0
+    rhr_norm = (
+        normalize_resting_hr_factor(health.resting_hr_bpm, baselines.resting_hr_mean)
+        if rhr_present
+        else 0.0
+    )
 
     # Sleep duration
     sleep_dur_present = _is_finite(health.sleep_duration_hours)
     presence["sleep_duration"] = sleep_dur_present
-    sleep_dur_norm = normalize_sleep_duration(health.sleep_duration_hours) if sleep_dur_present else 0.0
+    sleep_dur_norm = (
+        normalize_sleep_duration(health.sleep_duration_hours) if sleep_dur_present else 0.0
+    )
 
     # Checkin factors
     c = checkin or UserCheckin()
@@ -227,10 +233,15 @@ def compute_readiness(
     if factors_present == 0:
         logger.info("All readiness factors absent — returning None score")
         for name in FACTOR_NAMES:
-            factors.append(FactorScore(
-                name=name, normalized=0.0,
-                weight=getattr(weights, name), effective_weight=0.0, present=False,
-            ))
+            factors.append(
+                FactorScore(
+                    name=name,
+                    normalized=0.0,
+                    weight=getattr(weights, name),
+                    effective_weight=0.0,
+                    present=False,
+                )
+            )
         return ReadinessResult(score=None, factors=factors, factors_present=0, factors_total=6)
 
     eff_weights = redistribute_weights(weights, presence)
@@ -250,7 +261,9 @@ def compute_readiness(
         ew = eff_weights[name]
         n = norm_map[name]
         p = presence[name]
-        factors.append(FactorScore(name=name, normalized=n, weight=w, effective_weight=ew, present=p))
+        factors.append(
+            FactorScore(name=name, normalized=n, weight=w, effective_weight=ew, present=p)
+        )
         if p:
             raw += n * ew
 
@@ -258,6 +271,11 @@ def compute_readiness(
     score = max(0, min(round(raw * 100), 100))
     logger.debug(
         "Readiness computed: score=%d, factors_present=%d/%d, raw=%.4f",
-        score, factors_present, 6, raw,
+        score,
+        factors_present,
+        6,
+        raw,
     )
-    return ReadinessResult(score=score, factors=factors, factors_present=factors_present, factors_total=6)
+    return ReadinessResult(
+        score=score, factors=factors, factors_present=factors_present, factors_total=6
+    )

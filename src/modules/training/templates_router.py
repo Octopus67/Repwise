@@ -52,7 +52,7 @@ async def get_shared_template(
     if template is None:
         raise NotFoundError("Template not found")
     safe_exercises = []
-    for ex in (template.exercises or []):
+    for ex in template.exercises or []:
         safe_ex = {"exercise_name": ex.get("exercise_name", ""), "sets": []}
         for s in ex.get("sets", []):
             safe_ex["sets"].append({"reps": s.get("reps"), "set_type": s.get("set_type", "normal")})
@@ -115,9 +115,7 @@ async def update_user_template(
     service: TemplateService = Depends(_get_template_service),
 ) -> UserWorkoutTemplateResponse:
     """Update a user workout template."""
-    return await service.update_template(
-        user_id=user.id, template_id=template_id, data=data
-    )
+    return await service.update_template(user_id=user.id, template_id=template_id, data=data)
 
 
 @router.delete(

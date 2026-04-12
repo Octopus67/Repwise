@@ -7,7 +7,7 @@ Operates at the service level using the db_session fixture.
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date
 
 import pytest
 from hypothesis import HealthCheck, given, settings as h_settings, strategies as st
@@ -30,7 +30,9 @@ from src.shared.pagination import PaginationParams
 # ---------------------------------------------------------------------------
 
 _meal_names = st.text(
-    alphabet=st.characters(whitelist_categories=("L", "N", "Zs"), min_codepoint=32, max_codepoint=127),
+    alphabet=st.characters(
+        whitelist_categories=("L", "N", "Zs"), min_codepoint=32, max_codepoint=127
+    ),
     min_size=1,
     max_size=100,
 ).filter(lambda s: s.strip() != "")
@@ -97,6 +99,7 @@ _fixture_settings = h_settings(
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 async def _create_test_user(db: AsyncSession) -> User:
     """Create a minimal user for testing."""
@@ -339,7 +342,9 @@ class TestProperty28MealPreFillCorrectness:
         assert prefill.protein_g == meal.protein_g, "Pre-fill protein_g must match source"
         assert prefill.carbs_g == meal.carbs_g, "Pre-fill carbs_g must match source"
         assert prefill.fat_g == meal.fat_g, "Pre-fill fat_g must match source"
-        assert prefill.micro_nutrients == meal.micro_nutrients, "Pre-fill micro_nutrients must match source"
+        assert prefill.micro_nutrients == meal.micro_nutrients, (
+            "Pre-fill micro_nutrients must match source"
+        )
         assert prefill.source_meal_id == meal.id, "Pre-fill source_meal_id must reference the meal"
 
     @pytest.mark.asyncio
@@ -375,5 +380,9 @@ class TestProperty28MealPreFillCorrectness:
         assert prefill.protein_g == favorite.protein_g, "Pre-fill protein_g must match favorite"
         assert prefill.carbs_g == favorite.carbs_g, "Pre-fill carbs_g must match favorite"
         assert prefill.fat_g == favorite.fat_g, "Pre-fill fat_g must match favorite"
-        assert prefill.micro_nutrients == favorite.micro_nutrients, "Pre-fill micro_nutrients must match favorite"
-        assert prefill.source_meal_id == favorite.meal_id, "Pre-fill source_meal_id must reference the meal"
+        assert prefill.micro_nutrients == favorite.micro_nutrients, (
+            "Pre-fill micro_nutrients must match favorite"
+        )
+        assert prefill.source_meal_id == favorite.meal_id, (
+            "Pre-fill source_meal_id must reference the meal"
+        )

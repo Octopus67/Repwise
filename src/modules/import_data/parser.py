@@ -8,7 +8,7 @@ from typing import Literal
 
 LBS_PER_KG = 2.20462
 
-SET_TYPE_MAP = {'warmup': 'warm-up', 'dropset': 'drop-set', 'failure': 'normal'}
+SET_TYPE_MAP = {"warmup": "warm-up", "dropset": "drop-set", "failure": "normal"}
 
 
 @dataclass
@@ -57,7 +57,9 @@ def detect_format(header: list[str]) -> Literal["strong", "hevy", "fitnotes", "u
     return "unknown"
 
 
-def parse_csv(content: str, fmt: str | None = None, weight_unit: str = "kg") -> list[ImportedWorkout]:
+def parse_csv(
+    content: str, fmt: str | None = None, weight_unit: str = "kg"
+) -> list[ImportedWorkout]:
     reader = csv.DictReader(io.StringIO(content))
     rows = list(reader)
     if not rows:
@@ -84,7 +86,9 @@ def _group_workouts(rows: list[dict], key_fn, date_fn, name_fn, set_fn) -> list[
         name = name_fn(group[0])
         exercises: dict[str, ImportedExercise] = {}
         for r in group:
-            ex_name = r.get("Exercise Name") or r.get("exercise_title") or r.get("Exercise", "Unknown")
+            ex_name = (
+                r.get("Exercise Name") or r.get("exercise_title") or r.get("Exercise", "Unknown")
+            )
             if ex_name not in exercises:
                 exercises[ex_name] = ImportedExercise(name=ex_name)
             exercises[ex_name].sets.append(set_fn(r))

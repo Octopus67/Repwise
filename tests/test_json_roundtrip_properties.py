@@ -10,14 +10,11 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime, timezone
 
-import pytest
 from hypothesis import HealthCheck, given, settings as h_settings, strategies as st
 from pydantic import BaseModel
 
 from src.modules.user.schemas import (
     BodyweightLogResponse,
-    UserGoalResponse,
-    UserMetricResponse,
     UserProfileResponse,
 )
 from src.modules.nutrition.schemas import NutritionEntryResponse
@@ -37,9 +34,13 @@ _datetimes = st.datetimes(
     timezones=st.just(timezone.utc),
 )
 _dates = st.dates(min_value=date(2020, 1, 1), max_value=date(2030, 12, 31))
-_positive_floats = st.floats(min_value=0.0, max_value=10000.0, allow_nan=False, allow_infinity=False)
+_positive_floats = st.floats(
+    min_value=0.0, max_value=10000.0, allow_nan=False, allow_infinity=False
+)
 _strings = st.text(
-    alphabet=st.characters(whitelist_categories=("L", "N", "Zs"), min_codepoint=32, max_codepoint=127),
+    alphabet=st.characters(
+        whitelist_categories=("L", "N", "Zs"), min_codepoint=32, max_codepoint=127
+    ),
     min_size=1,
     max_size=100,
 ).filter(lambda s: s.strip() != "")
@@ -209,7 +210,9 @@ class TestProperty5JsonSerializationRoundTrip:
             id=uuid.uuid4(),
             user_id=uuid.uuid4(),
             session_date=session_date,
-            exercises=[ExerciseEntry(exercise_name="squat", sets=[SetEntry(reps=5, weight_kg=100)])],
+            exercises=[
+                ExerciseEntry(exercise_name="squat", sets=[SetEntry(reps=5, weight_kg=100)])
+            ],
             metadata=None,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),

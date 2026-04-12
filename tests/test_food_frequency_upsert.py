@@ -6,7 +6,7 @@ Tests: first log creates entry, subsequent logs increment, no breakage without f
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date
 
 import pytest
 from sqlalchemy import select
@@ -14,12 +14,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.auth.models import User
 from src.modules.food_database.models import FoodItem, UserFoodFrequency
-from src.modules.nutrition.models import NutritionEntry
 from src.modules.nutrition.schemas import NutritionEntryCreate
 from src.modules.nutrition.service import NutritionService
 
 
 # ── Helpers ──
+
 
 async def _create_user(db: AsyncSession) -> User:
     user = User(
@@ -50,6 +50,7 @@ async def _create_food_item(db: AsyncSession) -> FoodItem:
 
 
 # ── Tests ──
+
 
 class TestFoodFrequencyUpsert:
     @pytest.mark.asyncio
@@ -170,18 +171,23 @@ class TestFoodFrequencyUpsert:
 
         for food, count in [(food1, 3), (food2, 1)]:
             for _ in range(count):
-                await svc.create_entry(user.id, NutritionEntryCreate(
-                    meal_name="Meal",
-                    calories=100,
-                    protein_g=10,
-                    carbs_g=10,
-                    fat_g=5,
-                    entry_date=date.today(),
-                    food_item_id=food.id,
-                ))
+                await svc.create_entry(
+                    user.id,
+                    NutritionEntryCreate(
+                        meal_name="Meal",
+                        calories=100,
+                        protein_g=10,
+                        carbs_g=10,
+                        fat_g=5,
+                        entry_date=date.today(),
+                        food_item_id=food.id,
+                    ),
+                )
 
         stmt = select(UserFoodFrequency).where(UserFoodFrequency.user_id == user.id)
-        freqs = {f.food_item_id: f.log_count for f in (await db_session.execute(stmt)).scalars().all()}
+        freqs = {
+            f.food_item_id: f.log_count for f in (await db_session.execute(stmt)).scalars().all()
+        }
         assert freqs[food1.id] == 3
         assert freqs[food2.id] == 1
 

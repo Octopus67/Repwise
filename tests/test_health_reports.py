@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,6 +15,7 @@ from src.modules.payments.models import Subscription
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 async def _create_user(db: AsyncSession, email: str = "health@test.com") -> User:
     user = User(email=email, hashed_password="hashed", auth_provider="email", role="user")
@@ -36,8 +37,15 @@ async def _make_premium(db: AsyncSession, user: User) -> None:
 def _auth_headers(user_id: uuid.UUID) -> dict:
     import jwt
     from src.config.settings import settings
+
     token = jwt.encode(
-        {"sub": str(user_id), "type": "access", "exp": datetime.now(timezone.utc) + timedelta(hours=1), "iss": "repwise", "aud": "repwise-api"},
+        {
+            "sub": str(user_id),
+            "type": "access",
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "iss": "repwise",
+            "aud": "repwise-api",
+        },
         settings.JWT_SECRET,
         algorithm=settings.JWT_ALGORITHM,
     )
@@ -51,10 +59,13 @@ SAMPLE_MARKERS = {"hemoglobin": 14.0, "vitamin_d": 25.0, "iron": 80.0}
 # Auth tests
 # ---------------------------------------------------------------------------
 
+
 class TestHealthReportsAuth:
     @pytest.mark.asyncio
     async def test_create_requires_auth(self, client, override_get_db):
-        r = await client.post("/api/v1/health-reports/reports", json={"report_date": "2024-01-01", "markers": {}})
+        r = await client.post(
+            "/api/v1/health-reports/reports", json={"report_date": "2024-01-01", "markers": {}}
+        )
         assert r.status_code == 401
 
     @pytest.mark.asyncio
@@ -77,6 +88,7 @@ class TestHealthReportsAuth:
 # Premium gating
 # ---------------------------------------------------------------------------
 
+
 class TestHealthReportsPremiumGating:
     @pytest.mark.asyncio
     async def test_create_requires_premium(self, client, override_get_db, db_session):
@@ -98,6 +110,7 @@ class TestHealthReportsPremiumGating:
 # ---------------------------------------------------------------------------
 # POST /health-reports/reports
 # ---------------------------------------------------------------------------
+
 
 class TestCreateReport:
     @pytest.mark.asyncio
@@ -144,6 +157,7 @@ class TestCreateReport:
 # GET /health-reports/reports
 # ---------------------------------------------------------------------------
 
+
 class TestListReports:
     @pytest.mark.asyncio
     async def test_empty_list(self, client, override_get_db, db_session):
@@ -159,7 +173,11 @@ class TestListReports:
         user = await _create_user(db_session)
         await _make_premium(db_session, user)
         headers = _auth_headers(user.id)
-        await client.post("/api/v1/health-reports/reports", json={"report_date": "2024-01-01", "markers": {}}, headers=headers)
+        await client.post(
+            "/api/v1/health-reports/reports",
+            json={"report_date": "2024-01-01", "markers": {}},
+            headers=headers,
+        )
         r = await client.get("/api/v1/health-reports/reports", headers=headers)
         assert r.json()["total_count"] == 1
 
@@ -169,7 +187,11 @@ class TestListReports:
         await _make_premium(db_session, user)
         headers = _auth_headers(user.id)
         for i in range(3):
-            await client.post("/api/v1/health-reports/reports", json={"report_date": f"2024-0{i+1}-01", "markers": {}}, headers=headers)
+            await client.post(
+                "/api/v1/health-reports/reports",
+                json={"report_date": f"2024-0{i + 1}-01", "markers": {}},
+                headers=headers,
+            )
         r = await client.get("/api/v1/health-reports/reports?page=1&limit=2", headers=headers)
         data = r.json()
         assert len(data["items"]) == 2
@@ -180,13 +202,20 @@ class TestListReports:
 # GET /health-reports/reports/{id}
 # ---------------------------------------------------------------------------
 
+
 class TestGetReportDetail:
     @pytest.mark.asyncio
     async def test_get_detail(self, client, override_get_db, db_session):
         user = await _create_user(db_session)
         await _make_premium(db_session, user)
         headers = _auth_headers(user.id)
-        created = (await client.post("/api/v1/health-reports/reports", json={"report_date": "2024-01-01", "markers": SAMPLE_MARKERS}, headers=headers)).json()
+        created = (
+            await client.post(
+                "/api/v1/health-reports/reports",
+                json={"report_date": "2024-01-01", "markers": SAMPLE_MARKERS},
+                headers=headers,
+            )
+        ).json()
         r = await client.get(f"/api/v1/health-reports/reports/{created['id']}", headers=headers)
         assert r.status_code == 200
         assert r.json()["id"] == created["id"]
@@ -195,7 +224,9 @@ class TestGetReportDetail:
     async def test_not_found(self, client, override_get_db, db_session):
         user = await _create_user(db_session)
         await _make_premium(db_session, user)
-        r = await client.get(f"/api/v1/health-reports/reports/{uuid.uuid4()}", headers=_auth_headers(user.id))
+        r = await client.get(
+            f"/api/v1/health-reports/reports/{uuid.uuid4()}", headers=_auth_headers(user.id)
+        )
         assert r.status_code == 404
 
     @pytest.mark.asyncio
@@ -204,8 +235,16 @@ class TestGetReportDetail:
         u2 = await _create_user(db_session, "attacker@test.com")
         await _make_premium(db_session, u1)
         await _make_premium(db_session, u2)
-        created = (await client.post("/api/v1/health-reports/reports", json={"report_date": "2024-01-01", "markers": {}}, headers=_auth_headers(u1.id))).json()
-        r = await client.get(f"/api/v1/health-reports/reports/{created['id']}", headers=_auth_headers(u2.id))
+        created = (
+            await client.post(
+                "/api/v1/health-reports/reports",
+                json={"report_date": "2024-01-01", "markers": {}},
+                headers=_auth_headers(u1.id),
+            )
+        ).json()
+        r = await client.get(
+            f"/api/v1/health-reports/reports/{created['id']}", headers=_auth_headers(u2.id)
+        )
         assert r.status_code == 404
 
 
@@ -213,14 +252,23 @@ class TestGetReportDetail:
 # GET /health-reports/reports/{id}/correlations
 # ---------------------------------------------------------------------------
 
+
 class TestCorrelations:
     @pytest.mark.asyncio
     async def test_correlations_empty(self, client, override_get_db, db_session):
         user = await _create_user(db_session)
         await _make_premium(db_session, user)
         headers = _auth_headers(user.id)
-        created = (await client.post("/api/v1/health-reports/reports", json={"report_date": "2024-01-01", "markers": {"hemoglobin": 14.0}}, headers=headers)).json()
-        r = await client.get(f"/api/v1/health-reports/reports/{created['id']}/correlations", headers=headers)
+        created = (
+            await client.post(
+                "/api/v1/health-reports/reports",
+                json={"report_date": "2024-01-01", "markers": {"hemoglobin": 14.0}},
+                headers=headers,
+            )
+        ).json()
+        r = await client.get(
+            f"/api/v1/health-reports/reports/{created['id']}/correlations", headers=headers
+        )
         assert r.status_code == 200
         assert isinstance(r.json(), list)
 
@@ -228,7 +276,10 @@ class TestCorrelations:
     async def test_correlations_not_found(self, client, override_get_db, db_session):
         user = await _create_user(db_session)
         await _make_premium(db_session, user)
-        r = await client.get(f"/api/v1/health-reports/reports/{uuid.uuid4()}/correlations", headers=_auth_headers(user.id))
+        r = await client.get(
+            f"/api/v1/health-reports/reports/{uuid.uuid4()}/correlations",
+            headers=_auth_headers(user.id),
+        )
         assert r.status_code == 404
 
 
@@ -236,11 +287,14 @@ class TestCorrelations:
 # GET /health-reports/reports/samples
 # ---------------------------------------------------------------------------
 
+
 class TestSampleReports:
     @pytest.mark.asyncio
     async def test_samples_available_to_free_users(self, client, override_get_db, db_session):
         user = await _create_user(db_session)
-        r = await client.get("/api/v1/health-reports/reports/samples", headers=_auth_headers(user.id))
+        r = await client.get(
+            "/api/v1/health-reports/reports/samples", headers=_auth_headers(user.id)
+        )
         assert r.status_code == 200
         assert isinstance(r.json(), list)
         assert len(r.json()) >= 1

@@ -128,13 +128,13 @@ async def get_product_by_barcode(barcode: str) -> Optional[dict]:
         carbs_g = float(carbs_g) if carbs_g is not None else 0.0
         fat_g = float(fat_g) if fat_g is not None else 0.0
     except (TypeError, ValueError) as exc:
-        logger.warning("OFF nutrient parse failed for product %s: %s", product.get("code", "?"), exc)
+        logger.warning(
+            "OFF nutrient parse failed for product %s: %s", product.get("code", "?"), exc
+        )
         return None
 
     # Parse serving size
-    serving_size, serving_unit = _parse_serving_size(
-        product.get("serving_size")
-    )
+    serving_size, serving_unit = _parse_serving_size(product.get("serving_size"))
 
     return {
         "name": name,

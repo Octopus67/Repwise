@@ -9,11 +9,26 @@ WORKOUT_TEMPLATES: list[dict] = [
         "name": "Push Day",
         "description": "Chest, shoulders, and triceps",
         "exercises": [
-            {"exercise_name": "Barbell Bench Press", "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 4},
-            {"exercise_name": "Overhead Press", "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Incline Dumbbell Bench Press", "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Dumbbell Lateral Raise", "sets": [{"reps": 15, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Cable Pushdown", "sets": [{"reps": 12, "weight_kg": 0, "rpe": None}] * 3},
+            {
+                "exercise_name": "Barbell Bench Press",
+                "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 4,
+            },
+            {
+                "exercise_name": "Overhead Press",
+                "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3,
+            },
+            {
+                "exercise_name": "Incline Dumbbell Bench Press",
+                "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3,
+            },
+            {
+                "exercise_name": "Dumbbell Lateral Raise",
+                "sets": [{"reps": 15, "weight_kg": 0, "rpe": None}] * 3,
+            },
+            {
+                "exercise_name": "Cable Pushdown",
+                "sets": [{"reps": 12, "weight_kg": 0, "rpe": None}] * 3,
+            },
         ],
     },
     {
@@ -21,11 +36,20 @@ WORKOUT_TEMPLATES: list[dict] = [
         "name": "Pull Day",
         "description": "Back and biceps",
         "exercises": [
-            {"exercise_name": "Barbell Row", "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 4},
+            {
+                "exercise_name": "Barbell Row",
+                "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 4,
+            },
             {"exercise_name": "Pull-Ups", "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Seated Cable Row", "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3},
+            {
+                "exercise_name": "Seated Cable Row",
+                "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3,
+            },
             {"exercise_name": "Face Pull", "sets": [{"reps": 15, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Barbell Curl", "sets": [{"reps": 12, "weight_kg": 0, "rpe": None}] * 3},
+            {
+                "exercise_name": "Barbell Curl",
+                "sets": [{"reps": 12, "weight_kg": 0, "rpe": None}] * 3,
+            },
         ],
     },
     {
@@ -33,11 +57,23 @@ WORKOUT_TEMPLATES: list[dict] = [
         "name": "Legs",
         "description": "Quads, hamstrings, and calves",
         "exercises": [
-            {"exercise_name": "Barbell Back Squat", "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 4},
-            {"exercise_name": "Romanian Deadlift", "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3},
+            {
+                "exercise_name": "Barbell Back Squat",
+                "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 4,
+            },
+            {
+                "exercise_name": "Romanian Deadlift",
+                "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3,
+            },
             {"exercise_name": "Leg Press", "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Lying Leg Curl", "sets": [{"reps": 12, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Standing Calf Raise", "sets": [{"reps": 15, "weight_kg": 0, "rpe": None}] * 4},
+            {
+                "exercise_name": "Lying Leg Curl",
+                "sets": [{"reps": 12, "weight_kg": 0, "rpe": None}] * 3,
+            },
+            {
+                "exercise_name": "Standing Calf Raise",
+                "sets": [{"reps": 15, "weight_kg": 0, "rpe": None}] * 4,
+            },
         ],
     },
     {
@@ -45,12 +81,30 @@ WORKOUT_TEMPLATES: list[dict] = [
         "name": "Upper Body",
         "description": "Chest, back, shoulders, and arms",
         "exercises": [
-            {"exercise_name": "Barbell Bench Press", "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 4},
-            {"exercise_name": "Barbell Row", "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 4},
-            {"exercise_name": "Overhead Press", "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Lat Pulldown", "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Dumbbell Curl", "sets": [{"reps": 12, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Cable Pushdown", "sets": [{"reps": 12, "weight_kg": 0, "rpe": None}] * 3},
+            {
+                "exercise_name": "Barbell Bench Press",
+                "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 4,
+            },
+            {
+                "exercise_name": "Barbell Row",
+                "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 4,
+            },
+            {
+                "exercise_name": "Overhead Press",
+                "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3,
+            },
+            {
+                "exercise_name": "Lat Pulldown",
+                "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3,
+            },
+            {
+                "exercise_name": "Dumbbell Curl",
+                "sets": [{"reps": 12, "weight_kg": 0, "rpe": None}] * 3,
+            },
+            {
+                "exercise_name": "Cable Pushdown",
+                "sets": [{"reps": 12, "weight_kg": 0, "rpe": None}] * 3,
+            },
         ],
     },
     {
@@ -58,11 +112,26 @@ WORKOUT_TEMPLATES: list[dict] = [
         "name": "Lower Body",
         "description": "Quads, glutes, hamstrings, and calves",
         "exercises": [
-            {"exercise_name": "Barbell Back Squat", "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 4},
-            {"exercise_name": "Barbell Hip Thrust", "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Bulgarian Split Squat", "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Lying Leg Curl", "sets": [{"reps": 12, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Standing Calf Raise", "sets": [{"reps": 15, "weight_kg": 0, "rpe": None}] * 4},
+            {
+                "exercise_name": "Barbell Back Squat",
+                "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 4,
+            },
+            {
+                "exercise_name": "Barbell Hip Thrust",
+                "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3,
+            },
+            {
+                "exercise_name": "Bulgarian Split Squat",
+                "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3,
+            },
+            {
+                "exercise_name": "Lying Leg Curl",
+                "sets": [{"reps": 12, "weight_kg": 0, "rpe": None}] * 3,
+            },
+            {
+                "exercise_name": "Standing Calf Raise",
+                "sets": [{"reps": 15, "weight_kg": 0, "rpe": None}] * 4,
+            },
         ],
     },
     {
@@ -70,11 +139,26 @@ WORKOUT_TEMPLATES: list[dict] = [
         "name": "Full Body",
         "description": "All major muscle groups in one session",
         "exercises": [
-            {"exercise_name": "Barbell Back Squat", "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Barbell Bench Press", "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Barbell Row", "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Overhead Press", "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3},
-            {"exercise_name": "Romanian Deadlift", "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3},
+            {
+                "exercise_name": "Barbell Back Squat",
+                "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 3,
+            },
+            {
+                "exercise_name": "Barbell Bench Press",
+                "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 3,
+            },
+            {
+                "exercise_name": "Barbell Row",
+                "sets": [{"reps": 8, "weight_kg": 0, "rpe": None}] * 3,
+            },
+            {
+                "exercise_name": "Overhead Press",
+                "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3,
+            },
+            {
+                "exercise_name": "Romanian Deadlift",
+                "sets": [{"reps": 10, "weight_kg": 0, "rpe": None}] * 3,
+            },
         ],
     },
 ]

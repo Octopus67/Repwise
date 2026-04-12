@@ -4,11 +4,10 @@ Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5
 """
 
 import uuid
-from datetime import date, datetime
+from datetime import date
 
 import pytest
 
-from src.modules.user.models import BodyweightLog, UserGoal, UserMetric, UserProfile
 from src.modules.user.schemas import (
     BodyweightLogCreate,
     UserGoalSet,
@@ -24,6 +23,7 @@ from src.shared.types import ActivityLevel, GoalType
 # Helpers
 # ------------------------------------------------------------------
 
+
 def _user_id() -> uuid.UUID:
     return uuid.uuid4()
 
@@ -31,6 +31,7 @@ def _user_id() -> uuid.UUID:
 # ------------------------------------------------------------------
 # Profile tests (Requirement 2.1)
 # ------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_profile_creates_blank_when_missing(db_session):
@@ -78,6 +79,7 @@ async def test_update_profile_partial_update(db_session):
 # Metrics tests (Requirements 2.2, 2.5)
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_log_metrics_appends_entry(db_session):
     """log_metrics creates a new row and returns it."""
@@ -86,7 +88,9 @@ async def test_log_metrics_appends_entry(db_session):
 
     result = await svc.log_metrics(
         uid,
-        UserMetricCreate(height_cm=180.0, weight_kg=85.0, body_fat_pct=15.0, activity_level=ActivityLevel.ACTIVE),
+        UserMetricCreate(
+            height_cm=180.0, weight_kg=85.0, body_fat_pct=15.0, activity_level=ActivityLevel.ACTIVE
+        ),
     )
     assert result.user_id == uid
     assert result.height_cm == 180.0
@@ -136,13 +140,16 @@ async def test_metrics_history_pagination(db_session):
 # Bodyweight log tests (Requirements 2.3, 2.5)
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_log_bodyweight_creates_entry(db_session):
     """log_bodyweight persists a new entry."""
     svc = UserService(db_session)
     uid = _user_id()
 
-    result = await svc.log_bodyweight(uid, BodyweightLogCreate(weight_kg=83.5, recorded_date=date(2025, 1, 15)))
+    result = await svc.log_bodyweight(
+        uid, BodyweightLogCreate(weight_kg=83.5, recorded_date=date(2025, 1, 15))
+    )
     assert result.user_id == uid
     assert result.weight_kg == 83.5
     assert result.recorded_date == date(2025, 1, 15)
@@ -154,8 +161,12 @@ async def test_bodyweight_history_append_only(db_session):
     svc = UserService(db_session)
     uid = _user_id()
 
-    await svc.log_bodyweight(uid, BodyweightLogCreate(weight_kg=80.0, recorded_date=date(2025, 1, 1)))
-    await svc.log_bodyweight(uid, BodyweightLogCreate(weight_kg=80.5, recorded_date=date(2025, 1, 2)))
+    await svc.log_bodyweight(
+        uid, BodyweightLogCreate(weight_kg=80.0, recorded_date=date(2025, 1, 1))
+    )
+    await svc.log_bodyweight(
+        uid, BodyweightLogCreate(weight_kg=80.5, recorded_date=date(2025, 1, 2))
+    )
 
     history = await svc.get_bodyweight_history(uid, PaginationParams(page=1, limit=10))
     assert history.total_count == 2
@@ -168,7 +179,9 @@ async def test_bodyweight_history_pagination(db_session):
     uid = _user_id()
 
     for i in range(4):
-        await svc.log_bodyweight(uid, BodyweightLogCreate(weight_kg=80.0 + i, recorded_date=date(2025, 1, i + 1)))
+        await svc.log_bodyweight(
+            uid, BodyweightLogCreate(weight_kg=80.0 + i, recorded_date=date(2025, 1, i + 1))
+        )
 
     page1 = await svc.get_bodyweight_history(uid, PaginationParams(page=1, limit=2))
     assert len(page1.items) == 2
@@ -182,13 +195,16 @@ async def test_bodyweight_history_pagination(db_session):
 # Goals tests (Requirement 2.4)
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_set_goals_creates_new(db_session):
     """set_goals creates a goal record when none exists."""
     svc = UserService(db_session)
     uid = _user_id()
 
-    result = await svc.set_goals(uid, UserGoalSet(goal_type=GoalType.CUTTING, target_weight_kg=75.0, goal_rate_per_week=-0.5))
+    result = await svc.set_goals(
+        uid, UserGoalSet(goal_type=GoalType.CUTTING, target_weight_kg=75.0, goal_rate_per_week=-0.5)
+    )
     assert result.user_id == uid
     assert result.goal_type == "cutting"
     assert result.target_weight_kg == 75.0
@@ -202,7 +218,9 @@ async def test_set_goals_updates_existing(db_session):
     uid = _user_id()
 
     await svc.set_goals(uid, UserGoalSet(goal_type=GoalType.CUTTING, target_weight_kg=75.0))
-    updated = await svc.set_goals(uid, UserGoalSet(goal_type=GoalType.BULKING, target_weight_kg=90.0))
+    updated = await svc.set_goals(
+        uid, UserGoalSet(goal_type=GoalType.BULKING, target_weight_kg=90.0)
+    )
 
     assert updated.goal_type == "bulking"
     assert updated.target_weight_kg == 90.0

@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 # Data classes
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class MeasurementPoint:
     date: date
@@ -94,6 +95,7 @@ class RecompCheckinOutput:
 # Trend computation (linear regression)
 # ---------------------------------------------------------------------------
 
+
 def compute_trend(points: list[MeasurementPoint]) -> Optional[TrendResult]:
     """Compute linear regression trend from measurement points.
 
@@ -144,6 +146,7 @@ def compute_trend(points: list[MeasurementPoint]) -> Optional[TrendResult]:
 # ---------------------------------------------------------------------------
 # Recomp score computation
 # ---------------------------------------------------------------------------
+
 
 def _filter_lookback(points: list[MeasurementPoint], lookback_days: int) -> list[MeasurementPoint]:
     """Filter points to those within lookback_days of the max date."""
@@ -267,6 +270,7 @@ def compute_recomp_daily_targets(inp: RecompDailyInput) -> RecompDailyOutput:
 # ---------------------------------------------------------------------------
 # Check-in decision tree
 # ---------------------------------------------------------------------------
+
 
 def compute_recomp_checkin(inp: RecompCheckinInput) -> RecompCheckinOutput:
     """Generate recomp check-in recommendation using priority-ordered decision tree."""

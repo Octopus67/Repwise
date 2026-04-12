@@ -270,7 +270,10 @@ class AchievementEngine:
                 frozen = False
                 if 1 <= gap_days <= 2:
                     frozen = await try_auto_freeze(
-                        self.session, user_id, last_active, activity_date,
+                        self.session,
+                        user_id,
+                        last_active,
+                        activity_date,
                     )
                 if frozen:
                     # Freeze bridged the gap — continue streak (+gap days +1 for today)
@@ -322,18 +325,15 @@ class AchievementEngine:
         from src.modules.adaptive.models import AdaptiveSnapshot
 
         # Sum day's nutrition totals
-        stmt = (
-            select(
-                func.sum(NutritionEntry.calories).label("total_cal"),
-                func.sum(NutritionEntry.protein_g).label("total_pro"),
-                func.sum(NutritionEntry.carbs_g).label("total_carb"),
-                func.sum(NutritionEntry.fat_g).label("total_fat"),
-            )
-            .where(
-                NutritionEntry.user_id == user_id,
-                NutritionEntry.entry_date == entry_date,
-                NutritionEntry.deleted_at.is_(None),
-            )
+        stmt = select(
+            func.sum(NutritionEntry.calories).label("total_cal"),
+            func.sum(NutritionEntry.protein_g).label("total_pro"),
+            func.sum(NutritionEntry.carbs_g).label("total_carb"),
+            func.sum(NutritionEntry.fat_g).label("total_fat"),
+        ).where(
+            NutritionEntry.user_id == user_id,
+            NutritionEntry.entry_date == entry_date,
+            NutritionEntry.deleted_at.is_(None),
         )
         row = (await self.session.execute(stmt)).one_or_none()
         if row is None or row.total_cal is None:
@@ -359,7 +359,12 @@ class AchievementEngine:
         # Check compliance: each macro within 5% of target
         compliant = self._is_compliant(
             actuals=(total_cal, total_pro, total_carb, total_fat),
-            targets=(snap.target_calories, snap.target_protein_g, snap.target_carbs_g, snap.target_fat_g),
+            targets=(
+                snap.target_calories,
+                snap.target_protein_g,
+                snap.target_carbs_g,
+                snap.target_fat_g,
+            ),
         )
 
         # Update compliance streak
@@ -426,9 +431,7 @@ class AchievementEngine:
         self, user_id: uuid.UUID, category: AchievementCategory
     ) -> set[str]:
         """Return the set of achievement IDs already unlocked by this user in *category*."""
-        category_ids = [
-            d.id for d in ACHIEVEMENT_REGISTRY.values() if d.category == category
-        ]
+        category_ids = [d.id for d in ACHIEVEMENT_REGISTRY.values() if d.category == category]
         if not category_ids:
             return set()
         stmt = select(UserAchievement.achievement_id).where(

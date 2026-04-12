@@ -12,9 +12,7 @@ import pytest
 
 from src.modules.meal_plans.generator import (
     DEFAULT_SLOT_SPLITS,
-    DayPlan,
     FoodCandidate,
-    GeneratedPlan,
     MacroSummary,
     MealAssignment,
     compute_day_summary,
@@ -24,14 +22,11 @@ from src.modules.meal_plans.generator import (
 )
 from src.modules.meal_plans.scaler import (
     IngredientInput,
-    ScaledRecipe,
     compute_scale_factor,
     scale_recipe,
 )
 from src.modules.meal_plans.shopping import (
     IngredientEntry,
-    ShoppingItem,
-    ShoppingList,
     consolidate_ingredients,
     normalize_unit,
     resolve_category,
@@ -41,6 +36,7 @@ from src.modules.meal_plans.shopping import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_candidate(
     name: str = "Chicken Breast",
@@ -68,9 +64,7 @@ def _make_targets(
     carbs_g: float = 250.0,
     fat_g: float = 70.0,
 ) -> MacroSummary:
-    return MacroSummary(
-        calories=calories, protein_g=protein_g, carbs_g=carbs_g, fat_g=fat_g
-    )
+    return MacroSummary(calories=calories, protein_g=protein_g, carbs_g=carbs_g, fat_g=fat_g)
 
 
 # ===========================================================================
@@ -138,14 +132,26 @@ class TestComputeSummaries:
 
     def test_day_summary_multiple(self):
         a1 = MealAssignment(
-            slot="breakfast", food_item_id=uuid.uuid4(), name="Eggs",
-            calories=150, protein_g=12, carbs_g=1, fat_g=10,
-            scale_factor=1.0, is_recipe=False,
+            slot="breakfast",
+            food_item_id=uuid.uuid4(),
+            name="Eggs",
+            calories=150,
+            protein_g=12,
+            carbs_g=1,
+            fat_g=10,
+            scale_factor=1.0,
+            is_recipe=False,
         )
         a2 = MealAssignment(
-            slot="lunch", food_item_id=uuid.uuid4(), name="Rice",
-            calories=300, protein_g=6, carbs_g=65, fat_g=1,
-            scale_factor=1.0, is_recipe=False,
+            slot="lunch",
+            food_item_id=uuid.uuid4(),
+            name="Rice",
+            calories=300,
+            protein_g=6,
+            carbs_g=65,
+            fat_g=1,
+            scale_factor=1.0,
+            is_recipe=False,
         )
         s = compute_day_summary([a1, a2])
         assert s.calories == 450.0

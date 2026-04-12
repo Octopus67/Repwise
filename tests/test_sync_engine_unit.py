@@ -1,9 +1,7 @@
 """Unit tests for the Nutrition-Training Sync Engine (pure computation)."""
 
-import pytest
 
 from src.modules.adaptive.sync_engine import (
-    COMPOUND_BONUS_CAP,
     MIN_CARBS_G,
     MIN_FAT_G,
     SessionExercise,
@@ -18,16 +16,25 @@ from src.shared.types import TrainingPhase
 
 def _ex(name="curl", group="biceps", compound=False, sets=3, reps=10, volume=300.0):
     return SessionExercise(
-        exercise_name=name, muscle_group=group, is_compound=compound,
-        total_sets=sets, total_reps=reps, total_volume=volume,
+        exercise_name=name,
+        muscle_group=group,
+        is_compound=compound,
+        total_sets=sets,
+        total_reps=reps,
+        total_volume=volume,
     )
 
 
 def _base_input(**overrides):
     defaults = dict(
-        baseline_calories=2500, baseline_protein_g=180, baseline_carbs_g=250,
-        baseline_fat_g=80, is_training_day=True, session_exercises=[],
-        session_volume=5000, rolling_avg_volume=5000,
+        baseline_calories=2500,
+        baseline_protein_g=180,
+        baseline_carbs_g=250,
+        baseline_fat_g=80,
+        is_training_day=True,
+        session_exercises=[],
+        session_volume=5000,
+        rolling_avg_volume=5000,
         training_phase=TrainingPhase.NONE,
     )
     defaults.update(overrides)
@@ -35,6 +42,7 @@ def _base_input(**overrides):
 
 
 # ── compute_muscle_group_demand ──────────────────────────────────────────
+
 
 class TestMuscleDemand:
     def test_empty_exercises(self):
@@ -70,13 +78,28 @@ class TestMuscleDemand:
         assert result >= 0.0
 
     def test_result_always_lte_one(self):
-        all_groups = [_ex(group=g, compound=True) for g in
-                      ["quads", "hamstrings", "glutes", "calves", "back", "chest",
-                       "shoulders", "biceps", "triceps", "forearms", "abs", "traps"]]
+        all_groups = [
+            _ex(group=g, compound=True)
+            for g in [
+                "quads",
+                "hamstrings",
+                "glutes",
+                "calves",
+                "back",
+                "chest",
+                "shoulders",
+                "biceps",
+                "triceps",
+                "forearms",
+                "abs",
+                "traps",
+            ]
+        ]
         assert compute_muscle_group_demand(all_groups) <= 1.0
 
 
 # ── compute_volume_multiplier ────────────────────────────────────────────
+
 
 class TestVolumeMultiplier:
     def test_zero_rolling_avg(self):
@@ -101,6 +124,7 @@ class TestVolumeMultiplier:
 
 # ── compute_session_volume ───────────────────────────────────────────────
 
+
 class TestSessionVolume:
     def test_empty(self):
         assert compute_session_volume([]) == 0.0
@@ -111,6 +135,7 @@ class TestSessionVolume:
 
 
 # ── compute_daily_targets ────────────────────────────────────────────────
+
 
 class TestDailyTargets:
     def test_rest_day_negative_delta(self):
@@ -124,9 +149,12 @@ class TestDailyTargets:
         assert out.day_classification == "training_day"
 
     def test_deload_zeroes_surplus(self):
-        out = compute_daily_targets(_base_input(
-            training_phase=TrainingPhase.DELOAD, is_training_day=True,
-        ))
+        out = compute_daily_targets(
+            _base_input(
+                training_phase=TrainingPhase.DELOAD,
+                is_training_day=True,
+            )
+        )
         assert out.calorie_delta == 0
         assert out.phase_modifier == 0.0
 
@@ -140,15 +168,21 @@ class TestDailyTargets:
         assert out.adjusted_protein_g == 180
 
     def test_carbs_floor(self):
-        out = compute_daily_targets(_base_input(
-            baseline_carbs_g=10, is_training_day=False,
-        ))
+        out = compute_daily_targets(
+            _base_input(
+                baseline_carbs_g=10,
+                is_training_day=False,
+            )
+        )
         assert out.adjusted_carbs_g >= MIN_CARBS_G
 
     def test_fat_floor(self):
-        out = compute_daily_targets(_base_input(
-            baseline_fat_g=5, is_training_day=False,
-        ))
+        out = compute_daily_targets(
+            _base_input(
+                baseline_fat_g=5,
+                is_training_day=False,
+            )
+        )
         assert out.adjusted_fat_g >= MIN_FAT_G
 
     def test_explanation_rest_day(self):
@@ -161,10 +195,14 @@ class TestDailyTargets:
         assert "Leg day" in out.explanation
 
     def test_zero_baseline_no_crash(self):
-        out = compute_daily_targets(_base_input(
-            baseline_calories=0, baseline_protein_g=0,
-            baseline_carbs_g=0, baseline_fat_g=0,
-        ))
+        out = compute_daily_targets(
+            _base_input(
+                baseline_calories=0,
+                baseline_protein_g=0,
+                baseline_carbs_g=0,
+                baseline_fat_g=0,
+            )
+        )
         assert out.adjusted_calories >= 0
         assert out.adjusted_carbs_g >= MIN_CARBS_G
         assert out.adjusted_fat_g >= MIN_FAT_G

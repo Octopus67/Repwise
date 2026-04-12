@@ -51,9 +51,7 @@ async def list_blocks(
     end_date: Optional[date] = Query(default=None),
 ) -> list[TrainingBlockResponse]:
     """List training blocks with optional date range filter."""
-    return await service.list_blocks(
-        user_id=user.id, start_date=start_date, end_date=end_date
-    )
+    return await service.list_blocks(user_id=user.id, start_date=start_date, end_date=end_date)
 
 
 # NOTE: /blocks/deload-suggestions MUST be defined BEFORE /blocks/{block_id}

@@ -11,13 +11,12 @@ import pytest
 
 from src.modules.readiness.combined_score import (
     CombinedConfig,
-    CombinedFactor,
-    CombinedRecoveryResult,
     compute_combined_recovery,
 )
 
 
 # ── Helpers ──
+
 
 @dataclass
 class FakeFatigueScore:
@@ -26,6 +25,7 @@ class FakeFatigueScore:
 
 
 # ── Tests: Basic behavior ──
+
 
 class TestBasicCombinedScore:
     def test_both_none_returns_neutral_50(self):
@@ -59,6 +59,7 @@ class TestBasicCombinedScore:
 
 # ── Tests: Volume multiplier bounds ──
 
+
 class TestVolumeMultiplierBounds:
     def test_minimum_at_score_0(self):
         result = compute_combined_recovery(0, None)
@@ -84,6 +85,7 @@ class TestVolumeMultiplierBounds:
 
 
 # ── Tests: Label thresholds ──
+
 
 class TestLabelThresholds:
     def test_score_70_ready_to_push(self):
@@ -113,6 +115,7 @@ class TestLabelThresholds:
 
 # ── Tests: Edge cases ──
 
+
 class TestEdgeCases:
     def test_empty_fatigue_list(self):
         result = compute_combined_recovery(80, [])
@@ -120,9 +123,11 @@ class TestEdgeCases:
 
     def test_fatigue_with_none_score_attr(self):
         """Fatigue objects without score attribute are skipped."""
+
         @dataclass
         class BadFatigue:
             muscle_group: str
+
         result = compute_combined_recovery(80, [BadFatigue("chest")])
         assert result.score == 80
 
@@ -152,6 +157,7 @@ class TestEdgeCases:
 
 # ── Tests: Custom config ──
 
+
 class TestCustomConfig:
     def test_custom_readiness_weight(self):
         config = CombinedConfig(readiness_weight=0.8)
@@ -176,6 +182,7 @@ class TestCustomConfig:
 
 
 # ── Tests: Factor tracking ──
+
 
 class TestFactorTracking:
     def test_readiness_factor_included(self):
@@ -204,6 +211,7 @@ class TestFactorTracking:
 
 
 # ── Tests: Result immutability ──
+
 
 class TestResultImmutability:
     def test_result_is_frozen_dataclass(self):

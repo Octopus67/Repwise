@@ -145,7 +145,9 @@ class VolumeCalculatorService:
         def _coefficients(name: str) -> dict[str, float]:
             ex = _catalog.get(name.lower().strip())
             if ex:
-                return get_muscle_coefficients(name, ex["muscle_group"], ex.get("secondary_muscles", []))
+                return get_muscle_coefficients(
+                    name, ex["muscle_group"], ex.get("secondary_muscles", [])
+                )
             mg = get_muscle_group(name)
             return {mg: 1.0} if mg and mg != "Other" else {}
 

@@ -7,7 +7,7 @@ Tests Properties 1-8 from the design document.
 from __future__ import annotations
 
 import uuid
-from datetime import date, timedelta
+from datetime import date
 
 import pytest
 from hypothesis import HealthCheck, given, settings as h_settings, strategies as st
@@ -29,10 +29,12 @@ _exercise_name_st = st.one_of(
     st.text(min_size=1, max_size=30).filter(lambda s: s.strip()),
 )
 
-_exercise_dict_st = st.fixed_dictionaries({
-    "exercise_name": _exercise_name_st,
-    "sets": st.just([{"reps": 5, "weight_kg": 100.0}]),
-})
+_exercise_dict_st = st.fixed_dictionaries(
+    {
+        "exercise_name": _exercise_name_st,
+        "sets": st.just([{"reps": 5, "weight_kg": 100.0}]),
+    }
+)
 
 _exercise_list_st = st.lists(_exercise_dict_st, min_size=1, max_size=5)
 
@@ -58,9 +60,7 @@ class TestProperty5MuscleGroupExtractionMatchesMapping:
 
     @_fixture_settings
     @given(exercise_lists=st.lists(_exercise_list_st, min_size=1, max_size=3))
-    def test_extraction_matches_individual_mapping(
-        self, exercise_lists: list[list[dict]]
-    ):
+    def test_extraction_matches_individual_mapping(self, exercise_lists: list[list[dict]]):
         """For any list of exercises, _extract_muscle_groups returns exactly the set
         produced by applying get_muscle_group() to each exercise name.
 
@@ -92,9 +92,7 @@ class TestProperty6MuscleGroupsDeduplicatedAndSorted:
 
     @_fixture_settings
     @given(exercise_lists=st.lists(_exercise_list_st, min_size=1, max_size=3))
-    def test_output_is_deduplicated_and_sorted(
-        self, exercise_lists: list[list[dict]]
-    ):
+    def test_output_is_deduplicated_and_sorted(self, exercise_lists: list[list[dict]]):
         """The muscle_groups list has no duplicates and is sorted alphabetically.
 
         **Validates: Requirements 2.4**
@@ -231,9 +229,7 @@ class TestProperty3TemplateScheduleImpliesTrainingDay:
     @given(
         exercise_name=st.sampled_from(_known_exercises[:10]),
     )
-    async def test_template_on_weekday_means_training_day(
-        self, exercise_name: str, db_session
-    ):
+    async def test_template_on_weekday_means_training_day(self, exercise_name: str, db_session):
         """If a template is scheduled on the target weekday (no session), classify_day returns training + source=template.
 
         **Validates: Requirements 1.3, 5.1**
@@ -475,7 +471,9 @@ class TestMultipleSessionsSameDay:
         s2 = TrainingSession(
             user_id=user_id,
             session_date=target,
-            exercises=[{"exercise_name": "dumbbell bench press", "sets": [{"reps": 8, "weight_kg": 30.0}]}],
+            exercises=[
+                {"exercise_name": "dumbbell bench press", "sets": [{"reps": 8, "weight_kg": 30.0}]}
+            ],
         )
         db_session.add(s1)
         db_session.add(s2)

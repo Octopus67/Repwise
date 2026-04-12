@@ -33,6 +33,7 @@ class FeedEventResponse(BaseModel):
 
 class PostCreate(BaseModel):
     """User-created social post."""
+
     content: str = Field(..., min_length=1, max_length=500)
     post_type: str = Field(default="text", pattern="^(text|progress|milestone)$")
 
@@ -85,12 +86,14 @@ class SharedTemplateResponse(BaseModel):
 
 class FeedPageResponse(BaseModel):
     """Wrapped feed response matching frontend FeedPage contract (Issue #9)."""
+
     events: list[FeedEventResponse]
     next_cursor: Optional[str] = None
 
 
 class LeaderboardEntryEnriched(BaseModel):
     """Enriched leaderboard entry with user data (Issue #10)."""
+
     rank: Optional[int] = None
     user: dict  # { id, display_name, avatar_url }
     score: float
@@ -99,6 +102,7 @@ class LeaderboardEntryEnriched(BaseModel):
 
 class LeaderboardPageResponse(BaseModel):
     """Wrapped leaderboard response matching frontend contract (Issue #10)."""
+
     entries: list[LeaderboardEntryEnriched]
 
 

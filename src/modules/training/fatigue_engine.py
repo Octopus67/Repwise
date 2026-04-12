@@ -76,19 +76,26 @@ class FatigueConfig:
 
 
 MRV_SETS_PER_WEEK: dict[str, int] = {
-    "chest": 22, "lats": 22, "erectors": 18, "adductors": 16,
-    "shoulders": 22, "quads": 20,
-    "hamstrings": 16, "glutes": 16, "biceps": 20, "triceps": 18,
-    "calves": 16, "abs": 20, "traps": 16, "forearms": 16,
+    "chest": 22,
+    "lats": 22,
+    "erectors": 18,
+    "adductors": 16,
+    "shoulders": 22,
+    "quads": 20,
+    "hamstrings": 16,
+    "glutes": 16,
+    "biceps": 20,
+    "triceps": 18,
+    "calves": 16,
+    "abs": 20,
+    "traps": 16,
+    "forearms": 16,
 }
 
 
 def compute_e1rm(weight_kg: float, reps: int) -> float:
     """Epley formula. Returns 0 for non-positive weight/reps or NaN inputs."""
-    if (
-        not isinstance(weight_kg, (int, float))
-        or not isinstance(reps, (int, float))
-    ):
+    if not isinstance(weight_kg, (int, float)) or not isinstance(reps, (int, float)):
         return 0.0
     # Guard against NaN / Inf
     if weight_kg != weight_kg or reps != reps:  # NaN check without math import
@@ -131,13 +138,15 @@ def compute_best_e1rm_per_session(
                     best_w = s.weight_kg
                     best_r = s.reps
             if best_e1rm > 0:
-                points.append(ExerciseE1RM(
-                    session_date=session_date,
-                    exercise_name=ex_name,
-                    best_e1rm=best_e1rm,
-                    best_weight_kg=best_w,
-                    best_reps=best_r,
-                ))
+                points.append(
+                    ExerciseE1RM(
+                        session_date=session_date,
+                        exercise_name=ex_name,
+                        best_e1rm=best_e1rm,
+                        best_weight_kg=best_w,
+                        best_reps=best_r,
+                    )
+                )
         result[ex_name] = sorted(points, key=lambda p: p.session_date)
     return result
 
@@ -179,14 +188,16 @@ def detect_regressions(
             if decline_start_idx >= 0:
                 peak = points[decline_start_idx].best_e1rm
             decline_pct = ((peak - current) / peak * 100) if peak > 0 else 0.0
-            signals.append(RegressionSignal(
-                exercise_name=ex_name,
-                muscle_group=get_muscle_group(ex_name),
-                consecutive_declines=consecutive,
-                peak_e1rm=peak,
-                current_e1rm=current,
-                decline_pct=decline_pct,
-            ))
+            signals.append(
+                RegressionSignal(
+                    exercise_name=ex_name,
+                    muscle_group=get_muscle_group(ex_name),
+                    consecutive_declines=consecutive,
+                    peak_e1rm=peak,
+                    current_e1rm=current,
+                    decline_pct=decline_pct,
+                )
+            )
     return signals
 
 
@@ -195,9 +206,8 @@ def compute_nutrition_compliance(
     target_calories: float,
 ) -> float:
     """Return ratio clamped to [0, 2.0]. Returns 1.0 if target <= 0 or inputs invalid."""
-    if (
-        not isinstance(total_calories, (int, float))
-        or not isinstance(target_calories, (int, float))
+    if not isinstance(total_calories, (int, float)) or not isinstance(
+        target_calories, (int, float)
     ):
         return 1.0
     # NaN guard
@@ -287,14 +297,16 @@ def generate_suggestions(
             f"Consider deloading {s.muscle_group} — fatigue score {s.score:.0f}/100. "
             f"{top_exercise} declined {decline_pct:.1f}% over {decline_sessions} sessions."
         )
-        suggestions.append(DeloadSuggestion(
-            muscle_group=s.muscle_group,
-            fatigue_score=s.score,
-            top_regressed_exercise=top_exercise,
-            decline_pct=decline_pct,
-            decline_sessions=max(decline_sessions, 2),
-            message=msg,
-        ))
+        suggestions.append(
+            DeloadSuggestion(
+                muscle_group=s.muscle_group,
+                fatigue_score=s.score,
+                top_regressed_exercise=top_exercise,
+                decline_pct=decline_pct,
+                decline_sessions=max(decline_sessions, 2),
+                message=msg,
+            )
+        )
     return suggestions
 
 

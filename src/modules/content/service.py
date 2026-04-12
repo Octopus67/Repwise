@@ -52,9 +52,11 @@ class ContentService:
         if module_id is not None:
             base = base.where(ContentArticle.module_id == module_id)
         if category is not None:
-            module_subq = select(ContentModule.id).where(
-                func.lower(ContentModule.name) == func.lower(category)
-            ).scalar_subquery()
+            module_subq = (
+                select(ContentModule.id)
+                .where(func.lower(ContentModule.name) == func.lower(category))
+                .scalar_subquery()
+            )
             base = base.where(ContentArticle.module_id == module_subq)
         if status is not None:
             base = base.where(ContentArticle.status == status)
@@ -114,9 +116,7 @@ class ContentService:
                 )
                 if unlock.scalar_one_or_none():
                     return article
-            raise PremiumRequiredError(
-                "This article requires an active premium subscription"
-            )
+            raise PremiumRequiredError("This article requires an active premium subscription")
 
         return article
 
@@ -288,14 +288,10 @@ class ContentService:
         pagination = pagination or PaginationParams()
 
         fav_subq = (
-            select(ArticleFavorite.article_id)
-            .where(ArticleFavorite.user_id == user_id)
-            .subquery()
+            select(ArticleFavorite.article_id).where(ArticleFavorite.user_id == user_id).subquery()
         )
 
-        base = select(ContentArticle).where(
-            ContentArticle.id.in_(select(fav_subq.c.article_id))
-        )
+        base = select(ContentArticle).where(ContentArticle.id.in_(select(fav_subq.c.article_id)))
         base = ContentArticle.not_deleted(base)
 
         count_stmt = select(func.count()).select_from(base.subquery())

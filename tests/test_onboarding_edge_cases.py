@@ -9,6 +9,7 @@ import pytest
 @pytest.fixture(autouse=True)
 def _clear_rate_limits():
     from src.middleware.rate_limiter import clear_all
+
     clear_all()
     yield
     clear_all()
@@ -41,6 +42,7 @@ async def _register(client, email: str) -> dict[str, str]:
 # after loadState resolves.  The frontend must not render the wizard until
 # _hydrated is True.  We verify the store contract here.
 
+
 @pytest.mark.asyncio
 async def test_onboarding_hydration_gate(client, override_get_db):
     """Onboarding endpoint requires auth (proxy for hydration: unauthenticated
@@ -51,6 +53,7 @@ async def test_onboarding_hydration_gate(client, override_get_db):
 
 # ── 6.1.2 sex=null doesn't crash BMR calculation ────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_onboarding_sex_null_handling(client, override_get_db):
     """Submitting sex=null falls back to server default and doesn't crash."""
@@ -58,10 +61,13 @@ async def test_onboarding_sex_null_handling(client, override_get_db):
     payload = {**VALID_ONBOARDING_PAYLOAD, "sex": None}
     resp = await client.post("/api/v1/onboarding/complete", json=payload, headers=headers)
     # Server should either accept with default or reject with validation error — not 500
-    assert resp.status_code in (201, 400, 422), f"Unexpected {resp.status_code}: sex=null must not crash"
+    assert resp.status_code in (201, 400, 422), (
+        f"Unexpected {resp.status_code}: sex=null must not crash"
+    )
 
 
 # ── 6.1.3 Lifestyle step validation gate ────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_lifestyle_step_validation_gate(client, override_get_db):
@@ -78,6 +84,7 @@ async def test_lifestyle_step_validation_gate(client, override_get_db):
 
 
 # ── 6.1.4 Goal step validation gate ─────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_goal_step_validation_gate(client, override_get_db):

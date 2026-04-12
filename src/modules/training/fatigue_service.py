@@ -87,11 +87,13 @@ class FatigueService:
                     if isinstance(reps, (int, float)) and isinstance(weight, (int, float)):
                         sets.append(SetData(reps=int(reps), weight_kg=float(weight)))
                 if sets:
-                    flat.append(SessionExerciseData(
-                        session_date=session_date,
-                        exercise_name=exercise_name.strip(),
-                        sets=sets,
-                    ))
+                    flat.append(
+                        SessionExerciseData(
+                            session_date=session_date,
+                            exercise_name=exercise_name.strip(),
+                            sets=sets,
+                        )
+                    )
 
         # 3-4. Compute e1RM and detect regressions
         e1rm_series = compute_best_e1rm_per_session(flat)
@@ -134,7 +136,9 @@ class FatigueService:
                 nutrition_compliance = compute_nutrition_compliance(daily_avg, target_cal)
         except (SQLAlchemyError, TypeError, ZeroDivisionError):
             # Fallback: skip nutrition compliance factor in fatigue calculation
-            logger.exception("Failed to compute nutrition compliance for fatigue score, user=%s", user_id)
+            logger.exception(
+                "Failed to compute nutrition compliance for fatigue score, user=%s", user_id
+            )
             nutrition_compliance = None
 
         # 7. Compute fatigue scores per muscle group
@@ -148,8 +152,13 @@ class FatigueService:
             weekly_freq = int(len(mg_dates.get(mg, set())) / weeks)
             mrv = MRV_SETS_PER_WEEK.get(mg, 0)
             score = compute_fatigue_score(
-                mg, regressions, weekly_sets, mrv, weekly_freq,
-                nutrition_compliance, config,
+                mg,
+                regressions,
+                weekly_sets,
+                mrv,
+                weekly_freq,
+                nutrition_compliance,
+                config,
             )
             scores.append(score)
 

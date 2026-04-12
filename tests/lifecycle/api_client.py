@@ -70,7 +70,9 @@ class LifecycleClient:
 
     async def update_profile(self, **kwargs: Any) -> dict:
         resp = await self._client.put(
-            "/api/v1/users/profile", json=kwargs, headers=self.headers,
+            "/api/v1/users/profile",
+            json=kwargs,
+            headers=self.headers,
         )
         assert resp.status_code == 200, f"Update profile failed: {resp.status_code} {resp.text}"
         return resp.json()
@@ -78,7 +80,9 @@ class LifecycleClient:
     async def set_goals(self, goal_type: str, **kwargs: Any) -> dict:
         body = {"goal_type": goal_type, **kwargs}
         resp = await self._client.put(
-            "/api/v1/users/goals", json=body, headers=self.headers,
+            "/api/v1/users/goals",
+            json=body,
+            headers=self.headers,
         )
         assert resp.status_code == 200, f"Set goals failed: {resp.status_code} {resp.text}"
         return resp.json()
@@ -92,7 +96,9 @@ class LifecycleClient:
 
     async def log_metrics(self, **kwargs: Any) -> dict:
         resp = await self._client.post(
-            "/api/v1/users/metrics", json=kwargs, headers=self.headers,
+            "/api/v1/users/metrics",
+            json=kwargs,
+            headers=self.headers,
         )
         assert resp.status_code == 201, f"Log metrics failed: {resp.status_code} {resp.text}"
         return resp.json()
@@ -120,8 +126,13 @@ class LifecycleClient:
     # ── Nutrition ─────────────────────────────────────────────────────
 
     async def log_food(
-        self, meal_name: str, calories: float, protein_g: float,
-        carbs_g: float, fat_g: float, entry_date: date,
+        self,
+        meal_name: str,
+        calories: float,
+        protein_g: float,
+        carbs_g: float,
+        fat_g: float,
+        entry_date: date,
         micro_nutrients: Optional[dict] = None,
     ) -> dict:
         body: dict[str, Any] = {
@@ -135,13 +146,17 @@ class LifecycleClient:
         if micro_nutrients:
             body["micro_nutrients"] = micro_nutrients
         resp = await self._client.post(
-            "/api/v1/nutrition/entries", json=body, headers=self.headers,
+            "/api/v1/nutrition/entries",
+            json=body,
+            headers=self.headers,
         )
         assert resp.status_code == 201, f"Log food failed: {resp.status_code} {resp.text}"
         return resp.json()
 
     async def get_nutrition_entries(
-        self, start_date: Optional[date] = None, end_date: Optional[date] = None,
+        self,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
         limit: int = 100,
     ) -> dict:
         params: dict[str, Any] = {"limit": limit}
@@ -150,14 +165,17 @@ class LifecycleClient:
         if end_date:
             params["end_date"] = end_date.isoformat()
         resp = await self._client.get(
-            "/api/v1/nutrition/entries", params=params, headers=self.headers,
+            "/api/v1/nutrition/entries",
+            params=params,
+            headers=self.headers,
         )
         assert resp.status_code == 200, f"Get entries failed: {resp.status_code} {resp.text}"
         return resp.json()
 
     async def delete_nutrition_entry(self, entry_id: str) -> None:
         resp = await self._client.delete(
-            f"/api/v1/nutrition/entries/{entry_id}", headers=self.headers,
+            f"/api/v1/nutrition/entries/{entry_id}",
+            headers=self.headers,
         )
         assert resp.status_code == 204
 
@@ -170,13 +188,17 @@ class LifecycleClient:
             **kwargs,
         }
         resp = await self._client.post(
-            "/api/v1/training/sessions", json=body, headers=self.headers,
+            "/api/v1/training/sessions",
+            json=body,
+            headers=self.headers,
         )
         assert resp.status_code == 201, f"Log training failed: {resp.status_code} {resp.text}"
         return resp.json()
 
     async def get_training_sessions(
-        self, start_date: Optional[date] = None, end_date: Optional[date] = None,
+        self,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
         limit: int = 100,
     ) -> dict:
         params: dict[str, Any] = {"limit": limit}
@@ -185,7 +207,9 @@ class LifecycleClient:
         if end_date:
             params["end_date"] = end_date.isoformat()
         resp = await self._client.get(
-            "/api/v1/training/sessions", params=params, headers=self.headers,
+            "/api/v1/training/sessions",
+            params=params,
+            headers=self.headers,
         )
         assert resp.status_code == 200
         return resp.json()
@@ -206,7 +230,9 @@ class LifecycleClient:
 
     async def create_snapshot(self, body: dict) -> dict:
         resp = await self._client.post(
-            "/api/v1/adaptive/snapshots", json=body, headers=self.headers,
+            "/api/v1/adaptive/snapshots",
+            json=body,
+            headers=self.headers,
         )
         assert resp.status_code == 201, f"Snapshot failed: {resp.status_code} {resp.text}"
         return resp.json()
@@ -216,7 +242,9 @@ class LifecycleClient:
         if target_date:
             params["date"] = target_date.isoformat()
         resp = await self._client.get(
-            "/api/v1/adaptive/daily-targets", params=params, headers=self.headers,
+            "/api/v1/adaptive/daily-targets",
+            params=params,
+            headers=self.headers,
         )
         assert resp.status_code == 200
         return resp.json()

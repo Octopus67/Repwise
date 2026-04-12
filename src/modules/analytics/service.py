@@ -77,9 +77,7 @@ def track_user_logged_in(user_id: UUID | str, method: str = "email") -> None:
     track_event(user_id, "user.logged_in", {"method": method})
 
 
-def track_subscription_created(
-    user_id: UUID | str, plan_id: str, currency: str
-) -> None:
+def track_subscription_created(user_id: UUID | str, plan_id: str, currency: str) -> None:
     track_event(
         user_id,
         "subscription.created",

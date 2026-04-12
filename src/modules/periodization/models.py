@@ -31,9 +31,7 @@ class TrainingBlock(SoftDeleteMixin, AuditLogMixin, Base):
     nutrition_phase: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
 
     __table_args__ = (
-        CheckConstraint(
-            "end_date >= start_date", name="ck_training_blocks_date_range"
-        ),
+        CheckConstraint("end_date >= start_date", name="ck_training_blocks_date_range"),
         Index("ix_training_blocks_user_dates", "user_id", "start_date", "end_date"),
         Index(
             "ix_training_blocks_not_deleted",

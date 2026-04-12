@@ -21,10 +21,14 @@ class FavoritesService:
         """Toggle is_favorite on a UserFoodFrequency row. Creates row if missing. Returns new state."""
         from src.modules.food_database.models import UserFoodFrequency
 
-        stmt = select(UserFoodFrequency).where(
-            UserFoodFrequency.user_id == user_id,
-            UserFoodFrequency.food_item_id == food_item_id,
-        ).with_for_update()
+        stmt = (
+            select(UserFoodFrequency)
+            .where(
+                UserFoodFrequency.user_id == user_id,
+                UserFoodFrequency.food_item_id == food_item_id,
+            )
+            .with_for_update()
+        )
         result = await self.db.execute(stmt)
         freq = result.scalar_one_or_none()
         if freq is None:

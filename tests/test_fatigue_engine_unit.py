@@ -7,10 +7,8 @@ deload suggestions, color mapping, and edge cases.
 import math
 from datetime import date, timedelta
 
-import pytest
 
 from src.modules.training.fatigue_engine import (
-    DeloadSuggestion,
     ExerciseE1RM,
     FatigueConfig,
     FatigueScoreResult,
@@ -29,6 +27,7 @@ from src.modules.training.fatigue_engine import (
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
+
 
 def _make_session(name: str, day_offset: int, weight: float, reps: int) -> SessionExerciseData:
     """Create a SessionExerciseData with a single set, offset days from today."""
@@ -51,6 +50,7 @@ def _make_declining_sessions(name: str, count: int, start_weight: float = 100.0,
 # ═══════════════════════════════════════════════════════════════════════════════
 # 1. compute_e1rm
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class TestComputeE1RM:
     def test_basic_epley(self):
@@ -92,6 +92,7 @@ class TestComputeE1RM:
 # 2. compute_best_e1rm_per_session
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class TestComputeBestE1RMPerSession:
     def test_empty_input(self):
         assert compute_best_e1rm_per_session([]) == {}
@@ -118,8 +119,8 @@ class TestComputeBestE1RMPerSession:
             session_date=date.today(),
             exercise_name="squat",
             sets=[
-                SetData(reps=10, weight_kg=80.0),   # e1rm ≈ 106.67
-                SetData(reps=5, weight_kg=100.0),    # e1rm ≈ 116.67
+                SetData(reps=10, weight_kg=80.0),  # e1rm ≈ 106.67
+                SetData(reps=5, weight_kg=100.0),  # e1rm ≈ 116.67
             ],
         )
         result = compute_best_e1rm_per_session([s])
@@ -160,6 +161,7 @@ class TestComputeBestE1RMPerSession:
 # ═══════════════════════════════════════════════════════════════════════════════
 # 3. detect_regressions
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class TestDetectRegressions:
     def test_empty_series(self):
@@ -216,6 +218,7 @@ class TestDetectRegressions:
 # 4. compute_nutrition_compliance
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class TestComputeNutritionCompliance:
     def test_perfect_compliance(self):
         assert compute_nutrition_compliance(2000.0, 2000.0) == 1.0
@@ -248,6 +251,7 @@ class TestComputeNutritionCompliance:
 # ═══════════════════════════════════════════════════════════════════════════════
 # 5. compute_fatigue_score
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class TestComputeFatigueScore:
     def test_zero_everything_returns_zero(self):
@@ -296,10 +300,7 @@ class TestComputeFatigueScore:
         assert result.score >= 0.0
 
     def test_regression_component_caps_at_one(self):
-        regs = [
-            RegressionSignal(f"ex{i}", "chest", 3, 100.0, 80.0, 20.0)
-            for i in range(10)
-        ]
+        regs = [RegressionSignal(f"ex{i}", "chest", 3, 100.0, 80.0, 20.0) for i in range(10)]
         result = compute_fatigue_score("chest", regs, 0, 22, 0, None)
         assert result.regression_component == 1.0
 
@@ -307,6 +308,7 @@ class TestComputeFatigueScore:
 # ═══════════════════════════════════════════════════════════════════════════════
 # 6. generate_suggestions
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class TestGenerateSuggestions:
     def test_no_suggestions_below_threshold(self):
@@ -347,6 +349,7 @@ class TestGenerateSuggestions:
 # 7. get_fatigue_color
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class TestGetFatigueColor:
     def test_green_zone(self):
         assert get_fatigue_color(0) == "#4CAF50"
@@ -373,6 +376,7 @@ class TestGetFatigueColor:
 # ═══════════════════════════════════════════════════════════════════════════════
 # 8. Integration / end-to-end engine flow
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class TestEndToEndFlow:
     def test_full_pipeline_no_data(self):
@@ -401,8 +405,12 @@ class TestEndToEndFlow:
         assert regs[0].muscle_group == "chest"
 
         score = compute_fatigue_score(
-            "chest", regs, weekly_sets=20, mrv_sets=22,
-            weekly_frequency=4, nutrition_compliance=0.6,
+            "chest",
+            regs,
+            weekly_sets=20,
+            mrv_sets=22,
+            weekly_frequency=4,
+            nutrition_compliance=0.6,
         )
         assert score.score > 0
 
@@ -415,8 +423,12 @@ class TestEndToEndFlow:
     def test_very_high_volume_triggers_fatigue(self):
         """Volume at or above MRV should contribute to fatigue score."""
         score = compute_fatigue_score(
-            "chest", [], weekly_sets=25, mrv_sets=22,
-            weekly_frequency=5, nutrition_compliance=None,
+            "chest",
+            [],
+            weekly_sets=25,
+            mrv_sets=22,
+            weekly_frequency=5,
+            nutrition_compliance=None,
         )
         # Volume component should be capped at 1.0
         assert score.volume_component == 1.0
@@ -427,6 +439,7 @@ class TestEndToEndFlow:
 # ═══════════════════════════════════════════════════════════════════════════════
 # 9. MRV_SETS_PER_WEEK sanity
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class TestMRVConstants:
     def test_all_values_positive(self):

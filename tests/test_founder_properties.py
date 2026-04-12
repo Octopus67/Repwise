@@ -12,7 +12,6 @@ import pytest
 from hypothesis import HealthCheck, given, settings as h_settings, strategies as st
 
 from src.modules.auth.models import User
-from src.modules.founder.models import FounderContent
 from src.modules.founder.schemas import FounderContentUpdate
 from src.modules.founder.service import FounderService
 from src.shared.types import UserRole
@@ -28,7 +27,9 @@ _locales = st.sampled_from(["en", "hi", "es"])
 # Generate random JSONB-compatible content dicts
 _content_values = st.dictionaries(
     keys=st.text(
-        alphabet=st.characters(whitelist_categories=("L", "N"), min_codepoint=65, max_codepoint=122),
+        alphabet=st.characters(
+            whitelist_categories=("L", "N"), min_codepoint=65, max_codepoint=122
+        ),
         min_size=1,
         max_size=20,
     ),
@@ -109,9 +110,7 @@ class TestProperty26FounderContentUpdateRoundTrip:
             locale=locale,
             content=content,
         )
-        updated_entry = await service.update_content(
-            data=update_data, admin_user_id=admin.id
-        )
+        updated_entry = await service.update_content(data=update_data, admin_user_id=admin.id)
         await db_session.commit()
 
         # Assert: read back returns the updated content
@@ -119,9 +118,7 @@ class TestProperty26FounderContentUpdateRoundTrip:
         assert len(items) >= 1, "Expected at least one content entry"
 
         found = items[0]
-        assert found.content == content, (
-            f"Expected content {content}, got {found.content}"
-        )
+        assert found.content == content, f"Expected content {content}, got {found.content}"
         assert found.section_key == section_key
         assert found.locale == locale
 
@@ -149,18 +146,14 @@ class TestProperty26FounderContentUpdateRoundTrip:
 
         # First update
         await service.update_content(
-            data=FounderContentUpdate(
-                section_key=section_key, locale="en", content=content_v1
-            ),
+            data=FounderContentUpdate(section_key=section_key, locale="en", content=content_v1),
             admin_user_id=admin.id,
         )
         await db_session.commit()
 
         # Second update
         await service.update_content(
-            data=FounderContentUpdate(
-                section_key=section_key, locale="en", content=content_v2
-            ),
+            data=FounderContentUpdate(section_key=section_key, locale="en", content=content_v2),
             admin_user_id=admin.id,
         )
         await db_session.commit()
@@ -204,9 +197,7 @@ class TestProperty26FounderContentUpdateRoundTrip:
 
         # Update
         updated = await service.update_content(
-            data=FounderContentUpdate(
-                section_key=section_key, locale="en", content=content
-            ),
+            data=FounderContentUpdate(section_key=section_key, locale="en", content=content),
             admin_user_id=admin.id,
         )
         await db_session.commit()

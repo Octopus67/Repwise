@@ -17,7 +17,8 @@ class RecompMeasurement(SoftDeleteMixin, Base):  # Audit fix 8.6
     __tablename__ = "recomp_measurements"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
     )
     recorded_date: Mapped[date] = mapped_column(Date, nullable=False)
     waist_cm: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
@@ -26,5 +27,7 @@ class RecompMeasurement(SoftDeleteMixin, Base):  # Audit fix 8.6
 
     __table_args__ = (
         Index("ix_recomp_measurements_user_date", "user_id", "recorded_date"),
-        Index("ix_recomp_measurements_not_deleted", "id", postgresql_where=text("deleted_at IS NULL")),
+        Index(
+            "ix_recomp_measurements_not_deleted", "id", postgresql_where=text("deleted_at IS NULL")
+        ),
     )

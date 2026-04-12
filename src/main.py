@@ -183,10 +183,14 @@ async def lifespan(application: FastAPI):
             break
         except Exception as exc:
             if _attempt < 3:
-                logger.warning("DB connectivity check attempt %d/3 failed: %s — retrying in 5s", _attempt, exc)
+                logger.warning(
+                    "DB connectivity check attempt %d/3 failed: %s — retrying in 5s", _attempt, exc
+                )
                 await asyncio.sleep(5)
             else:
-                logger.critical("Startup DB connectivity check FAILED after 3 attempts: %s — exiting", exc)
+                logger.critical(
+                    "Startup DB connectivity check FAILED after 3 attempts: %s — exiting", exc
+                )
                 import sys
 
                 sys.exit(1)
@@ -258,7 +262,10 @@ if not settings.DEBUG:
 # Audit fix 10.8 — reject wildcard origin when credentials are enabled
 if "*" in settings.cors_origins_list:
     import logging as _cors_log
-    _cors_log.getLogger(__name__).warning("CORS: wildcard '*' origin used with allow_credentials=True — this is insecure")
+
+    _cors_log.getLogger(__name__).warning(
+        "CORS: wildcard '*' origin used with allow_credentials=True — this is insecure"
+    )
 
 app.add_middleware(
     CORSMiddleware,

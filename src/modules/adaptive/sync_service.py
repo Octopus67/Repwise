@@ -49,12 +49,12 @@ class SyncEngineService:
             .limit(1)
         )
         snap = (await self.session.execute(snap_stmt)).scalar_one_or_none()
-        
+
         if snap is None:
             # Return default targets based on user profile or safe defaults
             logger.warning("No adaptive snapshot found for user %s, using defaults", user_id)
             default_targets = await self._get_default_targets(user_id)
-            
+
             return DailyTargetResponse(
                 date=target_date,
                 day_classification="rest",
@@ -140,12 +140,14 @@ class SyncEngineService:
         )
 
     async def set_override(
-        self, user_id: uuid.UUID, data: OverrideCreate,
+        self,
+        user_id: uuid.UUID,
+        data: OverrideCreate,
     ) -> OverrideResponse:
         """Upsert a daily target override."""
         from src.middleware.audit_logger import record_audit
         from src.shared.types import AuditAction
-        
+
         existing = await self._get_override(user_id, data.date)
         if existing:
             old_values = {
@@ -160,13 +162,13 @@ class SyncEngineService:
                 "carbs_g": data.carbs_g,
                 "fat_g": data.fat_g,
             }
-            
+
             existing.calories = data.calories
             existing.protein_g = data.protein_g
             existing.carbs_g = data.carbs_g
             existing.fat_g = data.fat_g
             await self.session.flush()
-            
+
             # Audit log the update
             record_audit(
                 user_id=user_id,
@@ -175,7 +177,7 @@ class SyncEngineService:
                 entity_id=existing.id,
                 changes={"old": old_values, "new": new_values},
             )
-            
+
             return OverrideResponse.model_validate(existing)
 
         row = DailyTargetOverride(
@@ -188,7 +190,7 @@ class SyncEngineService:
         )
         self.session.add(row)
         await self.session.flush()
-        
+
         # Audit log the creation
         record_audit(
             user_id=user_id,
@@ -197,7 +199,7 @@ class SyncEngineService:
             entity_id=row.id,
             changes={"new": data.model_dump()},
         )
-        
+
         return OverrideResponse.model_validate(row)
 
     async def remove_override(self, user_id: uuid.UUID, target_date: date) -> None:
@@ -214,12 +216,14 @@ class SyncEngineService:
     # ------------------------------------------------------------------
 
     async def _classify_day(
-        self, user_id: uuid.UUID, target_date: date,
+        self,
+        user_id: uuid.UUID,
+        target_date: date,
     ) -> tuple[bool, list[dict], str]:
         """Check training sessions for the date. Returns (is_training, exercises_json, reason)."""
         try:
             from src.modules.training.models import TrainingSession
-            
+
             stmt = (
                 select(TrainingSession)
                 .where(
@@ -234,18 +238,23 @@ class SyncEngineService:
                 exercises = session.exercises if isinstance(session.exercises, list) else []
                 return True, exercises, "Session logged"
         except (ImportError, SQLAlchemyError):
-            logger.exception("Failed to classify training day for user %s on %s", user_id, target_date)
+            logger.exception(
+                "Failed to classify training day for user %s on %s", user_id, target_date
+            )
 
         return False, [], "No session"
 
     async def _get_rolling_avg_volume(
-        self, user_id: uuid.UUID, end_date: date, weeks: int = 4,
+        self,
+        user_id: uuid.UUID,
+        end_date: date,
+        weeks: int = 4,
     ) -> float:
         """Compute average session volume over the last N weeks."""
         start_date = end_date - timedelta(weeks=weeks)
         try:
             from src.modules.training.models import TrainingSession
-            
+
             stmt = select(TrainingSession).where(
                 TrainingSession.user_id == user_id,
                 TrainingSession.session_date >= start_date,
@@ -276,7 +285,9 @@ class SyncEngineService:
             return 0.0
 
     async def _get_override(
-        self, user_id: uuid.UUID, target_date: date,
+        self,
+        user_id: uuid.UUID,
+        target_date: date,
     ) -> Optional[DailyTargetOverride]:
         stmt = select(DailyTargetOverride).where(
             DailyTargetOverride.user_id == user_id,
@@ -296,21 +307,23 @@ class SyncEngineService:
             total_sets = len(sets)
             total_reps = sum(s.get("reps", 0) for s in sets)
             total_volume = sum(s.get("reps", 0) * s.get("weight_kg", 0) for s in sets)
-            result.append(SessionExercise(
-                exercise_name=name,
-                muscle_group=get_muscle_group(name),
-                is_compound=is_compound(name),
-                total_sets=total_sets,
-                total_reps=total_reps,
-                total_volume=total_volume,
-            ))
+            result.append(
+                SessionExercise(
+                    exercise_name=name,
+                    muscle_group=get_muscle_group(name),
+                    is_compound=is_compound(name),
+                    total_sets=total_sets,
+                    total_reps=total_reps,
+                    total_volume=total_volume,
+                )
+            )
         return result
 
     async def _get_default_targets(self, user_id: uuid.UUID) -> MacroTargets:
         """Calculate default targets from user profile or return safe defaults."""
         try:
             from src.modules.user.models import UserMetric
-            
+
             # Try to get user metrics for TDEE calculation
             metrics_stmt = (
                 select(UserMetric)
@@ -319,17 +332,17 @@ class SyncEngineService:
                 .limit(1)
             )
             metrics = (await self.session.execute(metrics_stmt)).scalar_one_or_none()
-            
-            if metrics and hasattr(metrics, 'height_cm') and hasattr(metrics, 'weight_kg'):
+
+            if metrics and hasattr(metrics, "height_cm") and hasattr(metrics, "weight_kg"):
                 # Calculate basic TDEE
                 weight_kg = metrics.weight_kg
                 height_cm = metrics.height_cm
-                age_years = getattr(metrics, 'age_years', 30)
-                
+                age_years = getattr(metrics, "age_years", 30)
+
                 # Basic BMR calculation (assuming male for safety)
                 bmr = 10.0 * weight_kg + 6.25 * height_cm - 5.0 * age_years + 5.0
                 tdee = bmr * 1.55  # Moderate activity
-                
+
                 return MacroTargets(
                     calories=tdee,
                     protein_g=weight_kg * 1.8,  # 1.8g per kg
@@ -338,7 +351,7 @@ class SyncEngineService:
                 )
         except (ImportError, SQLAlchemyError, AttributeError):
             logger.exception("Failed to calculate default targets for user %s", user_id)
-        
+
         # Safe fallback defaults
         return MacroTargets(
             calories=2000.0,

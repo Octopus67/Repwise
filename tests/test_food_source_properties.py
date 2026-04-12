@@ -7,7 +7,6 @@ Operates at the service level using the db_session fixture.
 from __future__ import annotations
 
 import uuid
-from unittest.mock import AsyncMock, patch
 
 import pytest
 from hypothesis import HealthCheck, given, settings as h_settings, strategies as st
@@ -27,13 +26,9 @@ VALID_SOURCES = ["usda", "verified", "community", "custom"]
 
 _sources = st.sampled_from(VALID_SOURCES)
 
-_positive_floats = st.floats(
-    min_value=0.1, max_value=5000.0, allow_nan=False, allow_infinity=False
-)
+_positive_floats = st.floats(min_value=0.1, max_value=5000.0, allow_nan=False, allow_infinity=False)
 
-_serving_sizes = st.floats(
-    min_value=1.0, max_value=1000.0, allow_nan=False, allow_infinity=False
-)
+_serving_sizes = st.floats(min_value=1.0, max_value=1000.0, allow_nan=False, allow_infinity=False)
 
 _categories = st.sampled_from(
     ["Curry", "Bread", "Grain", "Breakfast", "Protein", "Side", "Dessert"]
@@ -142,9 +137,7 @@ class TestProperty18FoodSourceFieldIntegrity:
     @pytest.mark.asyncio
     @_fixture_settings
     @given(
-        client_source=st.sampled_from(
-            ["usda", "verified", "community", "custom", "unknown", ""]
-        ),
+        client_source=st.sampled_from(["usda", "verified", "community", "custom", "unknown", ""]),
         data=food_item_strategy(),
     )
     async def test_create_food_item_always_sets_source_custom(

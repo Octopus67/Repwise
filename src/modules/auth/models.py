@@ -22,21 +22,13 @@ class User(SoftDeleteMixin, Base):
 
     __tablename__ = "users"
 
-    email: Mapped[str] = mapped_column(
-        String(320), index=True, nullable=False
-    )
-    hashed_password: Mapped[Optional[str]] = mapped_column(
-        String(128), nullable=True
-    )
+    email: Mapped[str] = mapped_column(String(320), index=True, nullable=False)
+    hashed_password: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
     auth_provider: Mapped[str] = mapped_column(
         String(20), nullable=False, default=AuthProvider.EMAIL
     )
-    auth_provider_id: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    role: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=UserRole.USER
-    )
+    auth_provider_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    role: Mapped[str] = mapped_column(String(20), nullable=False, default=UserRole.USER)
 
     # Email verification
     email_verified: Mapped[bool] = mapped_column(
@@ -53,7 +45,7 @@ class User(SoftDeleteMixin, Base):
     trial_ends_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    
+
     # Session invalidation on password change
     password_changed_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
@@ -85,7 +77,9 @@ class PasswordResetCode(Base):
 
     __tablename__ = "password_reset_codes"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     code_hash: Mapped[str] = mapped_column(String(128), nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
@@ -93,7 +87,7 @@ class PasswordResetCode(Base):
 
 class TokenBlacklist(Base):
     """JWT token blacklist table.
-    
+
     Stores JTI (JWT ID) of tokens that have been logged out.
     """
 
@@ -111,7 +105,9 @@ class EmailVerificationCode(Base):
 
     __tablename__ = "email_verification_codes"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     code_hash: Mapped[str] = mapped_column(String(128), nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

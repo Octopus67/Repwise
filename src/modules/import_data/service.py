@@ -37,12 +37,17 @@ class ImportService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def preview_import(self, content: str, weight_unit: str = "kg", user_id: uuid.UUID | None = None) -> ImportPreviewResponse:
+    async def preview_import(
+        self, content: str, weight_unit: str = "kg", user_id: uuid.UUID | None = None
+    ) -> ImportPreviewResponse:
         """Parse CSV and return preview without saving anything."""
         workouts = parse_csv(content, weight_unit=weight_unit)
         if not workouts:
             return ImportPreviewResponse(
-                session_count=0, date_range=("", ""), exercise_mappings=[], unmapped_count=0,
+                session_count=0,
+                date_range=("", ""),
+                exercise_mappings=[],
+                unmapped_count=0,
             )
 
         all_names = list({e.name for w in workouts for e in w.exercises})
@@ -50,7 +55,8 @@ class ImportService:
         db_exercises: list[dict] = []
         if user_id:
             stmt = select(CustomExercise).where(
-                CustomExercise.user_id == user_id, CustomExercise.deleted_at.is_(None),
+                CustomExercise.user_id == user_id,
+                CustomExercise.deleted_at.is_(None),
             )
             result = await self.session.execute(stmt)
             db_exercises = [{"id": str(e.id), "name": e.name} for e in result.scalars().all()]
@@ -77,7 +83,10 @@ class ImportService:
         )
 
     async def execute_import(
-        self, user_id: uuid.UUID, content: str, weight_unit: str = "kg",
+        self,
+        user_id: uuid.UUID,
+        content: str,
+        weight_unit: str = "kg",
     ) -> ImportResultResponse:
         """Parse CSV, map exercises, create sessions in batches."""
         workouts = parse_csv(content, weight_unit=weight_unit)
@@ -86,7 +95,8 @@ class ImportService:
 
         # Load all user custom exercises once (no N+1)
         stmt = select(CustomExercise).where(
-            CustomExercise.user_id == user_id, CustomExercise.deleted_at.is_(None),
+            CustomExercise.user_id == user_id,
+            CustomExercise.deleted_at.is_(None),
         )
         result = await self.session.execute(stmt)
         db_exercises = [{"id": str(e.id), "name": e.name} for e in result.scalars().all()]
@@ -104,8 +114,12 @@ class ImportService:
             else:
                 # Create as custom exercise
                 custom = CustomExercise(
-                    user_id=user_id, name=name, muscle_group="full_body",
-                    secondary_muscles=[], equipment="bodyweight", category="compound",
+                    user_id=user_id,
+                    name=name,
+                    muscle_group="full_body",
+                    secondary_muscles=[],
+                    equipment="bodyweight",
+                    category="compound",
                 )
                 self.session.add(custom)
                 name_to_exercise[name] = name
@@ -116,9 +130,14 @@ class ImportService:
 
         # Duplicate detection: load existing session hashes
         existing_hashes = set()
-        existing_stmt = select(TrainingSession).where(
-            TrainingSession.user_id == user_id, TrainingSession.deleted_at.is_(None),
-        ).options(load_only(TrainingSession.session_date, TrainingSession.exercises))
+        existing_stmt = (
+            select(TrainingSession)
+            .where(
+                TrainingSession.user_id == user_id,
+                TrainingSession.deleted_at.is_(None),
+            )
+            .options(load_only(TrainingSession.session_date, TrainingSession.exercises))
+        )
         existing_result = await self.session.execute(existing_stmt)
         for s in existing_result.scalars().all():
             # Reconstruct hash from existing sessions
@@ -141,8 +160,12 @@ class ImportService:
                     mapped_name = name_to_exercise.get(ex.name, ex.name)
                     sets = [
                         SetEntry(
-                            reps=s.reps, weight_kg=s.weight_kg,
-                            rpe=s.rpe, set_type=s.set_type if s.set_type in {"normal", "warm-up", "drop-set", "amrap"} else "normal",
+                            reps=s.reps,
+                            weight_kg=s.weight_kg,
+                            rpe=s.rpe,
+                            set_type=s.set_type
+                            if s.set_type in {"normal", "warm-up", "drop-set", "amrap"}
+                            else "normal",
                         )
                         for s in ex.sets
                     ]
@@ -164,5 +187,7 @@ class ImportService:
             await self.session.flush()
 
         return ImportResultResponse(
-            sessions_imported=sessions_imported, exercises_created=exercises_created, prs_detected=0,
+            sessions_imported=sessions_imported,
+            exercises_created=exercises_created,
+            prs_detected=0,
         )

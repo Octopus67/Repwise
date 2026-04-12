@@ -21,7 +21,6 @@ from src.modules.meal_plans.generator import (
     generate_plan,
 )
 from src.modules.nutrition.models import NutritionEntry
-from src.modules.nutrition.schemas import NutritionEntryCreate
 from src.modules.nutrition.service import NutritionService
 from src.modules.training.schemas import ExerciseEntry, SetEntry, TrainingSessionCreate
 from src.modules.training.service import TrainingService
@@ -31,6 +30,7 @@ from src.shared.pagination import PaginationParams
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 async def _create_user(db: AsyncSession) -> User:
     user = User(
@@ -52,7 +52,6 @@ async def _create_user(db: AsyncSession) -> User:
 
 
 class TestDuplicateDataIntegrity:
-
     @pytest.mark.asyncio
     async def test_duplicate_exercise_notes_preserved(self, db_session: AsyncSession):
         """Workout with 2× Squat, each with different notes, preserves both."""
@@ -64,12 +63,18 @@ class TestDuplicateDataIntegrity:
             TrainingSessionCreate(
                 session_date=date.today(),
                 exercises=[
-                    ExerciseEntry(exercise_name="Squat", sets=[
-                        SetEntry(reps=5, weight_kg=100.0),
-                    ]),
-                    ExerciseEntry(exercise_name="Squat", sets=[
-                        SetEntry(reps=8, weight_kg=80.0),
-                    ]),
+                    ExerciseEntry(
+                        exercise_name="Squat",
+                        sets=[
+                            SetEntry(reps=5, weight_kg=100.0),
+                        ],
+                    ),
+                    ExerciseEntry(
+                        exercise_name="Squat",
+                        sets=[
+                            SetEntry(reps=8, weight_kg=80.0),
+                        ],
+                    ),
                 ],
                 metadata={"exercise_notes": {"Squat_0": "Felt strong", "Squat_1": "Back-off set"}},
             ),
@@ -143,6 +148,7 @@ class TestDuplicateDataIntegrity:
 
         # Verify total on target date is still 2
         from src.modules.nutrition.schemas import DateRangeFilter
+
         result = await svc.get_entries(
             user.id,
             filters=DateRangeFilter(start_date=target, end_date=target),
@@ -184,7 +190,6 @@ def _make_candidates(n: int = 8) -> list[FoodCandidate]:
 
 
 class TestMealPlanVariety:
-
     def test_meal_plan_day_variety(self):
         """5-day plan has different food assignments across consecutive days."""
         targets = MacroSummary(calories=2000, protein_g=150, carbs_g=200, fat_g=70)
@@ -202,8 +207,7 @@ class TestMealPlanVariety:
 
         # At least some consecutive days should differ (rotation logic)
         differences = sum(
-            1 for i in range(len(day_food_sets) - 1)
-            if day_food_sets[i] != day_food_sets[i + 1]
+            1 for i in range(len(day_food_sets) - 1) if day_food_sets[i] != day_food_sets[i + 1]
         )
         assert differences >= 1, "Consecutive days should have some variety"
 

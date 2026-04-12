@@ -25,7 +25,9 @@ class NutritionEntry(Base, SoftDeleteMixin, AuditLogMixin):
 
     __tablename__ = "nutrition_entries"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
     meal_name: Mapped[str] = mapped_column(String(255))
     food_name: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     calories: Mapped[float] = mapped_column(Float)

@@ -40,9 +40,7 @@ class TemplateService:
         await self.session.flush()
         return UserWorkoutTemplateResponse.from_orm_model(template)
 
-    async def list_user_templates(
-        self, user_id: uuid.UUID
-    ) -> list[UserWorkoutTemplateResponse]:
+    async def list_user_templates(self, user_id: uuid.UUID) -> list[UserWorkoutTemplateResponse]:
         """Return all non-deleted templates for a user, ordered by sort_order ASC, created_at DESC."""
         stmt = select(WorkoutTemplate).where(WorkoutTemplate.user_id == user_id)
         stmt = WorkoutTemplate.not_deleted(stmt)
@@ -95,9 +93,7 @@ class TemplateService:
         await self.session.flush()
         return UserWorkoutTemplateResponse.from_orm_model(template)
 
-    async def soft_delete_template(
-        self, user_id: uuid.UUID, template_id: uuid.UUID
-    ) -> None:
+    async def soft_delete_template(self, user_id: uuid.UUID, template_id: uuid.UUID) -> None:
         """Soft-delete a user workout template."""
         template = await self._get_or_404(user_id, template_id)
         template.deleted_at = datetime.now(timezone.utc)
@@ -110,9 +106,7 @@ class TemplateService:
         )
         await self.session.flush()
 
-    async def _get_or_404(
-        self, user_id: uuid.UUID, template_id: uuid.UUID
-    ) -> WorkoutTemplate:
+    async def _get_or_404(self, user_id: uuid.UUID, template_id: uuid.UUID) -> WorkoutTemplate:
         """Fetch a non-deleted template or raise NotFoundError."""
         stmt = select(WorkoutTemplate).where(
             WorkoutTemplate.id == template_id,

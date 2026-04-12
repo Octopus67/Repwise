@@ -34,7 +34,9 @@ class MonthlyReportService:
 
         # Current month metrics
         training = await self._weekly._build_training_metrics(user_id, month_start, month_end)
-        nutrition, _, _ = await self._weekly._build_nutrition_metrics(user_id, month_start, month_end)
+        nutrition, _, _ = await self._weekly._build_nutrition_metrics(
+            user_id, month_start, month_end
+        )
         body = await self._weekly._build_body_metrics(user_id, month_start, month_end)
 
         # Previous month metrics for MoM delta
@@ -46,7 +48,9 @@ class MonthlyReportService:
         prev_end = date(prev_year, prev_month, calendar.monthrange(prev_year, prev_month)[1])
 
         prev_training = await self._weekly._build_training_metrics(user_id, prev_start, prev_end)
-        prev_nutrition, _, _ = await self._weekly._build_nutrition_metrics(user_id, prev_start, prev_end)
+        prev_nutrition, _, _ = await self._weekly._build_nutrition_metrics(
+            user_id, prev_start, prev_end
+        )
         prev_body = await self._weekly._build_body_metrics(user_id, prev_start, prev_end)
 
         # Build MoM delta

@@ -15,16 +15,12 @@ import pytest
 from hypothesis import HealthCheck, given, settings as h_settings, strategies as st
 from sqlalchemy import select
 
-from src.modules.feature_flags.models import FeatureFlag
 from src.modules.feature_flags.service import FeatureFlagService, invalidate_cache
-from src.modules.nutrition.models import NutritionEntry
 from src.modules.nutrition.schemas import NutritionEntryCreate, NutritionEntryUpdate
 from src.modules.nutrition.service import NutritionService
-from src.modules.training.models import TrainingSession
 from src.modules.training.schemas import ExerciseEntry, SetEntry, TrainingSessionCreate
 from src.modules.training.service import TrainingService
 from src.shared.audit import AuditLog
-from src.shared.pagination import PaginationParams
 
 
 # ---------------------------------------------------------------------------
@@ -67,7 +63,9 @@ _set_entry = st.builds(
 _exercise_entry = st.builds(
     ExerciseEntry,
     exercise_name=st.text(
-        alphabet=st.characters(whitelist_categories=("L", "Zs"), min_codepoint=65, max_codepoint=122),
+        alphabet=st.characters(
+            whitelist_categories=("L", "Zs"), min_codepoint=65, max_codepoint=122
+        ),
         min_size=2,
         max_size=30,
     ).filter(lambda s: s.strip() != ""),
@@ -82,15 +80,28 @@ _training_session_create = st.builds(
 )
 
 # CRUD action enum for Property 17
-_crud_action = st.sampled_from(["create_nutrition", "update_nutrition", "delete_nutrition",
-                                 "create_training", "delete_training"])
+_crud_action = st.sampled_from(
+    [
+        "create_nutrition",
+        "update_nutrition",
+        "delete_nutrition",
+        "create_training",
+        "delete_training",
+    ]
+)
 
 # Feature flag strategies
-_flag_names = st.text(
-    alphabet=st.characters(whitelist_categories=("L", "N"), min_codepoint=97, max_codepoint=122),
-    min_size=3,
-    max_size=30,
-).filter(lambda s: s.strip() != "").map(lambda s: f"flag_{s}")
+_flag_names = (
+    st.text(
+        alphabet=st.characters(
+            whitelist_categories=("L", "N"), min_codepoint=97, max_codepoint=122
+        ),
+        min_size=3,
+        max_size=30,
+    )
+    .filter(lambda s: s.strip() != "")
+    .map(lambda s: f"flag_{s}")
+)
 
 _flag_enabled = st.booleans()
 
@@ -125,7 +136,9 @@ class TestProperty17AuditLoggingCompleteness:
     @_fixture_settings
     @given(
         nutrition_data=_nutrition_entry_create,
-        update_calories=st.floats(min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False),
+        update_calories=st.floats(
+            min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False
+        ),
     )
     async def test_create_update_delete_all_produce_audit_entries(
         self,
@@ -176,14 +189,12 @@ class TestProperty17AuditLoggingCompleteness:
         # Update should be logged (if calories actually changed)
         if update_calories != nutrition_data.calories:
             assert "update" in actions_logged, (
-                f"Expected 'update' audit log for entry {entry_id}, "
-                f"got actions: {actions_logged}"
+                f"Expected 'update' audit log for entry {entry_id}, got actions: {actions_logged}"
             )
 
         # Delete should always be logged
         assert "delete" in actions_logged, (
-            f"Expected 'delete' audit log for entry {entry_id}, "
-            f"got actions: {actions_logged}"
+            f"Expected 'delete' audit log for entry {entry_id}, got actions: {actions_logged}"
         )
 
         # Verify all audit entries have required fields
@@ -278,8 +289,7 @@ class TestProperty25FeatureFlagToggling:
         result = await service.is_feature_enabled(flag_name)
 
         assert result == is_enabled, (
-            f"Flag '{flag_name}' is_enabled={is_enabled} but "
-            f"is_feature_enabled returned {result}"
+            f"Flag '{flag_name}' is_enabled={is_enabled} but is_feature_enabled returned {result}"
         )
 
     @pytest.mark.asyncio
@@ -379,7 +389,9 @@ class TestProperty25FeatureFlagToggling:
         if role == "premium":
             assert result is True, f"Premium user should have access to flag '{flag_name}'"
         else:
-            assert result is False, f"User with role '{role}' should NOT have access to flag '{flag_name}'"
+            assert result is False, (
+                f"User with role '{role}' should NOT have access to flag '{flag_name}'"
+            )
 
     @pytest.mark.asyncio
     async def test_nonexistent_flag_returns_false(self, db_session):

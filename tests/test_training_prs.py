@@ -8,7 +8,7 @@ duplicate exercise handling, and PR celebration response.
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date
 
 import pytest
 from sqlalchemy import select
@@ -16,7 +16,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.auth.models import User
 from src.modules.training.models import PersonalRecord, TrainingSession
-from src.modules.training.pr_detector import PRDetector
 from src.modules.training.schemas import (
     ExerciseEntry,
     SetEntry,
@@ -29,6 +28,7 @@ from src.modules.training.service import TrainingService
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 async def _create_user(db: AsyncSession) -> User:
     user = User(
@@ -57,7 +57,6 @@ def _session_create(exercises: list[ExerciseEntry], d: date | None = None) -> Tr
 
 
 class TestPRDetection:
-
     @pytest.mark.asyncio
     async def test_pr_detection_first_time_exercise(self, db_session: AsyncSession):
         """First-ever set for an exercise is detected as PR with previous_weight_kg=None."""
@@ -66,11 +65,16 @@ class TestPRDetection:
 
         resp = await svc.create_session(
             user.id,
-            _session_create([
-                ExerciseEntry(exercise_name="Bench Press", sets=[
-                    SetEntry(reps=5, weight_kg=60.0),
-                ]),
-            ]),
+            _session_create(
+                [
+                    ExerciseEntry(
+                        exercise_name="Bench Press",
+                        sets=[
+                            SetEntry(reps=5, weight_kg=60.0),
+                        ],
+                    ),
+                ]
+            ),
         )
         await db_session.commit()
 
@@ -89,22 +93,32 @@ class TestPRDetection:
         # Session 1: Squat at 5 reps
         await svc.create_session(
             user.id,
-            _session_create([
-                ExerciseEntry(exercise_name="Squat", sets=[
-                    SetEntry(reps=5, weight_kg=100.0),
-                ]),
-            ]),
+            _session_create(
+                [
+                    ExerciseEntry(
+                        exercise_name="Squat",
+                        sets=[
+                            SetEntry(reps=5, weight_kg=100.0),
+                        ],
+                    ),
+                ]
+            ),
         )
         await db_session.commit()
 
         # Session 2: Squat at 8 reps (new rep count)
         resp = await svc.create_session(
             user.id,
-            _session_create([
-                ExerciseEntry(exercise_name="Squat", sets=[
-                    SetEntry(reps=8, weight_kg=80.0),
-                ]),
-            ]),
+            _session_create(
+                [
+                    ExerciseEntry(
+                        exercise_name="Squat",
+                        sets=[
+                            SetEntry(reps=8, weight_kg=80.0),
+                        ],
+                    ),
+                ]
+            ),
         )
         await db_session.commit()
 
@@ -121,22 +135,32 @@ class TestPRDetection:
         # Session 1: 100kg × 5
         await svc.create_session(
             user.id,
-            _session_create([
-                ExerciseEntry(exercise_name="Squat", sets=[
-                    SetEntry(reps=5, weight_kg=100.0),
-                ]),
-            ]),
+            _session_create(
+                [
+                    ExerciseEntry(
+                        exercise_name="Squat",
+                        sets=[
+                            SetEntry(reps=5, weight_kg=100.0),
+                        ],
+                    ),
+                ]
+            ),
         )
         await db_session.commit()
 
         # Session 2: 95kg × 5 — should NOT be a PR
         resp = await svc.create_session(
             user.id,
-            _session_create([
-                ExerciseEntry(exercise_name="Squat", sets=[
-                    SetEntry(reps=5, weight_kg=95.0),
-                ]),
-            ]),
+            _session_create(
+                [
+                    ExerciseEntry(
+                        exercise_name="Squat",
+                        sets=[
+                            SetEntry(reps=5, weight_kg=95.0),
+                        ],
+                    ),
+                ]
+            ),
         )
         await db_session.commit()
 
@@ -153,22 +177,32 @@ class TestPRDetection:
         # Session 1: Deadlift 3×140
         await svc.create_session(
             user.id,
-            _session_create([
-                ExerciseEntry(exercise_name="Deadlift", sets=[
-                    SetEntry(reps=3, weight_kg=140.0),
-                ]),
-            ]),
+            _session_create(
+                [
+                    ExerciseEntry(
+                        exercise_name="Deadlift",
+                        sets=[
+                            SetEntry(reps=3, weight_kg=140.0),
+                        ],
+                    ),
+                ]
+            ),
         )
         await db_session.commit()
 
         # Session 2: Deadlift 3×130 (below session 1, no PR at reps=3)
         resp = await svc.create_session(
             user.id,
-            _session_create([
-                ExerciseEntry(exercise_name="Deadlift", sets=[
-                    SetEntry(reps=3, weight_kg=130.0),
-                ]),
-            ]),
+            _session_create(
+                [
+                    ExerciseEntry(
+                        exercise_name="Deadlift",
+                        sets=[
+                            SetEntry(reps=3, weight_kg=130.0),
+                        ],
+                    ),
+                ]
+            ),
         )
         await db_session.commit()
         session_id = resp.id
@@ -182,11 +216,16 @@ class TestPRDetection:
         updated = await svc.update_session(
             user.id,
             session_id,
-            TrainingSessionUpdate(exercises=[
-                ExerciseEntry(exercise_name="Deadlift", sets=[
-                    SetEntry(reps=3, weight_kg=150.0),
-                ]),
-            ]),
+            TrainingSessionUpdate(
+                exercises=[
+                    ExerciseEntry(
+                        exercise_name="Deadlift",
+                        sets=[
+                            SetEntry(reps=3, weight_kg=150.0),
+                        ],
+                    ),
+                ]
+            ),
         )
         await db_session.commit()
 
@@ -203,23 +242,33 @@ class TestPRDetection:
         # Baseline: 80kg × 5 normal
         await svc.create_session(
             user.id,
-            _session_create([
-                ExerciseEntry(exercise_name="Bench Press", sets=[
-                    SetEntry(reps=5, weight_kg=80.0),
-                ]),
-            ]),
+            _session_create(
+                [
+                    ExerciseEntry(
+                        exercise_name="Bench Press",
+                        sets=[
+                            SetEntry(reps=5, weight_kg=80.0),
+                        ],
+                    ),
+                ]
+            ),
         )
         await db_session.commit()
 
         # New session: warm-up at 90kg (higher) + normal at 75kg (lower)
         resp = await svc.create_session(
             user.id,
-            _session_create([
-                ExerciseEntry(exercise_name="Bench Press", sets=[
-                    SetEntry(reps=5, weight_kg=90.0, set_type="warm-up"),
-                    SetEntry(reps=5, weight_kg=75.0),
-                ]),
-            ]),
+            _session_create(
+                [
+                    ExerciseEntry(
+                        exercise_name="Bench Press",
+                        sets=[
+                            SetEntry(reps=5, weight_kg=90.0, set_type="warm-up"),
+                            SetEntry(reps=5, weight_kg=75.0),
+                        ],
+                    ),
+                ]
+            ),
         )
         await db_session.commit()
 
@@ -240,11 +289,16 @@ class TestPRDetection:
         # Create session with PR
         resp = await svc.create_session(
             user.id,
-            _session_create([
-                ExerciseEntry(exercise_name="OHP", sets=[
-                    SetEntry(reps=5, weight_kg=50.0),
-                ]),
-            ]),
+            _session_create(
+                [
+                    ExerciseEntry(
+                        exercise_name="OHP",
+                        sets=[
+                            SetEntry(reps=5, weight_kg=50.0),
+                        ],
+                    ),
+                ]
+            ),
         )
         await db_session.commit()
         session_id = resp.id
@@ -282,14 +336,22 @@ class TestPRDetection:
 
         resp = await svc.create_session(
             user.id,
-            _session_create([
-                ExerciseEntry(exercise_name="Bench Press", sets=[
-                    SetEntry(reps=5, weight_kg=60.0),
-                ]),
-                ExerciseEntry(exercise_name="Bench Press", sets=[
-                    SetEntry(reps=8, weight_kg=50.0),
-                ]),
-            ]),
+            _session_create(
+                [
+                    ExerciseEntry(
+                        exercise_name="Bench Press",
+                        sets=[
+                            SetEntry(reps=5, weight_kg=60.0),
+                        ],
+                    ),
+                    ExerciseEntry(
+                        exercise_name="Bench Press",
+                        sets=[
+                            SetEntry(reps=8, weight_kg=50.0),
+                        ],
+                    ),
+                ]
+            ),
         )
         await db_session.commit()
 
@@ -307,11 +369,16 @@ class TestPRDetection:
 
         resp = await svc.create_session(
             user.id,
-            _session_create([
-                ExerciseEntry(exercise_name="Squat", sets=[
-                    SetEntry(reps=5, weight_kg=100.0),
-                ]),
-            ]),
+            _session_create(
+                [
+                    ExerciseEntry(
+                        exercise_name="Squat",
+                        sets=[
+                            SetEntry(reps=5, weight_kg=100.0),
+                        ],
+                    ),
+                ]
+            ),
         )
         await db_session.commit()
 

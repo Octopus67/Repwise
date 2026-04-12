@@ -31,7 +31,9 @@ class ProgressPhoto(SoftDeleteMixin, Base):
     capture_date: Mapped[date] = mapped_column(Date, nullable=False)
     bodyweight_kg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     pose_type: Mapped[str] = mapped_column(
-        String(30), nullable=False, default="front_relaxed",
+        String(30),
+        nullable=False,
+        default="front_relaxed",
     )
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     alignment_data: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)

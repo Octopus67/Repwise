@@ -323,37 +323,53 @@ class TestWNSSchemaValidation:
 
     def test_wns_landmarks_rejects_negative(self):
         from src.modules.training.volume_schemas import WNSLandmarks
+
         with pytest.raises(Exception):
             WNSLandmarks(mv=-1, mev=8, mav_low=14, mav_high=20, mrv=28)
 
     def test_wns_landmarks_accepts_valid(self):
         from src.modules.training.volume_schemas import WNSLandmarks
+
         lm = WNSLandmarks(mv=3, mev=8, mav_low=14, mav_high=20, mrv=28)
         assert lm.mv == 3
         assert lm.mrv == 28
 
     def test_wns_exercise_contribution_valid(self):
         from src.modules.training.volume_schemas import WNSExerciseContribution
+
         ec = WNSExerciseContribution(
-            exercise_name="Bench Press", coefficient=1.0,
-            sets_count=4, stimulating_reps_total=12.0, contribution_hu=8.5,
+            exercise_name="Bench Press",
+            coefficient=1.0,
+            sets_count=4,
+            stimulating_reps_total=12.0,
+            contribution_hu=8.5,
         )
         assert ec.coefficient == 1.0
 
     def test_wns_exercise_contribution_rejects_coefficient_above_1(self):
         from src.modules.training.volume_schemas import WNSExerciseContribution
+
         with pytest.raises(Exception):
             WNSExerciseContribution(
-                exercise_name="Bench Press", coefficient=1.5,
-                sets_count=4, stimulating_reps_total=12.0, contribution_hu=8.5,
+                exercise_name="Bench Press",
+                coefficient=1.5,
+                sets_count=4,
+                stimulating_reps_total=12.0,
+                contribution_hu=8.5,
             )
 
     def test_wns_muscle_volume_valid(self):
         from src.modules.training.volume_schemas import WNSMuscleVolume, WNSLandmarks
+
         mv = WNSMuscleVolume(
-            muscle_group="chest", gross_stimulus=15.0, atrophy_effect=1.5,
-            net_stimulus=13.5, hypertrophy_units=13.5, status="optimal",
-            session_count=2, frequency=2,
+            muscle_group="chest",
+            gross_stimulus=15.0,
+            atrophy_effect=1.5,
+            net_stimulus=13.5,
+            hypertrophy_units=13.5,
+            status="optimal",
+            session_count=2,
+            frequency=2,
             landmarks=WNSLandmarks(mv=3, mev=8, mav_low=14, mav_high=20, mrv=28),
             exercises=[],
         )
@@ -361,16 +377,20 @@ class TestWNSSchemaValidation:
 
     def test_wns_weekly_response_engine_field(self):
         from src.modules.training.volume_schemas import WNSWeeklyResponse
+
         resp = WNSWeeklyResponse(
-            week_start=date(2026, 3, 2), week_end=date(2026, 3, 8),
+            week_start=date(2026, 3, 2),
+            week_end=date(2026, 3, 8),
             muscle_groups=[],
         )
         assert resp.engine == "wns"
 
     def test_legacy_response_engine_field(self):
         from src.modules.training.volume_schemas import WeeklyVolumeResponse
+
         resp = WeeklyVolumeResponse(
-            week_start=date(2026, 3, 2), week_end=date(2026, 3, 8),
+            week_start=date(2026, 3, 2),
+            week_end=date(2026, 3, 8),
             muscle_groups=[],
         )
         assert resp.engine == "legacy"

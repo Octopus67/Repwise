@@ -188,9 +188,18 @@ class TestFormatCustomExerciseAsDict:
 
         result = format_custom_exercise_as_dict(FakeExercise())
         expected_keys = {
-            "id", "name", "muscle_group", "secondary_muscles",
-            "equipment", "category", "image_url", "animation_url",
-            "description", "instructions", "tips", "is_custom",
+            "id",
+            "name",
+            "muscle_group",
+            "secondary_muscles",
+            "equipment",
+            "category",
+            "image_url",
+            "animation_url",
+            "description",
+            "instructions",
+            "tips",
+            "is_custom",
         }
         assert set(result.keys()) == expected_keys
 
@@ -236,12 +245,16 @@ class TestCustomExerciseServiceCRUD:
         user_b = uuid.uuid4()
 
         await svc.create_custom_exercise(
-            user_id=user_a, name="User A Exercise",
-            muscle_group="chest", equipment="barbell",
+            user_id=user_a,
+            name="User A Exercise",
+            muscle_group="chest",
+            equipment="barbell",
         )
         await svc.create_custom_exercise(
-            user_id=user_b, name="User B Exercise",
-            muscle_group="back", equipment="cable",
+            user_id=user_b,
+            name="User B Exercise",
+            muscle_group="back",
+            equipment="cable",
         )
 
         user_a_exercises = await svc.list_user_custom_exercises(user_a)
@@ -258,12 +271,16 @@ class TestCustomExerciseServiceCRUD:
         user_id = uuid.uuid4()
 
         exercise = await svc.create_custom_exercise(
-            user_id=user_id, name="Old Name",
-            muscle_group="chest", equipment="barbell",
+            user_id=user_id,
+            name="Old Name",
+            muscle_group="chest",
+            equipment="barbell",
         )
 
         updated = await svc.update_custom_exercise(
-            user_id=user_id, exercise_id=exercise.id, name="New Name",
+            user_id=user_id,
+            exercise_id=exercise.id,
+            name="New Name",
         )
         assert updated.name == "New Name"
 
@@ -273,8 +290,10 @@ class TestCustomExerciseServiceCRUD:
         user_id = uuid.uuid4()
 
         exercise = await svc.create_custom_exercise(
-            user_id=user_id, name="To Delete",
-            muscle_group="chest", equipment="barbell",
+            user_id=user_id,
+            name="To Delete",
+            muscle_group="chest",
+            equipment="barbell",
         )
 
         await svc.delete_custom_exercise(user_id=user_id, exercise_id=exercise.id)
@@ -289,8 +308,10 @@ class TestCustomExerciseServiceCRUD:
         user_id = uuid.uuid4()
 
         await svc.create_custom_exercise(
-            user_id=user_id, name="Custom Press",
-            muscle_group="chest", equipment="barbell",
+            user_id=user_id,
+            name="Custom Press",
+            muscle_group="chest",
+            equipment="barbell",
         )
 
         dicts = await svc.list_user_custom_exercises_as_dicts(user_id)

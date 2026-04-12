@@ -45,9 +45,7 @@ class OnboardingService:
 
         # Step 1 — conflict guard (row-level lock prevents concurrent onboarding)
         result = await self.db.execute(
-            select(UserGoal)
-            .where(UserGoal.user_id == user_id)
-            .with_for_update()
+            select(UserGoal).where(UserGoal.user_id == user_id).with_for_update()
         )
         existing_goal = result.scalar_one_or_none()
         if existing_goal is not None:

@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 def async_cached(prefix: str, ttl: int = 300) -> Callable:
     """Decorator that caches async function results in Redis. Falls back to no-cache."""
+
     def decorator(fn: Callable) -> Callable:
         @functools.wraps(fn)
         async def wrapper(*args, **kwargs):
@@ -31,5 +32,7 @@ def async_cached(prefix: str, ttl: int = 300) -> Callable:
                 except Exception:
                     logger.debug("Cache write failed for %s", key)
             return result
+
         return wrapper
+
     return decorator

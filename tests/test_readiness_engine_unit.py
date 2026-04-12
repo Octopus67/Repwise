@@ -12,17 +12,12 @@ Tests cover:
 
 from __future__ import annotations
 
-import math
-from typing import Optional
 
 import pytest
 
 from src.modules.readiness.readiness_engine import (
     Baselines,
-    FactorScore,
     HealthMetrics,
-    MIN_BASELINE_DAYS,
-    ReadinessResult,
     ReadinessWeights,
     UserCheckin,
     _clamp,
@@ -42,7 +37,9 @@ from src.modules.readiness.readiness_engine import (
 # Helper: build baselines with enough data days
 # ---------------------------------------------------------------------------
 def _baselines(hrv_mean: float = 60.0, rhr_mean: float = 60.0, days: int = 14) -> Baselines:
-    return Baselines(hrv_mean=hrv_mean, resting_hr_mean=rhr_mean, hrv_data_days=days, resting_hr_data_days=days)
+    return Baselines(
+        hrv_mean=hrv_mean, resting_hr_mean=rhr_mean, hrv_data_days=days, resting_hr_data_days=days
+    )
 
 
 # ===========================================================================
@@ -206,20 +203,46 @@ class TestNormalizeSleepQuality:
 class TestRedistributeWeights:
     def test_all_present(self) -> None:
         w = ReadinessWeights()
-        present = {k: True for k in ["hrv_trend", "resting_hr_trend", "sleep_duration", "sleep_quality", "soreness", "stress"]}
+        present = {
+            k: True
+            for k in [
+                "hrv_trend",
+                "resting_hr_trend",
+                "sleep_duration",
+                "sleep_quality",
+                "soreness",
+                "stress",
+            ]
+        }
         ew = redistribute_weights(w, present)
         assert sum(ew.values()) == pytest.approx(1.0)
 
     def test_none_present(self) -> None:
         w = ReadinessWeights()
-        present = {k: False for k in ["hrv_trend", "resting_hr_trend", "sleep_duration", "sleep_quality", "soreness", "stress"]}
+        present = {
+            k: False
+            for k in [
+                "hrv_trend",
+                "resting_hr_trend",
+                "sleep_duration",
+                "sleep_quality",
+                "soreness",
+                "stress",
+            ]
+        }
         ew = redistribute_weights(w, present)
         assert all(v == 0.0 for v in ew.values())
 
     def test_partial_present(self) -> None:
         w = ReadinessWeights()
-        present = {"hrv_trend": True, "resting_hr_trend": False, "sleep_duration": True,
-                    "sleep_quality": False, "soreness": False, "stress": False}
+        present = {
+            "hrv_trend": True,
+            "resting_hr_trend": False,
+            "sleep_duration": True,
+            "sleep_quality": False,
+            "soreness": False,
+            "stress": False,
+        }
         ew = redistribute_weights(w, present)
         assert ew["resting_hr_trend"] == 0.0
         assert ew["hrv_trend"] > 0
@@ -290,7 +313,9 @@ class TestComputeReadiness:
     def test_hrv_needs_min_baseline_days(self) -> None:
         """HRV factor should be absent if baseline has < MIN_BASELINE_DAYS."""
         health = HealthMetrics(hrv_ms=60.0, sleep_duration_hours=7.0)
-        baselines = Baselines(hrv_mean=60.0, resting_hr_mean=None, hrv_data_days=3, resting_hr_data_days=0)
+        baselines = Baselines(
+            hrv_mean=60.0, resting_hr_mean=None, hrv_data_days=3, resting_hr_data_days=0
+        )
         result = compute_readiness(health, None, baselines)
         hrv_factor = next(f for f in result.factors if f.name == "hrv_trend")
         assert hrv_factor.present is False
@@ -300,7 +325,9 @@ class TestComputeReadiness:
     def test_rhr_needs_min_baseline_days(self) -> None:
         """RHR factor should be absent if baseline has < MIN_BASELINE_DAYS."""
         health = HealthMetrics(resting_hr_bpm=60.0, sleep_duration_hours=7.0)
-        baselines = Baselines(hrv_mean=None, resting_hr_mean=60.0, hrv_data_days=0, resting_hr_data_days=5)
+        baselines = Baselines(
+            hrv_mean=None, resting_hr_mean=60.0, hrv_data_days=0, resting_hr_data_days=5
+        )
         result = compute_readiness(health, None, baselines)
         rhr_factor = next(f for f in result.factors if f.name == "resting_hr_trend")
         assert rhr_factor.present is False
@@ -347,8 +374,12 @@ class TestComputeReadiness:
         checkin = UserCheckin(soreness=1, stress=1, sleep_quality=5)
         # Give sleep_duration 100% weight
         weights = ReadinessWeights(
-            hrv_trend=0.0, resting_hr_trend=0.0, sleep_duration=1.0,
-            sleep_quality=0.0, soreness=0.0, stress=0.0,
+            hrv_trend=0.0,
+            resting_hr_trend=0.0,
+            sleep_duration=1.0,
+            sleep_quality=0.0,
+            soreness=0.0,
+            stress=0.0,
         )
         result = compute_readiness(health, checkin, Baselines(), weights)
         # sleep_duration=8h → norm=1.0, weight=1.0 → score=100
@@ -364,7 +395,14 @@ class TestComputeReadiness:
         """All 6 expected factor names should be present."""
         result = compute_readiness(HealthMetrics(), None, Baselines())
         names = {f.name for f in result.factors}
-        expected = {"hrv_trend", "resting_hr_trend", "sleep_duration", "sleep_quality", "soreness", "stress"}
+        expected = {
+            "hrv_trend",
+            "resting_hr_trend",
+            "sleep_duration",
+            "sleep_quality",
+            "soreness",
+            "stress",
+        }
         assert names == expected
 
     def test_normalized_values_in_range(self) -> None:
@@ -374,4 +412,6 @@ class TestComputeReadiness:
         baselines = _baselines()
         result = compute_readiness(health, checkin, baselines)
         for f in result.factors:
-            assert 0.0 <= f.normalized <= 1.0, f"Factor {f.name} normalized={f.normalized} out of range"
+            assert 0.0 <= f.normalized <= 1.0, (
+                f"Factor {f.name} normalized={f.normalized} out of range"
+            )

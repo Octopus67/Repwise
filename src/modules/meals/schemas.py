@@ -13,6 +13,7 @@ from src.shared.sanitize import strip_html
 # Custom Meals
 # ---------------------------------------------------------------------------
 
+
 class CustomMealCreate(BaseModel):
     """Payload for creating a custom meal."""
 
@@ -69,6 +70,7 @@ class CustomMealResponse(BaseModel):
 # Meal Favorites
 # ---------------------------------------------------------------------------
 
+
 class MealFavoriteCreate(BaseModel):
     """Payload for adding a meal to favorites.
 
@@ -114,6 +116,7 @@ class MealFavoriteResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Pre-fill helper (NutritionEntryCreate-compatible dict)
 # ---------------------------------------------------------------------------
+
 
 class NutritionEntryPreFill(BaseModel):
     """Pre-filled nutrition entry values derived from a custom meal or favorite.

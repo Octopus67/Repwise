@@ -54,7 +54,9 @@ class MealFavorite(Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     meal_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        ForeignKey("custom_meals.id", ondelete="SET NULL"), nullable=True, index=True  # Audit fix 10.6
+        ForeignKey("custom_meals.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,  # Audit fix 10.6
     )
     food_item_id: Mapped[Optional[uuid.UUID]] = mapped_column(nullable=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -64,6 +66,4 @@ class MealFavorite(Base):
     fat_g: Mapped[float] = mapped_column(nullable=False)
     micro_nutrients: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
 
-    __table_args__ = (
-        Index("ix_meal_favorites_user_id", "user_id"),
-    )
+    __table_args__ = (Index("ix_meal_favorites_user_id", "user_id"),)

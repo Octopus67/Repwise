@@ -11,13 +11,11 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime, timedelta, timezone
-from typing import Optional
 
 import pytest
 from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.progress_photos.models import ProgressPhoto
 from src.modules.progress_photos.schemas import (
     AlignmentData,
     MAX_BODYWEIGHT_KG,
@@ -39,6 +37,7 @@ from src.shared.pagination import PaginationParams
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 async def _create_user(db: AsyncSession) -> User:
     user = User(
         id=uuid.uuid4(),
@@ -51,7 +50,10 @@ async def _create_user(db: AsyncSession) -> User:
 
 
 async def _create_bodyweight(
-    db: AsyncSession, user_id: uuid.UUID, weight: float, recorded: date,
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    weight: float,
+    recorded: date,
 ) -> BodyweightLog:
     log = BodyweightLog(user_id=user_id, weight_kg=weight, recorded_date=recorded)
     db.add(log)
@@ -366,7 +368,9 @@ class TestProgressPhotoServiceList:
 
         pagination = PaginationParams(page=1, limit=20)
         result = await service.list_photos(
-            user_id=user.id, pagination=pagination, pose_type="front_relaxed",
+            user_id=user.id,
+            pagination=pagination,
+            pose_type="front_relaxed",
         )
 
         assert result.total_count == 2
@@ -385,13 +389,15 @@ class TestProgressPhotoServiceList:
             )
 
         page1 = await service.list_photos(
-            user_id=user.id, pagination=PaginationParams(page=1, limit=2),
+            user_id=user.id,
+            pagination=PaginationParams(page=1, limit=2),
         )
         assert len(page1.items) == 2
         assert page1.total_count == 5
 
         page3 = await service.list_photos(
-            user_id=user.id, pagination=PaginationParams(page=3, limit=2),
+            user_id=user.id,
+            pagination=PaginationParams(page=3, limit=2),
         )
         assert len(page3.items) == 1
 

@@ -6,6 +6,7 @@ from src.modules.import_data.parser import detect_format, parse_csv, _round_weig
 
 # --- Format detection ---
 
+
 def test_detect_strong():
     assert detect_format(["Date", "Workout Name", "Exercise Name", "Weight", "Reps"]) == "strong"
 
@@ -73,6 +74,7 @@ def test_parse_hevy_date():
 
 # --- Weight rounding ---
 
+
 def test_weight_rounding_float_precision():
     assert _round_weight(185.00000000000003) == 185.0
 
@@ -83,6 +85,7 @@ def test_weight_rounding_quarter_kg():
 
 
 # --- Edge cases ---
+
 
 def test_empty_csv():
     assert parse_csv("") == []

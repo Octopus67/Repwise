@@ -4,6 +4,7 @@ Revision ID: g1b2_gin_indexes
 Revises: fts5_auto_sync
 Create Date: 2026-07-15 12:00:00.000000
 """
+
 from typing import Sequence, Union
 
 from alembic import op

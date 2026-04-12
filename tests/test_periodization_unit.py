@@ -239,9 +239,7 @@ class TestTemplates:
         """8-week mesocycle: 3+1+3+1 = 4 blocks, 8 weeks total."""
         blocks = expand_template("hypertrophy-8", date(2025, 6, 2))
         assert len(blocks) == 4
-        total_days = sum(
-            (b["end_date"] - b["start_date"]).days + 1 for b in blocks
-        )
+        total_days = sum((b["end_date"] - b["start_date"]).days + 1 for b in blocks)
         assert total_days == 56  # 8 weeks
 
     def test_expand_peaking_3(self):
@@ -268,7 +266,7 @@ class TestTemplates:
             for i in range(1, len(blocks)):
                 expected_start = blocks[i - 1]["end_date"] + timedelta(days=1)
                 assert blocks[i]["start_date"] == expected_start, (
-                    f"Template {template['id']}: gap between block {i-1} and {i}"
+                    f"Template {template['id']}: gap between block {i - 1} and {i}"
                 )
 
 
@@ -374,7 +372,9 @@ async def test_list_blocks_with_date_filter(client, override_get_db):
 @pytest.mark.asyncio
 async def test_get_block_by_id(client, override_get_db):
     headers = await _register_and_get_headers(client, "getone@example.com")
-    create_resp = await client.post("/api/v1/periodization/blocks", json=VALID_BLOCK, headers=headers)
+    create_resp = await client.post(
+        "/api/v1/periodization/blocks", json=VALID_BLOCK, headers=headers
+    )
     block_id = create_resp.json()["id"]
 
     resp = await client.get(f"/api/v1/periodization/blocks/{block_id}", headers=headers)
@@ -397,7 +397,9 @@ async def test_get_nonexistent_block_returns_404(client, override_get_db):
 )
 async def test_update_block(client, override_get_db):
     headers = await _register_and_get_headers(client, "update@example.com")
-    create_resp = await client.post("/api/v1/periodization/blocks", json=VALID_BLOCK, headers=headers)
+    create_resp = await client.post(
+        "/api/v1/periodization/blocks", json=VALID_BLOCK, headers=headers
+    )
     block_id = create_resp.json()["id"]
 
     resp = await client.put(
@@ -412,7 +414,9 @@ async def test_update_block(client, override_get_db):
 @pytest.mark.asyncio
 async def test_delete_block(client, override_get_db):
     headers = await _register_and_get_headers(client, "delete@example.com")
-    create_resp = await client.post("/api/v1/periodization/blocks", json=VALID_BLOCK, headers=headers)
+    create_resp = await client.post(
+        "/api/v1/periodization/blocks", json=VALID_BLOCK, headers=headers
+    )
     block_id = create_resp.json()["id"]
 
     resp = await client.delete(f"/api/v1/periodization/blocks/{block_id}", headers=headers)
@@ -429,7 +433,12 @@ async def test_overlap_detection(client, override_get_db):
     await client.post("/api/v1/periodization/blocks", json=VALID_BLOCK, headers=headers)
 
     # Overlapping block
-    overlap = {**VALID_BLOCK, "name": "Overlap", "start_date": "2025-01-20", "end_date": "2025-02-15"}
+    overlap = {
+        **VALID_BLOCK,
+        "name": "Overlap",
+        "start_date": "2025-01-20",
+        "end_date": "2025-02-15",
+    }
     resp = await client.post("/api/v1/periodization/blocks", json=overlap, headers=headers)
     assert resp.status_code == 409
 

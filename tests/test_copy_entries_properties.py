@@ -8,15 +8,13 @@ Validates: Requirements 6.1, 6.3
 from __future__ import annotations
 
 import uuid
-from datetime import date, timedelta
+from datetime import date
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.nutrition.models import NutritionEntry
 from src.modules.nutrition.service import NutritionService
-from src.modules.nutrition.schemas import DateRangeFilter
-from src.shared.pagination import PaginationParams
 
 
 @pytest.fixture
@@ -67,9 +65,7 @@ class TestProperty12CopiedEntriesPreserveData:
         target_date = date(2024, 1, 16)
 
         source = await _create_entry(db_session, user_id, source_date, "Breakfast bowl")
-        copied = await nutrition_service.copy_entries_from_date(
-            user_id, source_date, target_date
-        )
+        copied = await nutrition_service.copy_entries_from_date(user_id, source_date, target_date)
 
         assert len(copied) == 1
         assert copied[0].id != source.id
@@ -86,9 +82,7 @@ class TestProperty12CopiedEntriesPreserveData:
         await _create_entry(db_session, user_id, source_date)
         await _create_entry(db_session, user_id, source_date, "Lunch")
 
-        copied = await nutrition_service.copy_entries_from_date(
-            user_id, source_date, target_date
-        )
+        copied = await nutrition_service.copy_entries_from_date(user_id, source_date, target_date)
 
         assert len(copied) == 2
         for entry in copied:
@@ -116,9 +110,7 @@ class TestProperty12CopiedEntriesPreserveData:
             micro_nutrients=micro,
         )
 
-        copied = await nutrition_service.copy_entries_from_date(
-            user_id, source_date, target_date
-        )
+        copied = await nutrition_service.copy_entries_from_date(user_id, source_date, target_date)
 
         assert len(copied) == 1
         c = copied[0]
@@ -144,9 +136,7 @@ class TestProperty12CopiedEntriesPreserveData:
                 db_session, user_id, source_date, f"Meal {i}", calories=100.0 * (i + 1)
             )
 
-        copied = await nutrition_service.copy_entries_from_date(
-            user_id, source_date, target_date
-        )
+        copied = await nutrition_service.copy_entries_from_date(user_id, source_date, target_date)
 
         assert len(copied) == 5
 
@@ -159,9 +149,7 @@ class TestProperty12CopiedEntriesPreserveData:
         source_date = date(2024, 1, 15)
         target_date = date(2024, 1, 16)
 
-        copied = await nutrition_service.copy_entries_from_date(
-            user_id, source_date, target_date
-        )
+        copied = await nutrition_service.copy_entries_from_date(user_id, source_date, target_date)
 
         assert copied == []
 
@@ -178,9 +166,7 @@ class TestProperty12CopiedEntriesPreserveData:
         deleted = await _create_entry(db_session, user_id, source_date, "Deleted meal")
         await nutrition_service.soft_delete_entry(user_id, deleted.id)
 
-        copied = await nutrition_service.copy_entries_from_date(
-            user_id, source_date, target_date
-        )
+        copied = await nutrition_service.copy_entries_from_date(user_id, source_date, target_date)
 
         assert len(copied) == 1
         assert copied[0].meal_name == "Active meal"

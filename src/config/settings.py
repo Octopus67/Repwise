@@ -108,13 +108,17 @@ class Settings(BaseSettings):
         env = info.data.get("ENVIRONMENT", "production")
         if env != "development" and (len(v) < 32 or v == "change-me-in-production"):
             import logging as _logging
-            _logging.getLogger(__name__).warning("JWT_SECRET should be at least 32 characters and not the default value in production")
+
+            _logging.getLogger(__name__).warning(
+                "JWT_SECRET should be at least 32 characters and not the default value in production"
+            )
         return v
 
     @field_validator("USDA_API_KEY")
     @classmethod
     def validate_usda_api_key(cls, v: str, info: ValidationInfo) -> str:
         import logging as _logging
+
         env = info.data.get("ENVIRONMENT", "production")
         if env == "production" and v == "DEMO_KEY":
             _logging.getLogger(__name__).warning(
@@ -129,7 +133,10 @@ class Settings(BaseSettings):
         origins = _parse_list(v)
         if not debug and all("localhost" in o or "127.0.0.1" in o for o in origins):
             import logging as _logging
-            _logging.getLogger(__name__).warning("CORS_ORIGINS should include production origins (not just localhost) when DEBUG=false")
+
+            _logging.getLogger(__name__).warning(
+                "CORS_ORIGINS should include production origins (not just localhost) when DEBUG=false"
+            )
         return v
 
     @field_validator("ALLOWED_HOSTS")
@@ -139,7 +146,10 @@ class Settings(BaseSettings):
         hosts = _parse_list(v)
         if not debug and all(h in ("localhost", "127.0.0.1") for h in hosts):
             import logging as _logging
-            _logging.getLogger(__name__).warning("ALLOWED_HOSTS should include production hostnames when DEBUG=false")
+
+            _logging.getLogger(__name__).warning(
+                "ALLOWED_HOSTS should include production hostnames when DEBUG=false"
+            )
         return v
 
 

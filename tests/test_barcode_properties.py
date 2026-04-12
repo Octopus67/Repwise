@@ -15,12 +15,12 @@ from hypothesis import HealthCheck, given, settings as h_settings, strategies as
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.food_database.barcode_service import BarcodeService
-from src.modules.food_database.schemas import BarcodeResponse
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _unique_barcode() -> str:
     """Generate a unique 14-digit barcode to avoid cache collisions across examples."""
@@ -37,13 +37,9 @@ _barcode_strategy = st.text(
     max_size=14,
 )
 
-_positive_floats = st.floats(
-    min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False
-)
+_positive_floats = st.floats(min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False)
 
-_serving_sizes = st.floats(
-    min_value=1.0, max_value=1000.0, allow_nan=False, allow_infinity=False
-)
+_serving_sizes = st.floats(min_value=1.0, max_value=1000.0, allow_nan=False, allow_infinity=False)
 
 _food_names = st.text(
     alphabet=st.characters(
@@ -465,6 +461,7 @@ class TestGetProductByBarcode:
     def _make_mock_response(json_data, status_code=200):
         """Build a mock httpx.Response with synchronous .json() and .raise_for_status()."""
         from unittest.mock import MagicMock
+
         mock_resp = MagicMock()
         mock_resp.status_code = status_code
         mock_resp.json.return_value = json_data
@@ -514,13 +511,15 @@ class TestGetProductByBarcode:
     @pytest.mark.asyncio
     async def test_missing_product_name_returns_none(self):
         """Product with empty name → returns None."""
-        mock_resp = self._make_mock_response({
-            "status": 1,
-            "product": {
-                "product_name": "",
-                "nutriments": {"energy-kcal_100g": 100},
-            },
-        })
+        mock_resp = self._make_mock_response(
+            {
+                "status": 1,
+                "product": {
+                    "product_name": "",
+                    "nutriments": {"energy-kcal_100g": 100},
+                },
+            }
+        )
         with patch("src.modules.food_database.off_client.httpx.AsyncClient") as MockClient:
             MockClient.return_value = self._make_mock_client(mock_resp)
 
@@ -530,13 +529,15 @@ class TestGetProductByBarcode:
     @pytest.mark.asyncio
     async def test_missing_calories_returns_none(self):
         """Product without calories → returns None."""
-        mock_resp = self._make_mock_response({
-            "status": 1,
-            "product": {
-                "product_name": "Some Food",
-                "nutriments": {"proteins_100g": 10},
-            },
-        })
+        mock_resp = self._make_mock_response(
+            {
+                "status": 1,
+                "product": {
+                    "product_name": "Some Food",
+                    "nutriments": {"proteins_100g": 10},
+                },
+            }
+        )
         with patch("src.modules.food_database.off_client.httpx.AsyncClient") as MockClient:
             MockClient.return_value = self._make_mock_client(mock_resp)
 
@@ -547,6 +548,7 @@ class TestGetProductByBarcode:
     async def test_timeout_returns_none(self):
         """HTTP timeout → returns None (no crash)."""
         import httpx as httpx_mod
+
         with patch("src.modules.food_database.off_client.httpx.AsyncClient") as MockClient:
             mock_instance = AsyncMock()
             mock_instance.get = AsyncMock(side_effect=httpx_mod.TimeoutException("timeout"))
@@ -560,13 +562,15 @@ class TestGetProductByBarcode:
     @pytest.mark.asyncio
     async def test_macros_default_to_zero_when_missing(self):
         """Product with calories but no macros → macros default to 0."""
-        mock_resp = self._make_mock_response({
-            "status": 1,
-            "product": {
-                "product_name": "Mystery Food",
-                "nutriments": {"energy-kcal_100g": 200},
-            },
-        })
+        mock_resp = self._make_mock_response(
+            {
+                "status": 1,
+                "product": {
+                    "product_name": "Mystery Food",
+                    "nutriments": {"energy-kcal_100g": 200},
+                },
+            }
+        )
         with patch("src.modules.food_database.off_client.httpx.AsyncClient") as MockClient:
             MockClient.return_value = self._make_mock_client(mock_resp)
 
@@ -586,7 +590,9 @@ class TestGetProductByBarcode:
 async def test_barcode_endpoint_invalid_format_returns_422(client, override_get_db):
     """GET /food/barcode/abc → 400 (not numeric, custom validation handler returns 400)."""
     # Register and get auth headers
-    resp = await client.post("/api/v1/auth/register", json={"email": "bc_test@example.com", "password": "Securepass123!"})
+    resp = await client.post(
+        "/api/v1/auth/register", json={"email": "bc_test@example.com", "password": "Securepass123!"}
+    )
     token = resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -597,7 +603,10 @@ async def test_barcode_endpoint_invalid_format_returns_422(client, override_get_
 @pytest.mark.asyncio
 async def test_barcode_endpoint_too_short_returns_422(client, override_get_db):
     """GET /food/barcode/123 → 400 (too short, min 8 digits)."""
-    resp = await client.post("/api/v1/auth/register", json={"email": "bc_short@example.com", "password": "Securepass123!"})
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "bc_short@example.com", "password": "Securepass123!"},
+    )
     token = resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 

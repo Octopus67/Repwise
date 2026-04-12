@@ -30,11 +30,11 @@ class RegisterRequest(BaseModel):
     def validate_password_complexity(cls, v: str) -> str:
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters")
-        if not re.search(r'[A-Z]', v):
+        if not re.search(r"[A-Z]", v):
             raise ValueError("Password must contain at least one uppercase letter")
-        if not re.search(r'[a-z]', v):
+        if not re.search(r"[a-z]", v):
             raise ValueError("Password must contain at least one lowercase letter")
-        if not re.search(r'[0-9]', v):
+        if not re.search(r"[0-9]", v):
             raise ValueError("Password must contain at least one digit")
         # Audit fix 10.7 — require at least one special character
         if not re.search(r'[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>/?`~]', v):
@@ -59,10 +59,18 @@ class OAuthCallbackRequest(BaseModel):
 
     provider: str = Field(default="", description="OAuth provider name (google, apple)")
     token: Optional[str] = Field(default=None, description="OAuth access/id token from provider")
-    identity_token: Optional[str] = Field(default=None, description="Apple identity token (alias for token)")
-    nonce: Optional[str] = Field(default=None, description="Nonce for Apple Sign-In replay protection")  # Audit fix 2.2 — Apple nonce mandatory (Optional kept for Google compat)
-    full_name: Optional[str] = Field(default=None, description="Display name from Apple first sign-in")
-    state: Optional[str] = Field(default=None, description="OAuth state for CSRF protection (web flow)")  # Audit fix 2.3
+    identity_token: Optional[str] = Field(
+        default=None, description="Apple identity token (alias for token)"
+    )
+    nonce: Optional[str] = Field(
+        default=None, description="Nonce for Apple Sign-In replay protection"
+    )  # Audit fix 2.2 — Apple nonce mandatory (Optional kept for Google compat)
+    full_name: Optional[str] = Field(
+        default=None, description="Display name from Apple first sign-in"
+    )
+    state: Optional[str] = Field(
+        default=None, description="OAuth state for CSRF protection (web flow)"
+    )  # Audit fix 2.3
 
     @model_validator(mode="after")
     def resolve_token(self) -> "OAuthCallbackRequest":
@@ -85,6 +93,7 @@ class AuthTokensResponse(BaseModel):
 
 class LoginResponse(AuthTokensResponse):
     """Login response — tokens only."""
+
     # Audit fix 10.12 — prevent email enumeration
     pass
 
@@ -114,6 +123,7 @@ class UserResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+
 class ForgotPasswordRequest(BaseModel):
     """Forgot password request payload."""
 
@@ -142,17 +152,16 @@ class ResetPasswordRequest(BaseModel):
     def validate_password_complexity(cls, v: str) -> str:
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters")
-        if not re.search(r'[A-Z]', v):
+        if not re.search(r"[A-Z]", v):
             raise ValueError("Password must contain at least one uppercase letter")
-        if not re.search(r'[a-z]', v):
+        if not re.search(r"[a-z]", v):
             raise ValueError("Password must contain at least one lowercase letter")
-        if not re.search(r'[0-9]', v):
+        if not re.search(r"[0-9]", v):
             raise ValueError("Password must contain at least one digit")
         # Audit fix 10.7 — require at least one special character
         if not re.search(r'[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>/?`~]', v):
             raise ValueError("Password must contain at least one special character")
         return v
-
 
 
 class VerifyEmailRequest(BaseModel):

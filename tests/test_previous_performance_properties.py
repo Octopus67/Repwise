@@ -12,7 +12,6 @@ from datetime import date, timedelta
 import pytest
 from hypothesis import HealthCheck, given, settings as h_settings, strategies as st
 
-from src.modules.training.analytics_schemas import PreviousPerformance
 from src.modules.training.models import TrainingSession
 from src.modules.training.previous_performance import PreviousPerformanceResolver
 from src.modules.training.schemas import ExerciseEntry, SetEntry
@@ -29,10 +28,18 @@ _set_entry_st = st.builds(
     rpe=st.none(),
 )
 
-_exercise_name_st = st.sampled_from([
-    "bench press", "squat", "deadlift", "overhead press",
-    "barbell row", "bicep curl", "tricep extension", "leg press",
-])
+_exercise_name_st = st.sampled_from(
+    [
+        "bench press",
+        "squat",
+        "deadlift",
+        "overhead press",
+        "barbell row",
+        "bicep curl",
+        "tricep extension",
+        "leg press",
+    ]
+)
 
 _exercise_entry_st = st.builds(
     ExerciseEntry,
@@ -128,7 +135,7 @@ class TestProperty13PreviousPerformanceRecency:
         user_id = uuid.uuid4()
 
         # Ensure we have enough sets lists for each date offset
-        sets_lists = extra_sets_per_session[:len(date_offsets)]
+        sets_lists = extra_sets_per_session[: len(date_offsets)]
         while len(sets_lists) < len(date_offsets):
             sets_lists.append(extra_sets_per_session[0])
 
@@ -163,9 +170,7 @@ class TestProperty13PreviousPerformanceRecency:
             f"Expected date {latest_date}, got {result.session_date}"
         )
         assert result.exercise_name == target_exercise
-        assert result.last_set_weight_kg == pytest.approx(
-            expected_last_set.weight_kg, rel=1e-6
-        ), (
+        assert result.last_set_weight_kg == pytest.approx(expected_last_set.weight_kg, rel=1e-6), (
             f"Expected weight {expected_last_set.weight_kg}, got {result.last_set_weight_kg}"
         )
         assert result.last_set_reps == expected_last_set.reps, (
@@ -187,10 +192,12 @@ class TestProperty13PreviousPerformanceRecency:
         ts = TrainingSession(
             user_id=user_id,
             session_date=date(2024, 3, 15),
-            exercises=[{
-                "exercise_name": "squat",
-                "sets": [{"reps": 5, "weight_kg": 100.0}],
-            }],
+            exercises=[
+                {
+                    "exercise_name": "squat",
+                    "sets": [{"reps": 5, "weight_kg": 100.0}],
+                }
+            ],
         )
         db_session.add(ts)
         await db_session.flush()

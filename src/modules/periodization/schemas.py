@@ -26,9 +26,7 @@ class TrainingBlockCreate(BaseModel):
     @classmethod
     def validate_phase_type(cls, v: str) -> str:
         if v not in VALID_PHASE_TYPES:
-            raise ValueError(
-                f"phase_type must be one of: {', '.join(sorted(VALID_PHASE_TYPES))}"
-            )
+            raise ValueError(f"phase_type must be one of: {', '.join(sorted(VALID_PHASE_TYPES))}")
         return v
 
     @field_validator("nutrition_phase")
@@ -63,9 +61,7 @@ class TrainingBlockUpdate(BaseModel):
     @classmethod
     def validate_phase_type(cls, v: Optional[str]) -> Optional[str]:
         if v is not None and v not in VALID_PHASE_TYPES:
-            raise ValueError(
-                f"phase_type must be one of: {', '.join(sorted(VALID_PHASE_TYPES))}"
-            )
+            raise ValueError(f"phase_type must be one of: {', '.join(sorted(VALID_PHASE_TYPES))}")
         return v
 
     @field_validator("nutrition_phase")

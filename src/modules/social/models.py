@@ -69,9 +69,7 @@ class FeedEvent(Base):
         back_populates="feed_event", cascade="all, delete-orphan"
     )
 
-    __table_args__ = (
-        Index("idx_feed_user_time", "user_id", "created_at"),
-    )
+    __table_args__ = (Index("idx_feed_user_time", "user_id", "created_at"),)
 
 
 class Reaction(Base):
@@ -109,9 +107,7 @@ class LeaderboardEntry(Base):
     rank: Mapped[Optional[int]] = mapped_column(nullable=True)
 
     __table_args__ = (
-        UniqueConstraint(
-            "board_type", "period_start", "user_id", name="uq_leaderboard_entry"
-        ),
+        UniqueConstraint("board_type", "period_start", "user_id", name="uq_leaderboard_entry"),
         Index("idx_lb_board_period_rank", "board_type", "period_start", "rank"),
     )
 
@@ -124,7 +120,9 @@ class SharedTemplate(Base):
     owner_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    template_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('workout_templates.id', ondelete='CASCADE'), nullable=False)
+    template_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("workout_templates.id", ondelete="CASCADE"), nullable=False
+    )
     share_code: Mapped[str] = mapped_column(
         String(12), unique=True, nullable=False, default=lambda: secrets.token_urlsafe(9)
     )

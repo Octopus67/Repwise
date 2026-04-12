@@ -20,7 +20,6 @@ from src.modules.nutrition.service import NutritionService
 from src.modules.meals.schemas import MealFavoriteCreate
 from src.modules.meals.service import MealService
 from src.modules.auth.models import User
-from src.shared.pagination import PaginationParams
 
 
 # ---------------------------------------------------------------------------
@@ -56,9 +55,7 @@ def batch_entry_item_strategy(draw):
 @st.composite
 def batch_entry_create_strategy(draw):
     """Generate a valid BatchEntryCreate with 1-10 items."""
-    items = draw(
-        st.lists(batch_entry_item_strategy(), min_size=1, max_size=10)
-    )
+    items = draw(st.lists(batch_entry_item_strategy(), min_size=1, max_size=10))
     return BatchEntryCreate(
         meal_name=draw(_meal_names),
         entry_date=draw(_entry_dates),
@@ -80,6 +77,7 @@ _fixture_settings = h_settings(
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 async def _create_test_user(db: AsyncSession) -> User:
     """Create a minimal user for testing."""
@@ -198,9 +196,7 @@ class TestProperty17FavoriteRoundTrip:
         meal_service = MealService(db_session)
 
         # 1. Create batch entries (the original meal)
-        created = await nutrition_service.create_entries_batch(
-            user_id=user.id, data=data
-        )
+        created = await nutrition_service.create_entries_batch(user_id=user.id, data=data)
         await db_session.commit()
 
         # 2. Compute total macros from the batch

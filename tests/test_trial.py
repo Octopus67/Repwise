@@ -10,7 +10,6 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from sqlalchemy import select
 
 from src.modules.auth.models import User
 from src.modules.measurements.models import BodyMeasurement
@@ -225,6 +224,7 @@ class TestTrialInsights:
 
         # Add a workout during trial
         from datetime import date as d
+
         session = TrainingSession(
             user_id=user.id,
             session_date=d.today(),
@@ -252,6 +252,7 @@ class TestTrialInsights:
         await svc.start_trial(user.id)
 
         from datetime import date as d
+
         entry = NutritionEntry(
             user_id=user.id,
             meal_name="Lunch",

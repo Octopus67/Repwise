@@ -13,10 +13,10 @@ def _log(level: str, event: str, **kwargs) -> None:
 
 
 def _mask_email(email: str) -> str:
-    if not email or '@' not in email:
-        return email or ''
-    local, domain = email.split('@', 1)
-    return local[:3] + '***@' + domain
+    if not email or "@" not in email:
+        return email or ""
+    local, domain = email.split("@", 1)
+    return local[:3] + "***@" + domain
 
 
 def log_auth_success(email: str, ip: str, method: str = "email") -> None:

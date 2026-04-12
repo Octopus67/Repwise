@@ -34,7 +34,13 @@ def _auth_headers(user_id: uuid.UUID) -> dict:
     from src.config.settings import settings
 
     token = jwt.encode(
-        {"sub": str(user_id), "type": "access", "exp": datetime.now(timezone.utc) + timedelta(hours=1), "iss": "repwise", "aud": "repwise-api"},
+        {
+            "sub": str(user_id),
+            "type": "access",
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "iss": "repwise",
+            "aud": "repwise-api",
+        },
         settings.JWT_SECRET,
         algorithm=settings.JWT_ALGORITHM,
     )
@@ -91,7 +97,9 @@ class TestDeleteAccount:
         assert user.hashed_password == "hashed"
 
     @pytest.mark.asyncio
-    async def test_delete_response_includes_permanent_date(self, client, override_get_db, db_session):
+    async def test_delete_response_includes_permanent_date(
+        self, client, override_get_db, db_session
+    ):
         user = await _create_user(db_session)
         r = await client.delete("/api/v1/account/", headers=_auth_headers(user.id))
         body = r.json()

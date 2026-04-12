@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from httpx import AsyncClient
 
-from tests.e2e.conftest import register_user, login_user
+from tests.e2e.conftest import register_user
 from tests.e2e.factories import make_user_credentials
 
 
@@ -46,14 +46,19 @@ class TestRegisterFlow:
         assert data.get("access_token") is None or "message" in data
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("bad_password,expected_msg", [
-        ("short1!", "at least 8 characters"),
-        ("alllowercase1!", "uppercase"),
-        ("ALLUPPERCASE1!", "lowercase"),
-        ("NoDigitsHere!", "digit"),
-        ("NoSpecial1Char", "special character"),
-    ])
-    async def test_register_password_rules(self, client: AsyncClient, override_get_db, bad_password, expected_msg):
+    @pytest.mark.parametrize(
+        "bad_password,expected_msg",
+        [
+            ("short1!", "at least 8 characters"),
+            ("alllowercase1!", "uppercase"),
+            ("ALLUPPERCASE1!", "lowercase"),
+            ("NoDigitsHere!", "digit"),
+            ("NoSpecial1Char", "special character"),
+        ],
+    )
+    async def test_register_password_rules(
+        self, client: AsyncClient, override_get_db, bad_password, expected_msg
+    ):
         """F1.13: Each password rule violation returns specific error."""
         creds = make_user_credentials(password=bad_password)
         resp = await client.post("/api/v1/auth/register", json=creds)
@@ -70,13 +75,17 @@ class TestLoginFlow:
         """F1.4: Login with wrong password → 401."""
         creds = make_user_credentials()
         await client.post("/api/v1/auth/register", json=creds)
-        resp = await client.post("/api/v1/auth/login", json={"email": creds["email"], "password": "WrongPass1!"})
+        resp = await client.post(
+            "/api/v1/auth/login", json={"email": creds["email"], "password": "WrongPass1!"}
+        )
         assert resp.status_code == 401
 
     @pytest.mark.asyncio
     async def test_login_nonexistent_email(self, client: AsyncClient, override_get_db):
         """F1.5: Login with non-existent email → 401."""
-        resp = await client.post("/api/v1/auth/login", json={"email": "nobody@test.com", "password": "Pass1234!"})
+        resp = await client.post(
+            "/api/v1/auth/login", json={"email": "nobody@test.com", "password": "Pass1234!"}
+        )
         assert resp.status_code == 401
 
 
@@ -87,12 +96,16 @@ class TestTokenLifecycle:
     async def test_refresh_token(self, client: AsyncClient, override_get_db):
         """F1.9: Refresh token → get new access token."""
         user = await register_user(client)
-        resp = await client.post("/api/v1/auth/refresh", json={"refresh_token": user["refresh_token"]})
+        resp = await client.post(
+            "/api/v1/auth/refresh", json={"refresh_token": user["refresh_token"]}
+        )
         assert resp.status_code == 200
         new_data = resp.json()
         assert "access_token" in new_data
         # New token works
-        resp = await client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {new_data['access_token']}"})
+        resp = await client.get(
+            "/api/v1/auth/me", headers={"Authorization": f"Bearer {new_data['access_token']}"}
+        )
         assert resp.status_code == 200
 
     @pytest.mark.asyncio
@@ -101,10 +114,14 @@ class TestTokenLifecycle:
         user = await register_user(client)
         headers = {"Authorization": f"Bearer {user['access_token']}"}
         # Logout
-        resp = await client.post("/api/v1/auth/logout", headers=headers, json={"refresh_token": user["refresh_token"]})
+        resp = await client.post(
+            "/api/v1/auth/logout", headers=headers, json={"refresh_token": user["refresh_token"]}
+        )
         assert resp.status_code in (200, 204)
         # Token should be blacklisted — refresh should fail
-        resp = await client.post("/api/v1/auth/refresh", json={"refresh_token": user["refresh_token"]})
+        resp = await client.post(
+            "/api/v1/auth/refresh", json={"refresh_token": user["refresh_token"]}
+        )
         assert resp.status_code == 401
 
     @pytest.mark.asyncio
@@ -116,7 +133,9 @@ class TestTokenLifecycle:
     @pytest.mark.asyncio
     async def test_invalid_token_returns_401(self, client: AsyncClient, override_get_db):
         """F1.12: Access with garbage token → 401."""
-        resp = await client.get("/api/v1/auth/me", headers={"Authorization": "Bearer garbage.token.here"})
+        resp = await client.get(
+            "/api/v1/auth/me", headers={"Authorization": "Bearer garbage.token.here"}
+        )
         assert resp.status_code in (401, 403)
 
 
@@ -139,9 +158,12 @@ class TestForgotPasswordFlow:
         """F1.7: Reset with wrong code → fails."""
         user = await register_user(client)
         await client.post("/api/v1/auth/forgot-password", json={"email": user["email"]})
-        resp = await client.post("/api/v1/auth/reset-password", json={
-            "email": user["email"],
-            "code": "000000",
-            "new_password": "NewPass1!xyz",
-        })
+        resp = await client.post(
+            "/api/v1/auth/reset-password",
+            json={
+                "email": user["email"],
+                "code": "000000",
+                "new_password": "NewPass1!xyz",
+            },
+        )
         assert resp.status_code in (400, 401)

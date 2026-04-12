@@ -20,37 +20,37 @@ API_TIMEOUT_SECONDS = 10.0
 
 # USDA nutrient ID → our field name mapping
 NUTRIENT_MAP = {
-    1008: ("calories", 1.0),        # Energy (kcal)
-    1003: ("protein_g", 1.0),       # Protein
-    1004: ("fat_g", 1.0),           # Total lipid (fat)
-    1005: ("carbs_g", 1.0),         # Carbohydrate
-    1079: ("fibre_g", 1.0),         # Fiber, total dietary
-    1087: ("calcium_mg", 1.0),      # Calcium, Ca
-    1089: ("iron_mg", 1.0),         # Iron, Fe
-    1090: ("magnesium_mg", 1.0),    # Magnesium, Mg
-    1091: ("phosphorus_mg", 1.0),   # Phosphorus, P
-    1092: ("potassium_mg", 1.0),    # Potassium, K
-    1093: ("sodium_mg", 1.0),       # Sodium, Na
-    1095: ("zinc_mg", 1.0),         # Zinc, Zn
-    1098: ("copper_mg", 1.0),       # Copper, Cu
-    1101: ("manganese_mg", 1.0),    # Manganese, Mn
-    1103: ("selenium_mcg", 1.0),    # Selenium, Se
-    1106: ("vitamin_a_mcg", 1.0),   # Vitamin A, RAE
-    1162: ("vitamin_c_mg", 1.0),    # Vitamin C
-    1109: ("vitamin_e_mg", 1.0),    # Vitamin E
-    1114: ("vitamin_d_mcg", 1.0),   # Vitamin D (D2 + D3)
-    1183: ("vitamin_k_mcg", 1.0),   # Vitamin K
-    1165: ("thiamin_mg", 1.0),      # Thiamin (B1)
-    1166: ("riboflavin_mg", 1.0),   # Riboflavin (B2)
-    1167: ("niacin_mg", 1.0),       # Niacin (B3)
-    1175: ("vitamin_b6_mg", 1.0),   # Vitamin B-6
-    1177: ("folate_mcg", 1.0),      # Folate, total
-    1178: ("vitamin_b12_mcg", 1.0), # Vitamin B-12
+    1008: ("calories", 1.0),  # Energy (kcal)
+    1003: ("protein_g", 1.0),  # Protein
+    1004: ("fat_g", 1.0),  # Total lipid (fat)
+    1005: ("carbs_g", 1.0),  # Carbohydrate
+    1079: ("fibre_g", 1.0),  # Fiber, total dietary
+    1087: ("calcium_mg", 1.0),  # Calcium, Ca
+    1089: ("iron_mg", 1.0),  # Iron, Fe
+    1090: ("magnesium_mg", 1.0),  # Magnesium, Mg
+    1091: ("phosphorus_mg", 1.0),  # Phosphorus, P
+    1092: ("potassium_mg", 1.0),  # Potassium, K
+    1093: ("sodium_mg", 1.0),  # Sodium, Na
+    1095: ("zinc_mg", 1.0),  # Zinc, Zn
+    1098: ("copper_mg", 1.0),  # Copper, Cu
+    1101: ("manganese_mg", 1.0),  # Manganese, Mn
+    1103: ("selenium_mcg", 1.0),  # Selenium, Se
+    1106: ("vitamin_a_mcg", 1.0),  # Vitamin A, RAE
+    1162: ("vitamin_c_mg", 1.0),  # Vitamin C
+    1109: ("vitamin_e_mg", 1.0),  # Vitamin E
+    1114: ("vitamin_d_mcg", 1.0),  # Vitamin D (D2 + D3)
+    1183: ("vitamin_k_mcg", 1.0),  # Vitamin K
+    1165: ("thiamin_mg", 1.0),  # Thiamin (B1)
+    1166: ("riboflavin_mg", 1.0),  # Riboflavin (B2)
+    1167: ("niacin_mg", 1.0),  # Niacin (B3)
+    1175: ("vitamin_b6_mg", 1.0),  # Vitamin B-6
+    1177: ("folate_mcg", 1.0),  # Folate, total
+    1178: ("vitamin_b12_mcg", 1.0),  # Vitamin B-12
     1253: ("cholesterol_mg", 1.0),  # Cholesterol
     1170: ("pantothenic_acid_mg", 1.0),  # Pantothenic Acid (Vitamin B5)
-    1176: ("biotin_mcg", 1.0),           # Biotin (Vitamin B7)
-    1404: ("omega_3_g", 1.0),            # Total Omega-3 fatty acids
-    1405: ("omega_6_g", 1.0),            # Total Omega-6 fatty acids
+    1176: ("biotin_mcg", 1.0),  # Biotin (Vitamin B7)
+    1404: ("omega_3_g", 1.0),  # Total Omega-3 fatty acids
+    1405: ("omega_6_g", 1.0),  # Total Omega-6 fatty acids
 }
 
 

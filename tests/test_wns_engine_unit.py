@@ -6,7 +6,6 @@ atrophy_between_sessions, compute_session_muscle_stimulus.
 
 from __future__ import annotations
 
-import pytest
 
 from src.modules.training.wns_engine import (
     rir_from_rpe,
@@ -148,7 +147,9 @@ class TestAtrophyBetweenSessions:
 
     def test_gap_beyond_stimulus(self):
         """Gap beyond stimulus duration causes atrophy."""
-        result = atrophy_between_sessions(5.0, stimulus_duration_days=2.0, maintenance_sets_per_week=3.0)
+        result = atrophy_between_sessions(
+            5.0, stimulus_duration_days=2.0, maintenance_sets_per_week=3.0
+        )
         # atrophy_days = 5.0 - 2.0 = 3.0
         # daily_rate = 3.0 / 7.0 ≈ 0.4286
         # atrophy = 3.0 * 0.4286 ≈ 1.286
@@ -161,7 +162,9 @@ class TestAtrophyBetweenSessions:
 
     def test_large_gap(self):
         """Large gap causes proportional atrophy."""
-        result = atrophy_between_sessions(7.0, stimulus_duration_days=2.0, maintenance_sets_per_week=3.0)
+        result = atrophy_between_sessions(
+            7.0, stimulus_duration_days=2.0, maintenance_sets_per_week=3.0
+        )
         # atrophy_days = 7.0 - 2.0 = 5.0
         # daily_rate = 3.0 / 7.0 ≈ 0.4286
         # atrophy = 5.0 * 0.4286 ≈ 2.143

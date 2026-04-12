@@ -196,9 +196,9 @@ def _get_catalog_lookup() -> dict[str, str]:
     global _CATALOG_LOOKUP
     if _CATALOG_LOOKUP is None:
         from src.modules.training.exercises import get_all_exercises
+
         _CATALOG_LOOKUP = {
-            ex["name"].strip().lower(): ex["muscle_group"]
-            for ex in get_all_exercises()
+            ex["name"].strip().lower(): ex["muscle_group"] for ex in get_all_exercises()
         }
     return _CATALOG_LOOKUP
 

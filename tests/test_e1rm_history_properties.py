@@ -140,5 +140,7 @@ class TestEdgeCases:
         await db_session.flush()
 
         svc = TrainingAnalyticsService(db_session)
-        result = await svc.get_e1rm_history(user_id, "barbell bench press", date(2024, 1, 1), date(2024, 12, 31))
+        result = await svc.get_e1rm_history(
+            user_id, "barbell bench press", date(2024, 1, 1), date(2024, 12, 31)
+        )
         assert result == []

@@ -26,9 +26,15 @@ _activity_levels = st.sampled_from(list(ActivityLevel))
 
 _metric_create = st.builds(
     UserMetricCreate,
-    height_cm=st.one_of(st.none(), st.floats(min_value=50.0, max_value=250.0, allow_nan=False, allow_infinity=False)),
-    weight_kg=st.one_of(st.none(), st.floats(min_value=20.0, max_value=300.0, allow_nan=False, allow_infinity=False)),
-    body_fat_pct=st.one_of(st.none(), st.floats(min_value=0.0, max_value=100.0, allow_nan=False, allow_infinity=False)),
+    height_cm=st.one_of(
+        st.none(), st.floats(min_value=50.0, max_value=250.0, allow_nan=False, allow_infinity=False)
+    ),
+    weight_kg=st.one_of(
+        st.none(), st.floats(min_value=20.0, max_value=300.0, allow_nan=False, allow_infinity=False)
+    ),
+    body_fat_pct=st.one_of(
+        st.none(), st.floats(min_value=0.0, max_value=100.0, allow_nan=False, allow_infinity=False)
+    ),
     activity_level=st.one_of(st.none(), _activity_levels),
     additional_metrics=st.none(),
 )
@@ -61,7 +67,9 @@ class TestHistoryAppendOnlyInvariant:
             max_size=20,
         ),
     )
-    async def test_append_only_metrics(self, setup_database, n: int, metrics: list[UserMetricCreate]):
+    async def test_append_only_metrics(
+        self, setup_database, n: int, metrics: list[UserMetricCreate]
+    ):
         """Adding N entries increases count by exactly N; prior entries unchanged."""
         async with test_session_factory() as session:
             svc = UserService(session)
@@ -117,7 +125,9 @@ class TestPaginationMetadataCorrectness:
         page=st.integers(min_value=1, max_value=10),
         limit=st.integers(min_value=1, max_value=50),
     )
-    async def test_pagination_metadata(self, setup_database, total_entries: int, page: int, limit: int):
+    async def test_pagination_metadata(
+        self, setup_database, total_entries: int, page: int, limit: int
+    ):
         """Pagination metadata is consistent with the actual data."""
         async with test_session_factory() as session:
             svc = UserService(session)

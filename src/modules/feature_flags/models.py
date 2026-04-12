@@ -27,7 +27,9 @@ class FeatureFlag(Base):
     __tablename__ = "feature_flags"
 
     flag_name: Mapped[str] = mapped_column(
-        String(255), unique=True, nullable=False,
+        String(255),
+        unique=True,
+        nullable=False,
     )
     is_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     conditions: Mapped[Optional[dict[str, Any]]] = mapped_column(

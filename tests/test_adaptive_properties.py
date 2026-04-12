@@ -51,9 +51,7 @@ def _bodyweight_histories(draw: st.DrawFn) -> list[tuple[date, float]]:
         delta = draw(st.floats(min_value=-1.5, max_value=1.5))
         prev_weight = history[-1][1]
         new_weight = max(30.0, min(200.0, prev_weight + delta))
-        history.append(
-            (start_date + timedelta(days=i), round(new_weight, 1))
-        )
+        history.append((start_date + timedelta(days=i), round(new_weight, 1)))
     return history
 
 
@@ -79,9 +77,7 @@ def _adaptive_inputs(draw: st.DrawFn) -> AdaptiveInput:
         goal_type=goal_type,
         goal_rate_per_week=round(goal_rate, 2),
         bodyweight_history=draw(_bodyweight_histories()),
-        training_load_score=draw(
-            st.floats(min_value=0.0, max_value=100.0)
-        ),
+        training_load_score=draw(st.floats(min_value=0.0, max_value=100.0)),
     )
 
 

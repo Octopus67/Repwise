@@ -12,7 +12,7 @@ exercise_name, reps, new_weight_kg, previous_weight_kg.
 
 from __future__ import annotations
 
-from hypothesis import given, settings, assume
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from src.modules.training.schemas import ExerciseEntry, SetEntry
@@ -21,6 +21,7 @@ from src.modules.training.schemas import ExerciseEntry, SetEntry
 # ---------------------------------------------------------------------------
 # Pure logic extracted from PRDetector for property testing without DB
 # ---------------------------------------------------------------------------
+
 
 def detect_prs_pure(
     historical_bests: dict[str, dict[int, float]],
@@ -40,12 +41,14 @@ def detect_prs_pure(
                 # No history — skip (Requirement 4.4)
                 continue
             if s.weight_kg > prev_best:
-                prs.append({
-                    "exercise_name": exercise.exercise_name,
-                    "reps": s.reps,
-                    "new_weight_kg": s.weight_kg,
-                    "previous_weight_kg": prev_best,
-                })
+                prs.append(
+                    {
+                        "exercise_name": exercise.exercise_name,
+                        "reps": s.reps,
+                        "new_weight_kg": s.weight_kg,
+                        "previous_weight_kg": prev_best,
+                    }
+                )
     return prs
 
 
@@ -53,10 +56,18 @@ def detect_prs_pure(
 # Hypothesis strategies
 # ---------------------------------------------------------------------------
 
-exercise_names_st = st.sampled_from([
-    "bench press", "squat", "deadlift", "overhead press",
-    "barbell row", "bicep curl", "tricep extension", "leg press",
-])
+exercise_names_st = st.sampled_from(
+    [
+        "bench press",
+        "squat",
+        "deadlift",
+        "overhead press",
+        "barbell row",
+        "bicep curl",
+        "tricep extension",
+        "leg press",
+    ]
+)
 
 rep_counts_st = st.integers(min_value=1, max_value=20)
 weights_st = st.floats(min_value=0.0, max_value=500.0, allow_nan=False, allow_infinity=False)
@@ -92,6 +103,7 @@ historical_bests_st = st.dictionaries(
 # Property 6: PR detection correctness
 # ---------------------------------------------------------------------------
 
+
 @settings(max_examples=200)
 @given(
     historical_bests=historical_bests_st,
@@ -119,17 +131,17 @@ def test_pr_detection_correctness(
         for s in exercise.sets:
             prev = bests.get(s.reps)
             if prev is not None and s.weight_kg > prev:
-                expected_prs.append({
-                    "exercise_name": exercise.exercise_name,
-                    "reps": s.reps,
-                    "new_weight_kg": s.weight_kg,
-                    "previous_weight_kg": prev,
-                })
+                expected_prs.append(
+                    {
+                        "exercise_name": exercise.exercise_name,
+                        "reps": s.reps,
+                        "new_weight_kg": s.weight_kg,
+                        "previous_weight_kg": prev,
+                    }
+                )
 
     # Same number of PRs detected
-    assert len(prs) == len(expected_prs), (
-        f"Expected {len(expected_prs)} PRs, got {len(prs)}"
-    )
+    assert len(prs) == len(expected_prs), f"Expected {len(expected_prs)} PRs, got {len(prs)}"
 
     # Each PR matches expected values
     for pr, expected in zip(prs, expected_prs):
@@ -179,16 +191,12 @@ def test_pr_only_when_exceeding_best(
         )
 
     # Also verify: any set that has history and weight <= best is NOT in prs
-    pr_tuples = {
-        (p["exercise_name"], p["reps"], p["new_weight_kg"])
-        for p in prs
-    }
+    pr_tuples = {(p["exercise_name"], p["reps"], p["new_weight_kg"]) for p in prs}
     for exercise in exercises:
         bests = historical_bests.get(exercise.exercise_name, {})
         for s in exercise.sets:
             prev = bests.get(s.reps)
             if prev is not None and s.weight_kg <= prev:
                 assert (exercise.exercise_name, s.reps, s.weight_kg) not in pr_tuples, (
-                    f"Set with weight {s.weight_kg} <= best {prev} "
-                    f"should not be flagged as PR"
+                    f"Set with weight {s.weight_kg} <= best {prev} should not be flagged as PR"
                 )

@@ -7,19 +7,16 @@ against realistic training scenarios to verify correctness of calculations.
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import Optional
 
 import pytest
 
 from src.modules.training.wns_engine import (
-    MAX_STIM_REPS,
     atrophy_between_sessions,
     diminishing_returns,
     rir_from_rpe,
     stimulating_reps_per_set,
 )
 from src.modules.training.fatigue_engine import (
-    FatigueConfig,
     RegressionSignal,
     SessionExerciseData,
     SetData,
@@ -316,17 +313,31 @@ class TestFatigueScoreComposite:
 
     def test_undereating_increases_fatigue(self):
         well_fed = compute_fatigue_score(
-            "chest", [], 10, 22, 2, nutrition_compliance=1.0,
+            "chest",
+            [],
+            10,
+            22,
+            2,
+            nutrition_compliance=1.0,
         )
         underfed = compute_fatigue_score(
-            "chest", [], 10, 22, 2, nutrition_compliance=0.5,
+            "chest",
+            [],
+            10,
+            22,
+            2,
+            nutrition_compliance=0.5,
         )
         assert underfed.score > well_fed.score
         assert underfed.nutrition_component > 0
 
     def test_over_mrv_high_volume_component(self):
         score = compute_fatigue_score(
-            "quads", [], weekly_sets=25, mrv_sets=20, weekly_frequency=3,
+            "quads",
+            [],
+            weekly_sets=25,
+            mrv_sets=20,
+            weekly_frequency=3,
             nutrition_compliance=1.0,
         )
         assert score.volume_component == 1.0, "Over MRV → volume component maxed"
@@ -334,8 +345,12 @@ class TestFatigueScoreComposite:
     def test_deload_suggestion_generated(self):
         regression = RegressionSignal("bench press", "chest", 3, 100.0, 85.0, 15.0)
         score = compute_fatigue_score(
-            "chest", [regression], weekly_sets=22, mrv_sets=22,
-            weekly_frequency=4, nutrition_compliance=0.6,
+            "chest",
+            [regression],
+            weekly_sets=22,
+            mrv_sets=22,
+            weekly_frequency=4,
+            nutrition_compliance=0.6,
         )
         suggestions = generate_suggestions([score], [regression])
         if score.score > 70:
@@ -379,8 +394,12 @@ class TestWNSFatigueInteraction:
         # But strength is declining
         regression = RegressionSignal("bench press", "chest", 3, 100.0, 88.0, 12.0)
         score = compute_fatigue_score(
-            "chest", [regression], weekly_sets=18, mrv_sets=22,
-            weekly_frequency=3, nutrition_compliance=0.9,
+            "chest",
+            [regression],
+            weekly_sets=18,
+            mrv_sets=22,
+            weekly_frequency=3,
+            nutrition_compliance=0.9,
         )
         assert score.score > 30, "Regression + high volume should elevate fatigue"
 
@@ -392,8 +411,12 @@ class TestWNSFatigueInteraction:
         assert weekly_stim < 10
 
         score = compute_fatigue_score(
-            "chest", [], weekly_sets=6, mrv_sets=22,
-            weekly_frequency=2, nutrition_compliance=1.0,
+            "chest",
+            [],
+            weekly_sets=6,
+            mrv_sets=22,
+            weekly_frequency=2,
+            nutrition_compliance=1.0,
         )
         assert score.score < 25, "Low volume + no regression = low fatigue"
 
@@ -403,16 +426,16 @@ class TestWNSFatigueInteraction:
 
         # 1x/week
         monday = date(2026, 2, 2)
-        _, atrophy_1x, net_1x = _week_stimulus(
-            [(monday, [(stim, 1.0)] * 6)]
-        )
+        _, atrophy_1x, net_1x = _week_stimulus([(monday, [(stim, 1.0)] * 6)])
 
         # 3x/week (same total sets)
-        _, atrophy_3x, net_3x = _week_stimulus([
-            (monday, [(stim, 1.0)] * 2),
-            (monday + timedelta(days=2), [(stim, 1.0)] * 2),
-            (monday + timedelta(days=4), [(stim, 1.0)] * 2),
-        ])
+        _, atrophy_3x, net_3x = _week_stimulus(
+            [
+                (monday, [(stim, 1.0)] * 2),
+                (monday + timedelta(days=2), [(stim, 1.0)] * 2),
+                (monday + timedelta(days=4), [(stim, 1.0)] * 2),
+            ]
+        )
 
         assert atrophy_3x < atrophy_1x
         assert net_3x > net_1x

@@ -207,4 +207,6 @@ def generate_plan(
         day_summaries.append(day_summary)
 
     weekly = compute_weekly_summary(day_summaries)
-    return GeneratedPlan(days=days, daily_macro_summaries=day_summaries, weekly_macro_summary=weekly)
+    return GeneratedPlan(
+        days=days, daily_macro_summaries=day_summaries, weekly_macro_summary=weekly
+    )

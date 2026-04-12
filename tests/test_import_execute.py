@@ -40,7 +40,13 @@ def _auth_headers(user_id: uuid.UUID) -> dict:
     from src.config.settings import settings
 
     token = jwt.encode(
-        {"sub": str(user_id), "type": "access", "exp": datetime.now(timezone.utc) + timedelta(hours=1), "iss": "repwise", "aud": "repwise-api"},
+        {
+            "sub": str(user_id),
+            "type": "access",
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "iss": "repwise",
+            "aud": "repwise-api",
+        },
         settings.JWT_SECRET,
         algorithm=settings.JWT_ALGORITHM,
     )
@@ -116,8 +122,12 @@ class TestImportExecute:
     @pytest.mark.asyncio
     async def test_duplicate_import_skipped(self, client, override_get_db, db_session):
         user = await _create_user(db_session)
-        await client.post("/api/v1/import/execute", files=_csv_file(STRONG_CSV), headers=_auth_headers(user.id))
-        r = await client.post("/api/v1/import/execute", files=_csv_file(STRONG_CSV), headers=_auth_headers(user.id))
+        await client.post(
+            "/api/v1/import/execute", files=_csv_file(STRONG_CSV), headers=_auth_headers(user.id)
+        )
+        r = await client.post(
+            "/api/v1/import/execute", files=_csv_file(STRONG_CSV), headers=_auth_headers(user.id)
+        )
         assert r.status_code == 200
         assert r.json()["sessions_imported"] == 0
 

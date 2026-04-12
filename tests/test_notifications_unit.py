@@ -14,7 +14,7 @@ from sqlalchemy import select
 
 from src.modules.auth.models import User
 from src.modules.feature_flags.service import FeatureFlagService, invalidate_cache
-from src.modules.notifications.models import DeviceToken, NotificationPreference
+from src.modules.notifications.models import DeviceToken
 from src.modules.notifications.schemas import DeviceTokenCreate, NotificationPreferenceUpdate
 from src.modules.notifications.service import NotificationService
 from src.shared.errors import NotFoundError
@@ -35,6 +35,7 @@ async def _create_user(session, email: str = "test@example.com") -> User:
 
 # --- 1. register_device creates token ---
 
+
 @pytest.mark.asyncio
 async def test_register_device_creates_token(db_session):
     user = await _create_user(db_session)
@@ -51,6 +52,7 @@ async def test_register_device_creates_token(db_session):
 
 # --- 2. register_device with duplicate token reassigns ---
 
+
 @pytest.mark.asyncio
 async def test_register_device_duplicate_token_reassigns(db_session):
     user_a = await _create_user(db_session, email="a@example.com")
@@ -66,6 +68,7 @@ async def test_register_device_duplicate_token_reassigns(db_session):
     device_b = await svc.register_device(user_b.id, data)
     # Verify via fresh query to avoid identity map caching
     from sqlalchemy import select as sa_select
+
     result = await db_session.execute(
         sa_select(DeviceToken).where(DeviceToken.token == "shared_token_xyz")
     )
@@ -76,6 +79,7 @@ async def test_register_device_duplicate_token_reassigns(db_session):
 
 
 # --- 3. unregister_device removes token ---
+
 
 @pytest.mark.asyncio
 async def test_unregister_device_removes_token(db_session):
@@ -95,6 +99,7 @@ async def test_unregister_device_removes_token(db_session):
 
 # --- 4. unregister_device with wrong user_id raises NotFoundError ---
 
+
 @pytest.mark.asyncio
 async def test_unregister_device_wrong_user_raises(db_session):
     user = await _create_user(db_session)
@@ -110,6 +115,7 @@ async def test_unregister_device_wrong_user_raises(db_session):
 
 # --- 5. get_preferences creates defaults on first call ---
 
+
 @pytest.mark.asyncio
 async def test_get_preferences_creates_defaults(db_session):
     user = await _create_user(db_session)
@@ -124,6 +130,7 @@ async def test_get_preferences_creates_defaults(db_session):
 
 
 # --- 6. update_preferences partial update works ---
+
 
 @pytest.mark.asyncio
 async def test_update_preferences_partial_update(db_session):
@@ -144,6 +151,7 @@ async def test_update_preferences_partial_update(db_session):
 
 # --- 7. send_push with push_enabled=False returns 0 ---
 
+
 @pytest.mark.asyncio
 async def test_send_push_disabled_returns_zero(db_session):
     invalidate_cache()
@@ -160,13 +168,16 @@ async def test_send_push_disabled_returns_zero(db_session):
     await svc.update_preferences(user.id, NotificationPreferenceUpdate(push_enabled=False))
 
     # Register a token so we know it's the preference blocking delivery
-    await svc.register_device(user.id, DeviceTokenCreate(platform="ios", token="disabled_push_token"))
+    await svc.register_device(
+        user.id, DeviceTokenCreate(platform="ios", token="disabled_push_token")
+    )
 
     count = await svc.send_push(user.id, "Test", "Body")
     assert count == 0
 
 
 # --- 8. send_push with push_enabled=True and active tokens returns count > 0 ---
+
 
 @pytest.mark.asyncio
 async def test_send_push_enabled_with_tokens_returns_count(db_session):
@@ -204,6 +215,7 @@ async def test_send_push_enabled_with_tokens_returns_count(db_session):
 
 # --- 9. deactivate_token sets is_active=False ---
 
+
 @pytest.mark.asyncio
 async def test_deactivate_token_sets_inactive(db_session):
     user = await _create_user(db_session)
@@ -223,6 +235,7 @@ async def test_deactivate_token_sets_inactive(db_session):
 
 # --- H1: Feature flag disabled → no notification sent ---
 
+
 @pytest.mark.asyncio
 async def test_send_push_feature_flag_disabled_returns_zero(db_session):
     """When push_notifications feature flag is disabled, send_push returns 0."""
@@ -240,6 +253,7 @@ async def test_send_push_feature_flag_disabled_returns_zero(db_session):
 
 
 # --- H2: Quiet hours active → no notification sent ---
+
 
 @pytest.mark.asyncio
 async def test_send_push_quiet_hours_blocks_delivery(db_session):
@@ -270,6 +284,7 @@ async def test_send_push_quiet_hours_blocks_delivery(db_session):
 
 # --- H3: Per-type preference disabled → no notification sent ---
 
+
 @pytest.mark.asyncio
 async def test_send_push_type_preference_disabled_returns_zero(db_session):
     """When the per-type preference (e.g. workout_reminders) is disabled, send_push returns 0."""
@@ -290,5 +305,7 @@ async def test_send_push_type_preference_disabled_returns_zero(db_session):
     )
     await svc.register_device(user.id, DeviceTokenCreate(platform="ios", token="type_test_tok"))
 
-    count = await svc.send_push(user.id, "Workout!", "Time to train", notification_type="workout_reminder")
+    count = await svc.send_push(
+        user.id, "Workout!", "Time to train", notification_type="workout_reminder"
+    )
     assert count == 0

@@ -53,9 +53,7 @@ async def get_community_links(
     Requirement 13.5, 13.6: Accessible to all users.
     Links are stored in founder_content with section_key='community_links'.
     """
-    items = await service.get_content(
-        section_key=COMMUNITY_SECTION_KEY, locale="en"
-    )
+    items = await service.get_content(section_key=COMMUNITY_SECTION_KEY, locale="en")
     if items:
         content = items[0].content
         return CommunityLinksResponse(

@@ -77,9 +77,7 @@ class PeriodizationService:
         rows = result.scalars().all()
         return [TrainingBlockResponse.from_orm_model(r) for r in rows]
 
-    async def get_block(
-        self, user_id: uuid.UUID, block_id: uuid.UUID
-    ) -> TrainingBlockResponse:
+    async def get_block(self, user_id: uuid.UUID, block_id: uuid.UUID) -> TrainingBlockResponse:
         """Return a single block or raise NotFoundError."""
         block = await self._get_or_404(user_id, block_id)
         return TrainingBlockResponse.from_orm_model(block)
@@ -124,9 +122,7 @@ class PeriodizationService:
         await self.session.flush()
         return TrainingBlockResponse.from_orm_model(block)
 
-    async def soft_delete_block(
-        self, user_id: uuid.UUID, block_id: uuid.UUID
-    ) -> None:
+    async def soft_delete_block(self, user_id: uuid.UUID, block_id: uuid.UUID) -> None:
         """Soft-delete a training block."""
         logger.info("Soft-deleting training block %s for user %s", block_id, user_id)
         block = await self._get_or_404(user_id, block_id)
@@ -147,7 +143,9 @@ class PeriodizationService:
         start_date: date,
     ) -> list[TrainingBlockResponse]:
         """Expand and apply a block template, creating all blocks atomically."""
-        logger.info("Applying template '%s' for user %s starting %s", template_id, user_id, start_date)
+        logger.info(
+            "Applying template '%s' for user %s starting %s", template_id, user_id, start_date
+        )
         template = get_template_by_id(template_id)
         if template is None:
             raise NotFoundError("Block template not found")
@@ -176,9 +174,7 @@ class PeriodizationService:
 
         return created
 
-    async def check_deload_suggestions(
-        self, user_id: uuid.UUID
-    ) -> list[DeloadSuggestion]:
+    async def check_deload_suggestions(self, user_id: uuid.UUID) -> list[DeloadSuggestion]:
         """Check for consecutive non-deload blocks > 4 weeks and suggest deloads."""
         stmt = (
             select(TrainingBlock)
@@ -226,9 +222,7 @@ class PeriodizationService:
     # Internal helpers
     # ------------------------------------------------------------------
 
-    async def _get_or_404(
-        self, user_id: uuid.UUID, block_id: uuid.UUID
-    ) -> TrainingBlock:
+    async def _get_or_404(self, user_id: uuid.UUID, block_id: uuid.UUID) -> TrainingBlock:
         """Fetch a non-deleted training block or raise NotFoundError."""
         stmt = select(TrainingBlock).where(
             TrainingBlock.id == block_id,

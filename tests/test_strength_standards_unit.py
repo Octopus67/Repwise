@@ -108,8 +108,8 @@ class TestRankByStrength:
 
     def test_ranking_order(self):
         c1 = classify_strength("barbell bench press", 160.0, 80.0)  # ratio 2.0
-        c2 = classify_strength("overhead press", 40.0, 80.0)        # ratio 0.5
-        c3 = classify_strength("conventional deadlift", 200.0, 80.0) # ratio 2.5
+        c2 = classify_strength("overhead press", 40.0, 80.0)  # ratio 0.5
+        c3 = classify_strength("conventional deadlift", 200.0, 80.0)  # ratio 2.5
         ranked = rank_by_strength([c1, c2, c3])
         assert ranked[0].bodyweight_ratio >= ranked[1].bodyweight_ratio
         assert ranked[1].bodyweight_ratio >= ranked[2].bodyweight_ratio

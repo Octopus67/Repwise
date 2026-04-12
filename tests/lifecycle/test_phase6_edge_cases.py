@@ -25,19 +25,26 @@ async def _onboard(client: LifecycleClient, p: PersonaProfile) -> None:
     await client.get_me()
     await client.update_profile(display_name=p.display_name)
     await client.log_metrics(
-        height_cm=p.height_cm, weight_kg=p.weight_kg,
-        body_fat_pct=p.body_fat_pct, activity_level=p.activity_level,
+        height_cm=p.height_cm,
+        weight_kg=p.weight_kg,
+        body_fat_pct=p.body_fat_pct,
+        activity_level=p.activity_level,
     )
     await client.set_goals(goal_type=p.goal_type, goal_rate_per_week=p.goal_rate_per_week)
     await client.log_bodyweight(p.weight_kg, SIM_START)
-    await client.create_snapshot({
-        "weight_kg": p.weight_kg, "height_cm": p.height_cm,
-        "age_years": p.age_years, "sex": p.sex,
-        "activity_level": p.activity_level, "goal_type": p.goal_type,
-        "goal_rate_per_week": p.goal_rate_per_week,
-        "bodyweight_history": [{"date": SIM_START.isoformat(), "weight_kg": p.weight_kg}],
-        "training_load_score": 0.0,
-    })
+    await client.create_snapshot(
+        {
+            "weight_kg": p.weight_kg,
+            "height_cm": p.height_cm,
+            "age_years": p.age_years,
+            "sex": p.sex,
+            "activity_level": p.activity_level,
+            "goal_type": p.goal_type,
+            "goal_rate_per_week": p.goal_rate_per_week,
+            "bodyweight_history": [{"date": SIM_START.isoformat(), "weight_kg": p.weight_kg}],
+            "training_load_score": 0.0,
+        }
+    )
 
 
 # ===========================================================================
@@ -46,7 +53,6 @@ async def _onboard(client: LifecycleClient, p: PersonaProfile) -> None:
 
 
 class TestDuplicateFoodSubmission:
-
     @pytest.mark.asyncio
     async def test_duplicate_food_submission(self, override_get_db):
         """Log the same food entry twice rapidly — both should be created."""
@@ -56,19 +62,27 @@ class TestDuplicateFoodSubmission:
 
             entry1 = await c.log_food(
                 meal_name="Chicken Breast",
-                calories=300, protein_g=50, carbs_g=0, fat_g=7,
+                calories=300,
+                protein_g=50,
+                carbs_g=0,
+                fat_g=7,
                 entry_date=SIM_START,
             )
             entry2 = await c.log_food(
                 meal_name="Chicken Breast",
-                calories=300, protein_g=50, carbs_g=0, fat_g=7,
+                calories=300,
+                protein_g=50,
+                carbs_g=0,
+                fat_g=7,
                 entry_date=SIM_START,
             )
 
             assert entry1["id"] != entry2["id"], "Duplicate entries should have different IDs"
 
             entries = await c.get_nutrition_entries(
-                start_date=SIM_START, end_date=SIM_START, limit=100,
+                start_date=SIM_START,
+                end_date=SIM_START,
+                limit=100,
             )
             assert entries["total_count"] == 2, (
                 f"Expected 2 entries (no dedup), got {entries['total_count']}"
@@ -83,7 +97,6 @@ class TestDuplicateFoodSubmission:
 
 
 class TestZeroCalorieEntryAccepted:
-
     @pytest.mark.asyncio
     async def test_zero_calorie_entry_accepted(self, override_get_db):
         """A 0-calorie entry (water, supplements) should be accepted."""
@@ -93,7 +106,10 @@ class TestZeroCalorieEntryAccepted:
 
             entry = await c.log_food(
                 meal_name="Water",
-                calories=0, protein_g=0, carbs_g=0, fat_g=0,
+                calories=0,
+                protein_g=0,
+                carbs_g=0,
+                fat_g=0,
                 entry_date=SIM_START,
             )
             assert entry["calories"] == 0
@@ -108,7 +124,6 @@ class TestZeroCalorieEntryAccepted:
 
 
 class TestAbsurdCalorieEntryRejected:
-
     @pytest.mark.asyncio
     async def test_absurd_calorie_entry_rejected(self, override_get_db):
         """99999 calories exceeds le=50000 validation → rejected."""
@@ -140,7 +155,6 @@ class TestAbsurdCalorieEntryRejected:
 
 
 class TestNegativeCalorieEntryRejected:
-
     @pytest.mark.asyncio
     async def test_negative_calorie_entry_rejected(self, override_get_db):
         """-100 calories violates ge=0 validation → rejected."""
@@ -172,7 +186,6 @@ class TestNegativeCalorieEntryRejected:
 
 
 class TestFutureTrainingDateRejected:
-
     @pytest.mark.asyncio
     async def test_future_training_date_rejected(self, override_get_db):
         """A training session with a future date should be rejected."""
@@ -185,10 +198,12 @@ class TestFutureTrainingDateRejected:
                 "/api/v1/training/sessions",
                 json={
                     "session_date": future_date.isoformat(),
-                    "exercises": [{
-                        "exercise_name": "barbell back squat",
-                        "sets": [{"reps": 5, "weight_kg": 60, "set_type": "normal"}],
-                    }],
+                    "exercises": [
+                        {
+                            "exercise_name": "barbell back squat",
+                            "sets": [{"reps": 5, "weight_kg": 60, "set_type": "normal"}],
+                        }
+                    ],
                 },
             )
             assert resp.status_code in (400, 422), (
@@ -204,7 +219,6 @@ class TestFutureTrainingDateRejected:
 
 
 class TestDeleteAndVerifyRecalculation:
-
     @pytest.mark.asyncio
     async def test_delete_and_verify_recalculation(self, override_get_db):
         """Log 3 entries, delete the middle one, verify remaining 2 sum correctly."""
@@ -213,9 +227,27 @@ class TestDeleteAndVerifyRecalculation:
             await _onboard(c, PERSONA_A)
 
             meals = [
-                {"meal_name": "Breakfast", "calories": 400, "protein_g": 30, "carbs_g": 40, "fat_g": 12},
-                {"meal_name": "Lunch", "calories": 600, "protein_g": 45, "carbs_g": 55, "fat_g": 20},
-                {"meal_name": "Dinner", "calories": 500, "protein_g": 35, "carbs_g": 45, "fat_g": 18},
+                {
+                    "meal_name": "Breakfast",
+                    "calories": 400,
+                    "protein_g": 30,
+                    "carbs_g": 40,
+                    "fat_g": 12,
+                },
+                {
+                    "meal_name": "Lunch",
+                    "calories": 600,
+                    "protein_g": 45,
+                    "carbs_g": 55,
+                    "fat_g": 20,
+                },
+                {
+                    "meal_name": "Dinner",
+                    "calories": 500,
+                    "protein_g": 35,
+                    "carbs_g": 45,
+                    "fat_g": 18,
+                },
             ]
             entry_ids = []
             for m in meals:
@@ -233,7 +265,9 @@ class TestDeleteAndVerifyRecalculation:
             await c.delete_nutrition_entry(entry_ids[1])
 
             entries = await c.get_nutrition_entries(
-                start_date=SIM_START, end_date=SIM_START, limit=100,
+                start_date=SIM_START,
+                end_date=SIM_START,
+                limit=100,
             )
             assert entries["total_count"] == 2
 
@@ -252,7 +286,6 @@ class TestDeleteAndVerifyRecalculation:
 
 
 class TestEmptyExercisesTrainingSession:
-
     @pytest.mark.asyncio
     async def test_empty_exercises_training_session(self, override_get_db):
         """A training session with empty exercises list should be rejected.
@@ -283,7 +316,6 @@ class TestEmptyExercisesTrainingSession:
 
 
 class TestConcurrentFoodAndBodyweightLogging:
-
     @pytest.mark.asyncio
     async def test_concurrent_food_and_bodyweight_logging(self, override_get_db):
         """Log food and bodyweight on the same day — both stored correctly."""
@@ -295,7 +327,10 @@ class TestConcurrentFoodAndBodyweightLogging:
 
             food_entry = await c.log_food(
                 meal_name="Post-Workout Shake",
-                calories=350, protein_g=40, carbs_g=30, fat_g=8,
+                calories=350,
+                protein_g=40,
+                carbs_g=30,
+                fat_g=8,
                 entry_date=day,
             )
             bw_entry = await c.log_bodyweight(81.5, day)
@@ -307,10 +342,7 @@ class TestConcurrentFoodAndBodyweightLogging:
 
             # Verify bodyweight entry
             history = await c.get_bodyweight_history(limit=100)
-            bw_on_day = [
-                e for e in history["items"]
-                if e["recorded_date"] == day.isoformat()
-            ]
+            bw_on_day = [e for e in history["items"] if e["recorded_date"] == day.isoformat()]
             assert len(bw_on_day) == 1
             assert bw_on_day[0]["weight_kg"] == 81.5
         finally:
@@ -323,7 +355,6 @@ class TestConcurrentFoodAndBodyweightLogging:
 
 
 class TestVeryLongMealName:
-
     @pytest.mark.asyncio
     async def test_very_long_meal_name(self, override_get_db):
         """255-char meal name accepted; 256-char meal name rejected."""
@@ -335,7 +366,10 @@ class TestVeryLongMealName:
             name_255 = "A" * 255
             entry = await c.log_food(
                 meal_name=name_255,
-                calories=100, protein_g=10, carbs_g=10, fat_g=5,
+                calories=100,
+                protein_g=10,
+                carbs_g=10,
+                fat_g=5,
                 entry_date=SIM_START,
             )
             assert entry["meal_name"] == name_255
@@ -366,7 +400,6 @@ class TestVeryLongMealName:
 
 
 class TestQueryNonexistentDateRange:
-
     @pytest.mark.asyncio
     async def test_query_nonexistent_date_range(self, override_get_db):
         """Query a date range with no data → empty result, not an error."""
@@ -379,7 +412,9 @@ class TestQueryNonexistentDateRange:
             empty_end = date(2020, 1, 31)
 
             entries = await c.get_nutrition_entries(
-                start_date=empty_start, end_date=empty_end, limit=100,
+                start_date=empty_start,
+                end_date=empty_end,
+                limit=100,
             )
             assert entries["total_count"] == 0
             assert entries["items"] == []

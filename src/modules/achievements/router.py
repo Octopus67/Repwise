@@ -106,7 +106,12 @@ async def manual_freeze(
     if available < 1:
         return ManualFreezeResponse(success=False, message="No freezes available for this month.")
 
-    freeze = StreakFreeze(user_id=user.id, freeze_date=freeze_date, month=month_str, used_at=datetime.now(timezone.utc))
+    freeze = StreakFreeze(
+        user_id=user.id,
+        freeze_date=freeze_date,
+        month=month_str,
+        used_at=datetime.now(timezone.utc),
+    )
     try:
         db.add(freeze)
         await db.flush()
@@ -120,6 +125,7 @@ async def manual_freeze(
         await engine.recalculate_streak(user.id)
     except (SQLAlchemyError, ValueError):
         import logging
+
         logging.getLogger(__name__).exception("recalculate_streak failed for user %s", user.id)
 
     return ManualFreezeResponse(

@@ -28,11 +28,15 @@ class CoachProfile(Base, AuditLogMixin):
     __tablename__ = "coach_profiles"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), unique=True, index=True,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        unique=True,
+        index=True,
     )
     bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     specializations: Mapped[Optional[dict[str, Any]]] = mapped_column(
-        JSONB, nullable=True, server_default=text("'[]'::jsonb"),
+        JSONB,
+        nullable=True,
+        server_default=text("'[]'::jsonb"),
     )
     is_active: Mapped[bool] = mapped_column(default=True)
 
@@ -46,20 +50,27 @@ class CoachingRequest(SoftDeleteMixin, Base, AuditLogMixin):  # Audit fix 8.6
     __tablename__ = "coaching_requests"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), index=True,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
     )
     status: Mapped[str] = mapped_column(String(20), default="pending")
     goals: Mapped[str] = mapped_column(Text)
     progress_data: Mapped[Optional[dict[str, Any]]] = mapped_column(
-        JSONB, nullable=True, server_default=text("'{}'::jsonb"),
+        JSONB,
+        nullable=True,
+        server_default=text("'{}'::jsonb"),
     )
     document_urls: Mapped[Optional[list[str]]] = mapped_column(
-        JSONB, nullable=True, server_default=text("'[]'::jsonb"),
+        JSONB,
+        nullable=True,
+        server_default=text("'[]'::jsonb"),
     )
 
     # Relationship to session (one-to-one)
     session: Mapped[Optional[CoachingSession]] = relationship(
-        "CoachingSession", back_populates="request", uselist=False,
+        "CoachingSession",
+        back_populates="request",
+        uselist=False,
     )
 
     __table_args__ = (
@@ -78,20 +89,29 @@ class CoachingSession(SoftDeleteMixin, Base, AuditLogMixin):  # Audit fix 8.6
     __tablename__ = "coaching_sessions"
 
     request_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("coaching_requests.id", ondelete="CASCADE"), unique=True,
+        ForeignKey("coaching_requests.id", ondelete="CASCADE"),
+        unique=True,
     )
     coach_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("coach_profiles.id", ondelete="CASCADE"), index=True,
+        ForeignKey("coach_profiles.id", ondelete="CASCADE"),
+        index=True,
     )
     status: Mapped[str] = mapped_column(String(20), default="scheduled")
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     document_urls: Mapped[Optional[list[str]]] = mapped_column(
-        JSONB, nullable=True, server_default=text("'[]'::jsonb"),
+        JSONB,
+        nullable=True,
+        server_default=text("'[]'::jsonb"),
     )
-    scheduled_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)  # Audit fix 1.4 — timezone-aware
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)  # Audit fix 1.4 — timezone-aware
+    scheduled_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )  # Audit fix 1.4 — timezone-aware
+    completed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )  # Audit fix 1.4 — timezone-aware
 
     # Relationships
     request: Mapped[CoachingRequest] = relationship(
-        "CoachingRequest", back_populates="session",
+        "CoachingRequest",
+        back_populates="session",
     )

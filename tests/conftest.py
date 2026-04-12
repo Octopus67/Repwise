@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 
 import pytest
-from sqlalchemy import JSON, event
+from sqlalchemy import JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
@@ -52,7 +52,9 @@ for table in Base.metadata.tables.values():
             column.type = JSON()
         # Remove PostgreSQL-specific casts like '{}'::jsonb from server_default
         if column.server_default is not None:
-            default_text = str(column.server_default.arg) if hasattr(column.server_default, "arg") else ""
+            default_text = (
+                str(column.server_default.arg) if hasattr(column.server_default, "arg") else ""
+            )
             if "::jsonb" in default_text:
                 column.server_default = None
 
@@ -76,6 +78,7 @@ async def setup_database():
     """Create all tables before each test and drop them after."""
     from src.modules.feature_flags.service import invalidate_cache
     from src.middleware.rate_limiter import clear_all as clear_rate_limits
+
     invalidate_cache()
     clear_rate_limits()
     async with test_engine.begin() as conn:

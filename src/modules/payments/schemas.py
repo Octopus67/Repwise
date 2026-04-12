@@ -39,4 +39,3 @@ class WebhookResponse(BaseModel):
 
     status: str = "ok"
     event_type: Optional[str] = None
-

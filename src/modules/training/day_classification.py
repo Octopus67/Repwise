@@ -43,13 +43,10 @@ async def classify_day(
     Priority: logged sessions > scheduled templates > rest day.
     """
     # Step 1: Check for logged sessions on the target date
-    session_query = (
-        select(TrainingSession)
-        .where(
-            TrainingSession.user_id == user_id,
-            TrainingSession.session_date == target_date,
-            TrainingSession.deleted_at.is_(None),
-        )
+    session_query = select(TrainingSession).where(
+        TrainingSession.user_id == user_id,
+        TrainingSession.session_date == target_date,
+        TrainingSession.deleted_at.is_(None),
     )
     result = await db.execute(session_query)
     sessions = result.scalars().all()
@@ -65,12 +62,9 @@ async def classify_day(
         )
 
     # Step 2: Check for workout templates scheduled on this weekday
-    template_query = (
-        select(WorkoutTemplate)
-        .where(
-            WorkoutTemplate.user_id == user_id,
-            WorkoutTemplate.deleted_at.is_(None),
-        )
+    template_query = select(WorkoutTemplate).where(
+        WorkoutTemplate.user_id == user_id,
+        WorkoutTemplate.deleted_at.is_(None),
     )
     result = await db.execute(template_query)
     templates = result.scalars().all()

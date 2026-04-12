@@ -29,9 +29,7 @@ class AchievementService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def get_all_achievements(
-        self, user_id: uuid.UUID
-    ) -> list[AchievementWithStatus]:
+    async def get_all_achievements(self, user_id: uuid.UUID) -> list[AchievementWithStatus]:
         """Return all achievement definitions with the user's unlock/progress state."""
         # Batch-load all unlocked achievements for this user
         ua_stmt = select(UserAchievement).where(

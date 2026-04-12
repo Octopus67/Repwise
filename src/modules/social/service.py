@@ -101,13 +101,9 @@ class SocialService:
         )
 
         if cursor_time and cursor_id:
-            stmt = stmt.where(
-                tuple_(FeedEvent.created_at, FeedEvent.id) < (cursor_time, cursor_id)
-            )
+            stmt = stmt.where(tuple_(FeedEvent.created_at, FeedEvent.id) < (cursor_time, cursor_id))
 
-        stmt = stmt.order_by(
-            FeedEvent.created_at.desc(), FeedEvent.id.desc()
-        ).limit(limit)
+        stmt = stmt.order_by(FeedEvent.created_at.desc(), FeedEvent.id.desc()).limit(limit)
 
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
@@ -175,23 +171,23 @@ class SocialService:
         enriched = []
         for e in entries:
             p = profiles.get(e.user_id)
-            enriched.append({
-                "rank": e.rank,
-                "user": {
-                    "id": str(e.user_id),
-                    "display_name": p.display_name if p and p.display_name else "Anonymous",
-                    "avatar_url": p.avatar_url if p else None,
-                },
-                "score": float(e.score),
-                "unit": unit,
-            })
+            enriched.append(
+                {
+                    "rank": e.rank,
+                    "user": {
+                        "id": str(e.user_id),
+                        "display_name": p.display_name if p and p.display_name else "Anonymous",
+                        "avatar_url": p.avatar_url if p else None,
+                    },
+                    "score": float(e.score),
+                    "unit": unit,
+                }
+            )
         return enriched
 
     # ── Template Sharing ──────────────────────────────────────────────────
 
-    async def share_template(
-        self, owner_id: uuid.UUID, template_id: uuid.UUID
-    ) -> SharedTemplate:
+    async def share_template(self, owner_id: uuid.UUID, template_id: uuid.UUID) -> SharedTemplate:
         """Create a shareable link for a workout template."""
         # Verify template exists and belongs to user
         stmt = select(WorkoutTemplate).where(
@@ -230,9 +226,7 @@ class SocialService:
             raise NotFoundError("Shared template not found")
         return shared
 
-    async def copy_shared_template(
-        self, user_id: uuid.UUID, share_code: str
-    ) -> WorkoutTemplate:
+    async def copy_shared_template(self, user_id: uuid.UUID, share_code: str) -> WorkoutTemplate:
         """Copy a shared template to the user's account, increment copy_count."""
         shared = await self.get_shared_template(share_code)
 
@@ -296,17 +290,17 @@ class SocialService:
         return event
 
     async def discover_users(
-        self, current_user_id: uuid.UUID, query: str, limit: int = 20,
+        self,
+        current_user_id: uuid.UUID,
+        query: str,
+        limit: int = 20,
     ) -> list[dict]:
         """Search users by display name, excluding current user."""
         from src.modules.user.models import UserProfile
 
-        stmt = (
-            select(UserProfile)
-            .where(UserProfile.user_id != current_user_id)
-        )
+        stmt = select(UserProfile).where(UserProfile.user_id != current_user_id)
         if query:
-            escaped = query.replace('%', '\\%').replace('_', '\\_')
+            escaped = query.replace("%", "\\%").replace("_", "\\_")
             stmt = stmt.where(UserProfile.display_name.ilike(f"%{escaped}%"))
         stmt = stmt.limit(limit)
         result = await self.session.execute(stmt)

@@ -10,7 +10,9 @@ from __future__ import annotations
 
 MAX_STIM_REPS: float = 5.0
 DEFAULT_RIR: float = 2.0  # RPE 8 when user doesn't log RPE/RIR (3 stimulating reps)
-DIMINISHING_K: float = 0.96  # Average of Schoenfeld (K=1.69, 6 sets=2x) and Pelland (K=0.24, 6 sets=4x)
+DIMINISHING_K: float = (
+    0.96  # Average of Schoenfeld (K=1.69, 6 sets=2x) and Pelland (K=0.24, 6 sets=4x)
+)
 DEFAULT_STIMULUS_DURATION_DAYS: float = 2.0
 DEFAULT_MAINTENANCE_SETS: float = 3.0
 MAX_SETS_PER_SESSION_PER_MUSCLE: int = 10  # Beardsley: above 10 sets/session = negative effects
@@ -21,10 +23,10 @@ MAX_SETS_PER_SESSION_PER_MUSCLE: int = 10  # Beardsley: above 10 sets/session = 
 
 def rir_from_rpe(rpe: float | None) -> float:
     """Convert RPE to RIR (Reps in Reserve).
-    
+
     Args:
         rpe: RPE value (1-10 scale) or None
-        
+
     Returns:
         RIR value. None → DEFAULT_RIR. Clamps RPE to [1, 10].
         Returns max(0, 10 - clamped_rpe).
@@ -35,16 +37,14 @@ def rir_from_rpe(rpe: float | None) -> float:
     return max(0.0, 10.0 - clamped_rpe)
 
 
-def stimulating_reps_per_set(
-    reps: int, rir: float | None, intensity_pct: float | None
-) -> float:
+def stimulating_reps_per_set(reps: int, rir: float | None, intensity_pct: float | None) -> float:
     """Calculate stimulating reps for a single set.
-    
+
     Args:
         reps: Number of reps performed
         rir: Reps in reserve (None → DEFAULT_RIR)
         intensity_pct: Load intensity as percentage (None/0 → 0.75)
-        
+
     Returns:
         Number of stimulating reps for this set
     """
@@ -56,11 +56,11 @@ def stimulating_reps_per_set(
     # Guard against invalid reps
     if reps <= 0:
         return 0.0
-        
+
     # Heavy load (≥85%) - all reps are stimulating up to max
     if intensity_pct >= 0.85:
         return min(float(reps), MAX_STIM_REPS)
-    
+
     # RIR-based calculation for moderate loads
     if rir >= 4:
         return 0.0
@@ -76,10 +76,10 @@ def stimulating_reps_per_set(
 
 def diminishing_returns(ordered_stim_reps: list[float]) -> float:
     """Apply diminishing returns curve to ordered stimulating reps.
-    
+
     Args:
         ordered_stim_reps: List of stimulating reps per set, in order performed
-        
+
     Returns:
         Total stimulus after applying diminishing returns
     """
@@ -96,12 +96,12 @@ def atrophy_between_sessions(
     maintenance_sets_per_week: float = DEFAULT_MAINTENANCE_SETS,
 ) -> float:
     """Calculate atrophy between training sessions.
-    
+
     Args:
         gap_days: Days between sessions
         stimulus_duration_days: How long stimulus lasts
         maintenance_sets_per_week: Sets needed per week to maintain
-        
+
     Returns:
         Atrophy amount (sets lost)
     """
@@ -116,43 +116,43 @@ def compute_session_muscle_stimulus(
     exercise_coefficients: dict[str, dict[str, float]],
 ) -> tuple[float, bool]:
     """Compute total muscle stimulus for a session.
-    
+
     Args:
-        sets_data: List of set dicts with keys: exercise_id, reps, rir (or rpe), 
+        sets_data: List of set dicts with keys: exercise_id, reps, rir (or rpe),
                   intensity_pct, set_type
         muscle_group: Target muscle group
         exercise_coefficients: Dict mapping exercise_id to muscle coefficients
-        
+
     Returns:
         Tuple of (stimulus, exceeds_per_session_cap)
         - stimulus: Total stimulus for the muscle group after diminishing returns
         - exceeds_per_session_cap: True if >10 sets per muscle in this session
     """
     stim_reps_list: list[float] = []
-    
+
     for set_data in sets_data:
         # Skip warm-up sets
         if set_data.get("set_type") == "warm-up":
             continue
-            
+
         exercise_id = set_data.get("exercise_id", "")
         reps = set_data.get("reps", 0)
         rir = set_data.get("rir")
         rpe = set_data.get("rpe")
         intensity_pct = set_data.get("intensity_pct")
-        
+
         # Convert RPE to RIR if needed
         if rir is None and rpe is not None:
             rir = rir_from_rpe(rpe)
-            
+
         # Get coefficient for this muscle group
         coefficients = exercise_coefficients.get(exercise_id, {})
         coefficient = coefficients.get(muscle_group, 0.0)
-        
+
         if coefficient > 0.0:
             stim_reps = stimulating_reps_per_set(reps, rir, intensity_pct)
             weighted_stim_reps = stim_reps * coefficient
             stim_reps_list.append(weighted_stim_reps)
-    
+
     exceeds_cap = len(stim_reps_list) > MAX_SETS_PER_SESSION_PER_MUSCLE
     return diminishing_returns(stim_reps_list), exceeds_cap

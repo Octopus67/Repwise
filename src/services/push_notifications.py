@@ -91,7 +91,9 @@ class PushNotificationService:
         return list(result.scalars().all())
 
     async def _send_batch(
-        self, tokens: list[DeviceToken], messages: list[dict],
+        self,
+        tokens: list[DeviceToken],
+        messages: list[dict],
     ) -> int:
         """POST a batch of messages to Expo and handle responses."""
         access_token = os.environ.get("EXPO_ACCESS_TOKEN", "")

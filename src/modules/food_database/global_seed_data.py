@@ -3,7 +3,9 @@
 import json
 from pathlib import Path
 
-_DATA_FILE = Path(__file__).resolve().parent.parent.parent.parent / "data" / "global_food_items.json"
+_DATA_FILE = (
+    Path(__file__).resolve().parent.parent.parent.parent / "data" / "global_food_items.json"
+)
 
 _CACHED_FOOD_ITEMS: list[dict] | None = None
 

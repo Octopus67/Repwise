@@ -6,28 +6,28 @@ Covers: models, schemas, service, router, background worker, cleanup job.
 from __future__ import annotations
 
 import json
-import os
 import shutil
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
 
 import pytest
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.auth.models import User
 from src.modules.export.models import ExportRequest
 from src.modules.export.schemas import ExportRequestCreate, ExportRequestResponse
-from src.modules.export.service import ExportService, EXPORTS_DIR, EXPORT_EXPIRY_DAYS, RATE_LIMIT_HOURS
+from src.modules.export.service import (
+    ExportService,
+    EXPORTS_DIR,
+)
 from src.shared.errors import NotFoundError, RateLimitedError, UnprocessableError
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 async def _create_user(db: AsyncSession, email: str = "export@test.com") -> User:
     user = User(email=email, hashed_password="hashed", auth_provider="email", role="user")
@@ -39,8 +39,15 @@ async def _create_user(db: AsyncSession, email: str = "export@test.com") -> User
 def _auth_headers(user_id: uuid.UUID) -> dict:
     import jwt
     from src.config.settings import settings
+
     token = jwt.encode(
-        {"sub": str(user_id), "type": "access", "exp": datetime.now(timezone.utc) + timedelta(hours=1), "iss": "repwise", "aud": "repwise-api"},
+        {
+            "sub": str(user_id),
+            "type": "access",
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "iss": "repwise",
+            "aud": "repwise-api",
+        },
         settings.JWT_SECRET,
         algorithm=settings.JWT_ALGORITHM,
     )
@@ -50,6 +57,7 @@ def _auth_headers(user_id: uuid.UUID) -> dict:
 # ---------------------------------------------------------------------------
 # Schema tests
 # ---------------------------------------------------------------------------
+
 
 class TestExportSchemas:
     def test_valid_json_format(self):
@@ -74,7 +82,9 @@ class TestExportSchemas:
 
     def test_response_schema_from_attributes(self):
         resp = ExportRequestResponse(
-            id="abc", format="json", status="pending",
+            id="abc",
+            format="json",
+            status="pending",
             requested_at=datetime.now(timezone.utc),
         )
         assert resp.status == "pending"
@@ -84,12 +94,15 @@ class TestExportSchemas:
 # Model tests
 # ---------------------------------------------------------------------------
 
+
 class TestExportModel:
     @pytest.mark.asyncio
     async def test_create_export_request(self, db_session: AsyncSession):
         user = await _create_user(db_session)
         export = ExportRequest(
-            user_id=user.id, format="json", status="pending",
+            user_id=user.id,
+            format="json",
+            status="pending",
             requested_at=datetime.now(timezone.utc),
         )
         db_session.add(export)
@@ -101,7 +114,9 @@ class TestExportModel:
     async def test_export_fields_nullable(self, db_session: AsyncSession):
         user = await _create_user(db_session)
         export = ExportRequest(
-            user_id=user.id, format="csv", status="pending",
+            user_id=user.id,
+            format="csv",
+            status="pending",
             requested_at=datetime.now(timezone.utc),
         )
         db_session.add(export)
@@ -117,6 +132,7 @@ class TestExportModel:
 # ---------------------------------------------------------------------------
 # Service tests
 # ---------------------------------------------------------------------------
+
 
 class TestExportServiceRequestExport:
     @pytest.mark.asyncio
@@ -140,7 +156,9 @@ class TestExportServiceRequestExport:
     async def test_rate_limit_allows_after_24h(self, db_session: AsyncSession):
         user = await _create_user(db_session)
         old = ExportRequest(
-            user_id=user.id, format="json", status="completed",
+            user_id=user.id,
+            format="json",
+            status="completed",
             requested_at=datetime.now(timezone.utc) - timedelta(hours=25),
         )
         db_session.add(old)
@@ -153,7 +171,9 @@ class TestExportServiceRequestExport:
     async def test_rate_limit_ignores_failed_exports(self, db_session: AsyncSession):
         user = await _create_user(db_session)
         failed = ExportRequest(
-            user_id=user.id, format="json", status="failed",
+            user_id=user.id,
+            format="json",
+            status="failed",
             requested_at=datetime.now(timezone.utc),
         )
         db_session.add(failed)
@@ -194,10 +214,14 @@ class TestExportServiceHistory:
     async def test_history_returns_user_exports(self, db_session: AsyncSession):
         user = await _create_user(db_session)
         for fmt in ["json", "csv"]:
-            db_session.add(ExportRequest(
-                user_id=user.id, format=fmt, status="completed",
-                requested_at=datetime.now(timezone.utc) - timedelta(days=2),
-            ))
+            db_session.add(
+                ExportRequest(
+                    user_id=user.id,
+                    format=fmt,
+                    status="completed",
+                    requested_at=datetime.now(timezone.utc) - timedelta(days=2),
+                )
+            )
         await db_session.flush()
         svc = ExportService(db_session)
         history = await svc.get_history(user.id)
@@ -207,10 +231,14 @@ class TestExportServiceHistory:
     async def test_history_excludes_other_users(self, db_session: AsyncSession):
         user = await _create_user(db_session)
         other = await _create_user(db_session, "other@test.com")
-        db_session.add(ExportRequest(
-            user_id=other.id, format="json", status="completed",
-            requested_at=datetime.now(timezone.utc) - timedelta(days=2),
-        ))
+        db_session.add(
+            ExportRequest(
+                user_id=other.id,
+                format="json",
+                status="completed",
+                requested_at=datetime.now(timezone.utc) - timedelta(days=2),
+            )
+        )
         await db_session.flush()
         svc = ExportService(db_session)
         history = await svc.get_history(user.id)
@@ -221,10 +249,14 @@ class TestExportServiceHistory:
         user = await _create_user(db_session)
         now = datetime.now(timezone.utc)
         for i in range(3):
-            db_session.add(ExportRequest(
-                user_id=user.id, format="json", status="completed",
-                requested_at=now - timedelta(days=i + 2),
-            ))
+            db_session.add(
+                ExportRequest(
+                    user_id=user.id,
+                    format="json",
+                    status="completed",
+                    requested_at=now - timedelta(days=i + 2),
+                )
+            )
         await db_session.flush()
         svc = ExportService(db_session)
         history = await svc.get_history(user.id)
@@ -246,7 +278,9 @@ class TestExportServiceDelete:
     async def test_delete_removes_file(self, db_session: AsyncSession, tmp_path: Path):
         user = await _create_user(db_session)
         export = ExportRequest(
-            user_id=user.id, format="json", status="completed",
+            user_id=user.id,
+            format="json",
+            status="completed",
             requested_at=datetime.now(timezone.utc),
             download_url=str(tmp_path / "test.json"),
         )
@@ -263,7 +297,9 @@ class TestExportServiceMarkDownloaded:
     async def test_mark_downloaded_sets_timestamp(self, db_session: AsyncSession):
         user = await _create_user(db_session)
         export = ExportRequest(
-            user_id=user.id, format="json", status="completed",
+            user_id=user.id,
+            format="json",
+            status="completed",
             requested_at=datetime.now(timezone.utc),
             expires_at=datetime.now(timezone.utc) + timedelta(days=7),
         )
@@ -285,7 +321,9 @@ class TestExportServiceMarkDownloaded:
     async def test_mark_downloaded_expired_raises(self, db_session: AsyncSession):
         user = await _create_user(db_session)
         export = ExportRequest(
-            user_id=user.id, format="json", status="completed",
+            user_id=user.id,
+            format="json",
+            status="completed",
             requested_at=datetime.now(timezone.utc) - timedelta(days=10),
             expires_at=datetime.now(timezone.utc) - timedelta(days=1),
         )
@@ -361,6 +399,7 @@ class TestExportGeneration:
 # ---------------------------------------------------------------------------
 # Router tests
 # ---------------------------------------------------------------------------
+
 
 class TestExportRouter:
     @pytest.mark.asyncio
@@ -477,13 +516,17 @@ class TestExportRouter:
 # Background worker tests
 # ---------------------------------------------------------------------------
 
+
 class TestExportWorker:
     @pytest.mark.asyncio
     async def test_worker_processes_pending(self, db_session: AsyncSession):
         from src.jobs.export_worker import run_export_worker
+
         user = await _create_user(db_session)
         export = ExportRequest(
-            user_id=user.id, format="json", status="pending",
+            user_id=user.id,
+            format="json",
+            status="pending",
             requested_at=datetime.now(timezone.utc),
         )
         db_session.add(export)
@@ -500,9 +543,12 @@ class TestExportWorker:
     @pytest.mark.asyncio
     async def test_worker_skips_non_pending(self, db_session: AsyncSession):
         from src.jobs.export_worker import run_export_worker
+
         user = await _create_user(db_session)
         export = ExportRequest(
-            user_id=user.id, format="json", status="completed",
+            user_id=user.id,
+            format="json",
+            status="completed",
             requested_at=datetime.now(timezone.utc),
         )
         db_session.add(export)
@@ -515,15 +561,19 @@ class TestExportWorker:
 # Cleanup job tests
 # ---------------------------------------------------------------------------
 
+
 class TestCleanupExports:
     @pytest.mark.asyncio
     async def test_cleanup_removes_expired(self, db_session: AsyncSession, tmp_path: Path):
         from src.jobs.cleanup_exports import run_cleanup_exports
+
         user = await _create_user(db_session)
         file_path = tmp_path / "expired.json"
         file_path.write_text("{}")
         export = ExportRequest(
-            user_id=user.id, format="json", status="completed",
+            user_id=user.id,
+            format="json",
+            status="completed",
             requested_at=datetime.now(timezone.utc) - timedelta(days=10),
             expires_at=datetime.now(timezone.utc) - timedelta(days=1),
             download_url=str(file_path),
@@ -537,9 +587,12 @@ class TestCleanupExports:
     @pytest.mark.asyncio
     async def test_cleanup_keeps_non_expired(self, db_session: AsyncSession):
         from src.jobs.cleanup_exports import run_cleanup_exports
+
         user = await _create_user(db_session)
         export = ExportRequest(
-            user_id=user.id, format="json", status="completed",
+            user_id=user.id,
+            format="json",
+            status="completed",
             requested_at=datetime.now(timezone.utc),
             expires_at=datetime.now(timezone.utc) + timedelta(days=5),
         )
@@ -551,9 +604,12 @@ class TestCleanupExports:
     @pytest.mark.asyncio
     async def test_cleanup_handles_missing_file(self, db_session: AsyncSession):
         from src.jobs.cleanup_exports import run_cleanup_exports
+
         user = await _create_user(db_session)
         export = ExportRequest(
-            user_id=user.id, format="json", status="completed",
+            user_id=user.id,
+            format="json",
+            status="completed",
             requested_at=datetime.now(timezone.utc) - timedelta(days=10),
             expires_at=datetime.now(timezone.utc) - timedelta(days=1),
             download_url="/nonexistent/path.json",
@@ -567,6 +623,7 @@ class TestCleanupExports:
 # ---------------------------------------------------------------------------
 # Data collection tests
 # ---------------------------------------------------------------------------
+
 
 class TestDataCollection:
     @pytest.mark.asyncio
@@ -587,5 +644,13 @@ class TestDataCollection:
         user = await _create_user(db_session)
         svc = ExportService(db_session)
         data = await svc._collect_user_data(user.id)
-        expected_keys = {"bodyweight_logs", "sessions", "nutrition_entries", "measurements", "progress_photos", "achievements", "goals"}
+        expected_keys = {
+            "bodyweight_logs",
+            "sessions",
+            "nutrition_entries",
+            "measurements",
+            "progress_photos",
+            "achievements",
+            "goals",
+        }
         assert expected_keys.issubset(set(data.keys()))

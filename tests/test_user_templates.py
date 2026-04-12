@@ -22,6 +22,7 @@ from src.modules.training.template_service import TemplateService
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_template_data(
     name: str = "Push Day",
     description: str | None = "Chest and triceps",
@@ -131,6 +132,7 @@ class TestTemplateServiceUpdate:
         created = await service.create_template(user_id, _make_template_data())
 
         from src.modules.training.schemas import WorkoutTemplateUpdate
+
         updated = await service.update_template(
             user_id, created.id, WorkoutTemplateUpdate(name="Pull Day")
         )
@@ -145,6 +147,7 @@ class TestTemplateServiceUpdate:
         created = await service.create_template(user_id, _make_template_data())
 
         from src.modules.training.schemas import WorkoutTemplateUpdate
+
         new_exercises = [
             ExerciseEntry(
                 exercise_name="Barbell Row",
@@ -181,9 +184,7 @@ class TestTemplateServiceUpdate:
         created = await service.create_template(user_a, _make_template_data())
 
         with pytest.raises(NotFoundError):
-            await service.update_template(
-                user_b, created.id, WorkoutTemplateUpdate(name="Stolen")
-            )
+            await service.update_template(user_b, created.id, WorkoutTemplateUpdate(name="Stolen"))
 
 
 class TestTemplateServiceDelete:
@@ -226,6 +227,7 @@ class TestTemplateSchemaValidation:
     def test_empty_name_rejected(self):
         """Create template with empty name → ValidationError."""
         from pydantic import ValidationError
+
         with pytest.raises(ValidationError):
             WorkoutTemplateCreate(
                 name="",
@@ -240,12 +242,14 @@ class TestTemplateSchemaValidation:
     def test_no_exercises_rejected(self):
         """Create template with no exercises → ValidationError."""
         from pydantic import ValidationError
+
         with pytest.raises(ValidationError):
             WorkoutTemplateCreate(name="Empty", exercises=[])
 
     def test_name_too_long_rejected(self):
         """Create template with name > 200 chars → ValidationError."""
         from pydantic import ValidationError
+
         with pytest.raises(ValidationError):
             WorkoutTemplateCreate(
                 name="A" * 201,

@@ -53,7 +53,9 @@ class MealPlanItem(Base):
     day_index: Mapped[int] = mapped_column(Integer, nullable=False)
     slot: Mapped[str] = mapped_column(String(20), nullable=False)
     food_item_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("food_items.id", ondelete="CASCADE"), nullable=False, index=True  # Audit fix 10.6
+        ForeignKey("food_items.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,  # Audit fix 10.6
     )
     scale_factor: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     calories: Mapped[float] = mapped_column(Float, nullable=False)

@@ -28,8 +28,8 @@ async def run_cleanup_exports(session: AsyncSession | None = None) -> int:
     """Delete expired export requests and their files. Returns count cleaned."""
     start = time.monotonic()
     logger.info("Export cleanup job started")
-    sentry_sdk.set_tag('component', 'job')
-    sentry_sdk.set_tag('job_name', 'cleanup_exports')
+    sentry_sdk.set_tag("component", "job")
+    sentry_sdk.set_tag("job_name", "cleanup_exports")
     owns_session = session is None
     if owns_session:
         async with async_session_factory() as session:

@@ -8,7 +8,6 @@ import uuid
 import pytest
 
 from src.config.settings import settings
-from src.main import app
 
 
 @pytest.fixture(autouse=True)
@@ -22,12 +21,14 @@ def _enable_debug():
 @pytest.fixture(autouse=True)
 def _clear_rate_limits():
     from src.middleware.rate_limiter import clear_all
+
     clear_all()
     yield
     clear_all()
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
+
 
 async def _register(client, email=None, password="TestPass123!"):
     email = email or f"reg-{uuid.uuid4().hex[:8]}@test.com"
@@ -66,13 +67,18 @@ class TestEmailNormalization:
     async def test_case_insensitive_login(self, client, override_get_db):
         email_upper = f"CaseTest-{uuid.uuid4().hex[:6]}@Example.COM"
         password = "CasePass123!"
-        await client.post("/api/v1/auth/register", json={"email": email_upper, "password": password})
+        await client.post(
+            "/api/v1/auth/register", json={"email": email_upper, "password": password}
+        )
 
         # Login with lowercase
-        login = await client.post("/api/v1/auth/login", json={
-            "email": email_upper.lower(),
-            "password": password,
-        })
+        login = await client.post(
+            "/api/v1/auth/login",
+            json={
+                "email": email_upper.lower(),
+                "password": password,
+            },
+        )
         assert login.status_code == 200
         assert login.json().get("access_token") is not None
 
@@ -95,9 +101,13 @@ class TestOtpInvalidation:
 
         if token1 and token2:
             # Old token should be invalidated
-            old_reset = await client.post("/api/v1/auth/reset-password", json={
-                "token": token1, "new_password": "NewPass999!",
-            })
+            old_reset = await client.post(
+                "/api/v1/auth/reset-password",
+                json={
+                    "token": token1,
+                    "new_password": "NewPass999!",
+                },
+            )
             # Should fail (400/401/404) because old token was invalidated
             assert old_reset.status_code in (400, 401, 404, 422)
 
@@ -144,9 +154,13 @@ class TestIdorCoachingOwnership:
         headers_b, _ = await _auth_headers(client)
 
         # User A creates coaching request
-        create = await client.post("/api/v1/coaching/requests", headers=headers_a, json={
-            "goals": "Build muscle",
-        })
+        create = await client.post(
+            "/api/v1/coaching/requests",
+            headers=headers_a,
+            json={
+                "goals": "Build muscle",
+            },
+        )
         if create.status_code not in (200, 201):
             pytest.skip("Coaching module not available")
 
@@ -166,11 +180,24 @@ class TestIdorFoodDatabaseRecipes:
         headers_b, _ = await _auth_headers(client)
 
         # User A creates recipe
-        create = await client.post("/api/v1/food-database/recipes", headers=headers_a, json={
-            "name": "Secret Recipe",
-            "servings": 4,
-            "ingredients": [{"food_name": "Chicken", "amount_g": 200, "calories": 330, "protein_g": 62, "carbs_g": 0, "fat_g": 7}],
-        })
+        create = await client.post(
+            "/api/v1/food-database/recipes",
+            headers=headers_a,
+            json={
+                "name": "Secret Recipe",
+                "servings": 4,
+                "ingredients": [
+                    {
+                        "food_name": "Chicken",
+                        "amount_g": 200,
+                        "calories": 330,
+                        "protein_g": 62,
+                        "carbs_g": 0,
+                        "fat_g": 7,
+                    }
+                ],
+            },
+        )
         if create.status_code not in (200, 201):
             pytest.skip("Recipe creation not available")
 
@@ -200,11 +227,20 @@ class TestInputValidationJsonbSize:
 
         # 11KB metadata payload
         big_metadata = {"notes": "x" * 11_000}
-        resp = await client.post("/api/v1/training/sessions", headers=headers, json={
-            "session_date": "2024-06-15",
-            "exercises": [{"exercise_name": "Test", "sets": [{"reps": 5, "weight_kg": 50, "rpe": 7, "set_type": "normal"}]}],
-            "metadata": big_metadata,
-        })
+        resp = await client.post(
+            "/api/v1/training/sessions",
+            headers=headers,
+            json={
+                "session_date": "2024-06-15",
+                "exercises": [
+                    {
+                        "exercise_name": "Test",
+                        "sets": [{"reps": 5, "weight_kg": 50, "rpe": 7, "set_type": "normal"}],
+                    }
+                ],
+                "metadata": big_metadata,
+            },
+        )
         # Should reject (400/422) or accept if metadata field isn't size-validated
         assert resp.status_code in (201, 400, 422)
 
@@ -217,8 +253,8 @@ class TestFilenameSanitization:
 
         def sanitize_filename(name: str) -> str:
             name = name.replace("../", "").replace("..\\", "")
-            name = re.sub(r'[^\w\s\-.]', '_', name)
-            return name.strip().strip('.')
+            name = re.sub(r"[^\w\s\-.]", "_", name)
+            return name.strip().strip(".")
 
         result = sanitize_filename("../../../etc/passwd")
         assert ".." not in result
@@ -250,7 +286,11 @@ class TestBodySizeLimitEnforced:
         big_body = "x" * (2 * 1024 * 1024)
         resp = await client.post(
             "/api/v1/nutrition/entries",
-            headers={**headers_auth, "content-type": "application/json", "content-length": str(len(big_body))},
+            headers={
+                **headers_auth,
+                "content-type": "application/json",
+                "content-length": str(len(big_body)),
+            },
             content=big_body,
         )
         assert resp.status_code in (413, 400, 422)
@@ -304,4 +344,5 @@ class TestHttpsRedirect:
             pass
         # Confirm the middleware module exists
         from src.middleware.https_redirect import HTTPSRedirectMiddleware
+
         assert HTTPSRedirectMiddleware is not None

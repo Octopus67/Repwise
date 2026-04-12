@@ -58,12 +58,18 @@ class AccountService:
             action=AuditAction.DELETE.value,
             entity_type="users",
             entity_id=user_id,
-            changes={"action": "account_deletion_requested", "grace_period_days": GRACE_PERIOD_DAYS},
+            changes={
+                "action": "account_deletion_requested",
+                "grace_period_days": GRACE_PERIOD_DAYS,
+            },
         )
         self.session.add(audit)
         await self.session.flush()
 
-        logger.info("Account deletion requested", extra={"user_id": str(user_id), "action": "deletion_requested"})
+        logger.info(
+            "Account deletion requested",
+            extra={"user_id": str(user_id), "action": "deletion_requested"},
+        )
 
         permanent_date = now + timedelta(days=GRACE_PERIOD_DAYS)
         return {
@@ -93,9 +99,7 @@ class AccountService:
         now = datetime.now(timezone.utc)
         deadline = user.deleted_at + timedelta(days=GRACE_PERIOD_DAYS)
         if now > deadline:
-            raise UnprocessableError(
-                "Grace period has expired. Account cannot be reactivated."
-            )
+            raise UnprocessableError("Grace period has expired. Account cannot be reactivated.")
 
         user.deleted_at = None
 
@@ -138,7 +142,10 @@ class AccountService:
             try:
                 async with self.session.begin_nested():
                     await self.session.delete(user)
-                logger.info("Account permanently deleted", extra={"user_id": str(user.id), "action": "permanent_deletion"})
+                logger.info(
+                    "Account permanently deleted",
+                    extra={"user_id": str(user.id), "action": "permanent_deletion"},
+                )
                 count += 1
             except SQLAlchemyError:
                 logger.exception("Failed to delete user %s, skipping", user.id)
@@ -162,11 +169,13 @@ class AccountService:
         """Cancel any active subscription for the user."""
         stmt = select(Subscription).where(
             Subscription.user_id == user_id,
-            Subscription.status.in_([
-                SubscriptionStatus.ACTIVE,
-                SubscriptionStatus.PAST_DUE,
-                SubscriptionStatus.PENDING_PAYMENT,
-            ]),
+            Subscription.status.in_(
+                [
+                    SubscriptionStatus.ACTIVE,
+                    SubscriptionStatus.PAST_DUE,
+                    SubscriptionStatus.PENDING_PAYMENT,
+                ]
+            ),
             Subscription.deleted_at.is_(None),
         )
         result = await self.session.execute(stmt)

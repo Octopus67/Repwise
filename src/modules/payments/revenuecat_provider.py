@@ -57,18 +57,14 @@ class RevenueCatProvider(PaymentProvider):
         self.webhook_auth_key = settings.REVENUECAT_WEBHOOK_AUTH_KEY
         self.api_url = settings.REVENUECAT_API_URL
 
-    async def create_subscription(
-        self, params: CreateSubscriptionParams
-    ) -> ProviderSubscription:
+    async def create_subscription(self, params: CreateSubscriptionParams) -> ProviderSubscription:
         """Not supported — RevenueCat subscriptions are created client-side via SDK."""
         raise NotImplementedError(
             "RevenueCat subscriptions are created client-side via the mobile SDK. "
             "Use the RevenueCat SDK in the iOS/Android app to initiate purchases."
         )
 
-    async def verify_webhook(
-        self, payload: bytes, signature: str
-    ) -> WebhookEvent:
+    async def verify_webhook(self, payload: bytes, signature: str) -> WebhookEvent:
         """Verify RevenueCat webhook using Bearer token authorization.
 
         RevenueCat sends an Authorization header with a Bearer token that
@@ -92,12 +88,16 @@ class RevenueCatProvider(PaymentProvider):
 
         # Extract period end from expiration timestamp
         expiration_ms = event_data.get("expiration_at_ms")
-        period_end = datetime.fromtimestamp(expiration_ms / 1000, tz=timezone.utc) if expiration_ms else None
+        period_end = (
+            datetime.fromtimestamp(expiration_ms / 1000, tz=timezone.utc) if expiration_ms else None
+        )
 
         return WebhookEvent(
             event_type=normalized_type,
             event_id=event_data.get("id"),
-            provider_subscription_id=event_data.get("original_transaction_id", event_data.get("id", "")),
+            provider_subscription_id=event_data.get(
+                "original_transaction_id", event_data.get("id", "")
+            ),
             provider_transaction_id=event_data.get("transaction_id"),
             user_id=event_data.get("app_user_id", ""),
             amount=event_data.get("price"),
@@ -110,9 +110,7 @@ class RevenueCatProvider(PaymentProvider):
             },
         )
 
-    async def cancel_subscription(
-        self, provider_subscription_id: str
-    ) -> None:
+    async def cancel_subscription(self, provider_subscription_id: str) -> None:
         """Not supported — RevenueCat cancellations happen through the app stores."""
         raise NotImplementedError(
             "RevenueCat subscriptions are cancelled through the app store (iOS/Android). "

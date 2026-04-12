@@ -47,6 +47,7 @@ MUSCLE_GROUP_DEMAND_WEIGHTS: dict[str, float] = {
 # Data classes
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class SessionExercise:
     exercise_name: str
@@ -89,6 +90,7 @@ class DailyTargetOutput:
 # ---------------------------------------------------------------------------
 # Pure computation functions
 # ---------------------------------------------------------------------------
+
 
 def compute_muscle_group_demand(exercises: list[SessionExercise]) -> float:
     """Compute muscle group demand score (0.0–1.0) from session exercises."""
@@ -133,7 +135,11 @@ def compute_daily_targets(inp: DailyTargetInput) -> DailyTargetOutput:
     demand = compute_muscle_group_demand(inp.session_exercises) if inp.is_training_day else 0.0
 
     # Step 3: Volume multiplier
-    vol_mult = compute_volume_multiplier(inp.session_volume, inp.rolling_avg_volume) if inp.is_training_day else 1.0
+    vol_mult = (
+        compute_volume_multiplier(inp.session_volume, inp.rolling_avg_volume)
+        if inp.is_training_day
+        else 1.0
+    )
 
     # Step 4: Calorie adjustment
     if inp.is_training_day:
@@ -174,7 +180,7 @@ def compute_daily_targets(inp: DailyTargetInput) -> DailyTargetOutput:
     # Step 7: TDEE validation - ensure total calories don't exceed TDEE * 1.2
     total_macro_calories = adjusted_protein_g * 4.0 + adjusted_carbs_g * 4.0 + adjusted_fat_g * 9.0
     max_allowed_calories = inp.baseline_calories * 1.2
-    
+
     if total_macro_calories > max_allowed_calories:
         # Scale down proportionally
         scale_factor = max_allowed_calories / total_macro_calories

@@ -85,9 +85,7 @@ class CoachingService:
     ) -> CoachingRequestResponse:
         """Submit a coaching request (premium-gated, Requirement 12.1, 12.4, 12.7)."""
         if not is_premium:
-            raise PremiumRequiredError(
-                "Active subscription required to submit coaching requests"
-            )
+            raise PremiumRequiredError("Active subscription required to submit coaching requests")
 
         request = CoachingRequest(
             user_id=user_id,

@@ -122,11 +122,14 @@ class TestWorkoutVolumeCalculation:
         engine = AchievementEngine(db_session)
 
         exercises = [
-            {"exercise_id": "bench-press", "sets": [
-                {"weight": 80, "reps": 10},
-                {"weight": 80, "reps": 10},
-                {"weight": 80, "reps": 8},
-            ]},
+            {
+                "exercise_id": "bench-press",
+                "sets": [
+                    {"weight": 80, "reps": 10},
+                    {"weight": 80, "reps": 10},
+                    {"weight": 80, "reps": 8},
+                ],
+            },
         ]
 
         await engine.evaluate_training_session(user.id, exercises, session_date=date.today())

@@ -6,7 +6,6 @@ Property 24: Nutrient contribution breakdown invariant
 Validates: Requirements 11.1.1, 11.1.2, 11.2.5
 """
 
-import pytest
 from hypothesis import given, settings, assume
 from hypothesis import strategies as st
 
@@ -14,12 +13,33 @@ from src.modules.food_database.usda_client import NUTRIENT_MAP, _extract_nutrien
 
 # The 27 internal nutrient keys that MICRO_FIELDS tracks (excluding macros)
 EXPECTED_MICRO_KEYS = {
-    "vitamin_a_mcg", "vitamin_c_mg", "vitamin_d_mcg", "vitamin_e_mg", "vitamin_k_mcg",
-    "thiamin_mg", "riboflavin_mg", "niacin_mg", "pantothenic_acid_mg", "vitamin_b6_mg",
-    "biotin_mcg", "folate_mcg", "vitamin_b12_mcg",
-    "calcium_mg", "iron_mg", "zinc_mg", "magnesium_mg", "potassium_mg",
-    "selenium_mcg", "sodium_mg", "phosphorus_mg", "manganese_mg", "copper_mg",
-    "omega_3_g", "omega_6_g", "cholesterol_mg", "fibre_g",
+    "vitamin_a_mcg",
+    "vitamin_c_mg",
+    "vitamin_d_mcg",
+    "vitamin_e_mg",
+    "vitamin_k_mcg",
+    "thiamin_mg",
+    "riboflavin_mg",
+    "niacin_mg",
+    "pantothenic_acid_mg",
+    "vitamin_b6_mg",
+    "biotin_mcg",
+    "folate_mcg",
+    "vitamin_b12_mcg",
+    "calcium_mg",
+    "iron_mg",
+    "zinc_mg",
+    "magnesium_mg",
+    "potassium_mg",
+    "selenium_mcg",
+    "sodium_mg",
+    "phosphorus_mg",
+    "manganese_mg",
+    "copper_mg",
+    "omega_3_g",
+    "omega_6_g",
+    "cholesterol_mg",
+    "fibre_g",
 }
 
 # Macro keys that are also in NUTRIENT_MAP but tracked separately
@@ -101,9 +121,7 @@ class TestProperty24NutrientContributionBreakdown:
         percentages = [(c / total) * 100 for c in contributions]
         pct_sum = sum(percentages)
 
-        assert abs(pct_sum - 100.0) < 0.01, (
-            f"Percentages sum to {pct_sum}, expected ~100"
-        )
+        assert abs(pct_sum - 100.0) < 0.01, f"Percentages sum to {pct_sum}, expected ~100"
 
     @given(
         n_entries=st.integers(min_value=1, max_value=10),
@@ -115,9 +133,7 @@ class TestProperty24NutrientContributionBreakdown:
         contributions equals the total daily intake for that nutrient."""
         nutrient_key = data.draw(st.sampled_from(sorted(EXPECTED_MICRO_KEYS)))
         amounts = [
-            data.draw(
-                st.floats(min_value=0, max_value=5000, allow_nan=False, allow_infinity=False)
-            )
+            data.draw(st.floats(min_value=0, max_value=5000, allow_nan=False, allow_infinity=False))
             for _ in range(n_entries)
         ]
 

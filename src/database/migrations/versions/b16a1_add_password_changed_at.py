@@ -4,6 +4,7 @@ Revision ID: b16a1_password_changed_at
 Revises: r2a1_weekly_challenges
 Create Date: 2026-07-01 10:00:00.000000
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -16,7 +17,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column("users", sa.Column("password_changed_at", sa.DateTime(timezone=True), nullable=True))
+    op.add_column(
+        "users", sa.Column("password_changed_at", sa.DateTime(timezone=True), nullable=True)
+    )
 
 
 def downgrade() -> None:

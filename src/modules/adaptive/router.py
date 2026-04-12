@@ -115,7 +115,9 @@ async def get_daily_targets(
 
     target_date = date if date else date_type.today()
     return await service.get_daily_targets(
-        user_id=user.id, target_date=target_date, training_phase=training_phase,
+        user_id=user.id,
+        target_date=target_date,
+        training_phase=training_phase,
     )
 
 

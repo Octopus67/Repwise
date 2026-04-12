@@ -29,21 +29,26 @@ from tests.conftest import test_session_factory
 
 _unit_system = st.sampled_from(["metric", "imperial"])
 
-_rest_timer = st.fixed_dictionaries({
-    "compound_seconds": st.integers(min_value=10, max_value=600),
-    "isolation_seconds": st.integers(min_value=10, max_value=600),
-})
+_rest_timer = st.fixed_dictionaries(
+    {
+        "compound_seconds": st.integers(min_value=10, max_value=600),
+        "isolation_seconds": st.integers(min_value=10, max_value=600),
+    }
+)
 
 # Generate a full preferences dict with both unit_system and rest_timer
-_preferences = st.fixed_dictionaries({
-    "unit_system": _unit_system,
-    "rest_timer": _rest_timer,
-})
+_preferences = st.fixed_dictionaries(
+    {
+        "unit_system": _unit_system,
+        "rest_timer": _rest_timer,
+    }
+)
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 async def _create_user(session, user_id: uuid.UUID) -> None:
     """Insert a minimal User row so foreign keys are satisfied."""
@@ -78,9 +83,7 @@ class TestPreferencePersistenceRoundTrip:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @given(preferences=_preferences)
-    async def test_full_preferences_round_trip(
-        self, setup_database, preferences: dict
-    ):
+    async def test_full_preferences_round_trip(self, setup_database, preferences: dict):
         """PUT preferences then GET returns equivalent values."""
         async with test_session_factory() as session:
             svc = UserService(session)
@@ -100,8 +103,14 @@ class TestPreferencePersistenceRoundTrip:
 
             assert profile.preferences is not None
             assert profile.preferences["unit_system"] == preferences["unit_system"]
-            assert profile.preferences["rest_timer"]["compound_seconds"] == preferences["rest_timer"]["compound_seconds"]
-            assert profile.preferences["rest_timer"]["isolation_seconds"] == preferences["rest_timer"]["isolation_seconds"]
+            assert (
+                profile.preferences["rest_timer"]["compound_seconds"]
+                == preferences["rest_timer"]["compound_seconds"]
+            )
+            assert (
+                profile.preferences["rest_timer"]["isolation_seconds"]
+                == preferences["rest_timer"]["isolation_seconds"]
+            )
 
             await session.rollback()
 
@@ -112,9 +121,7 @@ class TestPreferencePersistenceRoundTrip:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @given(unit_system=_unit_system)
-    async def test_unit_system_only_round_trip(
-        self, setup_database, unit_system: str
-    ):
+    async def test_unit_system_only_round_trip(self, setup_database, unit_system: str):
         """Persisting only unit_system preference round-trips correctly."""
         async with test_session_factory() as session:
             svc = UserService(session)
@@ -143,9 +150,7 @@ class TestPreferencePersistenceRoundTrip:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @given(rest_timer=_rest_timer)
-    async def test_rest_timer_only_round_trip(
-        self, setup_database, rest_timer: dict
-    ):
+    async def test_rest_timer_only_round_trip(self, setup_database, rest_timer: dict):
         """Persisting only rest_timer preference round-trips correctly."""
         async with test_session_factory() as session:
             svc = UserService(session)
@@ -163,7 +168,13 @@ class TestPreferencePersistenceRoundTrip:
             profile = await svc.get_profile(uid)
 
             assert profile.preferences is not None
-            assert profile.preferences["rest_timer"]["compound_seconds"] == rest_timer["compound_seconds"]
-            assert profile.preferences["rest_timer"]["isolation_seconds"] == rest_timer["isolation_seconds"]
+            assert (
+                profile.preferences["rest_timer"]["compound_seconds"]
+                == rest_timer["compound_seconds"]
+            )
+            assert (
+                profile.preferences["rest_timer"]["isolation_seconds"]
+                == rest_timer["isolation_seconds"]
+            )
 
             await session.rollback()

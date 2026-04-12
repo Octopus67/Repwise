@@ -12,7 +12,6 @@ import pytest
 
 from tests.lifecycle.api_client import LifecycleClient
 from tests.lifecycle.personas import (
-    ALL_PERSONAS,
     DAILY_PLAN_GENERATORS,
     PERSONA_A,
     PERSONA_B,
@@ -35,29 +34,43 @@ async def _onboard(client: LifecycleClient, p: PersonaProfile) -> None:
     await client.get_me()
     await client.update_profile(display_name=p.display_name)
     await client.log_metrics(
-        height_cm=p.height_cm, weight_kg=p.weight_kg,
-        body_fat_pct=p.body_fat_pct, activity_level=p.activity_level,
+        height_cm=p.height_cm,
+        weight_kg=p.weight_kg,
+        body_fat_pct=p.body_fat_pct,
+        activity_level=p.activity_level,
     )
     await client.set_goals(goal_type=p.goal_type, goal_rate_per_week=p.goal_rate_per_week)
     await client.log_bodyweight(p.weight_kg, SIM_START)
-    await client.create_snapshot({
-        "weight_kg": p.weight_kg, "height_cm": p.height_cm,
-        "age_years": p.age_years, "sex": p.sex,
-        "activity_level": p.activity_level, "goal_type": p.goal_type,
-        "goal_rate_per_week": p.goal_rate_per_week,
-        "bodyweight_history": [{"date": SIM_START.isoformat(), "weight_kg": p.weight_kg}],
-        "training_load_score": 0.0,
-    })
+    await client.create_snapshot(
+        {
+            "weight_kg": p.weight_kg,
+            "height_cm": p.height_cm,
+            "age_years": p.age_years,
+            "sex": p.sex,
+            "activity_level": p.activity_level,
+            "goal_type": p.goal_type,
+            "goal_rate_per_week": p.goal_rate_per_week,
+            "bodyweight_history": [{"date": SIM_START.isoformat(), "weight_kg": p.weight_kg}],
+            "training_load_score": 0.0,
+        }
+    )
 
 
 async def _simulate_day(
-    client: LifecycleClient, persona: PersonaProfile, day_num: int,
+    client: LifecycleClient,
+    persona: PersonaProfile,
+    day_num: int,
 ) -> dict:
     """Simulate one day of activity. Returns summary of what was logged."""
     gen = DAILY_PLAN_GENERATORS[persona.name]
     plan = gen(day_num)
     sim_date = SIM_START + timedelta(days=day_num)
-    result = {"date": sim_date.isoformat(), "meals_logged": 0, "training_logged": False, "bw_logged": False}
+    result = {
+        "date": sim_date.isoformat(),
+        "meals_logged": 0,
+        "training_logged": False,
+        "bw_logged": False,
+    }
 
     # Log meals
     for meal in plan.meals:
@@ -68,7 +81,9 @@ async def _simulate_day(
             carbs_g=meal["carbs_g"],
             fat_g=meal["fat_g"],
             entry_date=sim_date,
-            micro_nutrients={"water_ml": plan.water_ml / max(len(plan.meals), 1)} if plan.water_ml > 0 else None,
+            micro_nutrients={"water_ml": plan.water_ml / max(len(plan.meals), 1)}
+            if plan.water_ml > 0
+            else None,
         )
         result["meals_logged"] += 1
 
@@ -112,7 +127,8 @@ class TestPersonaAWeek1:
 
                 # Verify daily entries are retrievable
                 entries = await c.get_nutrition_entries(
-                    start_date=sim_date, end_date=sim_date,
+                    start_date=sim_date,
+                    end_date=sim_date,
                 )
                 day_cal = sum(e["calories"] for e in entries["items"])
                 day_pro = sum(e["protein_g"] for e in entries["items"])
@@ -131,7 +147,8 @@ class TestPersonaAWeek1:
 
             # Verify weekly total matches sum of daily entries
             week_entries = await c.get_nutrition_entries(
-                start_date=SIM_START, end_date=SIM_START + timedelta(days=6),
+                start_date=SIM_START,
+                end_date=SIM_START + timedelta(days=6),
             )
             actual_total_cal = sum(e["calories"] for e in week_entries["items"])
             assert abs(actual_total_cal - expected_total_cal) < 1, (
@@ -140,7 +157,8 @@ class TestPersonaAWeek1:
 
             # Verify training sessions count
             sessions = await c.get_training_sessions(
-                start_date=SIM_START, end_date=SIM_START + timedelta(days=6),
+                start_date=SIM_START,
+                end_date=SIM_START + timedelta(days=6),
             )
             assert sessions["total_count"] == 3
 
@@ -157,7 +175,9 @@ class TestPersonaAWeek1:
                 await _simulate_day(c, PERSONA_A, day)
 
             streak = await c.get_streak()
-            assert streak["current_streak"] == 7, f"Expected streak=7, got {streak['current_streak']}"
+            assert streak["current_streak"] == 7, (
+                f"Expected streak=7, got {streak['current_streak']}"
+            )
         finally:
             await c.close()
 
@@ -203,7 +223,8 @@ class TestPersonaBWeek1:
 
             # Verify high calorie intake (5 meals × ~3000 cal/day)
             week_entries = await c.get_nutrition_entries(
-                start_date=SIM_START, end_date=SIM_START + timedelta(days=6),
+                start_date=SIM_START,
+                end_date=SIM_START + timedelta(days=6),
             )
             total_cal = sum(e["calories"] for e in week_entries["items"])
             # 7 days × 3000 cal = ~21000
@@ -282,7 +303,8 @@ class TestPersonaDWeek1:
 
             # Training: only day 1
             sessions = await c.get_training_sessions(
-                start_date=SIM_START, end_date=SIM_START + timedelta(days=6),
+                start_date=SIM_START,
+                end_date=SIM_START + timedelta(days=6),
             )
             assert sessions["total_count"] == 1
 
@@ -330,10 +352,12 @@ class TestDataIsolation:
 
             # Persona A sees only their entries
             entries_a = await c_a.get_nutrition_entries(
-                start_date=SIM_START, end_date=SIM_START,
+                start_date=SIM_START,
+                end_date=SIM_START,
             )
             entries_b = await c_b.get_nutrition_entries(
-                start_date=SIM_START, end_date=SIM_START,
+                start_date=SIM_START,
+                end_date=SIM_START,
             )
 
             # Persona A logs 4 meals, Persona B logs 5

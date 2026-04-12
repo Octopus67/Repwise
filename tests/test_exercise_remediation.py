@@ -4,10 +4,8 @@ Covers: catalog fallback, secondary muscle credit, mobility skip,
 WNS trend HU calculation, intensity_pct estimation, taxonomy cleanup.
 """
 
-import json
 from pathlib import Path
 
-import pytest
 
 from src.modules.training.exercise_mapping import get_muscle_group
 from src.modules.training.exercises import get_all_exercises, is_mobility_exercise
@@ -15,16 +13,30 @@ from src.modules.training.exercise_coefficients import get_muscle_coefficients
 from src.modules.training.wns_engine import (
     stimulating_reps_per_set,
     diminishing_returns,
-    rir_from_rpe,
 )
 
-VALID_GROUPS = frozenset([
-    "chest", "shoulders", "biceps", "triceps", "forearms", "abs",
-    "quads", "hamstrings", "glutes", "calves", "traps", "lats",
-    "erectors", "adductors",
-])
+VALID_GROUPS = frozenset(
+    [
+        "chest",
+        "shoulders",
+        "biceps",
+        "triceps",
+        "forearms",
+        "abs",
+        "quads",
+        "hamstrings",
+        "glutes",
+        "calves",
+        "traps",
+        "lats",
+        "erectors",
+        "adductors",
+    ]
+)
 
-DATA_FILE = Path(__file__).resolve().parent.parent / "src" / "modules" / "training" / "exercises_data.json"
+DATA_FILE = (
+    Path(__file__).resolve().parent.parent / "src" / "modules" / "training" / "exercises_data.json"
+)
 
 
 # ─── Taxonomy Tests ──────────────────────────────────────────────────────────
@@ -49,7 +61,7 @@ class TestTaxonomyCleanup:
 
     def test_all_secondaries_valid(self):
         for e in get_all_exercises():
-            for s in (e.get("secondary_muscles") or []):
+            for s in e.get("secondary_muscles") or []:
                 assert s in VALID_GROUPS, f"{e['name']} has invalid secondary '{s}'"
 
     def test_primary_not_in_secondary(self):
@@ -159,15 +171,17 @@ class TestMuscleCoverage:
 
     def test_every_group_has_10_primary(self):
         from collections import Counter
+
         dist = Counter(e["muscle_group"] for e in get_all_exercises())
         for g in VALID_GROUPS:
             assert dist.get(g, 0) >= 10, f"{g} has only {dist.get(g, 0)} exercises"
 
     def test_every_group_appears_as_secondary(self):
         from collections import Counter
+
         sec = Counter()
         for e in get_all_exercises():
-            for s in (e.get("secondary_muscles") or []):
+            for s in e.get("secondary_muscles") or []:
                 sec[s] += 1
         for g in VALID_GROUPS:
             assert sec.get(g, 0) >= 10, f"{g} appears as secondary only {sec.get(g, 0)} times"

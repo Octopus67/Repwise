@@ -53,7 +53,12 @@ class TestEnums:
         assert set(UserRole) == {UserRole.USER, UserRole.PREMIUM, UserRole.ADMIN}
 
     def test_goal_types(self):
-        assert set(GoalType) == {GoalType.CUTTING, GoalType.MAINTAINING, GoalType.BULKING, GoalType.RECOMPOSITION}
+        assert set(GoalType) == {
+            GoalType.CUTTING,
+            GoalType.MAINTAINING,
+            GoalType.BULKING,
+            GoalType.RECOMPOSITION,
+        }
 
     def test_activity_levels(self):
         assert len(ActivityLevel) == 5
@@ -166,7 +171,6 @@ class TestHealthEndpoint:
     @pytest.mark.asyncio
     async def test_api_error_handler(self):
         """Verify the global ApiError exception handler works."""
-        from fastapi import Request
 
         # The handler is registered — we test it indirectly via a 404 on unknown route
         transport = ASGITransport(app=app)

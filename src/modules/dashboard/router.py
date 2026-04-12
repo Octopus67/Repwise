@@ -25,7 +25,7 @@ async def get_dashboard_summary(
     db: AsyncSession = Depends(get_db),
 ) -> DashboardSummaryResponse:
     """Get all dashboard data in a single request.
-    
+
     Consolidates:
     - Nutrition entries for date
     - Adaptive targets

@@ -65,9 +65,7 @@ class TestProperty9SchemaConformance:
 
     @h_settings(max_examples=100, deadline=None)
     @given(exercises=_exercise_list)
-    def test_random_exercises_produce_valid_payload(
-        self, exercises: list[ExerciseEntry]
-    ):
+    def test_random_exercises_produce_valid_payload(self, exercises: list[ExerciseEntry]):
         """Generated exercise lists always produce a valid TrainingSessionCreate.
 
         **Validates: Requirements 7.4**

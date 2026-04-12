@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
 import pytest
 from httpx import AsyncClient
@@ -82,7 +82,9 @@ async def test_get_session_by_id(client: AsyncClient, override_get_db):
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail(reason="Pre-existing greenlet bug in update_session service (lazy load of updated_at)")
+@pytest.mark.xfail(
+    reason="Pre-existing greenlet bug in update_session service (lazy load of updated_at)"
+)
 async def test_update_session(client: AsyncClient, override_get_db):
     c = await setup_user(client)
     created = await _create_session(c)

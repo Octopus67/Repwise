@@ -25,13 +25,21 @@ class OnboardingCompleteRequest(BaseModel):
     display_name: Optional[str] = Field(default=None, max_length=100)
 
     # ── Food DNA fields (v2 onboarding) ──────────────────────────────────
-    dietary_restrictions: Optional[list[str]] = Field(default=None, description="e.g. ['vegetarian', 'dairy_free']")
+    dietary_restrictions: Optional[list[str]] = Field(
+        default=None, description="e.g. ['vegetarian', 'dairy_free']"
+    )
     allergies: Optional[list[str]] = Field(default=None, description="e.g. ['nuts', 'shellfish']")
-    cuisine_preferences: Optional[list[str]] = Field(default=None, description="e.g. ['indian', 'mediterranean']")
+    cuisine_preferences: Optional[list[str]] = Field(
+        default=None, description="e.g. ['indian', 'mediterranean']"
+    )
     meal_frequency: Optional[int] = Field(default=None, ge=2, le=6)
-    diet_style: Optional[str] = Field(default=None, description="balanced, high_protein, low_carb, keto")
+    diet_style: Optional[str] = Field(
+        default=None, description="balanced, high_protein, low_carb, keto"
+    )
     protein_per_kg: Optional[float] = Field(default=None, ge=1.0, le=3.0)
-    exercise_types: Optional[list[str]] = Field(default=None, description="e.g. ['strength', 'cardio']")
+    exercise_types: Optional[list[str]] = Field(
+        default=None, description="e.g. ['strength', 'cardio']"
+    )
     exercise_sessions_per_week: Optional[int] = Field(default=None, ge=0, le=14)
 
 

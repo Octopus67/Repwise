@@ -32,7 +32,7 @@ def _get_service(db: AsyncSession = Depends(get_db)) -> ContentService:
 def _article_to_response(article: object) -> ArticleResponse:
     """Convert a ContentArticle ORM object to an ArticleResponse, including module_name."""
     resp = ArticleResponse.model_validate(article)
-    module = getattr(article, 'module', None)
+    module = getattr(article, "module", None)
     if module and not resp.module_name:
         resp.module_name = module.name
     return resp
@@ -174,9 +174,7 @@ async def get_favorites(
 ) -> PaginatedResult[ArticleResponse]:
     """Get the user's favorited articles."""
     pagination = PaginationParams(page=page, limit=limit)
-    result = await service.get_favorite_articles(
-        user_id=user.id, pagination=pagination
-    )
+    result = await service.get_favorite_articles(user_id=user.id, pagination=pagination)
     return PaginatedResult[ArticleResponse](
         items=[_article_to_response(a) for a in result.items],
         total_count=result.total_count,

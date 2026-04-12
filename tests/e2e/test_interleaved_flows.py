@@ -37,7 +37,6 @@ async def setup_user(client: AsyncClient, **onboard_overrides) -> AsyncClient:
 
 
 class TestInterleavedFlows:
-
     @pytest.mark.asyncio
     async def test_workout_then_food_then_dashboard(self, client: AsyncClient, override_get_db):
         """Register → onboard → log workout → log food → dashboard returns (may 500 due to known serialization bug)."""
@@ -114,7 +113,6 @@ class TestInterleavedFlows:
 
 
 class TestAdaptiveFlows:
-
     @pytest.mark.asyncio
     async def test_onboard_creates_snapshot(self, client: AsyncClient, override_get_db):
         """Onboarding auto-creates an adaptive snapshot."""
@@ -155,7 +153,9 @@ class TestAdaptiveFlows:
         creds = make_user_credentials()
         resp = await client.post("/api/v1/auth/register", json=creds)
         client.headers["Authorization"] = f"Bearer {resp.json()['access_token']}"
-        await client.post(ONBOARDING, json=make_onboarding_payload(goal_type="bulking", goal_rate_per_week=0.5))
+        await client.post(
+            ONBOARDING, json=make_onboarding_payload(goal_type="bulking", goal_rate_per_week=0.5)
+        )
         r_bulk = await client.get(f"{ADAPTIVE}/snapshots")
         bulk_cals = r_bulk.json().get("items", r_bulk.json())[0]["target_calories"]
 
@@ -187,9 +187,12 @@ class TestAdaptiveFlows:
         r1 = await c.get(f"{ADAPTIVE}/snapshots")
         orig_cals = r1.json().get("items", r1.json())[0]["target_calories"]
 
-        recalc = await c.post(f"{USERS}/recalculate", json={
-            "goals": {"goal_type": "cutting", "goal_rate_per_week": -0.5},
-        })
+        recalc = await c.post(
+            f"{USERS}/recalculate",
+            json={
+                "goals": {"goal_type": "cutting", "goal_rate_per_week": -0.5},
+            },
+        )
         assert recalc.status_code == 200
         new_cals = recalc.json()["targets"]["calories"]
         assert new_cals != orig_cals

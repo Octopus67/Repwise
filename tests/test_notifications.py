@@ -10,17 +10,16 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import httpx
 import pytest
 from sqlalchemy import select
 
 from src.modules.auth.models import User
-from src.modules.notifications.models import DeviceToken, NotificationLog, NotificationPreference
+from src.modules.notifications.models import DeviceToken, NotificationLog
 from src.modules.notifications.schemas import (
     DeviceTokenCreate,
-    MarkReadRequest,
     NotificationPreferenceUpdate,
 )
 from src.modules.notifications.service import NotificationService
@@ -47,26 +46,33 @@ async def test_push_send_batches_messages(db_session):
 
     # Create 150 tokens
     for i in range(150):
-        db_session.add(DeviceToken(
-            user_id=user.id, platform="ios", token=f"tok_{i}", is_active=True,
-        ))
+        db_session.add(
+            DeviceToken(
+                user_id=user.id,
+                platform="ios",
+                token=f"tok_{i}",
+                is_active=True,
+            )
+        )
     await db_session.flush()
 
     # Mock httpx client
     mock_client = AsyncMock(spec=httpx.AsyncClient)
     # First batch: 100 ok, second batch: 50 ok
-    mock_client.post = AsyncMock(side_effect=[
-        AsyncMock(
-            status_code=200,
-            json=lambda: {"data": [{"status": "ok"}] * 100},
-            raise_for_status=lambda: None,
-        ),
-        AsyncMock(
-            status_code=200,
-            json=lambda: {"data": [{"status": "ok"}] * 50},
-            raise_for_status=lambda: None,
-        ),
-    ])
+    mock_client.post = AsyncMock(
+        side_effect=[
+            AsyncMock(
+                status_code=200,
+                json=lambda: {"data": [{"status": "ok"}] * 100},
+                raise_for_status=lambda: None,
+            ),
+            AsyncMock(
+                status_code=200,
+                json=lambda: {"data": [{"status": "ok"}] * 50},
+                raise_for_status=lambda: None,
+            ),
+        ]
+    )
 
     svc = PushNotificationService(db_session, http_client=mock_client)
     count = await svc.send_notification(user.id, "Test", "Body")
@@ -79,17 +85,32 @@ async def test_push_send_batches_messages(db_session):
 async def test_push_deactivates_unregistered_token(db_session):
     """DeviceNotRegistered error should mark token inactive."""
     user = await _create_user(db_session)
-    db_session.add(DeviceToken(
-        user_id=user.id, platform="ios", token="bad_token", is_active=True,
-    ))
+    db_session.add(
+        DeviceToken(
+            user_id=user.id,
+            platform="ios",
+            token="bad_token",
+            is_active=True,
+        )
+    )
     await db_session.flush()
 
     mock_client = AsyncMock(spec=httpx.AsyncClient)
-    mock_client.post = AsyncMock(return_value=AsyncMock(
-        status_code=200,
-        json=lambda: {"data": [{"status": "error", "message": "DeviceNotRegistered", "details": {"error": "DeviceNotRegistered"}}]},
-        raise_for_status=lambda: None,
-    ))
+    mock_client.post = AsyncMock(
+        return_value=AsyncMock(
+            status_code=200,
+            json=lambda: {
+                "data": [
+                    {
+                        "status": "error",
+                        "message": "DeviceNotRegistered",
+                        "details": {"error": "DeviceNotRegistered"},
+                    }
+                ]
+            },
+            raise_for_status=lambda: None,
+        )
+    )
 
     svc = PushNotificationService(db_session, http_client=mock_client)
     count = await svc.send_notification(user.id, "Test", "Body")
@@ -104,21 +125,32 @@ async def test_push_deactivates_unregistered_token(db_session):
 async def test_push_logs_notification(db_session):
     """Verify notification is logged to notification_log table."""
     user = await _create_user(db_session)
-    db_session.add(DeviceToken(
-        user_id=user.id, platform="android", token="log_test_tok", is_active=True,
-    ))
+    db_session.add(
+        DeviceToken(
+            user_id=user.id,
+            platform="android",
+            token="log_test_tok",
+            is_active=True,
+        )
+    )
     await db_session.flush()
 
     mock_client = AsyncMock(spec=httpx.AsyncClient)
-    mock_client.post = AsyncMock(return_value=AsyncMock(
-        status_code=200,
-        json=lambda: {"data": [{"status": "ok"}]},
-        raise_for_status=lambda: None,
-    ))
+    mock_client.post = AsyncMock(
+        return_value=AsyncMock(
+            status_code=200,
+            json=lambda: {"data": [{"status": "ok"}]},
+            raise_for_status=lambda: None,
+        )
+    )
 
     svc = PushNotificationService(db_session, http_client=mock_client)
     await svc.send_notification(
-        user.id, "PR!", "New record", data={"screen": "detail"}, notification_type="pr_celebration",
+        user.id,
+        "PR!",
+        "New record",
+        data={"screen": "detail"},
+        notification_type="pr_celebration",
     )
 
     stmt = select(NotificationLog).where(NotificationLog.user_id == user.id)
@@ -133,9 +165,14 @@ async def test_push_logs_notification(db_session):
 async def test_push_handles_api_error(db_session):
     """HTTP errors from Expo should return 0, not raise."""
     user = await _create_user(db_session)
-    db_session.add(DeviceToken(
-        user_id=user.id, platform="ios", token="err_tok", is_active=True,
-    ))
+    db_session.add(
+        DeviceToken(
+            user_id=user.id,
+            platform="ios",
+            token="err_tok",
+            is_active=True,
+        )
+    )
     await db_session.flush()
 
     mock_client = AsyncMock(spec=httpx.AsyncClient)
@@ -196,7 +233,9 @@ async def test_unregister_device_removes_token(db_session):
 async def test_unregister_device_wrong_user_raises(db_session):
     user = await _create_user(db_session)
     svc = NotificationService(db_session)
-    device = await svc.register_device(user.id, DeviceTokenCreate(platform="ios", token="wrong_usr"))
+    device = await svc.register_device(
+        user.id, DeviceTokenCreate(platform="ios", token="wrong_usr")
+    )
     with pytest.raises(NotFoundError):
         await svc.unregister_device(uuid.uuid4(), device.id)
 
@@ -226,6 +265,7 @@ async def test_notification_history_empty(db_session):
     user = await _create_user(db_session)
     svc = NotificationService(db_session)
     from src.shared.pagination import PaginationParams
+
     result = await svc.get_notification_history(user.id, PaginationParams(page=1, limit=10))
     assert result.total_count == 0
     assert result.items == []
@@ -235,14 +275,20 @@ async def test_notification_history_empty(db_session):
 async def test_notification_history_returns_logs(db_session):
     user = await _create_user(db_session)
     for i in range(3):
-        db_session.add(NotificationLog(
-            user_id=user.id, type="test", title=f"Title {i}", body=f"Body {i}",
-            sent_at=datetime.now(timezone.utc),
-        ))
+        db_session.add(
+            NotificationLog(
+                user_id=user.id,
+                type="test",
+                title=f"Title {i}",
+                body=f"Body {i}",
+                sent_at=datetime.now(timezone.utc),
+            )
+        )
     await db_session.flush()
 
     svc = NotificationService(db_session)
     from src.shared.pagination import PaginationParams
+
     result = await svc.get_notification_history(user.id, PaginationParams(page=1, limit=10))
     assert result.total_count == 3
     assert len(result.items) == 3
@@ -252,7 +298,9 @@ async def test_notification_history_returns_logs(db_session):
 async def test_mark_as_read(db_session):
     user = await _create_user(db_session)
     log = NotificationLog(
-        user_id=user.id, type="test", title="Read me",
+        user_id=user.id,
+        type="test",
+        title="Read me",
         sent_at=datetime.now(timezone.utc),
     )
     db_session.add(log)
@@ -271,8 +319,11 @@ async def test_mark_as_read(db_session):
 async def test_mark_as_read_already_read_returns_zero(db_session):
     user = await _create_user(db_session)
     log = NotificationLog(
-        user_id=user.id, type="test", title="Already read",
-        sent_at=datetime.now(timezone.utc), read_at=datetime.now(timezone.utc),
+        user_id=user.id,
+        type="test",
+        title="Already read",
+        sent_at=datetime.now(timezone.utc),
+        read_at=datetime.now(timezone.utc),
     )
     db_session.add(log)
     await db_session.flush()
@@ -285,6 +336,7 @@ async def test_mark_as_read_already_read_returns_zero(db_session):
 @pytest.mark.asyncio
 async def test_send_push_disabled_returns_zero(db_session):
     from src.modules.feature_flags.service import FeatureFlagService, invalidate_cache
+
     invalidate_cache()
     user = await _create_user(db_session)
     svc = NotificationService(db_session)
@@ -302,7 +354,9 @@ async def test_send_push_disabled_returns_zero(db_session):
 async def test_deactivate_token_sets_inactive(db_session):
     user = await _create_user(db_session)
     svc = NotificationService(db_session)
-    device = await svc.register_device(user.id, DeviceTokenCreate(platform="ios", token="deact_tok"))
+    device = await svc.register_device(
+        user.id, DeviceTokenCreate(platform="ios", token="deact_tok")
+    )
     await svc.deactivate_token(device.id)
     stmt = select(DeviceToken).where(DeviceToken.id == device.id)
     updated = (await db_session.execute(stmt)).scalar_one()
@@ -318,8 +372,15 @@ def _auth_headers(user_id: uuid.UUID) -> dict:
     """Generate a valid JWT for testing."""
     import jwt
     from src.config.settings import settings
+
     token = jwt.encode(
-        {"sub": str(user_id), "type": "access", "jti": str(uuid.uuid4()), "iss": "repwise", "aud": "repwise-api"},
+        {
+            "sub": str(user_id),
+            "type": "access",
+            "jti": str(uuid.uuid4()),
+            "iss": "repwise",
+            "aud": "repwise-api",
+        },
         settings.JWT_SECRET,
         algorithm=settings.JWT_ALGORITHM,
     )
@@ -344,7 +405,9 @@ async def test_router_register_device(db_session, override_get_db, client):
 async def test_router_unregister_device(db_session, override_get_db, client):
     user = await _create_user(db_session)
     svc = NotificationService(db_session)
-    device = await svc.register_device(user.id, DeviceTokenCreate(platform="ios", token="unreg_tok"))
+    device = await svc.register_device(
+        user.id, DeviceTokenCreate(platform="ios", token="unreg_tok")
+    )
     await db_session.commit()
 
     resp = await client.delete(
@@ -385,10 +448,14 @@ async def test_router_update_preferences(db_session, override_get_db, client):
 @pytest.mark.asyncio
 async def test_router_get_history(db_session, override_get_db, client):
     user = await _create_user(db_session)
-    db_session.add(NotificationLog(
-        user_id=user.id, type="test", title="History item",
-        sent_at=datetime.now(timezone.utc),
-    ))
+    db_session.add(
+        NotificationLog(
+            user_id=user.id,
+            type="test",
+            title="History item",
+            sent_at=datetime.now(timezone.utc),
+        )
+    )
     await db_session.commit()
 
     resp = await client.get(
@@ -405,7 +472,9 @@ async def test_router_get_history(db_session, override_get_db, client):
 async def test_router_mark_read(db_session, override_get_db, client):
     user = await _create_user(db_session)
     log = NotificationLog(
-        user_id=user.id, type="test", title="Mark me",
+        user_id=user.id,
+        type="test",
+        title="Mark me",
         sent_at=datetime.now(timezone.utc),
     )
     db_session.add(log)
@@ -434,23 +503,29 @@ async def test_volume_warning_dedup_skips_recent_notification(db_session):
     user = await _create_user(db_session, email="dedup@example.com")
 
     # Insert a recent volume_warning for 'chest' (2 days ago)
-    db_session.add(NotificationLog(
-        user_id=user.id,
-        type="volume_warning",
-        title="Volume Warning",
-        body="Your chest volume is above MRV",
-        data={"screen": "Analytics", "muscle": "chest"},
-        sent_at=datetime.now(timezone.utc) - timedelta(days=2),
-    ))
+    db_session.add(
+        NotificationLog(
+            user_id=user.id,
+            type="volume_warning",
+            title="Volume Warning",
+            body="Your chest volume is above MRV",
+            data={"screen": "Analytics", "muscle": "chest"},
+            sent_at=datetime.now(timezone.utc) - timedelta(days=2),
+        )
+    )
     await db_session.flush()
 
     cutoff = datetime.now(timezone.utc) - timedelta(days=7)
-    stmt = select(NotificationLog.id).where(
-        NotificationLog.user_id == user.id,
-        NotificationLog.type == "volume_warning",
-        func.json_extract(NotificationLog.data, "$.muscle") == "chest",
-        NotificationLog.sent_at > cutoff,
-    ).limit(1)
+    stmt = (
+        select(NotificationLog.id)
+        .where(
+            NotificationLog.user_id == user.id,
+            NotificationLog.type == "volume_warning",
+            func.json_extract(NotificationLog.data, "$.muscle") == "chest",
+            NotificationLog.sent_at > cutoff,
+        )
+        .limit(1)
+    )
     recent = (await db_session.execute(stmt)).scalar_one_or_none()
 
     assert recent is not None, "Dedup query should find recent volume_warning for chest"
@@ -465,23 +540,29 @@ async def test_volume_warning_dedup_allows_old_notification(db_session):
     user = await _create_user(db_session, email="dedup_old@example.com")
 
     # Insert an old volume_warning for 'chest' (10 days ago)
-    db_session.add(NotificationLog(
-        user_id=user.id,
-        type="volume_warning",
-        title="Volume Warning",
-        body="Your chest volume is above MRV",
-        data={"screen": "Analytics", "muscle": "chest"},
-        sent_at=datetime.now(timezone.utc) - timedelta(days=10),
-    ))
+    db_session.add(
+        NotificationLog(
+            user_id=user.id,
+            type="volume_warning",
+            title="Volume Warning",
+            body="Your chest volume is above MRV",
+            data={"screen": "Analytics", "muscle": "chest"},
+            sent_at=datetime.now(timezone.utc) - timedelta(days=10),
+        )
+    )
     await db_session.flush()
 
     cutoff = datetime.now(timezone.utc) - timedelta(days=7)
-    stmt = select(NotificationLog.id).where(
-        NotificationLog.user_id == user.id,
-        NotificationLog.type == "volume_warning",
-        func.json_extract(NotificationLog.data, "$.muscle") == "chest",
-        NotificationLog.sent_at > cutoff,
-    ).limit(1)
+    stmt = (
+        select(NotificationLog.id)
+        .where(
+            NotificationLog.user_id == user.id,
+            NotificationLog.type == "volume_warning",
+            func.json_extract(NotificationLog.data, "$.muscle") == "chest",
+            NotificationLog.sent_at > cutoff,
+        )
+        .limit(1)
+    )
     recent = (await db_session.execute(stmt)).scalar_one_or_none()
 
     assert recent is None, "Dedup query should not find volume_warning older than 7 days"
@@ -496,23 +577,29 @@ async def test_volume_warning_dedup_different_muscle_allowed(db_session):
     user = await _create_user(db_session, email="dedup_diff@example.com")
 
     # Insert a recent volume_warning for 'chest' (1 day ago)
-    db_session.add(NotificationLog(
-        user_id=user.id,
-        type="volume_warning",
-        title="Volume Warning",
-        body="Your chest volume is above MRV",
-        data={"screen": "Analytics", "muscle": "chest"},
-        sent_at=datetime.now(timezone.utc) - timedelta(days=1),
-    ))
+    db_session.add(
+        NotificationLog(
+            user_id=user.id,
+            type="volume_warning",
+            title="Volume Warning",
+            body="Your chest volume is above MRV",
+            data={"screen": "Analytics", "muscle": "chest"},
+            sent_at=datetime.now(timezone.utc) - timedelta(days=1),
+        )
+    )
     await db_session.flush()
 
     cutoff = datetime.now(timezone.utc) - timedelta(days=7)
-    stmt = select(NotificationLog.id).where(
-        NotificationLog.user_id == user.id,
-        NotificationLog.type == "volume_warning",
-        func.json_extract(NotificationLog.data, "$.muscle") == "quads",
-        NotificationLog.sent_at > cutoff,
-    ).limit(1)
+    stmt = (
+        select(NotificationLog.id)
+        .where(
+            NotificationLog.user_id == user.id,
+            NotificationLog.type == "volume_warning",
+            func.json_extract(NotificationLog.data, "$.muscle") == "quads",
+            NotificationLog.sent_at > cutoff,
+        )
+        .limit(1)
+    )
     recent = (await db_session.execute(stmt)).scalar_one_or_none()
 
     assert recent is None, "Dedup query for 'quads' should not match 'chest' warning"

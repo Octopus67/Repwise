@@ -55,21 +55,25 @@ def compute_combined_recovery(
             score_val = getattr(fs, "score", None)
             if score_val is not None:
                 fatigue_vals.append(float(score_val))
-                factors.append(CombinedFactor(
-                    name=getattr(fs, "muscle_group", "unknown"),
-                    value=float(score_val),
-                    source="fatigue",
-                ))
+                factors.append(
+                    CombinedFactor(
+                        name=getattr(fs, "muscle_group", "unknown"),
+                        value=float(score_val),
+                        source="fatigue",
+                    )
+                )
         if fatigue_vals:
             avg_fatigue = sum(fatigue_vals) / len(fatigue_vals)
 
     # Add readiness factor
     if readiness_score is not None:
-        factors.append(CombinedFactor(
-            name="readiness",
-            value=float(readiness_score),
-            source="readiness",
-        ))
+        factors.append(
+            CombinedFactor(
+                name="readiness",
+                value=float(readiness_score),
+                source="readiness",
+            )
+        )
 
     # Compute combined score
     if readiness_score is not None and avg_fatigue is not None:

@@ -24,7 +24,10 @@ class TestMealXSSSanitization:
     def test_script_tag_stripped_from_create(self):
         m = CustomMealCreate(
             name="<script>alert(1)</script>Chicken",
-            calories=200, protein_g=30, carbs_g=0, fat_g=5,
+            calories=200,
+            protein_g=30,
+            carbs_g=0,
+            fat_g=5,
         )
         assert "<script>" not in m.name
         assert "Chicken" in m.name
@@ -32,7 +35,10 @@ class TestMealXSSSanitization:
     def test_img_onerror_stripped_from_create(self):
         m = CustomMealCreate(
             name='<img onerror="alert(1)">Rice',
-            calories=100, protein_g=2, carbs_g=22, fat_g=0,
+            calories=100,
+            protein_g=2,
+            carbs_g=22,
+            fat_g=0,
         )
         assert "<img" not in m.name
         assert "Rice" in m.name
@@ -45,21 +51,30 @@ class TestMealXSSSanitization:
     def test_html_stripped_from_favorite(self):
         m = MealFavoriteCreate(
             name="<div>Wrapped</div>",
-            calories=100, protein_g=10, carbs_g=10, fat_g=5,
+            calories=100,
+            protein_g=10,
+            carbs_g=10,
+            fat_g=5,
         )
         assert "<div>" not in m.name
 
     def test_ampersand_escaped(self):
         m = CustomMealCreate(
             name="Fish & Chips",
-            calories=500, protein_g=20, carbs_g=50, fat_g=25,
+            calories=500,
+            protein_g=20,
+            carbs_g=50,
+            fat_g=25,
         )
         assert "&amp;" in m.name
 
     def test_clean_name_unchanged(self):
         m = CustomMealCreate(
             name="Grilled Chicken Breast",
-            calories=165, protein_g=31, carbs_g=0, fat_g=3.6,
+            calories=165,
+            protein_g=31,
+            carbs_g=0,
+            fat_g=3.6,
         )
         assert m.name == "Grilled Chicken Breast"
 
@@ -97,7 +112,10 @@ class TestMacroRounding:
     def test_zero_stays_zero(self):
         e = NutritionEntryCreate(
             meal_name="Water",
-            calories=0.0, protein_g=0.0, carbs_g=0.0, fat_g=0.0,
+            calories=0.0,
+            protein_g=0.0,
+            carbs_g=0.0,
+            fat_g=0.0,
             entry_date=date.today(),
         )
         assert e.calories == 0.0
@@ -111,6 +129,7 @@ class TestContextVarIsolation:
 
     def test_default_is_none_not_shared_list(self):
         from src.middleware.audit_logger import _pending_audits
+
         assert _pending_audits.get() is None
 
     def test_separate_contexts_dont_share(self):
@@ -119,6 +138,7 @@ class TestContextVarIsolation:
 
         # Simulate request 1
         ctx1 = contextvars.copy_context()
+
         def req1():
             record_audit(
                 user_id=uuid.uuid4(),
@@ -133,6 +153,7 @@ class TestContextVarIsolation:
 
         # Simulate request 2 — should start fresh
         ctx2 = contextvars.copy_context()
+
         def req2():
             return _pending_audits.get()
 

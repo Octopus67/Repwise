@@ -26,14 +26,12 @@ async def cleanup_expired_blacklist_entries() -> int:
     """Delete expired blacklist entries. Returns count purged."""
     start = time.monotonic()
     logger.info("Blacklist cleanup job started")
-    sentry_sdk.set_tag('component', 'job')
-    sentry_sdk.set_tag('job_name', 'cleanup_blacklist')
+    sentry_sdk.set_tag("component", "job")
+    sentry_sdk.set_tag("job_name", "cleanup_blacklist")
     try:
         async with async_session_factory() as session:
             result = await session.execute(
-                delete(TokenBlacklist).where(
-                    TokenBlacklist.expires_at < datetime.now(timezone.utc)
-                )
+                delete(TokenBlacklist).where(TokenBlacklist.expires_at < datetime.now(timezone.utc))
             )
             await session.commit()
             count = result.rowcount

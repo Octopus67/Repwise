@@ -219,23 +219,27 @@ class TrainingAnalyticsService:
         bw_row = bw_result.scalar_one_or_none()
 
         if bw_row is None:
-            return StrengthStandardsResponse(
-                classifications=[], milestones=[], bodyweight_kg=None
-            )
+            return StrengthStandardsResponse(classifications=[], milestones=[], bodyweight_kg=None)
 
         bodyweight_kg = float(bw_row)
 
         # Fetch recent sessions to find best e1RM per supported lift
         # Limit to last 365 days and max 200 sessions to prevent OOM
         from datetime import timedelta
+
         cutoff = date.today() - timedelta(days=365)
-        all_stmt = select(
-            TrainingSession.session_date,
-            TrainingSession.exercises,
-        ).where(
-            TrainingSession.user_id == user_id,
-            TrainingSession.session_date >= cutoff,
-        ).order_by(TrainingSession.session_date.desc()).limit(200)
+        all_stmt = (
+            select(
+                TrainingSession.session_date,
+                TrainingSession.exercises,
+            )
+            .where(
+                TrainingSession.user_id == user_id,
+                TrainingSession.session_date >= cutoff,
+            )
+            .order_by(TrainingSession.session_date.desc())
+            .limit(200)
+        )
         all_stmt = TrainingSession.not_deleted(all_stmt)
         result = await self.session.execute(all_stmt)
         all_sessions = [(row.session_date, row.exercises or []) for row in result]
@@ -250,11 +254,15 @@ class TrainingAnalyticsService:
                 sets = ex.get("sets", [])
                 best = best_e1rm_for_exercise(sets)
                 if best is not None:
-                    if ex_name not in best_e1rm_per_lift or best.primary > best_e1rm_per_lift[ex_name]:
+                    if (
+                        ex_name not in best_e1rm_per_lift
+                        or best.primary > best_e1rm_per_lift[ex_name]
+                    ):
                         best_e1rm_per_lift[ex_name] = best.primary
 
         # Classify each lift
         from src.modules.training.strength_standards import StrengthClassification as SC
+
         classifications: list[SC] = []
         for lift_name, e1rm_val in best_e1rm_per_lift.items():
             c = classify_strength(lift_name, e1rm_val, bodyweight_kg)

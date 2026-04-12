@@ -90,7 +90,9 @@ class ConflictError(ApiError):
 
 
 class UnprocessableError(ApiError):
-    def __init__(self, message: str = "Unprocessable entity", details: Optional[Any] = None) -> None:
+    def __init__(
+        self, message: str = "Unprocessable entity", details: Optional[Any] = None
+    ) -> None:
         super().__init__(422, ErrorCode.UNPROCESSABLE, message, details)
 
 

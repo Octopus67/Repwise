@@ -91,7 +91,9 @@ class MealPlanService:
             )
         logger.info(
             "Generating meal plan for user %s: %d days, %d candidates",
-            user_id, num_days, len(candidates),
+            user_id,
+            num_days,
+            len(candidates),
         )
         return generate_plan(daily_targets, candidates, slot_splits, num_days)
 
@@ -287,9 +289,7 @@ class MealPlanService:
     # Shopping list
     # ------------------------------------------------------------------
 
-    async def get_shopping_list(
-        self, user_id: uuid.UUID, plan_id: uuid.UUID
-    ) -> ShoppingList:
+    async def get_shopping_list(self, user_id: uuid.UUID, plan_id: uuid.UUID) -> ShoppingList:
         plan = await self.get_plan(user_id, plan_id)
         # Audit fix 4.1 — batch fetch to fix N+1
         all_food_ids = [item.food_item_id for item in plan.items]
@@ -367,12 +367,7 @@ class MealPlanService:
             )
 
         # Food database items (top 50 by calorie content)
-        food_stmt = (
-            select(FoodItem)
-            .where(FoodItem.calories > 0)
-            .order_by(FoodItem.name)
-            .limit(50)
-        )
+        food_stmt = select(FoodItem).where(FoodItem.calories > 0).order_by(FoodItem.name).limit(50)
         food_stmt = FoodItem.not_deleted(food_stmt)
         food_result = await self.db.execute(food_stmt)
         for food in food_result.scalars().all():

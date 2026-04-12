@@ -31,9 +31,7 @@ class MealService:
     # Custom Meals
     # ------------------------------------------------------------------
 
-    async def create_custom_meal(
-        self, user_id: uuid.UUID, data: CustomMealCreate
-    ) -> CustomMeal:
+    async def create_custom_meal(self, user_id: uuid.UUID, data: CustomMealCreate) -> CustomMeal:
         """Create a new custom meal for the user."""
         meal = CustomMeal(
             user_id=user_id,
@@ -71,9 +69,7 @@ class MealService:
         await self.db.refresh(meal)
         return meal
 
-    async def delete_custom_meal(
-        self, user_id: uuid.UUID, meal_id: uuid.UUID
-    ) -> None:
+    async def delete_custom_meal(self, user_id: uuid.UUID, meal_id: uuid.UUID) -> None:
         """Soft-delete a custom meal."""
         meal = await self._get_custom_meal_or_raise(user_id, meal_id)
         meal.deleted_at = datetime.now(timezone.utc)
@@ -110,9 +106,7 @@ class MealService:
     # Favorites
     # ------------------------------------------------------------------
 
-    async def add_favorite(
-        self, user_id: uuid.UUID, data: MealFavoriteCreate
-    ) -> MealFavorite:
+    async def add_favorite(self, user_id: uuid.UUID, data: MealFavoriteCreate) -> MealFavorite:
         """Add a meal (custom or food-database item) to the user's favorites."""
         # Prevent duplicate favorites for the same item
         if data.meal_id is not None:
@@ -150,9 +144,7 @@ class MealService:
         await self.db.refresh(favorite)
         return favorite
 
-    async def remove_favorite(
-        self, user_id: uuid.UUID, favorite_id: uuid.UUID
-    ) -> None:
+    async def remove_favorite(self, user_id: uuid.UUID, favorite_id: uuid.UUID) -> None:
         """Remove a meal from the user's favorites (hard delete)."""
         stmt = select(MealFavorite).where(
             MealFavorite.id == favorite_id,
@@ -239,9 +231,7 @@ class MealService:
     # Internal helpers
     # ------------------------------------------------------------------
 
-    async def _get_custom_meal_or_raise(
-        self, user_id: uuid.UUID, meal_id: uuid.UUID
-    ) -> CustomMeal:
+    async def _get_custom_meal_or_raise(self, user_id: uuid.UUID, meal_id: uuid.UUID) -> CustomMeal:
         """Fetch a non-deleted custom meal owned by the user, or 404."""
         stmt = select(CustomMeal).where(
             CustomMeal.id == meal_id,

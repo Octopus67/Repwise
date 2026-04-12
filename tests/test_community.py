@@ -23,7 +23,13 @@ def _auth_headers(user_id: uuid.UUID) -> dict:
     from src.config.settings import settings
 
     token = jwt.encode(
-        {"sub": str(user_id), "type": "access", "exp": datetime.now(timezone.utc) + timedelta(hours=1), "iss": "repwise", "aud": "repwise-api"},
+        {
+            "sub": str(user_id),
+            "type": "access",
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "iss": "repwise",
+            "aud": "repwise-api",
+        },
         settings.JWT_SECRET,
         algorithm=settings.JWT_ALGORITHM,
     )
@@ -50,7 +56,9 @@ class TestCommunityGet:
 class TestCommunityUpdate:
     @pytest.mark.asyncio
     async def test_put_requires_auth(self, client, override_get_db):
-        r = await client.put("/api/v1/community/", json={"telegram": "https://t.me/x", "email": "a@b.com"})
+        r = await client.put(
+            "/api/v1/community/", json={"telegram": "https://t.me/x", "email": "a@b.com"}
+        )
         assert r.status_code == 401
 
     @pytest.mark.asyncio

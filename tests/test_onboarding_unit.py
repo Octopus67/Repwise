@@ -38,6 +38,7 @@ async def _register_and_get_headers(client) -> dict[str, str]:
 # 1. Happy path — valid onboarding input → 201
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_onboarding_happy_path(client, override_get_db):
     """POST /onboarding/complete with valid data → 201, returns profile + goals + snapshot."""
@@ -74,6 +75,7 @@ async def test_onboarding_happy_path(client, override_get_db):
 # 2. Conflict — onboarding twice for same user → 409
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_onboarding_conflict_on_second_call(client, override_get_db):
     """Calling onboarding twice for the same user → second returns 409."""
@@ -98,6 +100,7 @@ async def test_onboarding_conflict_on_second_call(client, override_get_db):
 # 3. Optional body_fat_pct — null value accepted
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_onboarding_null_body_fat(client, override_get_db):
     """Onboarding with body_fat_pct=null succeeds."""
@@ -117,6 +120,7 @@ async def test_onboarding_null_body_fat(client, override_get_db):
 # ------------------------------------------------------------------
 # 4. Invalid inputs — out-of-range values → 400 (custom validation handler)
 # ------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_onboarding_invalid_height(client, override_get_db):
@@ -227,6 +231,7 @@ async def test_onboarding_v2_full_payload_stores_food_dna(client, override_get_d
 # 20.5 POST with old v1 payload → 201, backward compat
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_onboarding_v1_backward_compat(client, override_get_db):
     """POST /onboarding/complete with ONLY v1 fields → 201, no Food DNA in preferences."""
@@ -262,7 +267,9 @@ from types import SimpleNamespace
 from src.modules.food_database.service import FoodDatabaseService
 
 
-def _make_food(name: str, category: str = "grain", region: str = "global", source: str = "community"):
+def _make_food(
+    name: str, category: str = "grain", region: str = "global", source: str = "community"
+):
     """Create a mock food item with the attributes _personalize_results reads."""
     return SimpleNamespace(name=name, category=category, region=region, source=source)
 
@@ -356,8 +363,8 @@ class TestPersonalizeResults:
         """Cuisine boost + allergy demotion work together."""
         items = [
             _make_food("Cashew Curry", region="indian"),  # indian boost but "cashew" allergen
-            _make_food("Dal Tadka", region="indian"),      # indian boost, no allergen
-            _make_food("Plain Rice", region="global"),     # no boost, no allergen
+            _make_food("Dal Tadka", region="indian"),  # indian boost, no allergen
+            _make_food("Plain Rice", region="global"),  # no boost, no allergen
         ]
         prefs = {
             "cuisine_preferences": ["indian"],
@@ -431,6 +438,7 @@ class TestPersonalizeResults:
 # Schema boundary validation — Food DNA fields
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_onboarding_meal_frequency_min_boundary(client, override_get_db):
     """meal_frequency=2 (min boundary) → 201."""
@@ -438,6 +446,7 @@ async def test_onboarding_meal_frequency_min_boundary(client, override_get_db):
     payload = {**VALID_ONBOARDING_PAYLOAD, "meal_frequency": 2}
     resp = await client.post("/api/v1/onboarding/complete", json=payload, headers=headers)
     assert resp.status_code == 201
+
 
 @pytest.mark.asyncio
 async def test_onboarding_meal_frequency_max_boundary(client, override_get_db):
@@ -447,6 +456,7 @@ async def test_onboarding_meal_frequency_max_boundary(client, override_get_db):
     resp = await client.post("/api/v1/onboarding/complete", json=payload, headers=headers)
     assert resp.status_code == 201
 
+
 @pytest.mark.asyncio
 async def test_onboarding_meal_frequency_below_min(client, override_get_db):
     """meal_frequency=1 (below min 2) → 400."""
@@ -454,6 +464,7 @@ async def test_onboarding_meal_frequency_below_min(client, override_get_db):
     payload = {**VALID_ONBOARDING_PAYLOAD, "meal_frequency": 1}
     resp = await client.post("/api/v1/onboarding/complete", json=payload, headers=headers)
     assert resp.status_code == 400
+
 
 @pytest.mark.asyncio
 async def test_onboarding_meal_frequency_above_max(client, override_get_db):
@@ -463,6 +474,7 @@ async def test_onboarding_meal_frequency_above_max(client, override_get_db):
     resp = await client.post("/api/v1/onboarding/complete", json=payload, headers=headers)
     assert resp.status_code == 400
 
+
 @pytest.mark.asyncio
 async def test_onboarding_protein_per_kg_min_boundary(client, override_get_db):
     """protein_per_kg=1.0 (min boundary) → 201."""
@@ -470,6 +482,7 @@ async def test_onboarding_protein_per_kg_min_boundary(client, override_get_db):
     payload = {**VALID_ONBOARDING_PAYLOAD, "protein_per_kg": 1.0}
     resp = await client.post("/api/v1/onboarding/complete", json=payload, headers=headers)
     assert resp.status_code == 201
+
 
 @pytest.mark.asyncio
 async def test_onboarding_protein_per_kg_max_boundary(client, override_get_db):
@@ -479,6 +492,7 @@ async def test_onboarding_protein_per_kg_max_boundary(client, override_get_db):
     resp = await client.post("/api/v1/onboarding/complete", json=payload, headers=headers)
     assert resp.status_code == 201
 
+
 @pytest.mark.asyncio
 async def test_onboarding_protein_per_kg_below_min(client, override_get_db):
     """protein_per_kg=0.9 (below min 1.0) → 400."""
@@ -486,6 +500,7 @@ async def test_onboarding_protein_per_kg_below_min(client, override_get_db):
     payload = {**VALID_ONBOARDING_PAYLOAD, "protein_per_kg": 0.9}
     resp = await client.post("/api/v1/onboarding/complete", json=payload, headers=headers)
     assert resp.status_code == 400
+
 
 @pytest.mark.asyncio
 async def test_onboarding_protein_per_kg_above_max(client, override_get_db):
@@ -495,6 +510,7 @@ async def test_onboarding_protein_per_kg_above_max(client, override_get_db):
     resp = await client.post("/api/v1/onboarding/complete", json=payload, headers=headers)
     assert resp.status_code == 400
 
+
 @pytest.mark.asyncio
 async def test_onboarding_exercise_sessions_min_boundary(client, override_get_db):
     """exercise_sessions_per_week=0 (min boundary) → 201."""
@@ -502,6 +518,7 @@ async def test_onboarding_exercise_sessions_min_boundary(client, override_get_db
     payload = {**VALID_ONBOARDING_PAYLOAD, "exercise_sessions_per_week": 0}
     resp = await client.post("/api/v1/onboarding/complete", json=payload, headers=headers)
     assert resp.status_code == 201
+
 
 @pytest.mark.asyncio
 async def test_onboarding_exercise_sessions_max_boundary(client, override_get_db):
@@ -511,6 +528,7 @@ async def test_onboarding_exercise_sessions_max_boundary(client, override_get_db
     resp = await client.post("/api/v1/onboarding/complete", json=payload, headers=headers)
     assert resp.status_code == 201
 
+
 @pytest.mark.asyncio
 async def test_onboarding_exercise_sessions_above_max(client, override_get_db):
     """exercise_sessions_per_week=15 (above max 14) → 400."""
@@ -518,6 +536,7 @@ async def test_onboarding_exercise_sessions_above_max(client, override_get_db):
     payload = {**VALID_ONBOARDING_PAYLOAD, "exercise_sessions_per_week": 15}
     resp = await client.post("/api/v1/onboarding/complete", json=payload, headers=headers)
     assert resp.status_code == 400
+
 
 @pytest.mark.asyncio
 async def test_onboarding_partial_food_dna_only_restrictions(client, override_get_db):
@@ -535,6 +554,7 @@ async def test_onboarding_partial_food_dna_only_restrictions(client, override_ge
 # ------------------------------------------------------------------
 # Backend edge-case tests
 # ------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_onboarding_unauthenticated_returns_401(client, override_get_db):

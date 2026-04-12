@@ -4,6 +4,7 @@ Revision ID: f9a1_is_favorite
 Revises: f2a1_pr_history
 Create Date: 2026-04-15 10:00:00.000000
 """
+
 from typing import Sequence, Union
 
 from alembic import op

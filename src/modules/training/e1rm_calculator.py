@@ -24,9 +24,7 @@ class E1RMResult:
     low_confidence: bool  # True when reps > MAX_REPS (only via internal path)
 
 
-_ZERO_RESULT = E1RMResult(
-    epley=0.0, brzycki=0.0, lombardi=0.0, primary=0.0, low_confidence=False
-)
+_ZERO_RESULT = E1RMResult(epley=0.0, brzycki=0.0, lombardi=0.0, primary=0.0, low_confidence=False)
 
 
 def compute_e1rm(weight_kg: float, reps: int) -> E1RMResult:
@@ -50,9 +48,7 @@ def compute_e1rm(weight_kg: float, reps: int) -> E1RMResult:
         raise ValueError(f"reps must be <= {MAX_REPS}, got {reps}")
 
     if reps == 0 or weight_kg == 0:
-        return E1RMResult(
-            epley=0.0, brzycki=0.0, lombardi=0.0, primary=0.0, low_confidence=False
-        )
+        return E1RMResult(epley=0.0, brzycki=0.0, lombardi=0.0, primary=0.0, low_confidence=False)
 
     if reps == 1:
         return E1RMResult(
@@ -69,7 +65,7 @@ def compute_e1rm(weight_kg: float, reps: int) -> E1RMResult:
     # With reps capped at 30 the denominator is always >= 7, so no division-by-zero.
     brzycki = weight_kg * 36 / (37 - reps)
 
-    lombardi = weight_kg * (reps ** 0.10)
+    lombardi = weight_kg * (reps**0.10)
 
     return E1RMResult(
         epley=epley,

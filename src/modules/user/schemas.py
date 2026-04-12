@@ -24,6 +24,7 @@ def _ensure_tz_aware(v: datetime | None) -> datetime | None:
 # UserProfile schemas
 # ---------------------------------------------------------------------------
 
+
 class UserProfileUpdate(BaseModel):
     """Fields a user may update on their profile."""
 
@@ -36,7 +37,7 @@ class UserProfileUpdate(BaseModel):
     coaching_mode: Optional[str] = Field(None, pattern=r"^(coached|collaborative|manual)$")
 
     # Audit fix 2.4 — HTML sanitization
-    @field_validator('display_name', mode='before')
+    @field_validator("display_name", mode="before")
     @classmethod
     def sanitize_text(cls, v: str) -> str:
         return strip_html(v) if isinstance(v, str) else v
@@ -73,6 +74,7 @@ class UserProfileResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # UserMetrics schemas
 # ---------------------------------------------------------------------------
+
 
 class UserMetricCreate(BaseModel):
     """Payload for logging a new physiological metrics snapshot."""
@@ -124,6 +126,7 @@ class UserMetricResponse(BaseModel):
 # BodyweightLog schemas
 # ---------------------------------------------------------------------------
 
+
 class BodyweightLogCreate(BaseModel):
     """Payload for logging a bodyweight entry."""
 
@@ -134,6 +137,7 @@ class BodyweightLogCreate(BaseModel):
     @classmethod
     def no_far_future_dates(cls, v: date) -> date:
         from datetime import timedelta
+
         if v > date.today() + timedelta(days=1):
             raise ValueError("recorded_date cannot be more than 1 day in the future")
         return v
@@ -160,6 +164,7 @@ class BodyweightLogResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # UserGoals schemas
 # ---------------------------------------------------------------------------
+
 
 class UserGoalSet(BaseModel):
     """Payload for setting / updating user goals."""
@@ -201,6 +206,7 @@ class UserGoalResponse(BaseModel):
 # Recalculate schemas
 # ---------------------------------------------------------------------------
 
+
 class RecalculateRequest(BaseModel):
     """Payload for the recalculate endpoint.
     At least one of metrics or goals must be provided."""
@@ -208,10 +214,10 @@ class RecalculateRequest(BaseModel):
     metrics: Optional[UserMetricCreate] = None
     goals: Optional[UserGoalSet] = None
 
-    @model_validator(mode='after')
-    def at_least_one(self) -> 'RecalculateRequest':
+    @model_validator(mode="after")
+    def at_least_one(self) -> "RecalculateRequest":
         if self.metrics is None and self.goals is None:
-            raise ValueError('At least one of metrics or goals must be provided')
+            raise ValueError("At least one of metrics or goals must be provided")
         return self
 
 

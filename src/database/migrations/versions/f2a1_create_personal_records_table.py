@@ -4,6 +4,7 @@ Revision ID: f2a1_pr_history
 Revises: t1a2b3c4d5e6
 Create Date: 2026-04-01 11:00:00.000000
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -26,9 +27,24 @@ def upgrade() -> None:
         sa.Column("value_kg", sa.Float(), nullable=False),
         sa.Column("previous_value_kg", sa.Float(), nullable=True),
         sa.Column("session_id", sa.Uuid(), nullable=True),
-        sa.Column("achieved_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "achieved_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["session_id"], ["training_sessions.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),

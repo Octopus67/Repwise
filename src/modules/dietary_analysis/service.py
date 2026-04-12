@@ -21,6 +21,7 @@ from src.modules.nutrition.models import NutritionEntry
 # Data classes for pure function I/O
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class DailyAverages:
     """Average daily intake per nutrient over a time window."""
@@ -112,6 +113,7 @@ RECOMMENDED_DAILY_VALUES: dict[str, float] = {
 # Pure function: compute_daily_averages
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class NutritionEntryData:
     """Lightweight representation of a nutrition entry for pure functions."""
@@ -171,6 +173,7 @@ def compute_daily_averages(
 # Pure function: detect_gaps
 # ---------------------------------------------------------------------------
 
+
 def detect_gaps(
     averages: DailyAverages,
     recommended: RecommendedIntake,
@@ -198,24 +201,28 @@ def detect_gaps(
     for nutrient, avg, rec in macro_checks:
         if rec > 0 and avg < rec:
             deficit = (rec - avg) / rec * 100
-            gaps.append(NutritionGap(
-                nutrient=nutrient,
-                average_intake=avg,
-                recommended_value=rec,
-                deficit_percentage=deficit,
-            ))
+            gaps.append(
+                NutritionGap(
+                    nutrient=nutrient,
+                    average_intake=avg,
+                    recommended_value=rec,
+                    deficit_percentage=deficit,
+                )
+            )
 
     # Check micro nutrients
     for nutrient, rec_value in recommended.micro_nutrients.items():
         avg_value = averages.micro_nutrients.get(nutrient, 0.0)
         if rec_value > 0 and avg_value < rec_value:
             deficit = (rec_value - avg_value) / rec_value * 100
-            gaps.append(NutritionGap(
-                nutrient=nutrient,
-                average_intake=avg_value,
-                recommended_value=rec_value,
-                deficit_percentage=deficit,
-            ))
+            gaps.append(
+                NutritionGap(
+                    nutrient=nutrient,
+                    average_intake=avg_value,
+                    recommended_value=rec_value,
+                    deficit_percentage=deficit,
+                )
+            )
 
     return gaps
 
@@ -223,6 +230,7 @@ def detect_gaps(
 # ---------------------------------------------------------------------------
 # Service class
 # ---------------------------------------------------------------------------
+
 
 class DietaryAnalysisService:
     """Service layer for dietary trend analysis operations."""
@@ -315,7 +323,8 @@ class DietaryAnalysisService:
             carbs_g=RECOMMENDED_DAILY_VALUES["carbs_g"],
             fat_g=RECOMMENDED_DAILY_VALUES["fat_g"],
             micro_nutrients={
-                k: v for k, v in RECOMMENDED_DAILY_VALUES.items()
+                k: v
+                for k, v in RECOMMENDED_DAILY_VALUES.items()
                 if k not in ("calories", "protein_g", "carbs_g", "fat_g")
             },
         )
@@ -363,12 +372,14 @@ class DietaryAnalysisService:
                 micros = food.micro_nutrients or {}
                 amount = micros.get(nutrient, 0.0)
                 if amount > 0:
-                    recommendations.append(FoodRecommendation(
-                        nutrient=nutrient,
-                        food_name=food.name,
-                        nutrient_amount_per_serving=amount,
-                        serving_size=f"{food.serving_size} {food.serving_unit}",
-                    ))
+                    recommendations.append(
+                        FoodRecommendation(
+                            nutrient=nutrient,
+                            food_name=food.name,
+                            nutrient_amount_per_serving=amount,
+                            serving_size=f"{food.serving_size} {food.serving_unit}",
+                        )
+                    )
 
         return recommendations
 

@@ -27,9 +27,7 @@ class YearlyReportService:
         self.session = session
         self._weekly = WeeklyReportService(session)
 
-    async def get_yearly_report(
-        self, user_id: uuid.UUID, year: int
-    ) -> YearlyReportResponse:
+    async def get_yearly_report(self, user_id: uuid.UUID, year: int) -> YearlyReportResponse:
         year_start = date(year, 1, 1)
         year_end = date(year, 12, 31)
 

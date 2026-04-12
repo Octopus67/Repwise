@@ -24,7 +24,9 @@ class HealthReport(Base, SoftDeleteMixin, AuditLogMixin):
 
     __tablename__ = "health_reports"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
     report_date: Mapped[date] = mapped_column(Date, nullable=False)
     markers: Mapped[Optional[dict]] = mapped_column(
         JSONB, nullable=True, server_default=text("'{}'::jsonb")

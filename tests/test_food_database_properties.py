@@ -8,14 +8,12 @@ from __future__ import annotations
 
 import uuid
 import math
-from unittest.mock import AsyncMock, patch
 
 import pytest
 from hypothesis import HealthCheck, given, settings as h_settings, strategies as st
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.food_database.models import FoodItem, RecipeIngredient
-from src.modules.food_database.schemas import FoodItemCreate
 from src.modules.food_database.service import (
     FoodDatabaseService,
     aggregate_recipe_nutrition,
@@ -28,13 +26,9 @@ from src.shared.pagination import PaginationParams
 # Strategies
 # ---------------------------------------------------------------------------
 
-_positive_floats = st.floats(
-    min_value=0.1, max_value=5000.0, allow_nan=False, allow_infinity=False
-)
+_positive_floats = st.floats(min_value=0.1, max_value=5000.0, allow_nan=False, allow_infinity=False)
 
-_serving_sizes = st.floats(
-    min_value=1.0, max_value=1000.0, allow_nan=False, allow_infinity=False
-)
+_serving_sizes = st.floats(min_value=1.0, max_value=1000.0, allow_nan=False, allow_infinity=False)
 
 _micro_nutrient_keys = st.sampled_from(
     ["fiber", "sodium", "iron", "calcium", "vitamin_d", "vitamin_b12", "vitamin_c"]
@@ -51,12 +45,16 @@ _micro_nutrients = st.one_of(
 )
 
 _food_names = st.text(
-    alphabet=st.characters(whitelist_categories=("L", "N", "Zs"), min_codepoint=32, max_codepoint=127),
+    alphabet=st.characters(
+        whitelist_categories=("L", "N", "Zs"), min_codepoint=32, max_codepoint=127
+    ),
     min_size=1,
     max_size=80,
 ).filter(lambda s: s.strip() != "")
 
-_categories = st.sampled_from(["Curry", "Bread", "Grain", "Breakfast", "Protein", "Side", "Dessert"])
+_categories = st.sampled_from(
+    ["Curry", "Bread", "Grain", "Breakfast", "Protein", "Side", "Dessert"]
+)
 
 
 @st.composite
@@ -154,9 +152,7 @@ class TestProperty15RecipeNutritionalAggregation:
     @_fixture_settings
     @given(
         ingredients_data=st.lists(food_item_strategy(), min_size=1, max_size=5),
-        quantities=st.lists(
-            ingredient_quantity_strategy(), min_size=1, max_size=5
-        ),
+        quantities=st.lists(ingredient_quantity_strategy(), min_size=1, max_size=5),
     )
     async def test_recipe_aggregation_equals_sum_of_scaled_ingredients(
         self,
@@ -318,7 +314,7 @@ class TestProperty16FoodSearchRelevance:
 
         # Use the beginning of the first item's name as search query (prefix match)
         target_name = created_items[0].name
-        query = target_name[:max(4, len(target_name) // 2)]
+        query = target_name[: max(4, len(target_name) // 2)]
 
         service = FoodDatabaseService(db_session)
         pagination = PaginationParams(page=1, limit=100)
@@ -392,6 +388,7 @@ class TestGlobalFoodSearch:
         """Searching for 'apple' should return Apple from global seed data."""
         # Seed the apple item
         from src.modules.food_database.global_seed_data import GLOBAL_FOOD_ITEMS
+
         apple_data = next(item for item in GLOBAL_FOOD_ITEMS if item["name"] == "Apple")
         item = FoodItem(
             name=apple_data["name"],
@@ -421,6 +418,7 @@ class TestGlobalFoodSearch:
     async def test_banana_search_returns_results(self, db_session: AsyncSession):
         """Searching for 'banana' should return Banana from global seed data."""
         from src.modules.food_database.global_seed_data import GLOBAL_FOOD_ITEMS
+
         banana_data = next(item for item in GLOBAL_FOOD_ITEMS if item["name"] == "Banana")
         item = FoodItem(
             name=banana_data["name"],
@@ -449,6 +447,7 @@ class TestGlobalFoodSearch:
     async def test_chicken_search_returns_results(self, db_session: AsyncSession):
         """Searching for 'chicken' should return chicken items."""
         from src.modules.food_database.global_seed_data import GLOBAL_FOOD_ITEMS
+
         chicken_items = [item for item in GLOBAL_FOOD_ITEMS if "chicken" in item["name"].lower()]
         for data in chicken_items[:3]:
             item = FoodItem(

@@ -33,80 +33,83 @@ logger = logging.getLogger(__name__)
 # ─── Default WNS Landmarks (in Hypertrophy Units) ────────────────────────────
 
 DEFAULT_WNS_LANDMARKS: dict[str, dict[str, float]] = {
-    "chest":      {"mv": 3, "mev": 8,  "mav_low": 16, "mav_high": 24, "mrv": 35},
-    "lats":       {"mv": 3, "mev": 8,  "mav_low": 16, "mav_high": 26, "mrv": 38},
-    "erectors":   {"mv": 2, "mev": 5,  "mav_low": 10, "mav_high": 16, "mrv": 25},
-    "shoulders":  {"mv": 2, "mev": 6,  "mav_low": 12, "mav_high": 20, "mrv": 28},
-    "quads":      {"mv": 3, "mev": 7,  "mav_low": 14, "mav_high": 22, "mrv": 32},
-    "hamstrings": {"mv": 2, "mev": 6,  "mav_low": 12, "mav_high": 20, "mrv": 28},
-    "glutes":     {"mv": 2, "mev": 6,  "mav_low": 12, "mav_high": 20, "mrv": 30},
-    "biceps":     {"mv": 2, "mev": 5,  "mav_low": 10, "mav_high": 16, "mrv": 25},
-    "triceps":    {"mv": 2, "mev": 5,  "mav_low": 10, "mav_high": 16, "mrv": 25},
-    "calves":     {"mv": 2, "mev": 5,  "mav_low": 10, "mav_high": 16, "mrv": 25},
-    "abs":        {"mv": 2, "mev": 5,  "mav_low": 10, "mav_high": 16, "mrv": 25},
-    "traps":      {"mv": 2, "mev": 5,  "mav_low": 10, "mav_high": 14, "mrv": 22},
-    "forearms":   {"mv": 1, "mev": 4,  "mav_low": 8,  "mav_high": 12, "mrv": 20},
-    "adductors":  {"mv": 1, "mev": 4,  "mav_low": 8,  "mav_high": 12, "mrv": 20},
+    "chest": {"mv": 3, "mev": 8, "mav_low": 16, "mav_high": 24, "mrv": 35},
+    "lats": {"mv": 3, "mev": 8, "mav_low": 16, "mav_high": 26, "mrv": 38},
+    "erectors": {"mv": 2, "mev": 5, "mav_low": 10, "mav_high": 16, "mrv": 25},
+    "shoulders": {"mv": 2, "mev": 6, "mav_low": 12, "mav_high": 20, "mrv": 28},
+    "quads": {"mv": 3, "mev": 7, "mav_low": 14, "mav_high": 22, "mrv": 32},
+    "hamstrings": {"mv": 2, "mev": 6, "mav_low": 12, "mav_high": 20, "mrv": 28},
+    "glutes": {"mv": 2, "mev": 6, "mav_low": 12, "mav_high": 20, "mrv": 30},
+    "biceps": {"mv": 2, "mev": 5, "mav_low": 10, "mav_high": 16, "mrv": 25},
+    "triceps": {"mv": 2, "mev": 5, "mav_low": 10, "mav_high": 16, "mrv": 25},
+    "calves": {"mv": 2, "mev": 5, "mav_low": 10, "mav_high": 16, "mrv": 25},
+    "abs": {"mv": 2, "mev": 5, "mav_low": 10, "mav_high": 16, "mrv": 25},
+    "traps": {"mv": 2, "mev": 5, "mav_low": 10, "mav_high": 14, "mrv": 22},
+    "forearms": {"mv": 1, "mev": 4, "mav_low": 8, "mav_high": 12, "mrv": 20},
+    "adductors": {"mv": 1, "mev": 4, "mav_low": 8, "mav_high": 12, "mrv": 20},
 }
 
 
 def _build_exercise_lookup() -> dict[str, dict]:
     """Build a name→exercise dict from the system exercise catalog."""
     from src.modules.training.exercises import get_all_exercises
+
     return {ex["name"].lower().strip(): ex for ex in get_all_exercises()}
 
 
 def get_volume_multiplier_for_goal(goal_type: str, rate_kg_per_week: float) -> float:
     """Calculate volume multiplier based on calorie balance.
-    
+
     During a deficit, recovery capacity is reduced → lower MRV.
     During a surplus, recovery capacity is enhanced → higher MRV.
-    
+
     Args:
         goal_type: 'cutting', 'bulking', 'maintaining', 'recomposition'
         rate_kg_per_week: Target rate of weight change
-        
+
     Returns:
         Multiplier to apply to all volume landmarks (0.60-1.20 range)
-        
+
     Research basis:
     - Menno Henselmans: 20-33% volume reduction when cutting
     - Murphy & Koehler 2021: 500 kcal deficit fully blunts lean mass gains
     - Helms et al. 2014: 0.5-1% BW/week loss rate for contest prep
     - Slater et al. 2019: Conservative surplus ~360-480 kcal for optimal gains
     """
-    if goal_type == 'cutting':
+    if goal_type == "cutting":
         deficit_kcal = rate_kg_per_week * -1000
         multiplier = 1.0 + (deficit_kcal * 0.0003)
         return max(0.70, multiplier)
 
-    elif goal_type == 'bulking':
+    elif goal_type == "bulking":
         surplus_kcal = rate_kg_per_week * 1000
         multiplier = 1.0 + (surplus_kcal * 0.00025)
         return min(1.20, multiplier)
 
-    elif goal_type == 'recomposition':
+    elif goal_type == "recomposition":
         return 0.95
 
     else:  # 'maintaining'
         return 1.0
 
 
-def _classify_wns_status(net_stimulus: float, landmarks: dict[str, float], frequency: int) -> VolumeStatus:
+def _classify_wns_status(
+    net_stimulus: float, landmarks: dict[str, float], frequency: int
+) -> VolumeStatus:
     """Classify WNS status relative to HU landmarks.
-    
+
     Args:
         net_stimulus: Weekly net stimulus in HU
         landmarks: Landmark thresholds for this muscle
         frequency: Number of sessions per week
-        
+
     Returns:
         Status classification
     """
     # Maintenance zone: 1x/week with moderate volume
     if frequency == 1 and landmarks["mev"] <= net_stimulus <= landmarks["mav_low"]:
         return "optimal"  # Maintenance is considered optimal for 1x/week
-    
+
     if net_stimulus < landmarks["mev"]:
         return "below_mev"
     if net_stimulus <= landmarks["mav_high"]:
@@ -123,7 +126,9 @@ class WNSVolumeService:
         self.session = session
 
     async def _compute_trend(
-        self, user_id: uuid.UUID, week_start: date,
+        self,
+        user_id: uuid.UUID,
+        week_start: date,
     ) -> dict[str, list[WNSWeeklyTrendPoint]]:
         """Compute 4-week volume trend per muscle group (hard sets per week)."""
         from src.modules.training.analytics_service import TrainingAnalyticsService
@@ -141,12 +146,15 @@ class WNSVolumeService:
 
         # Build exercise lookup for coefficients
         from src.modules.training.exercises import get_all_exercises
+
         catalog = {ex["name"].lower().strip(): ex for ex in get_all_exercises()}
 
         def _get_coefficients(name: str) -> dict[str, float]:
             ex = catalog.get(name.lower().strip())
             if ex:
-                return get_muscle_coefficients(name, ex["muscle_group"], ex.get("secondary_muscles", []))
+                return get_muscle_coefficients(
+                    name, ex["muscle_group"], ex.get("secondary_muscles", [])
+                )
             mg = get_muscle_group(name)
             return {mg: 1.0} if mg and mg != "Other" else {}
 
@@ -187,13 +195,16 @@ class WNSVolumeService:
 
         for mg, week_data in weekly.items():
             result[mg] = [
-                WNSWeeklyTrendPoint(week=w, volume=float(week_data.get(w, 0)))
-                for w in four_weeks
+                WNSWeeklyTrendPoint(week=w, volume=float(week_data.get(w, 0))) for w in four_weeks
             ]
         return result
 
     async def get_weekly_muscle_volume(
-        self, user_id: uuid.UUID, week_start: date, goal_type: Optional[str] = None, goal_rate: Optional[float] = None
+        self,
+        user_id: uuid.UUID,
+        week_start: date,
+        goal_type: Optional[str] = None,
+        goal_rate: Optional[float] = None,
     ) -> list[WNSMuscleVolume]:
         from src.modules.training.analytics_service import TrainingAnalyticsService
 
@@ -205,9 +216,9 @@ class WNSVolumeService:
         except SQLAlchemyError as e:
             logger.exception("Failed to fetch training sessions for user %s", user_id)
             from fastapi import HTTPException
+
             raise HTTPException(
-                status_code=500,
-                detail="Failed to calculate volume data. Please try again."
+                status_code=500, detail="Failed to calculate volume data. Please try again."
             ) from e
 
         exercise_lookup = _build_exercise_lookup()
@@ -229,7 +240,9 @@ class WNSVolumeService:
 
         # Collect per-muscle-group, per-session data
         # Structure: {muscle_group: [(session_date, [(stim_reps, coefficient, exercise_name)])]}
-        muscle_sessions: dict[str, list[tuple[date, list[tuple[float, float, str]]]]] = defaultdict(list)
+        muscle_sessions: dict[str, list[tuple[date, list[tuple[float, float, str]]]]] = defaultdict(
+            list
+        )
 
         for session_date, exercises in rows:
             # Gather all sets per muscle group for this session
@@ -270,7 +283,7 @@ class WNSVolumeService:
 
         # Compute WNS for each muscle group
         results: list[WNSMuscleVolume] = []
-        
+
         # Calculate volume multiplier based on goal
         volume_multiplier = 1.0
         if goal_type and goal_rate is not None:
@@ -286,9 +299,14 @@ class WNSVolumeService:
             # Per-session stimulus with diminishing returns
             session_stimuli: list[tuple[date, float]] = []
             # Track per-exercise contributions
-            exercise_contrib: dict[str, dict] = defaultdict(lambda: {
-                "coefficient": 0.0, "sets_count": 0, "stim_reps_total": 0.0, "hu": 0.0,
-            })
+            exercise_contrib: dict[str, dict] = defaultdict(
+                lambda: {
+                    "coefficient": 0.0,
+                    "sets_count": 0,
+                    "stim_reps_total": 0.0,
+                    "hu": 0.0,
+                }
+            )
             for session_date, sets_list in sessions:
                 weighted_stim_reps = [sr * coeff for sr, coeff, _ in sets_list]
                 session_stim = diminishing_returns(weighted_stim_reps)
@@ -321,10 +339,10 @@ class WNSVolumeService:
                 total_atrophy += atrophy_between_sessions(float(days_since_last))
 
             net = max(0.0, gross - total_atrophy)
-            
+
             # Calculate frequency (unique session dates)
             session_dates = {sd for sd, _ in sessions}
-            
+
             # Apply goal-adjusted landmarks
             adjusted_landmarks = {k: v * volume_multiplier for k, v in lm_dict.items()}
             status = _classify_wns_status(net, adjusted_landmarks, len(session_dates))
@@ -353,7 +371,9 @@ class WNSVolumeService:
                     status=status,
                     session_count=len(sessions),
                     frequency=len(session_dates),
-                    landmarks=WNSLandmarks(**{k: round(v, 1) for k, v in adjusted_landmarks.items()}),
+                    landmarks=WNSLandmarks(
+                        **{k: round(v, 1) for k, v in adjusted_landmarks.items()}
+                    ),
                     exercises=ex_contributions,
                     trend=trend_data.get(mg, []),
                 )
@@ -362,9 +382,7 @@ class WNSVolumeService:
         return results
 
 
-async def send_volume_warnings(
-    session: AsyncSession, user_id: uuid.UUID, results: list
-) -> None:
+async def send_volume_warnings(session: AsyncSession, user_id: uuid.UUID, results: list) -> None:
     """Send push notifications for muscles above MRV. Fire-and-forget."""
     above_mrv_muscles = [r.muscle_group for r in results if r.status == "above_mrv"]
     if not above_mrv_muscles:
@@ -376,12 +394,16 @@ async def send_volume_warnings(
 
         notif_svc = NotificationService(session)
         for muscle in above_mrv_muscles:
-            stmt = select(NotificationLog.id).where(
-                NotificationLog.user_id == user_id,
-                NotificationLog.type == "volume_warning",
-                cast(NotificationLog.data["muscle"], String) == muscle,
-                NotificationLog.sent_at > text("NOW() - INTERVAL '7 days'"),
-            ).limit(1)
+            stmt = (
+                select(NotificationLog.id)
+                .where(
+                    NotificationLog.user_id == user_id,
+                    NotificationLog.type == "volume_warning",
+                    cast(NotificationLog.data["muscle"], String) == muscle,
+                    NotificationLog.sent_at > text("NOW() - INTERVAL '7 days'"),
+                )
+                .limit(1)
+            )
             recent = (await session.execute(stmt)).scalar_one_or_none()
             if recent is not None:
                 continue

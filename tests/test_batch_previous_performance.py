@@ -6,16 +6,9 @@ Validates: Requirements 3.1, 3.5, 8.1
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
 
 import pytest
 
-from src.modules.training.schemas import (
-    ExerciseEntry,
-    SetEntry,
-    TrainingSessionCreate,
-)
-from src.modules.training.service import TrainingService
 
 
 # ---------------------------------------------------------------------------
@@ -64,25 +57,29 @@ class TestBatchPreviousPerformance:
         await db_session.commit()
 
         # Create a session with Bench Press and Squat
-        await _create_session(client, headers, {
-            "session_date": "2024-01-15",
-            "exercises": [
-                {
-                    "exercise_name": "Barbell Bench Press",
-                    "sets": [
-                        {"reps": 8, "weight_kg": 80.0, "rpe": 7.0},
-                        {"reps": 8, "weight_kg": 80.0, "rpe": 8.0},
-                        {"reps": 6, "weight_kg": 82.5, "rpe": 9.0},
-                    ],
-                },
-                {
-                    "exercise_name": "Barbell Squat",
-                    "sets": [
-                        {"reps": 5, "weight_kg": 120.0},
-                    ],
-                },
-            ],
-        })
+        await _create_session(
+            client,
+            headers,
+            {
+                "session_date": "2024-01-15",
+                "exercises": [
+                    {
+                        "exercise_name": "Barbell Bench Press",
+                        "sets": [
+                            {"reps": 8, "weight_kg": 80.0, "rpe": 7.0},
+                            {"reps": 8, "weight_kg": 80.0, "rpe": 8.0},
+                            {"reps": 6, "weight_kg": 82.5, "rpe": 9.0},
+                        ],
+                    },
+                    {
+                        "exercise_name": "Barbell Squat",
+                        "sets": [
+                            {"reps": 5, "weight_kg": 120.0},
+                        ],
+                    },
+                ],
+            },
+        )
         await db_session.commit()
 
         # Batch request for 3 exercises (2 exist, 1 doesn't)
@@ -147,19 +144,23 @@ class TestBatchPreviousPerformance:
         await db_session.commit()
 
         # Create a session with 3 sets of bench press
-        await _create_session(client, headers, {
-            "session_date": "2024-01-20",
-            "exercises": [
-                {
-                    "exercise_name": "Barbell Bench Press",
-                    "sets": [
-                        {"reps": 8, "weight_kg": 80.0, "rpe": 7.0},
-                        {"reps": 8, "weight_kg": 82.5, "rpe": 8.0},
-                        {"reps": 6, "weight_kg": 85.0, "rpe": 9.0},
-                    ],
-                },
-            ],
-        })
+        await _create_session(
+            client,
+            headers,
+            {
+                "session_date": "2024-01-20",
+                "exercises": [
+                    {
+                        "exercise_name": "Barbell Bench Press",
+                        "sets": [
+                            {"reps": 8, "weight_kg": 80.0, "rpe": 7.0},
+                            {"reps": 8, "weight_kg": 82.5, "rpe": 8.0},
+                            {"reps": 6, "weight_kg": 85.0, "rpe": 9.0},
+                        ],
+                    },
+                ],
+            },
+        )
         await db_session.commit()
 
         resp = await client.post(
@@ -196,15 +197,19 @@ class TestSingleSessionFetch:
         headers = await _register_user(client, "fetch1@example.com")
         await db_session.commit()
 
-        created = await _create_session(client, headers, {
-            "session_date": "2024-02-01",
-            "exercises": [
-                {
-                    "exercise_name": "Deadlift",
-                    "sets": [{"reps": 5, "weight_kg": 180.0}],
-                },
-            ],
-        })
+        created = await _create_session(
+            client,
+            headers,
+            {
+                "session_date": "2024-02-01",
+                "exercises": [
+                    {
+                        "exercise_name": "Deadlift",
+                        "sets": [{"reps": 5, "weight_kg": 180.0}],
+                    },
+                ],
+            },
+        )
         await db_session.commit()
         session_id = created["id"]
 
@@ -239,15 +244,19 @@ class TestSingleSessionFetch:
         headers_a = await _register_user(client, "fetch3a@example.com")
         await db_session.commit()
 
-        created = await _create_session(client, headers_a, {
-            "session_date": "2024-02-01",
-            "exercises": [
-                {
-                    "exercise_name": "Squat",
-                    "sets": [{"reps": 5, "weight_kg": 100.0}],
-                },
-            ],
-        })
+        created = await _create_session(
+            client,
+            headers_a,
+            {
+                "session_date": "2024-02-01",
+                "exercises": [
+                    {
+                        "exercise_name": "Squat",
+                        "sets": [{"reps": 5, "weight_kg": 100.0}],
+                    },
+                ],
+            },
+        )
         await db_session.commit()
         session_id = created["id"]
 
@@ -267,15 +276,19 @@ class TestSingleSessionFetch:
         headers = await _register_user(client, "fetch4@example.com")
         await db_session.commit()
 
-        created = await _create_session(client, headers, {
-            "session_date": "2024-02-01",
-            "exercises": [
-                {
-                    "exercise_name": "Bench Press",
-                    "sets": [{"reps": 8, "weight_kg": 80.0}],
-                },
-            ],
-        })
+        created = await _create_session(
+            client,
+            headers,
+            {
+                "session_date": "2024-02-01",
+                "exercises": [
+                    {
+                        "exercise_name": "Bench Press",
+                        "sets": [{"reps": 8, "weight_kg": 80.0}],
+                    },
+                ],
+            },
+        )
         await db_session.commit()
         session_id = created["id"]
 

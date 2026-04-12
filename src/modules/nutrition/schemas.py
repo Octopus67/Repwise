@@ -33,23 +33,23 @@ class NutritionEntryCreate(BaseModel):
     food_item_id: Optional[uuid.UUID] = None
 
     # Audit fix 2.4 — HTML sanitization
-    @field_validator('meal_name', 'food_name', mode='before')
+    @field_validator("meal_name", "food_name", mode="before")
     @classmethod
     def sanitize_text(cls, v: str) -> str:
         return strip_html(v) if isinstance(v, str) else v
 
-    @model_validator(mode='after')
-    def validate_micro_nutrients(self) -> 'NutritionEntryCreate':
+    @model_validator(mode="after")
+    def validate_micro_nutrients(self) -> "NutritionEntryCreate":
         if self.micro_nutrients:
             for key, val in self.micro_nutrients.items():
                 if len(key) > 100:
-                    raise ValueError(f'micro_nutrient key too long: {key[:20]}...')
+                    raise ValueError(f"micro_nutrient key too long: {key[:20]}...")
                 if val < 0:
-                    raise ValueError(f'micro_nutrient value must be >= 0: {key}')
+                    raise ValueError(f"micro_nutrient value must be >= 0: {key}")
         return self
 
-    @model_validator(mode='after')
-    def round_macros(self) -> 'NutritionEntryCreate':
+    @model_validator(mode="after")
+    def round_macros(self) -> "NutritionEntryCreate":
         """Round macro values to 1 decimal to prevent float drift."""
         self.calories = round(self.calories, 1)
         self.protein_g = round(self.protein_g, 1)
@@ -57,15 +57,17 @@ class NutritionEntryCreate(BaseModel):
         self.fat_g = round(self.fat_g, 1)
         return self
 
-    @model_validator(mode='after')
-    def warn_macro_calorie_mismatch(self) -> 'NutritionEntryCreate':
+    @model_validator(mode="after")
+    def warn_macro_calorie_mismatch(self) -> "NutritionEntryCreate":
         computed = self.protein_g * 4 + self.carbs_g * 4 + self.fat_g * 9
         if self.calories > 0 and computed > 0:
             ratio = computed / self.calories
             if ratio > 2.0 or ratio < 0.25:
                 _logger.warning(
-                    'Macro-calorie mismatch: declared=%s, computed=%s (ratio=%.2f)',
-                    self.calories, computed, ratio,
+                    "Macro-calorie mismatch: declared=%s, computed=%s (ratio=%.2f)",
+                    self.calories,
+                    computed,
+                    ratio,
                 )
         return self
 
@@ -87,13 +89,13 @@ class NutritionEntryUpdate(BaseModel):
     source_meal_id: Optional[uuid.UUID] = None
 
     # Audit fix 2.4 — HTML sanitization
-    @field_validator('meal_name', 'food_name', mode='before')
+    @field_validator("meal_name", "food_name", mode="before")
     @classmethod
     def sanitize_text(cls, v: str) -> str:
         return strip_html(v) if isinstance(v, str) else v
 
-    @model_validator(mode='after')
-    def round_macros(self) -> 'NutritionEntryUpdate':
+    @model_validator(mode="after")
+    def round_macros(self) -> "NutritionEntryUpdate":
         """Round macro values to 1 decimal to prevent float drift."""
         if self.calories is not None:
             self.calories = round(self.calories, 1)
@@ -105,14 +107,14 @@ class NutritionEntryUpdate(BaseModel):
             self.fat_g = round(self.fat_g, 1)
         return self
 
-    @model_validator(mode='after')
-    def validate_micro_nutrients(self) -> 'NutritionEntryUpdate':
+    @model_validator(mode="after")
+    def validate_micro_nutrients(self) -> "NutritionEntryUpdate":
         if self.micro_nutrients:
             for key, val in self.micro_nutrients.items():
                 if len(key) > 100:
-                    raise ValueError(f'micro_nutrient key too long: {key[:20]}...')
+                    raise ValueError(f"micro_nutrient key too long: {key[:20]}...")
                 if val < 0:
-                    raise ValueError(f'micro_nutrient value must be >= 0: {key}')
+                    raise ValueError(f"micro_nutrient value must be >= 0: {key}")
         return self
 
 
@@ -154,10 +156,10 @@ class DateRangeFilter(BaseModel):
     start_date: date
     end_date: date
 
-    @model_validator(mode='after')
-    def start_before_end(self) -> 'DateRangeFilter':
+    @model_validator(mode="after")
+    def start_before_end(self) -> "DateRangeFilter":
         if self.start_date > self.end_date:
-            raise ValueError('start_date must be <= end_date')
+            raise ValueError("start_date must be <= end_date")
         return self
 
 
@@ -184,7 +186,7 @@ class BatchEntryCreate(BaseModel):
     entries: list[BatchEntryItem] = Field(..., min_length=1, max_length=50)
 
     # Audit fix 2.4 — HTML sanitization
-    @field_validator('meal_name', mode='before')
+    @field_validator("meal_name", mode="before")
     @classmethod
     def sanitize_text(cls, v: str) -> str:
         return strip_html(v) if isinstance(v, str) else v
@@ -196,8 +198,8 @@ class CopyEntriesRequest(BaseModel):
     source_date: date
     target_date: date
 
-    @model_validator(mode='after')
-    def dates_must_differ(self) -> 'CopyEntriesRequest':
+    @model_validator(mode="after")
+    def dates_must_differ(self) -> "CopyEntriesRequest":
         if self.source_date == self.target_date:
-            raise ValueError('source_date and target_date must be different')
+            raise ValueError("source_date and target_date must be different")
         return self

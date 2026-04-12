@@ -46,7 +46,9 @@ class PhotoCreate(BaseModel):
     )
     notes: Optional[str] = Field(default=None, max_length=MAX_NOTES_LENGTH)
     alignment_data: Optional[AlignmentData] = None
-    r2_key: Optional[str] = Field(default=None, max_length=500, pattern=r'^users/[a-f0-9\-]+/[a-zA-Z0-9._-]+$')
+    r2_key: Optional[str] = Field(
+        default=None, max_length=500, pattern=r"^users/[a-f0-9\-]+/[a-zA-Z0-9._-]+$"
+    )
 
     @field_validator("capture_date")
     @classmethod
@@ -91,15 +93,17 @@ class PhotoResponse(BaseModel):
     def image_url(self) -> Optional[str]:
         if self.r2_key:
             from src.config.settings import settings
+
             return f"{settings.CDN_BASE_URL}/{self.r2_key}"
         return None
 
     model_config = {"from_attributes": True}
 
+
 class UploadUrlRequest(BaseModel):
     """Schema for requesting a pre-signed upload URL."""
 
-    filename: str = Field(min_length=1, max_length=255, pattern=r'^[a-zA-Z0-9._-]+$')
+    filename: str = Field(min_length=1, max_length=255, pattern=r"^[a-zA-Z0-9._-]+$")
     content_type: str = Field(
         default="image/jpeg",
         pattern=r"^image/(jpeg|png|webp)$",
@@ -111,4 +115,3 @@ class UploadUrlResponse(BaseModel):
 
     upload_url: str
     key: str
-

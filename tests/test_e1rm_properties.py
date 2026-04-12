@@ -10,7 +10,6 @@ import pytest
 from hypothesis import given, settings as h_settings, strategies as st
 
 from src.modules.training.e1rm_calculator import (
-    E1RMResult,
     MAX_REPS,
     best_e1rm_for_exercise,
     compute_e1rm,
@@ -53,7 +52,7 @@ class TestProperty1FormulaCorrectness:
     @given(weight_kg=_weight_st, reps=st.integers(min_value=2, max_value=MAX_REPS))
     def test_lombardi_formula(self, weight_kg: float, reps: int):
         result = compute_e1rm(weight_kg, reps)
-        expected = weight_kg * (reps ** 0.10)
+        expected = weight_kg * (reps**0.10)
         assert result.lombardi == pytest.approx(expected, rel=1e-9)
 
     @_pbt_settings
@@ -97,10 +96,14 @@ class TestProperty3BestSetMaximality:
     @_pbt_settings
     @given(
         sets=st.lists(
-            st.fixed_dictionaries({
-                "weight_kg": st.floats(min_value=0.5, max_value=300.0, allow_nan=False, allow_infinity=False),
-                "reps": st.integers(min_value=1, max_value=MAX_REPS),
-            }),
+            st.fixed_dictionaries(
+                {
+                    "weight_kg": st.floats(
+                        min_value=0.5, max_value=300.0, allow_nan=False, allow_infinity=False
+                    ),
+                    "reps": st.integers(min_value=1, max_value=MAX_REPS),
+                }
+            ),
             min_size=1,
             max_size=10,
         )
@@ -172,7 +175,7 @@ class TestInputValidation:
         """Sets with reps > MAX_REPS are silently skipped."""
         sets = [
             {"weight_kg": 100, "reps": 50},  # skipped
-            {"weight_kg": 80, "reps": 10},   # valid
+            {"weight_kg": 80, "reps": 10},  # valid
         ]
         result = best_e1rm_for_exercise(sets)
         assert result is not None
@@ -181,7 +184,7 @@ class TestInputValidation:
     def test_best_e1rm_skips_negative_weight(self):
         sets = [
             {"weight_kg": -50, "reps": 5},  # skipped
-            {"weight_kg": 60, "reps": 5},   # valid
+            {"weight_kg": 60, "reps": 5},  # valid
         ]
         result = best_e1rm_for_exercise(sets)
         assert result is not None
@@ -189,7 +192,9 @@ class TestInputValidation:
 
     @_pbt_settings
     @given(
-        weight_kg=st.floats(min_value=-1000, max_value=-0.01, allow_nan=False, allow_infinity=False),
+        weight_kg=st.floats(
+            min_value=-1000, max_value=-0.01, allow_nan=False, allow_infinity=False
+        ),
         reps=st.integers(min_value=1, max_value=MAX_REPS),
     )
     def test_any_negative_weight_raises(self, weight_kg: float, reps: int):

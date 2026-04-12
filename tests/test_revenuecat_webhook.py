@@ -34,8 +34,14 @@ async def _user(session) -> User:
 
 
 async def _sub(session, uid, status=SubscriptionStatus.FREE, txn="txn_1") -> Subscription:
-    s = Subscription(user_id=uid, provider_name="revenuecat", status=status,
-                     provider_subscription_id=txn, currency="USD", region="US")
+    s = Subscription(
+        user_id=uid,
+        provider_name="revenuecat",
+        status=status,
+        provider_subscription_id=txn,
+        currency="USD",
+        region="US",
+    )
     session.add(s)
     await session.flush()
     return s
@@ -54,6 +60,7 @@ async def _handle(session, etype, uid, eid="evt_1", txn="txn_1", exp_ms=None):
 
 
 # --- Auth tests ---
+
 
 @pytest.mark.asyncio
 async def test_valid_bearer_token(db_session, mock_rc_settings):
@@ -78,6 +85,7 @@ async def test_missing_auth_header(db_session, mock_rc_settings):
 
 # --- Event processing tests ---
 
+
 @pytest.mark.asyncio
 async def test_initial_purchase_activates(db_session, mock_rc_settings):
     user = await _user(db_session)
@@ -92,7 +100,9 @@ async def test_renewal_extends_period(db_session, mock_rc_settings):
     user = await _user(db_session)
     sub = await _sub(db_session, user.id, status=SubscriptionStatus.ACTIVE)
     exp_ms = int(datetime(2025, 2, 1, tzinfo=timezone.utc).timestamp() * 1000)
-    await _handle(db_session, "RENEWAL", str(user.id), "evt_2", sub.provider_subscription_id, exp_ms)
+    await _handle(
+        db_session, "RENEWAL", str(user.id), "evt_2", sub.provider_subscription_id, exp_ms
+    )
     await db_session.refresh(sub)
     assert sub.status == SubscriptionStatus.ACTIVE
     assert sub.current_period_end is not None

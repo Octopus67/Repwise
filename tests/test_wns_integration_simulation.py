@@ -16,7 +16,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.modules.auth.models import User
 from src.modules.training.models import TrainingSession
 from src.modules.training.wns_engine import (
-    atrophy_between_sessions,
     diminishing_returns,
     rir_from_rpe,
     stimulating_reps_per_set,
@@ -29,14 +28,15 @@ from src.modules.training.fatigue_engine import (
     compute_fatigue_score,
     detect_regressions,
 )
-from src.modules.training.exercise_mapping import get_muscle_group
 
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
 
 async def _create_user(db: AsyncSession, email: str) -> User:
-    user = User(id=uuid.uuid4(), email=email, hashed_password="x", auth_provider="email", role="user")
+    user = User(
+        id=uuid.uuid4(), email=email, hashed_password="x", auth_provider="email", role="user"
+    )
     db.add(user)
     await db.flush()
     return user
@@ -59,8 +59,7 @@ def _make_exercise(name: str, sets: list[tuple[float, int, float | None]]) -> di
     return {
         "exercise_name": name,
         "sets": [
-            {"weight_kg": w, "reps": r, "rpe": rpe, "set_type": "normal"}
-            for w, r, rpe in sets
+            {"weight_kg": w, "reps": r, "rpe": rpe, "set_type": "normal"} for w, r, rpe in sets
         ],
     }
 
@@ -89,12 +88,17 @@ class TestConsistentFullBody:
             monday = base_monday + timedelta(weeks=week)
             for day_offset in [0, 2, 4]:  # Mon, Wed, Fri
                 d = monday + timedelta(days=day_offset)
-                await _log_session(db_session, user.id, d, [
-                    _make_warmup("Barbell Bench Press", 40, 10),
-                    _make_exercise("Barbell Bench Press", [(80, 8, 8.0)] * 3),
-                    _make_exercise("Barbell Back Squat", [(100, 8, 8.0)] * 3),
-                    _make_exercise("Barbell Row", [(70, 8, 8.0)] * 3),
-                ])
+                await _log_session(
+                    db_session,
+                    user.id,
+                    d,
+                    [
+                        _make_warmup("Barbell Bench Press", 40, 10),
+                        _make_exercise("Barbell Bench Press", [(80, 8, 8.0)] * 3),
+                        _make_exercise("Barbell Back Squat", [(100, 8, 8.0)] * 3),
+                        _make_exercise("Barbell Row", [(70, 8, 8.0)] * 3),
+                    ],
+                )
 
         await db_session.commit()
         return user, base_monday
@@ -132,7 +136,9 @@ class TestConsistentFullBody:
 
         # 3 sessions × 3 working sets = 9 total working sets
         # Warmup sets should NOT be counted
-        bench_contrib = next((e for e in chest.exercises if "bench" in e.exercise_name.lower()), None)
+        bench_contrib = next(
+            (e for e in chest.exercises if "bench" in e.exercise_name.lower()), None
+        )
         assert bench_contrib is not None
         assert bench_contrib.sets_count == 9  # 3 sessions × 3 sets
 
@@ -196,14 +202,21 @@ class TestProgressiveOverloadThenRegression:
         sessions_data = []
         for i, w in enumerate(all_weights):
             d = base_monday + timedelta(days=i * 3)  # every 3 days
-            await _log_session(db_session, user.id, d, [
-                _make_exercise("Barbell Bench Press", [(w, 8, 8.0)] * 3),
-            ])
-            sessions_data.append(SessionExerciseData(
-                session_date=d,
-                exercise_name="barbell bench press",
-                sets=[SetData(reps=8, weight_kg=w)] * 3,
-            ))
+            await _log_session(
+                db_session,
+                user.id,
+                d,
+                [
+                    _make_exercise("Barbell Bench Press", [(w, 8, 8.0)] * 3),
+                ],
+            )
+            sessions_data.append(
+                SessionExerciseData(
+                    session_date=d,
+                    exercise_name="barbell bench press",
+                    sets=[SetData(reps=8, weight_kg=w)] * 3,
+                )
+            )
 
         await db_session.commit()
         return user, base_monday, sessions_data
@@ -224,13 +237,19 @@ class TestProgressiveOverloadThenRegression:
         regressions = detect_regressions(e1rm_series, min_consecutive=2)
 
         score = compute_fatigue_score(
-            "chest", regressions, weekly_sets=9, mrv_sets=22,
-            weekly_frequency=2, nutrition_compliance=1.0,
+            "chest",
+            regressions,
+            weekly_sets=9,
+            mrv_sets=22,
+            weekly_frequency=2,
+            nutrition_compliance=1.0,
         )
         assert score.regression_component > 0
         assert score.score > 10
 
-    async def test_wns_volume_still_positive_during_regression(self, db_session: AsyncSession, setup):
+    async def test_wns_volume_still_positive_during_regression(
+        self, db_session: AsyncSession, setup
+    ):
         """Even during regression, volume stimulus is still being applied."""
         user, base_monday, _ = setup
         svc = WNSVolumeService(db_session)
@@ -257,10 +276,15 @@ class TestLowFrequencyLifter:
         for week in range(4):
             monday = base_monday + timedelta(weeks=week)
             # Only trains on Monday — one big session
-            await _log_session(db_session, user.id, monday, [
-                _make_exercise("Barbell Bench Press", [(80, 8, 9.0)] * 6),
-                _make_exercise("Barbell Back Squat", [(100, 8, 9.0)] * 6),
-            ])
+            await _log_session(
+                db_session,
+                user.id,
+                monday,
+                [
+                    _make_exercise("Barbell Bench Press", [(80, 8, 9.0)] * 6),
+                    _make_exercise("Barbell Back Squat", [(100, 8, 9.0)] * 6),
+                ],
+            )
 
         await db_session.commit()
         return user, base_monday
@@ -311,13 +335,23 @@ class TestMixedRPELifter:
             monday = base_monday + timedelta(weeks=week)
             for day_offset in [0, 3]:  # Mon, Thu
                 d = monday + timedelta(days=day_offset)
-                await _log_session(db_session, user.id, d, [
-                    # 2 hard sets + 2 easy sets
-                    _make_exercise("Barbell Bench Press", [
-                        (80, 8, 9.0), (80, 8, 9.0),  # hard
-                        (60, 12, 6.0), (60, 12, 6.0),  # easy
-                    ]),
-                ])
+                await _log_session(
+                    db_session,
+                    user.id,
+                    d,
+                    [
+                        # 2 hard sets + 2 easy sets
+                        _make_exercise(
+                            "Barbell Bench Press",
+                            [
+                                (80, 8, 9.0),
+                                (80, 8, 9.0),  # hard
+                                (60, 12, 6.0),
+                                (60, 12, 6.0),  # easy
+                            ],
+                        ),
+                    ],
+                )
 
         await db_session.commit()
         return user, base_monday
@@ -375,10 +409,15 @@ class TestHeavyLifter:
             monday = base_monday + timedelta(weeks=week)
             for day_offset in [0, 2, 4]:
                 d = monday + timedelta(days=day_offset)
-                await _log_session(db_session, user.id, d, [
-                    # 5x5 at RPE 9 with heavy weight
-                    _make_exercise("Barbell Back Squat", [(140, 5, 9.0)] * 5),
-                ])
+                await _log_session(
+                    db_session,
+                    user.id,
+                    d,
+                    [
+                        # 5x5 at RPE 9 with heavy weight
+                        _make_exercise("Barbell Back Squat", [(140, 5, 9.0)] * 5),
+                    ],
+                )
 
         await db_session.commit()
         return user, base_monday

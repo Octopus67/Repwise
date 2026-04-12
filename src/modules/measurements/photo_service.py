@@ -32,7 +32,9 @@ def _validate_upload(file_bytes: bytes, content_type: str) -> None:
     if len(file_bytes) > MAX_FILE_SIZE:
         raise ValidationError(f"File exceeds maximum size of {MAX_FILE_SIZE} bytes")
     if content_type not in ALLOWED_CONTENT_TYPES:
-        raise ValidationError(f"Content type '{content_type}' not allowed. Must be one of: {', '.join(sorted(ALLOWED_CONTENT_TYPES))}")
+        raise ValidationError(
+            f"Content type '{content_type}' not allowed. Must be one of: {', '.join(sorted(ALLOWED_CONTENT_TYPES))}"
+        )
     for sig in MAGIC_BYTES[content_type]:
         if file_bytes[: len(sig)] == sig:
             return

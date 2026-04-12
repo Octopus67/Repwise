@@ -184,7 +184,6 @@ async def test_refresh_invalid_token(client, override_get_db, mock_ses):
 async def test_apple_oauth_happy_path(client, override_get_db, monkeypatch, mock_ses):
     """POST /oauth/apple with valid token → 200, returns tokens and creates user."""
     import hashlib
-    import jwt as pyjwt
     from unittest.mock import MagicMock
 
     monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.octopuslabs.repwise")
@@ -225,7 +224,6 @@ async def test_apple_oauth_happy_path(client, override_get_db, monkeypatch, mock
 async def test_apple_oauth_invalid_token(client, override_get_db, monkeypatch, mock_ses):
     """POST /oauth/apple with invalid token → 401."""
     import jwt as pyjwt
-    from unittest.mock import MagicMock
 
     monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.octopuslabs.repwise")
 
@@ -429,7 +427,6 @@ async def test_verify_email_rate_limited(client, override_get_db, db_session, mo
 @pytest.mark.asyncio
 async def test_apple_oauth_identity_token_field(client, override_get_db, monkeypatch, mock_ses):
     """POST /oauth/apple with identity_token field → 200."""
-    import jwt as pyjwt
     from unittest.mock import MagicMock
 
     monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.octopuslabs.repwise")

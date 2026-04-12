@@ -58,7 +58,9 @@ class CoachingService:
         # Idempotency: if snapshot already created today, return it
         if existing is not None:
             return await self._build_response_from_snapshot(
-                existing, user_id, coaching_mode,
+                existing,
+                user_id,
+                coaching_mode,
             )
 
         # 2. Sequential fetch: bodyweight + goal + metrics + training load + body fat + weight trend + prev snapshot
@@ -82,16 +84,24 @@ class CoachingService:
         # 4. Build AdaptiveInput and compute snapshot
 
         weight_kg = bw_entries[-1][1]  # latest weight
-        height_cm = metrics.height_cm if metrics and metrics.height_cm else 170.0  # fallback to 170cm
-        age_years = metrics.age_years if metrics and hasattr(metrics, "age_years") else 30  # fallback to 30yo
+        height_cm = (
+            metrics.height_cm if metrics and metrics.height_cm else 170.0
+        )  # fallback to 170cm
+        age_years = (
+            metrics.age_years if metrics and hasattr(metrics, "age_years") else 30
+        )  # fallback to 30yo
         prefs = profile.preferences if profile and profile.preferences else {}
         sex = prefs.get("sex", "male")
         if sex not in ("male", "female", "other"):
             sex = "male"
-        
+
         if not metrics or not metrics.height_cm:
             logger.warning("Using fallback height (170cm) and age (30yo) for user %s", user_id)
-        activity_level = ActivityLevel(metrics.activity_level) if metrics and metrics.activity_level else ActivityLevel.MODERATE
+        activity_level = (
+            ActivityLevel(metrics.activity_level)
+            if metrics and metrics.activity_level
+            else ActivityLevel.MODERATE
+        )
         goal_type = GoalType(goal.goal_type) if goal else GoalType.MAINTAINING
         goal_rate = goal.goal_rate_per_week if goal and goal.goal_rate_per_week else 0.0
 
@@ -121,7 +131,12 @@ class CoachingService:
 
         # Apply measurement-based TDEE adjustment if needed
         if tdee_adjustment != 0.0:
-            from src.modules.adaptive.engine import AdaptiveOutput, _compute_macros, MIN_TARGET_CALORIES
+            from src.modules.adaptive.engine import (
+                AdaptiveOutput,
+                _compute_macros,
+                MIN_TARGET_CALORIES,
+            )
+
             adjusted_cals = max(output.target_calories + tdee_adjustment, MIN_TARGET_CALORIES)
             p, f, c = _compute_macros(weight_kg, adjusted_cals, goal_type)
             output = AdaptiveOutput(
@@ -153,7 +168,10 @@ class CoachingService:
 
         # 6. Generate explanation
         explanation = self._generate_explanation(
-            prev_targets, output, ema_current, ema_7d_ago,
+            prev_targets,
+            output,
+            ema_current,
+            ema_7d_ago,
         )
 
         new_targets = MacroTargets(
@@ -213,7 +231,9 @@ class CoachingService:
         return WeeklyCheckinResponse(
             has_sufficient_data=False,
             days_remaining=remaining if remaining > 0 else None,
-            explanation="No check-in data yet" if remaining == 0 else f"Log {remaining} more days for personalized recommendations",
+            explanation="No check-in data yet"
+            if remaining == 0
+            else f"Log {remaining} more days for personalized recommendations",
             coaching_mode=coaching_mode,
         )
 
@@ -250,29 +270,32 @@ class CoachingService:
             else:
                 parts.append("Targets unchanged")
         else:
-            parts.append(
-                f"Initial targets set: {new_output.target_calories:.0f} calories"
-            )
+            parts.append(f"Initial targets set: {new_output.target_calories:.0f} calories")
 
         return " — ".join(parts)
 
     async def accept_suggestion(
-        self, user_id: uuid.UUID, suggestion_id: uuid.UUID,
+        self,
+        user_id: uuid.UUID,
+        suggestion_id: uuid.UUID,
     ) -> None:
         """Apply proposed targets. Set status='accepted'."""
         suggestion = await self._get_suggestion(user_id, suggestion_id)
         if suggestion.status != "pending":
             from src.shared.errors import UnprocessableError
+
             raise UnprocessableError("Suggestion already resolved")
-        
+
         # Load the associated snapshot
-        snapshot_stmt = select(AdaptiveSnapshot).where(AdaptiveSnapshot.id == suggestion.snapshot_id)
+        snapshot_stmt = select(AdaptiveSnapshot).where(
+            AdaptiveSnapshot.id == suggestion.snapshot_id
+        )
         snapshot_result = await self.db.execute(snapshot_stmt)
         snapshot = snapshot_result.scalar_one_or_none()
-        
+
         suggestion.status = "accepted"
         suggestion.resolved_at = datetime.now(timezone.utc)
-        
+
         # APPLY the suggested targets by creating a new snapshot
         new_snapshot = AdaptiveSnapshot(
             user_id=user_id,
@@ -297,20 +320,23 @@ class CoachingService:
         suggestion = await self._get_suggestion(user_id, suggestion_id)
         if suggestion.status != "pending":
             from src.shared.errors import UnprocessableError
+
             raise UnprocessableError("Suggestion already resolved")
-        
+
         # Load the associated snapshot
-        snapshot_stmt = select(AdaptiveSnapshot).where(AdaptiveSnapshot.id == suggestion.snapshot_id)
+        snapshot_stmt = select(AdaptiveSnapshot).where(
+            AdaptiveSnapshot.id == suggestion.snapshot_id
+        )
         snapshot_result = await self.db.execute(snapshot_stmt)
         snapshot = snapshot_result.scalar_one_or_none()
-        
+
         suggestion.status = "modified"
         suggestion.modified_calories = modifications.calories
         suggestion.modified_protein_g = modifications.protein_g
         suggestion.modified_carbs_g = modifications.carbs_g
         suggestion.modified_fat_g = modifications.fat_g
         suggestion.resolved_at = datetime.now(timezone.utc)
-        
+
         # Apply modified targets by creating a new snapshot
         new_snapshot = AdaptiveSnapshot(
             user_id=user_id,
@@ -326,7 +352,9 @@ class CoachingService:
         await self.db.flush()
 
     async def dismiss_suggestion(
-        self, user_id: uuid.UUID, suggestion_id: uuid.UUID,
+        self,
+        user_id: uuid.UUID,
+        suggestion_id: uuid.UUID,
     ) -> None:
         """Set status='dismissed'. No target changes."""
         suggestion = await self._get_suggestion(user_id, suggestion_id)
@@ -335,13 +363,14 @@ class CoachingService:
         await self.db.flush()
 
     async def get_pending_suggestions(
-        self, user_id: uuid.UUID,
+        self,
+        user_id: uuid.UUID,
     ) -> list[CoachingSuggestionResponse]:
         """Return all pending suggestions for a user, excluding those older than 14 days."""
         from datetime import datetime, timezone, timedelta
-        
+
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=14)
-        
+
         stmt = (
             select(CoachingSuggestion)
             .where(
@@ -380,7 +409,8 @@ class CoachingService:
         return row.body_fat_pct if row else None
 
     async def _get_measurement_weight_trend(
-        self, user_id: uuid.UUID,
+        self,
+        user_id: uuid.UUID,
     ) -> Optional[float]:
         """Average weekly weight change from last 4 weeks of measurements.
 
@@ -419,7 +449,9 @@ class CoachingService:
         return result.scalar_one_or_none()
 
     async def _get_recent_bodyweight(
-        self, user_id: uuid.UUID, days: int = 14,
+        self,
+        user_id: uuid.UUID,
+        days: int = 14,
     ) -> list[tuple[date, float]]:
         cutoff = date.today() - timedelta(days=days)
         stmt = (
@@ -461,7 +493,10 @@ class CoachingService:
 
     async def _get_today_snapshot(self, user_id: uuid.UUID) -> Optional[AdaptiveSnapshot]:
         today_start = datetime.now(timezone.utc).replace(
-            hour=0, minute=0, second=0, microsecond=0,
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
         )
         stmt = (
             select(AdaptiveSnapshot)
@@ -506,7 +541,9 @@ class CoachingService:
         return snapshot
 
     async def _get_suggestion(
-        self, user_id: uuid.UUID, suggestion_id: uuid.UUID,
+        self,
+        user_id: uuid.UUID,
+        suggestion_id: uuid.UUID,
     ) -> CoachingSuggestion:
         stmt = select(CoachingSuggestion).where(
             CoachingSuggestion.id == suggestion_id,
@@ -561,7 +598,7 @@ class CoachingService:
         """Calculate training load from recent training data or return fallback."""
         try:
             from src.modules.training.models import TrainingSession
-            
+
             # Get last 14 days of training sessions
             cutoff = date.today() - timedelta(days=14)
             stmt = (
@@ -574,14 +611,14 @@ class CoachingService:
             )
             result = await self.db.execute(stmt)
             sessions = result.scalars().all()
-            
+
             if not sessions:
                 return 50.0  # fallback if no recent training data
-            
+
             # Calculate average session intensity based on volume and frequency
             total_volume = 0.0
             session_count = len(sessions)
-            
+
             for session in sessions:
                 exercises = session.exercises if isinstance(session.exercises, list) else []
                 for ex in exercises:
@@ -589,13 +626,13 @@ class CoachingService:
                     if isinstance(sets, list):
                         for s in sets:
                             total_volume += s.get("reps", 0) * s.get("weight_kg", 0)
-            
+
             # Normalize to 0-100 scale based on frequency and volume
             frequency_score = min(session_count / 14.0 * 100, 70)  # max 70 for frequency
             volume_score = min(total_volume / 10000.0 * 30, 30)  # max 30 for volume
-            
+
             return min(frequency_score + volume_score, 100.0)
-            
+
         except (SQLAlchemyError, TypeError, ZeroDivisionError):
             logger.exception("Failed to calculate training load for user %s", user_id)
             # Fallback: 50.0 is a neutral mid-range score that won't skew coaching advice

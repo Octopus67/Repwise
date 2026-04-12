@@ -32,7 +32,9 @@ def _clear_rate_limiter():
     clear_all()
 
 
-async def _register_onboard_and_get_headers(client, email: str = "recalc@example.com") -> dict[str, str]:
+async def _register_onboard_and_get_headers(
+    client, email: str = "recalc@example.com"
+) -> dict[str, str]:
     """Register a user, complete onboarding, ensure age/sex in profile prefs, return auth headers."""
     resp = await client.post(
         "/api/v1/auth/register",
@@ -72,6 +74,7 @@ async def _register_onboard_and_get_headers(client, email: str = "recalc@example
 # Test 1: POST with valid metrics → returns updated metrics + targets
 # Validates: Requirements 2.2, 9.1
 # ------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_recalculate_with_valid_metrics(client, override_get_db):
@@ -114,6 +117,7 @@ async def test_recalculate_with_valid_metrics(client, override_get_db):
 # Validates: Requirements 3.2, 9.2
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_recalculate_with_valid_goals(client, override_get_db):
     """POST /users/recalculate with goals only → 200, returns goals + targets."""
@@ -152,6 +156,7 @@ async def test_recalculate_with_valid_goals(client, override_get_db):
 # Validates: Requirements 2.2, 3.2, 9.1, 9.2
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_recalculate_with_both_metrics_and_goals(client, override_get_db):
     """POST /users/recalculate with both → 200, returns metrics + goals + targets."""
@@ -189,6 +194,7 @@ async def test_recalculate_with_both_metrics_and_goals(client, override_get_db):
 # Validates: Requirements 9.1, 9.2
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_recalculate_both_none_returns_400(client, override_get_db):
     """POST /users/recalculate with neither metrics nor goals → 400."""
@@ -207,6 +213,7 @@ async def test_recalculate_both_none_returns_400(client, override_get_db):
 # Validates: Requirements 9.1
 # ------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_recalculate_without_auth_returns_401(client, override_get_db):
     """POST /users/recalculate without Authorization header → 401."""
@@ -221,6 +228,7 @@ async def test_recalculate_without_auth_returns_401(client, override_get_db):
 # Test 6: Regression — existing endpoints still work
 # Validates: Requirements 9.4
 # ------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_existing_endpoints_still_work(client, override_get_db):
@@ -255,6 +263,7 @@ async def test_existing_endpoints_still_work(client, override_get_db):
 # Test 7: Recalculate with no bodyweight history → uses current weight
 # Validates: Requirements 9.1, 9.2
 # ------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_recalculate_no_bodyweight_history_uses_fallback(client, override_get_db):

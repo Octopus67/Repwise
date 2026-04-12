@@ -21,6 +21,7 @@ def async_retry(
     retryable_exceptions: Sequence[type[BaseException]] = (Exception,),
 ) -> Callable:
     """Async retry decorator with exponential backoff and jitter."""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -33,17 +34,25 @@ def async_retry(
                     if attempt == max_retries:
                         logger.error(
                             "[Retry] %s failed after %d attempts: %s",
-                            func.__name__, max_retries + 1, str(e),
+                            func.__name__,
+                            max_retries + 1,
+                            str(e),
                         )
                         raise
-                    delay = min(base_delay * (2 ** attempt) + random.uniform(0, 0.5), max_delay)
+                    delay = min(base_delay * (2**attempt) + random.uniform(0, 0.5), max_delay)
                     logger.warning(
                         "[Retry] %s attempt %d/%d failed (%s), retrying in %.1fs",
-                        func.__name__, attempt + 1, max_retries + 1, type(e).__name__, delay,
+                        func.__name__,
+                        attempt + 1,
+                        max_retries + 1,
+                        type(e).__name__,
+                        delay,
                     )
                     await asyncio.sleep(delay)
             raise last_exception  # type: ignore[misc]  # unreachable but satisfies type checker
+
         return wrapper
+
     return decorator
 
 
@@ -54,6 +63,7 @@ def sync_retry(
     retryable_exceptions: Sequence[type[BaseException]] = (Exception,),
 ) -> Callable:
     """Sync retry decorator with exponential backoff and jitter."""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -66,15 +76,23 @@ def sync_retry(
                     if attempt == max_retries:
                         logger.error(
                             "[Retry] %s failed after %d attempts: %s",
-                            func.__name__, max_retries + 1, str(e),
+                            func.__name__,
+                            max_retries + 1,
+                            str(e),
                         )
                         raise
-                    delay = min(base_delay * (2 ** attempt) + random.uniform(0, 0.5), max_delay)
+                    delay = min(base_delay * (2**attempt) + random.uniform(0, 0.5), max_delay)
                     logger.warning(
                         "[Retry] %s attempt %d/%d failed (%s), retrying in %.1fs",
-                        func.__name__, attempt + 1, max_retries + 1, type(e).__name__, delay,
+                        func.__name__,
+                        attempt + 1,
+                        max_retries + 1,
+                        type(e).__name__,
+                        delay,
                     )
                     time.sleep(delay)
             raise last_exception  # type: ignore[misc]  # unreachable but satisfies type checker
+
         return wrapper
+
     return decorator

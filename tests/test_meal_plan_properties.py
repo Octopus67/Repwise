@@ -35,9 +35,7 @@ _meal_names = st.text(
     max_size=100,
 ).filter(lambda s: s.strip() != "")
 
-_positive_floats = st.floats(
-    min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False
-)
+_positive_floats = st.floats(min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False)
 
 
 @st.composite

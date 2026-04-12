@@ -43,7 +43,7 @@ class WebhookEvent:
     provider_transaction_id: Optional[str] = None
     amount: Optional[float] = None
     currency: Optional[str] = None
-    user_id: str = ''
+    user_id: str = ""
     period_end: Optional[datetime] = None  # datetime when subscription period ends
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -66,23 +66,17 @@ class PaymentProvider(ABC):
     """
 
     @abstractmethod
-    async def create_subscription(
-        self, params: CreateSubscriptionParams
-    ) -> ProviderSubscription:
+    async def create_subscription(self, params: CreateSubscriptionParams) -> ProviderSubscription:
         """Create a subscription with the payment provider."""
         ...
 
     @abstractmethod
-    async def verify_webhook(
-        self, payload: bytes, signature: str
-    ) -> WebhookEvent:
+    async def verify_webhook(self, payload: bytes, signature: str) -> WebhookEvent:
         """Verify webhook signature and parse the event."""
         ...
 
     @abstractmethod
-    async def cancel_subscription(
-        self, provider_subscription_id: str
-    ) -> None:
+    async def cancel_subscription(self, provider_subscription_id: str) -> None:
         """Cancel a subscription via the provider's API."""
         ...
 

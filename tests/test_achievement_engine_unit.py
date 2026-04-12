@@ -17,13 +17,13 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.achievements.engine import AchievementEngine
-from src.modules.achievements.models import AchievementProgress, UserAchievement
 from src.modules.achievements.definitions import ACHIEVEMENT_REGISTRY
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _user_id() -> uuid.UUID:
     return uuid.uuid4()
@@ -41,6 +41,7 @@ def _make_exercises(
 # ---------------------------------------------------------------------------
 # Streak Tests
 # ---------------------------------------------------------------------------
+
 
 class TestStreakCalculation:
     """Tests for _update_streak via evaluate_training_session."""
@@ -146,6 +147,7 @@ class TestStreakCalculation:
 # PR Badge Tests
 # ---------------------------------------------------------------------------
 
+
 class TestPRBadges:
     """Tests for _check_pr_badges."""
 
@@ -227,6 +229,7 @@ class TestPRBadges:
 # Volume Tests
 # ---------------------------------------------------------------------------
 
+
 class TestVolumeTracking:
     """Tests for _update_volume."""
 
@@ -289,10 +292,13 @@ class TestVolumeTracking:
         user = _user_id()
 
         # 500kg * 10 reps * 2 sets = 10000 kg in one go
-        exercises = _make_exercises("bench press", [
-            {"weight_kg": 500, "reps": 10},
-            {"weight_kg": 500, "reps": 10},
-        ])
+        exercises = _make_exercises(
+            "bench press",
+            [
+                {"weight_kg": 500, "reps": 10},
+                {"weight_kg": 500, "reps": 10},
+            ],
+        )
         result = await engine._update_volume(user, exercises)
         ids = [u.achievement_id for u in result]
         assert "volume_10k" in ids
@@ -302,59 +308,82 @@ class TestVolumeTracking:
 # Nutrition Compliance Tests
 # ---------------------------------------------------------------------------
 
+
 class TestNutritionCompliance:
     """Tests for _is_compliant static method."""
 
     def test_within_tolerance(self):
         # All actuals within 5% of targets
-        assert AchievementEngine._is_compliant(
-            actuals=(2000, 150, 250, 70),
-            targets=(2000, 150, 250, 70),
-        ) is True
+        assert (
+            AchievementEngine._is_compliant(
+                actuals=(2000, 150, 250, 70),
+                targets=(2000, 150, 250, 70),
+            )
+            is True
+        )
 
     def test_outside_tolerance(self):
         # Calories way off
-        assert AchievementEngine._is_compliant(
-            actuals=(3000, 150, 250, 70),
-            targets=(2000, 150, 250, 70),
-        ) is False
+        assert (
+            AchievementEngine._is_compliant(
+                actuals=(3000, 150, 250, 70),
+                targets=(2000, 150, 250, 70),
+            )
+            is False
+        )
 
     def test_zero_target_returns_false(self):
-        assert AchievementEngine._is_compliant(
-            actuals=(2000, 150, 250, 70),
-            targets=(0, 150, 250, 70),
-        ) is False
+        assert (
+            AchievementEngine._is_compliant(
+                actuals=(2000, 150, 250, 70),
+                targets=(0, 150, 250, 70),
+            )
+            is False
+        )
 
     def test_none_target_returns_false(self):
-        assert AchievementEngine._is_compliant(
-            actuals=(2000, 150, 250, 70),
-            targets=(None, 150, 250, 70),
-        ) is False
+        assert (
+            AchievementEngine._is_compliant(
+                actuals=(2000, 150, 250, 70),
+                targets=(None, 150, 250, 70),
+            )
+            is False
+        )
 
     def test_none_actual_returns_false(self):
-        assert AchievementEngine._is_compliant(
-            actuals=(None, 150, 250, 70),
-            targets=(2000, 150, 250, 70),
-        ) is False
+        assert (
+            AchievementEngine._is_compliant(
+                actuals=(None, 150, 250, 70),
+                targets=(2000, 150, 250, 70),
+            )
+            is False
+        )
 
     def test_edge_of_tolerance(self):
         # Exactly 5% over on calories: 2100 / 2000 = 1.05 → abs diff / target = 0.05
-        assert AchievementEngine._is_compliant(
-            actuals=(2100, 150, 250, 70),
-            targets=(2000, 150, 250, 70),
-        ) is True
+        assert (
+            AchievementEngine._is_compliant(
+                actuals=(2100, 150, 250, 70),
+                targets=(2000, 150, 250, 70),
+            )
+            is True
+        )
 
     def test_just_over_tolerance(self):
         # 5.1% over
-        assert AchievementEngine._is_compliant(
-            actuals=(2102, 150, 250, 70),
-            targets=(2000, 150, 250, 70),
-        ) is False
+        assert (
+            AchievementEngine._is_compliant(
+                actuals=(2102, 150, 250, 70),
+                targets=(2000, 150, 250, 70),
+            )
+            is False
+        )
 
 
 # ---------------------------------------------------------------------------
 # Full Orchestrator Tests
 # ---------------------------------------------------------------------------
+
 
 class TestEvaluateTrainingSession:
     """Integration-level tests for evaluate_training_session."""
@@ -392,30 +421,36 @@ class TestEvaluateTrainingSession:
 # Exercise Alias Tests
 # ---------------------------------------------------------------------------
 
+
 class TestExerciseAliases:
     """Tests for exercise alias resolution."""
 
     def test_case_insensitive(self):
         from src.modules.achievements.exercise_aliases import resolve_exercise_group
+
         assert resolve_exercise_group("BENCH PRESS") == "bench_press"
         assert resolve_exercise_group("Bench Press") == "bench_press"
 
     def test_whitespace_stripped(self):
         from src.modules.achievements.exercise_aliases import resolve_exercise_group
+
         assert resolve_exercise_group("  bench press  ") == "bench_press"
 
     def test_unknown_returns_none(self):
         from src.modules.achievements.exercise_aliases import resolve_exercise_group
+
         assert resolve_exercise_group("tricep pushdown") is None
 
     def test_empty_string_returns_none(self):
         from src.modules.achievements.exercise_aliases import resolve_exercise_group
+
         assert resolve_exercise_group("") is None
 
 
 # ---------------------------------------------------------------------------
 # Achievement Registry Tests
 # ---------------------------------------------------------------------------
+
 
 class TestAchievementRegistry:
     """Tests for the static achievement definitions."""
@@ -430,12 +465,14 @@ class TestAchievementRegistry:
 
     def test_pr_badges_have_exercise_group(self):
         from src.modules.achievements.definitions import AchievementCategory
+
         for defn in ACHIEVEMENT_REGISTRY.values():
             if defn.category == AchievementCategory.PR_BADGE:
                 assert defn.exercise_group is not None, f"{defn.id} missing exercise_group"
 
     def test_non_pr_badges_have_no_exercise_group(self):
         from src.modules.achievements.definitions import AchievementCategory
+
         for defn in ACHIEVEMENT_REGISTRY.values():
             if defn.category != AchievementCategory.PR_BADGE:
                 assert defn.exercise_group is None, f"{defn.id} should not have exercise_group"

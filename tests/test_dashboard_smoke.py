@@ -23,7 +23,13 @@ def _auth_headers(user_id: uuid.UUID) -> dict:
     from src.config.settings import settings
 
     token = jwt.encode(
-        {"sub": str(user_id), "type": "access", "exp": datetime.now(timezone.utc) + timedelta(hours=1), "iss": "repwise", "aud": "repwise-api"},
+        {
+            "sub": str(user_id),
+            "type": "access",
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "iss": "repwise",
+            "aud": "repwise-api",
+        },
         settings.JWT_SECRET,
         algorithm=settings.JWT_ALGORITHM,
     )
@@ -109,7 +115,9 @@ class TestDashboardBusinessLogic:
         nutrition = r.json()["nutrition"]
         target = nutrition.get("calorie_target", nutrition.get("target_calories", 0))
         consumed = nutrition.get("total_calories", 0)
-        remaining = nutrition.get("calories_remaining", nutrition.get("remaining", target - consumed))
+        remaining = nutrition.get(
+            "calories_remaining", nutrition.get("remaining", target - consumed)
+        )
         # remaining should be target - consumed (or close to it)
         if target > 0:
             assert remaining == target - consumed

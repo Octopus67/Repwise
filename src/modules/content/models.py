@@ -63,18 +63,12 @@ class ContentArticle(Base, SoftDeleteMixin, AuditLogMixin):
     tags: Mapped[Optional[dict]] = mapped_column(
         JSONB, nullable=True, server_default=text("'[]'::jsonb")
     )
-    estimated_read_time_min: Mapped[Optional[int]] = mapped_column(
-        Integer, nullable=True
-    )
+    estimated_read_time_min: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     youtube_links: Mapped[Optional[dict]] = mapped_column(
         JSONB, nullable=True, server_default=text("'[]'::jsonb")
     )
-    published_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    unlocked_by_achievement: Mapped[Optional[str]] = mapped_column(
-        String(100), nullable=True
-    )
+    published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    unlocked_by_achievement: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
     module: Mapped[ContentModule] = relationship(
         "ContentModule", back_populates="articles", lazy="selectin"
@@ -113,13 +107,9 @@ class ArticleVersion(Base):
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     content_markdown: Mapped[str] = mapped_column(Text, nullable=False, default="")
 
-    article: Mapped[ContentArticle] = relationship(
-        "ContentArticle", back_populates="versions"
-    )
+    article: Mapped[ContentArticle] = relationship("ContentArticle", back_populates="versions")
 
-    __table_args__ = (
-        Index("ix_article_versions_article_version", "article_id", "version_number"),
-    )
+    __table_args__ = (Index("ix_article_versions_article_version", "article_id", "version_number"),)
 
 
 class ArticleFavorite(Base):

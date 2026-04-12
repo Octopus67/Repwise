@@ -14,10 +14,23 @@ from src.shared.validators import validate_json_size
 logger = logging.getLogger(__name__)
 
 VALID_MICRO_KEYS = {
-    "fiber_g", "sugar_g", "sodium_mg", "potassium_mg", "calcium_mg", "iron_mg",
-    "vitamin_a_iu", "vitamin_c_mg", "vitamin_d_iu", "vitamin_b12_mcg",
-    "zinc_mg", "magnesium_mg", "cholesterol_mg", "saturated_fat_g",
-    "trans_fat_g", "omega3_g", "omega6_g",
+    "fiber_g",
+    "sugar_g",
+    "sodium_mg",
+    "potassium_mg",
+    "calcium_mg",
+    "iron_mg",
+    "vitamin_a_iu",
+    "vitamin_c_mg",
+    "vitamin_d_iu",
+    "vitamin_b12_mcg",
+    "zinc_mg",
+    "magnesium_mg",
+    "cholesterol_mg",
+    "saturated_fat_g",
+    "trans_fat_g",
+    "omega3_g",
+    "omega6_g",
 }
 
 
@@ -30,7 +43,9 @@ def _validate_micro_nutrient_values(v):
         if val < 0:
             raise ValueError(f"Micronutrient '{key}' cannot be negative, got {val}")
         if key not in VALID_MICRO_KEYS:
-            logger.warning("Unknown micronutrient key '%s' — allowing for import compatibility", key)
+            logger.warning(
+                "Unknown micronutrient key '%s' — allowing for import compatibility", key
+            )
     return v
 
 
@@ -62,7 +77,7 @@ class FoodItemCreate(BaseModel):
     description: Optional[str] = Field(default=None, max_length=2000)
     total_servings: Optional[float] = None
 
-    @field_validator('micro_nutrients')
+    @field_validator("micro_nutrients")
     @classmethod
     def validate_micro_nutrients_size(cls, v):
         return _validate_micro_nutrient_values(v)
@@ -82,7 +97,7 @@ class FoodItemUpdate(BaseModel):
     fat_g: Optional[float] = Field(default=None, ge=0, le=5000)
     micro_nutrients: Optional[dict[str, float]] = None
 
-    @field_validator('micro_nutrients')
+    @field_validator("micro_nutrients")
     @classmethod
     def validate_micro_nutrients_size(cls, v):
         return _validate_micro_nutrient_values(v)

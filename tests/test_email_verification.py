@@ -11,7 +11,6 @@ import bcrypt as _bcrypt
 from sqlalchemy import select
 
 from src.modules.auth.models import EmailVerificationCode, PasswordResetCode, User
-from src.modules.auth.service import AuthService
 from src.middleware.rate_limiter import clear_all as clear_rate_limits
 from src.services.email_service import EmailService, generate_otp
 
@@ -27,6 +26,7 @@ from src.modules.auth.router import clear_verify_attempts
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def _clear_rate_limits():
@@ -104,12 +104,8 @@ class TestEmailService:
 
 class TestVerifyEmailEndpoint:
     @pytest.mark.asyncio
-    async def test_verify_email_unauthenticated_returns_401(
-        self, client, override_get_db
-    ):
-        resp = await client.post(
-            "/api/v1/auth/verify-email", json={"code": "123456"}
-        )
+    async def test_verify_email_unauthenticated_returns_401(self, client, override_get_db):
+        resp = await client.post("/api/v1/auth/verify-email", json={"code": "123456"})
         assert resp.status_code == 401
 
     @pytest.mark.asyncio
@@ -127,9 +123,7 @@ class TestVerifyEmailEndpoint:
         assert resp.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_verify_email_success(
-        self, client, override_get_db, db_session, mock_ses
-    ):
+    async def test_verify_email_success(self, client, override_get_db, db_session, mock_ses):
         token, _ = await _register_user(client)
         await db_session.commit()
 
@@ -139,8 +133,11 @@ class TestVerifyEmailEndpoint:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
-            issuer="repwise", audience="repwise-api",
+            token,
+            settings.JWT_SECRET,
+            algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise",
+            audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 
@@ -178,8 +175,11 @@ class TestVerifyEmailEndpoint:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
-            issuer="repwise", audience="repwise-api",
+            token,
+            settings.JWT_SECRET,
+            algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise",
+            audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 
@@ -211,8 +211,11 @@ class TestVerifyEmailEndpoint:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
-            issuer="repwise", audience="repwise-api",
+            token,
+            settings.JWT_SECRET,
+            algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise",
+            audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 
@@ -253,9 +256,7 @@ class TestVerifyEmailEndpoint:
         assert resp.status_code in (400, 422)
 
     @pytest.mark.asyncio
-    async def test_used_code_cannot_be_reused(
-        self, client, override_get_db, db_session, mock_ses
-    ):
+    async def test_used_code_cannot_be_reused(self, client, override_get_db, db_session, mock_ses):
         token, _ = await _register_user(client)
         await db_session.commit()
 
@@ -263,8 +264,11 @@ class TestVerifyEmailEndpoint:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
-            issuer="repwise", audience="repwise-api",
+            token,
+            settings.JWT_SECRET,
+            algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise",
+            audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 
@@ -298,16 +302,12 @@ class TestVerifyEmailEndpoint:
 
 class TestResendVerificationEndpoint:
     @pytest.mark.asyncio
-    async def test_resend_unauthenticated_returns_401(
-        self, client, override_get_db
-    ):
+    async def test_resend_unauthenticated_returns_401(self, client, override_get_db):
         resp = await client.post("/api/v1/auth/resend-verification")
         assert resp.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_resend_success(
-        self, client, override_get_db, db_session, mock_ses
-    ):
+    async def test_resend_success(self, client, override_get_db, db_session, mock_ses):
         token, _ = await _register_user(client)
         await db_session.commit()
 
@@ -319,9 +319,7 @@ class TestResendVerificationEndpoint:
         assert resp.json()["message"] == "Verification code sent"
 
     @pytest.mark.asyncio
-    async def test_resend_already_verified(
-        self, client, override_get_db, db_session, mock_ses
-    ):
+    async def test_resend_already_verified(self, client, override_get_db, db_session, mock_ses):
         token, _ = await _register_user(client)
         await db_session.commit()
 
@@ -329,8 +327,11 @@ class TestResendVerificationEndpoint:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
-            issuer="repwise", audience="repwise-api",
+            token,
+            settings.JWT_SECRET,
+            algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise",
+            audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 
@@ -346,9 +347,7 @@ class TestResendVerificationEndpoint:
         assert resp.json()["message"] == "Email already verified"
 
     @pytest.mark.asyncio
-    async def test_resend_rate_limited(
-        self, client, override_get_db, db_session, mock_ses
-    ):
+    async def test_resend_rate_limited(self, client, override_get_db, db_session, mock_ses):
         token, _ = await _register_user(client)
         await db_session.commit()
 
@@ -356,8 +355,11 @@ class TestResendVerificationEndpoint:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
-            issuer="repwise", audience="repwise-api",
+            token,
+            settings.JWT_SECRET,
+            algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise",
+            audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 
@@ -396,15 +398,16 @@ class TestRegistrationSendsVerification:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
-            issuer="repwise", audience="repwise-api",
+            token,
+            settings.JWT_SECRET,
+            algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise",
+            audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 
         # Verify a code was created
-        stmt = select(EmailVerificationCode).where(
-            EmailVerificationCode.user_id == user_id
-        )
+        stmt = select(EmailVerificationCode).where(EmailVerificationCode.user_id == user_id)
         result = await db_session.execute(stmt)
         codes = result.scalars().all()
         assert len(codes) >= 1
@@ -441,14 +444,15 @@ class TestOTPSecurity:
         from src.config.settings import settings
 
         payload = jose_jwt.decode(
-            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM],
-            issuer="repwise", audience="repwise-api",
+            token,
+            settings.JWT_SECRET,
+            algorithms=[settings.JWT_ALGORITHM],
+            issuer="repwise",
+            audience="repwise-api",
         )
         user_id = uuid.UUID(payload["sub"])
 
-        stmt = select(EmailVerificationCode).where(
-            EmailVerificationCode.user_id == user_id
-        )
+        stmt = select(EmailVerificationCode).where(EmailVerificationCode.user_id == user_id)
         result = await db_session.execute(stmt)
         code = result.scalars().first()
 
@@ -547,9 +551,7 @@ class TestForgotPasswordSendsOTP:
 
 class TestResetPasswordWithOTP:
     @pytest.mark.asyncio
-    async def test_reset_password_success(
-        self, client, override_get_db, db_session, mock_ses
-    ):
+    async def test_reset_password_success(self, client, override_get_db, db_session, mock_ses):
         """Valid OTP + email should reset the password."""
         await _register_user(client, "resetok@example.com")
         await db_session.commit()

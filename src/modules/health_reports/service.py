@@ -30,6 +30,7 @@ from src.shared.types import AuditAction
 # Pure function: flag_markers
 # ---------------------------------------------------------------------------
 
+
 def flag_markers(
     markers: dict[str, float],
     reference_ranges: dict[str, MarkerRange],
@@ -85,14 +86,62 @@ MARKER_NUTRIENT_MAP: dict[str, str] = {
 # ---------------------------------------------------------------------------
 
 SEED_MARKER_RANGES: list[dict] = [
-    {"marker_name": "total_cholesterol", "unit": "mg/dL", "min_normal": 125.0, "max_normal": 200.0, "category": "lipid_profile"},
-    {"marker_name": "ldl", "unit": "mg/dL", "min_normal": 0.0, "max_normal": 100.0, "category": "lipid_profile"},
-    {"marker_name": "hdl", "unit": "mg/dL", "min_normal": 40.0, "max_normal": 100.0, "category": "lipid_profile"},
-    {"marker_name": "triglycerides", "unit": "mg/dL", "min_normal": 0.0, "max_normal": 150.0, "category": "lipid_profile"},
-    {"marker_name": "hemoglobin", "unit": "g/dL", "min_normal": 12.0, "max_normal": 17.5, "category": "blood_count"},
-    {"marker_name": "vitamin_d", "unit": "ng/mL", "min_normal": 30.0, "max_normal": 100.0, "category": "vitamins"},
-    {"marker_name": "vitamin_b12", "unit": "pg/mL", "min_normal": 200.0, "max_normal": 900.0, "category": "vitamins"},
-    {"marker_name": "iron", "unit": "mcg/dL", "min_normal": 60.0, "max_normal": 170.0, "category": "minerals"},
+    {
+        "marker_name": "total_cholesterol",
+        "unit": "mg/dL",
+        "min_normal": 125.0,
+        "max_normal": 200.0,
+        "category": "lipid_profile",
+    },
+    {
+        "marker_name": "ldl",
+        "unit": "mg/dL",
+        "min_normal": 0.0,
+        "max_normal": 100.0,
+        "category": "lipid_profile",
+    },
+    {
+        "marker_name": "hdl",
+        "unit": "mg/dL",
+        "min_normal": 40.0,
+        "max_normal": 100.0,
+        "category": "lipid_profile",
+    },
+    {
+        "marker_name": "triglycerides",
+        "unit": "mg/dL",
+        "min_normal": 0.0,
+        "max_normal": 150.0,
+        "category": "lipid_profile",
+    },
+    {
+        "marker_name": "hemoglobin",
+        "unit": "g/dL",
+        "min_normal": 12.0,
+        "max_normal": 17.5,
+        "category": "blood_count",
+    },
+    {
+        "marker_name": "vitamin_d",
+        "unit": "ng/mL",
+        "min_normal": 30.0,
+        "max_normal": 100.0,
+        "category": "vitamins",
+    },
+    {
+        "marker_name": "vitamin_b12",
+        "unit": "pg/mL",
+        "min_normal": 200.0,
+        "max_normal": 900.0,
+        "category": "vitamins",
+    },
+    {
+        "marker_name": "iron",
+        "unit": "mcg/dL",
+        "min_normal": 60.0,
+        "max_normal": 170.0,
+        "category": "minerals",
+    },
 ]
 
 SAMPLE_REPORTS: list[dict] = [
@@ -131,6 +180,7 @@ SAMPLE_REPORTS: list[dict] = [
 # Service class
 # ---------------------------------------------------------------------------
 
+
 class HealthReportService:
     """Service layer for health report operations."""
 
@@ -149,8 +199,12 @@ class HealthReportService:
         # Flag markers using the pure function
         flagged = flag_markers(
             data.markers,
-            {name: MarkerRange(min_normal=r["min_normal"], max_normal=r["max_normal"], unit=r["unit"])
-             for name, r in ref_ranges.items()},
+            {
+                name: MarkerRange(
+                    min_normal=r["min_normal"], max_normal=r["max_normal"], unit=r["unit"]
+                )
+                for name, r in ref_ranges.items()
+            },
         )
 
         report = HealthReport(
@@ -236,7 +290,8 @@ class HealthReportService:
 
         # Only look at abnormal markers
         abnormal_markers = {
-            k: v for k, v in flagged.items()
+            k: v
+            for k, v in flagged.items()
             if isinstance(v, dict) and v.get("status") in ("low", "high")
         }
         if not abnormal_markers:
@@ -279,14 +334,16 @@ class HealthReportService:
             if rec <= 0:
                 continue
             deficit_pct = max(0.0, (rec - avg) / rec * 100)
-            correlations.append(NutritionCorrelation(
-                marker_name=marker_name,
-                marker_status=marker_data.get("status", "unknown"),
-                related_nutrient=related_nutrient,
-                average_intake=avg,
-                recommended_intake=rec,
-                deficit_percentage=round(deficit_pct, 2),
-            ))
+            correlations.append(
+                NutritionCorrelation(
+                    marker_name=marker_name,
+                    marker_status=marker_data.get("status", "unknown"),
+                    related_nutrient=related_nutrient,
+                    average_intake=avg,
+                    recommended_intake=rec,
+                    deficit_percentage=round(deficit_pct, 2),
+                )
+            )
 
         return correlations
 
@@ -297,15 +354,21 @@ class HealthReportService:
         for sample in SAMPLE_REPORTS:
             flagged = flag_markers(
                 sample["markers"],
-                {name: MarkerRange(min_normal=r["min_normal"], max_normal=r["max_normal"], unit=r["unit"])
-                 for name, r in ref_ranges.items()},
+                {
+                    name: MarkerRange(
+                        min_normal=r["min_normal"], max_normal=r["max_normal"], unit=r["unit"]
+                    )
+                    for name, r in ref_ranges.items()
+                },
             )
-            samples.append({
-                "report_date": sample["report_date"].isoformat(),
-                "markers": sample["markers"],
-                "flagged_markers": {k: v.model_dump() for k, v in flagged.items()},
-                "is_sample": True,
-            })
+            samples.append(
+                {
+                    "report_date": sample["report_date"].isoformat(),
+                    "markers": sample["markers"],
+                    "flagged_markers": {k: v.model_dump() for k, v in flagged.items()},
+                    "is_sample": True,
+                }
+            )
         return samples
 
     # ------------------------------------------------------------------
@@ -330,6 +393,4 @@ class HealthReportService:
             }
 
         # Fallback to seed data if DB is empty
-        return {
-            r["marker_name"]: r for r in SEED_MARKER_RANGES
-        }
+        return {r["marker_name"]: r for r in SEED_MARKER_RANGES}

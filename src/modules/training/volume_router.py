@@ -33,6 +33,7 @@ def _default_week_start(tz_name: str | None = None) -> date:
         try:
             from zoneinfo import ZoneInfo
             from datetime import datetime
+
             now = datetime.now(ZoneInfo(tz_name))
             today = now.date()
         except (ImportError, KeyError):
@@ -60,13 +61,14 @@ async def get_muscle_volume(
 ) -> Union[WeeklyVolumeResponse, WNSWeeklyResponse]:
     """Get weekly muscle group volume with landmark comparisons."""
     if week_start is None:
-        week_start = _default_week_start(getattr(user, 'timezone', None))
+        week_start = _default_week_start(getattr(user, "timezone", None))
     else:
         week_start = _snap_to_monday(week_start)
 
     week_end = week_start + timedelta(days=6)
 
     from src.modules.feature_flags.service import FeatureFlagService
+
     ff_svc = FeatureFlagService(db)
     use_wns = await ff_svc.is_feature_enabled("wns_engine", user)
 
@@ -81,10 +83,13 @@ async def get_muscle_volume(
         goal_rate = user_goal.goal_rate_per_week if user_goal else None
 
         wns_svc = WNSVolumeService(db)
-        muscle_groups = await wns_svc.get_weekly_muscle_volume(user.id, week_start, goal_type, goal_rate)
+        muscle_groups = await wns_svc.get_weekly_muscle_volume(
+            user.id, week_start, goal_type, goal_rate
+        )
         # Fire-and-forget volume warnings (decoupled from computation)
         try:
             from src.modules.training.wns_volume_service import send_volume_warnings
+
             await send_volume_warnings(db, user.id, muscle_groups)
         except Exception:
             pass  # Non-critical
@@ -115,11 +120,12 @@ async def get_muscle_volume_detail(
 ) -> MuscleGroupDetail:
     """Get per-exercise volume breakdown for a muscle group."""
     if week_start is None:
-        week_start = _default_week_start(getattr(user, 'timezone', None))
+        week_start = _default_week_start(getattr(user, "timezone", None))
     else:
         week_start = _snap_to_monday(week_start)
 
     from src.modules.feature_flags.service import FeatureFlagService
+
     ff_svc = FeatureFlagService(db)
     use_wns = await ff_svc.is_feature_enabled("wns_engine", user)
 
@@ -134,7 +140,9 @@ async def get_muscle_volume_detail(
         goal_rate = user_goal.goal_rate_per_week if user_goal else None
 
         wns_svc = WNSVolumeService(db)
-        all_muscles = await wns_svc.get_weekly_muscle_volume(user.id, week_start, goal_type, goal_rate)
+        all_muscles = await wns_svc.get_weekly_muscle_volume(
+            user.id, week_start, goal_type, goal_rate
+        )
         target = next((m for m in all_muscles if m.muscle_group == muscle_group), None)
         if target is None:
             raise NotFoundError(f"Muscle group '{muscle_group}' not found")

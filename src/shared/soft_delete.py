@@ -18,7 +18,9 @@ class SoftDeleteMixin:
     record is considered deleted but remains in the database for recovery.
     """
 
-    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=None, nullable=True)  # Audit fix 1.4 — timezone-aware
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), default=None, nullable=True
+    )  # Audit fix 1.4 — timezone-aware
 
     @property
     def is_deleted(self) -> bool:

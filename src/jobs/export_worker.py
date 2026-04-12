@@ -63,8 +63,8 @@ async def run_export_worker(session: AsyncSession | None = None) -> int:
     """Process all pending export requests. Returns count processed."""
     start = time.monotonic()
     logger.info("Export worker started")
-    sentry_sdk.set_tag('component', 'job')
-    sentry_sdk.set_tag('job_name', 'export_worker')
+    sentry_sdk.set_tag("component", "job")
+    sentry_sdk.set_tag("job_name", "export_worker")
     owns_session = session is None
     if owns_session:
         async with async_session_factory() as session:

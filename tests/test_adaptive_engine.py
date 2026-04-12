@@ -6,14 +6,11 @@ from typing import Optional
 import pytest
 
 from src.modules.adaptive.engine import (
-    ACTIVITY_MULTIPLIERS,
     ADJUSTMENT_CLAMP_MAX,
     ADJUSTMENT_CLAMP_MIN,
     EMA_ALPHA,
-    GOAL_OFFSETS,
     MIN_CARBS_G,
     MIN_TARGET_CALORIES,
-    PROTEIN_MULTIPLIERS,
     AdaptiveInput,
     AdaptiveOutput,
     _compute_bmr,
@@ -29,6 +26,7 @@ from src.shared.types import ActivityLevel, GoalType
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_history(weights: list[float], start: Optional[date] = None) -> list[tuple[date, float]]:
     """Build a bodyweight history from a list of weights, one per day."""
@@ -57,13 +55,22 @@ def _default_input(**overrides) -> AdaptiveInput:
 # Step 1: BMR
 # ---------------------------------------------------------------------------
 
+
 class TestBMR:
-    def _make_input(self, weight_kg=80.0, height_cm=178.0, age_years=30, sex="male", body_fat_pct=None):
+    def _make_input(
+        self, weight_kg=80.0, height_cm=178.0, age_years=30, sex="male", body_fat_pct=None
+    ):
         return AdaptiveInput(
-            weight_kg=weight_kg, height_cm=height_cm, age_years=age_years, sex=sex,
-            activity_level=ActivityLevel.MODERATE, goal_type=GoalType.MAINTAINING,
-            goal_rate_per_week=0.0, bodyweight_history=[(date.today(), weight_kg)],
-            training_load_score=0.0, body_fat_pct=body_fat_pct,
+            weight_kg=weight_kg,
+            height_cm=height_cm,
+            age_years=age_years,
+            sex=sex,
+            activity_level=ActivityLevel.MODERATE,
+            goal_type=GoalType.MAINTAINING,
+            goal_rate_per_week=0.0,
+            bodyweight_history=[(date.today(), weight_kg)],
+            training_load_score=0.0,
+            body_fat_pct=body_fat_pct,
         )
 
     def test_male_bmr(self):
@@ -99,6 +106,7 @@ class TestBMR:
 # Step 2: TDEE
 # ---------------------------------------------------------------------------
 
+
 class TestTDEE:
     def test_sedentary_multiplier(self):
         bmr = 1767.5
@@ -124,6 +132,7 @@ class TestTDEE:
 # ---------------------------------------------------------------------------
 # Step 3: EMA
 # ---------------------------------------------------------------------------
+
 
 class TestEMA:
     def test_single_entry(self):
@@ -157,6 +166,7 @@ class TestEMA:
 # Extreme fluctuation filtering
 # ---------------------------------------------------------------------------
 
+
 class TestFluctuationFilter:
     def test_no_fluctuations_keeps_all(self):
         history = _make_history([80.0, 80.5, 81.0, 80.8])
@@ -182,6 +192,7 @@ class TestFluctuationFilter:
 # Step 5: Macros
 # ---------------------------------------------------------------------------
 
+
 class TestMacros:
     def test_cutting_macros(self):
         protein_g, fat_g, carbs_g = _compute_macros(80.0, 2000.0, GoalType.CUTTING)
@@ -204,6 +215,7 @@ class TestMacros:
 # ---------------------------------------------------------------------------
 # Full compute_snapshot integration
 # ---------------------------------------------------------------------------
+
 
 class TestComputeSnapshot:
     def test_determinism(self):

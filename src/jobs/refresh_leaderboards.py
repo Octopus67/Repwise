@@ -75,8 +75,8 @@ async def refresh_leaderboards() -> None:
     """Calculate and upsert weekly_volume and streak leaderboards."""
     start_time = time.monotonic()
     logger.info("Leaderboard refresh started")
-    sentry_sdk.set_tag('component', 'job')
-    sentry_sdk.set_tag('job_name', 'refresh_leaderboards')
+    sentry_sdk.set_tag("component", "job")
+    sentry_sdk.set_tag("job_name", "refresh_leaderboards")
 
     redis = get_redis()
     if redis and not redis.set(LOCK_KEY, "1", nx=True, ex=LOCK_TTL):
@@ -109,23 +109,27 @@ async def refresh_leaderboards() -> None:
                     LeaderboardEntry.period_start == week_start,
                 )
             )
-            session.add_all([
-                LeaderboardEntry(
-                    board_type="weekly_volume",
-                    period_start=week_start,
-                    user_id=user_id,
-                    score=float(score),
-                    rank=rank,
-                )
-                for rank, (user_id, score) in enumerate(ranked_volume, 1)
-            ])
+            session.add_all(
+                [
+                    LeaderboardEntry(
+                        board_type="weekly_volume",
+                        period_start=week_start,
+                        user_id=user_id,
+                        score=float(score),
+                        rank=rank,
+                    )
+                    for rank, (user_id, score) in enumerate(ranked_volume, 1)
+                ]
+            )
 
             # ── Streak ────────────────────────────────────────────
-            stmt_all = select(
-                TrainingSession.user_id, TrainingSession.session_date
-            ).where(
-                TrainingSession.deleted_at.is_(None),
-            ).distinct()
+            stmt_all = (
+                select(TrainingSession.user_id, TrainingSession.session_date)
+                .where(
+                    TrainingSession.deleted_at.is_(None),
+                )
+                .distinct()
+            )
             result_all = await session.execute(stmt_all)
 
             dates_by_user: dict[str, list[date]] = defaultdict(list)
@@ -148,23 +152,27 @@ async def refresh_leaderboards() -> None:
                     LeaderboardEntry.period_start == week_start,
                 )
             )
-            session.add_all([
-                LeaderboardEntry(
-                    board_type="streak",
-                    period_start=week_start,
-                    user_id=user_id,
-                    score=float(streak_len),
-                    rank=rank,
-                )
-                for rank, (user_id, streak_len) in enumerate(ranked_streaks, 1)
-            ])
+            session.add_all(
+                [
+                    LeaderboardEntry(
+                        board_type="streak",
+                        period_start=week_start,
+                        user_id=user_id,
+                        score=float(streak_len),
+                        rank=rank,
+                    )
+                    for rank, (user_id, streak_len) in enumerate(ranked_streaks, 1)
+                ]
+            )
 
             await session.commit()
 
             elapsed = time.monotonic() - start_time
             logger.info(
                 "Leaderboard refresh complete: %d volume, %d streak entries in %.1fs",
-                len(ranked_volume), len(ranked_streaks), elapsed,
+                len(ranked_volume),
+                len(ranked_streaks),
+                elapsed,
             )
     except (SQLAlchemyError, OSError, ValueError):
         sentry_sdk.capture_exception()

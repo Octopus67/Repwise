@@ -128,7 +128,7 @@ class SharingService:
             # Build historical max per exercise name
             historical_maxes: dict[str, float] = {}
             for prev_exercises in prev_exercises_list:
-                for ex in (prev_exercises or []):
+                for ex in prev_exercises or []:
                     pname = ex.get("exercise_name", "")
                     if pname not in current_maxes:
                         continue

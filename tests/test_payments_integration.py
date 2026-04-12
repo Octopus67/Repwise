@@ -51,7 +51,13 @@ def _auth_headers(user_id: uuid.UUID) -> dict:
     from src.config.settings import settings
 
     token = jwt.encode(
-        {"sub": str(user_id), "type": "access", "exp": datetime.now(timezone.utc) + timedelta(hours=1), "iss": "repwise", "aud": "repwise-api"},
+        {
+            "sub": str(user_id),
+            "type": "access",
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "iss": "repwise",
+            "aud": "repwise-api",
+        },
         settings.JWT_SECRET,
         algorithm=settings.JWT_ALGORITHM,
     )
@@ -128,14 +134,16 @@ class TestWebhookFlow:
         user = await _create_user(db_session)
         await _create_sub(db_session, user.id, SubscriptionStatus.FREE)
 
-        payload = json.dumps({
-            "event": {
-                "type": "INITIAL_PURCHASE",
-                "id": "evt_activate",
-                "app_user_id": str(user.id),
-                "original_transaction_id": "txn_new",
+        payload = json.dumps(
+            {
+                "event": {
+                    "type": "INITIAL_PURCHASE",
+                    "id": "evt_activate",
+                    "app_user_id": str(user.id),
+                    "original_transaction_id": "txn_new",
+                }
             }
-        }).encode()
+        ).encode()
 
         svc = PaymentService(db_session)
         await svc.handle_webhook(payload, f"Bearer {WEBHOOK_KEY}")
@@ -154,14 +162,16 @@ class TestWebhookFlow:
         user = await _create_user(db_session)
         sub = await _create_sub(db_session, user.id, SubscriptionStatus.ACTIVE)
 
-        payload = json.dumps({
-            "event": {
-                "type": "EXPIRATION",
-                "id": "evt_expire",
-                "app_user_id": str(user.id),
-                "original_transaction_id": sub.provider_subscription_id,
+        payload = json.dumps(
+            {
+                "event": {
+                    "type": "EXPIRATION",
+                    "id": "evt_expire",
+                    "app_user_id": str(user.id),
+                    "original_transaction_id": sub.provider_subscription_id,
+                }
             }
-        }).encode()
+        ).encode()
 
         svc = PaymentService(db_session)
         await svc.handle_webhook(payload, f"Bearer {WEBHOOK_KEY}")

@@ -66,7 +66,9 @@ class ExportService:
             raise NotFoundError("Export request not found")
         return export
 
-    async def get_history(self, user_id: uuid.UUID, limit: int = 50, offset: int = 0) -> list[ExportRequest]:
+    async def get_history(
+        self, user_id: uuid.UUID, limit: int = 50, offset: int = 0
+    ) -> list[ExportRequest]:
         """List all export requests for a user, newest first."""
         stmt = (
             select(ExportRequest)
@@ -223,7 +225,12 @@ class ExportService:
             for category in ["sessions", "nutrition_entries", "measurements", "achievements"]:
                 rows = data.get(category, [])
                 if rows and isinstance(rows, list):
-                    elements.append(Paragraph(f"{category.replace('_', ' ').title()} ({len(rows)} records)", styles["Heading2"]))
+                    elements.append(
+                        Paragraph(
+                            f"{category.replace('_', ' ').title()} ({len(rows)} records)",
+                            styles["Heading2"],
+                        )
+                    )
                     # Show first 5 rows as a table
                     if isinstance(rows[0], dict):
                         headers = list(rows[0].keys())[:6]
@@ -231,12 +238,16 @@ class ExportService:
                         for row in rows[:5]:
                             table_data.append([str(row.get(h, ""))[:30] for h in headers])
                         t = Table(table_data)
-                        t.setStyle(TableStyle([
-                            ("BACKGROUND", (0, 0), (-1, 0), rl_colors.grey),
-                            ("TEXTCOLOR", (0, 0), (-1, 0), rl_colors.whitesmoke),
-                            ("FONTSIZE", (0, 0), (-1, -1), 7),
-                            ("GRID", (0, 0), (-1, -1), 0.5, rl_colors.black),
-                        ]))
+                        t.setStyle(
+                            TableStyle(
+                                [
+                                    ("BACKGROUND", (0, 0), (-1, 0), rl_colors.grey),
+                                    ("TEXTCOLOR", (0, 0), (-1, 0), rl_colors.whitesmoke),
+                                    ("FONTSIZE", (0, 0), (-1, -1), 7),
+                                    ("GRID", (0, 0), (-1, -1), 0.5, rl_colors.black),
+                                ]
+                            )
+                        )
                         elements.append(t)
                     elements.append(Spacer(1, 0.5 * cm))
 
@@ -270,6 +281,7 @@ class ExportService:
 
         # Profile
         from src.modules.user.models import UserProfile
+
         stmt = select(UserProfile).where(UserProfile.user_id == user_id)
         result = await self.session.execute(stmt)
         profile = result.scalar_one_or_none()
@@ -286,7 +298,13 @@ class ExportService:
 
         # Bodyweight logs
         from src.modules.user.models import BodyweightLog
-        stmt = select(BodyweightLog).where(BodyweightLog.user_id == user_id).order_by(BodyweightLog.created_at).limit(100_000)
+
+        stmt = (
+            select(BodyweightLog)
+            .where(BodyweightLog.user_id == user_id)
+            .order_by(BodyweightLog.created_at)
+            .limit(100_000)
+        )
         result = await self.session.execute(stmt)
         data["bodyweight_logs"] = [
             {"weight_kg": r.weight_kg, "recorded_at": str(r.created_at)}
@@ -295,9 +313,13 @@ class ExportService:
 
         # Training sessions
         from src.modules.training.models import TrainingSession
-        stmt = select(TrainingSession).where(
-            TrainingSession.user_id == user_id, TrainingSession.deleted_at.is_(None)
-        ).order_by(TrainingSession.session_date).limit(100_000)
+
+        stmt = (
+            select(TrainingSession)
+            .where(TrainingSession.user_id == user_id, TrainingSession.deleted_at.is_(None))
+            .order_by(TrainingSession.session_date)
+            .limit(100_000)
+        )
         result = await self.session.execute(stmt)
         data["sessions"] = [
             {
@@ -309,9 +331,13 @@ class ExportService:
 
         # Nutrition entries
         from src.modules.nutrition.models import NutritionEntry
-        stmt = select(NutritionEntry).where(
-            NutritionEntry.user_id == user_id, NutritionEntry.deleted_at.is_(None)
-        ).order_by(NutritionEntry.entry_date).limit(100_000)
+
+        stmt = (
+            select(NutritionEntry)
+            .where(NutritionEntry.user_id == user_id, NutritionEntry.deleted_at.is_(None))
+            .order_by(NutritionEntry.entry_date)
+            .limit(100_000)
+        )
         result = await self.session.execute(stmt)
         data["nutrition_entries"] = [
             {
@@ -327,7 +353,13 @@ class ExportService:
 
         # Measurements
         from src.modules.measurements.models import BodyMeasurement
-        stmt = select(BodyMeasurement).where(BodyMeasurement.user_id == user_id, BodyMeasurement.deleted_at.is_(None)).order_by(BodyMeasurement.measured_at).limit(100_000)  # Audit fix 8.6
+
+        stmt = (
+            select(BodyMeasurement)
+            .where(BodyMeasurement.user_id == user_id, BodyMeasurement.deleted_at.is_(None))
+            .order_by(BodyMeasurement.measured_at)
+            .limit(100_000)
+        )  # Audit fix 8.6
         result = await self.session.execute(stmt)
         data["measurements"] = [
             {
@@ -340,17 +372,25 @@ class ExportService:
 
         # Progress photos (URLs only)
         from src.modules.progress_photos.models import ProgressPhoto
-        stmt = select(ProgressPhoto).where(
-            ProgressPhoto.user_id == user_id, ProgressPhoto.deleted_at.is_(None)
-        ).limit(100_000)
+
+        stmt = (
+            select(ProgressPhoto)
+            .where(ProgressPhoto.user_id == user_id, ProgressPhoto.deleted_at.is_(None))
+            .limit(100_000)
+        )
         result = await self.session.execute(stmt)
         data["progress_photos"] = [
-            {"capture_date": str(r.capture_date), "pose_type": r.pose_type, "url": f"{settings.CDN_BASE_URL}/{r.r2_key}"}
+            {
+                "capture_date": str(r.capture_date),
+                "pose_type": r.pose_type,
+                "url": f"{settings.CDN_BASE_URL}/{r.r2_key}",
+            }
             for r in result.scalars().all()
         ]
 
         # Achievements
         from src.modules.achievements.models import UserAchievement
+
         stmt = select(UserAchievement).where(UserAchievement.user_id == user_id).limit(100_000)
         result = await self.session.execute(stmt)
         data["achievements"] = [
@@ -360,10 +400,15 @@ class ExportService:
 
         # Goals
         from src.modules.user.models import UserGoal
+
         stmt = select(UserGoal).where(UserGoal.user_id == user_id).limit(100_000)
         result = await self.session.execute(stmt)
         data["goals"] = [
-            {"goal_type": r.goal_type, "target_weight_kg": r.target_weight_kg, "goal_rate_per_week": r.goal_rate_per_week}
+            {
+                "goal_type": r.goal_type,
+                "target_weight_kg": r.target_weight_kg,
+                "goal_rate_per_week": r.goal_rate_per_week,
+            }
             for r in result.scalars().all()
         ]
 
@@ -376,10 +421,14 @@ class ExportService:
     async def _check_rate_limit(self, user_id: uuid.UUID) -> None:
         """Enforce max 1 export per 24 hours."""
         cutoff = datetime.now(timezone.utc) - timedelta(hours=RATE_LIMIT_HOURS)
-        stmt = select(func.count()).select_from(ExportRequest).where(
-            ExportRequest.user_id == user_id,
-            ExportRequest.requested_at >= cutoff,
-            ExportRequest.status.in_(["pending", "processing", "completed"]),
+        stmt = (
+            select(func.count())
+            .select_from(ExportRequest)
+            .where(
+                ExportRequest.user_id == user_id,
+                ExportRequest.requested_at >= cutoff,
+                ExportRequest.status.in_(["pending", "processing", "completed"]),
+            )
         )
         result = await self.session.execute(stmt)
         count = result.scalar_one()

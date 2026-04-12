@@ -18,7 +18,7 @@ from src.modules.auth.models import User
 from src.modules.content.models import ArticleVersion, ContentArticle, ContentModule
 from src.modules.content.schemas import ArticleCreate, ArticleUpdate
 from src.modules.content.service import ContentService
-from src.shared.types import ContentStatus, UserRole
+from src.shared.types import UserRole
 
 # ---------------------------------------------------------------------------
 # Strategies
@@ -196,9 +196,7 @@ class TestProperty21ContentVersioning:
                 title=f"V{i + 2} Title",
                 content_markdown=f"V{i + 2} Content",
             )
-            article = await service.update_article(
-                article_id=article.id, data=update_data
-            )
+            article = await service.update_article(article_id=article.id, data=update_data)
             await db_session.commit()
 
         # Final version should be 1 + num_updates
@@ -207,9 +205,7 @@ class TestProperty21ContentVersioning:
         # All previous versions should exist
         from sqlalchemy import select, func
 
-        count_stmt = select(func.count()).where(
-            ArticleVersion.article_id == article.id
-        )
+        count_stmt = select(func.count()).where(ArticleVersion.article_id == article.id)
         version_count = (await db_session.execute(count_stmt)).scalar_one()
         assert version_count == num_updates, (
             f"Expected {num_updates} version snapshots, got {version_count}"

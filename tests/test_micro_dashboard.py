@@ -32,19 +32,29 @@ def _entry(micros: dict[str, float]) -> dict:
 
 
 async def _create_user(db: AsyncSession, email: str) -> User:
-    user = User(id=uuid.uuid4(), email=email, hashed_password="x", auth_provider="email", role="user")
+    user = User(
+        id=uuid.uuid4(), email=email, hashed_password="x", auth_provider="email", role="user"
+    )
     db.add(user)
     await db.flush()
     return user
 
 
 async def _log_nutrition(
-    db: AsyncSession, user_id: uuid.UUID, entry_date: date,
-    calories: float, micros: dict[str, float],
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    entry_date: date,
+    calories: float,
+    micros: dict[str, float],
 ) -> None:
     entry = NutritionEntry(
-        user_id=user_id, entry_date=entry_date, meal_name="lunch",
-        calories=calories, protein_g=30, carbs_g=40, fat_g=10,
+        user_id=user_id,
+        entry_date=entry_date,
+        meal_name="lunch",
+        calories=calories,
+        protein_g=30,
+        carbs_g=40,
+        fat_g=10,
         micro_nutrients=micros,
     )
     db.add(entry)
@@ -104,8 +114,16 @@ class TestAggregateMicros:
 class TestComputeNutrientScore:
     def test_perfect_score(self):
         nutrients = [
-            NutrientSummary(key=k, label="", unit="", group="", daily_average=0,
-                            rda=100, rda_pct=100, status="adequate")
+            NutrientSummary(
+                key=k,
+                label="",
+                unit="",
+                group="",
+                daily_average=0,
+                rda=100,
+                rda_pct=100,
+                status="adequate",
+            )
             for k in RDA_VALUES
         ]
         score = compute_nutrient_score(nutrients)
@@ -113,25 +131,50 @@ class TestComputeNutrientScore:
 
     def test_zero_score(self):
         nutrients = [
-            NutrientSummary(key=k, label="", unit="", group="", daily_average=0,
-                            rda=100, rda_pct=0, status="deficient")
-            for k in RDA_VALUES if k not in ("sodium_mg", "cholesterol_mg")
+            NutrientSummary(
+                key=k,
+                label="",
+                unit="",
+                group="",
+                daily_average=0,
+                rda=100,
+                rda_pct=0,
+                status="deficient",
+            )
+            for k in RDA_VALUES
+            if k not in ("sodium_mg", "cholesterol_mg")
         ]
         score = compute_nutrient_score(nutrients)
         assert score == 0.0
 
     def test_excess_capped_at_100(self):
         nutrients = [
-            NutrientSummary(key="vitamin_c_mg", label="", unit="", group="",
-                            daily_average=200, rda=90, rda_pct=222, status="excess"),
+            NutrientSummary(
+                key="vitamin_c_mg",
+                label="",
+                unit="",
+                group="",
+                daily_average=200,
+                rda=90,
+                rda_pct=222,
+                status="excess",
+            ),
         ]
         score = compute_nutrient_score(nutrients)
         assert score == 100.0  # capped
 
     def test_sodium_excess_penalized(self):
         nutrients = [
-            NutrientSummary(key="sodium_mg", label="", unit="", group="",
-                            daily_average=4600, rda=2300, rda_pct=200, status="excess"),
+            NutrientSummary(
+                key="sodium_mg",
+                label="",
+                unit="",
+                group="",
+                daily_average=4600,
+                rda=2300,
+                rda_pct=200,
+                status="excess",
+            ),
         ]
         score = compute_nutrient_score(nutrients)
         assert score == 0.0  # 100% over → 0 score
@@ -187,21 +230,49 @@ class TestMicronutrientDashboardIntegration:
         base = date(2026, 3, 2)  # Monday
 
         # Day 1: Good nutrition
-        await _log_nutrition(db_session, user.id, base, 2000, {
-            "vitamin_c_mg": 120, "iron_mg": 12, "calcium_mg": 800,
-            "vitamin_d_mcg": 10, "zinc_mg": 8, "magnesium_mg": 300,
-            "fibre_g": 30, "sodium_mg": 2000,
-        })
+        await _log_nutrition(
+            db_session,
+            user.id,
+            base,
+            2000,
+            {
+                "vitamin_c_mg": 120,
+                "iron_mg": 12,
+                "calcium_mg": 800,
+                "vitamin_d_mcg": 10,
+                "zinc_mg": 8,
+                "magnesium_mg": 300,
+                "fibre_g": 30,
+                "sodium_mg": 2000,
+            },
+        )
         # Day 2: Poor nutrition
-        await _log_nutrition(db_session, user.id, base + timedelta(days=1), 1500, {
-            "vitamin_c_mg": 20, "iron_mg": 3, "calcium_mg": 200,
-            "sodium_mg": 3500,
-        })
+        await _log_nutrition(
+            db_session,
+            user.id,
+            base + timedelta(days=1),
+            1500,
+            {
+                "vitamin_c_mg": 20,
+                "iron_mg": 3,
+                "calcium_mg": 200,
+                "sodium_mg": 3500,
+            },
+        )
         # Day 3: Moderate
-        await _log_nutrition(db_session, user.id, base + timedelta(days=2), 1800, {
-            "vitamin_c_mg": 60, "iron_mg": 8, "calcium_mg": 500,
-            "vitamin_d_mcg": 5, "fibre_g": 15,
-        })
+        await _log_nutrition(
+            db_session,
+            user.id,
+            base + timedelta(days=2),
+            1800,
+            {
+                "vitamin_c_mg": 60,
+                "iron_mg": 8,
+                "calcium_mg": 500,
+                "vitamin_d_mcg": 5,
+                "fibre_g": 15,
+            },
+        )
         # Days 4-7: No data logged
 
         await db_session.commit()

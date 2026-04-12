@@ -26,7 +26,9 @@ class AdaptiveSnapshot(Base):
 
     __tablename__ = "adaptive_snapshots"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True, nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     target_calories: Mapped[float] = mapped_column(Float, nullable=False)
     target_protein_g: Mapped[float] = mapped_column(Float, nullable=False)
     target_carbs_g: Mapped[float] = mapped_column(Float, nullable=False)
@@ -60,13 +62,18 @@ class CoachingSuggestion(Base):
     __tablename__ = "coaching_suggestions"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
     )
     snapshot_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("adaptive_snapshots.id", ondelete="CASCADE"), nullable=False, index=True,  # Audit fix 8.1
+        ForeignKey("adaptive_snapshots.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,  # Audit fix 8.1
     )
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="pending",
+        String(20),
+        nullable=False,
+        default="pending",
     )
 
     # Proposed targets from the engine
@@ -84,9 +91,7 @@ class CoachingSuggestion(Base):
     explanation: Mapped[str] = mapped_column(Text, nullable=False)
     resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    __table_args__ = (
-        Index("ix_coaching_suggestions_user_status", "user_id", "status"),
-    )
+    __table_args__ = (Index("ix_coaching_suggestions_user_status", "user_id", "status"),)
 
 
 class DailyTargetOverride(Base):
@@ -95,7 +100,8 @@ class DailyTargetOverride(Base):
     __tablename__ = "daily_target_overrides"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
     )
     target_date: Mapped[date] = mapped_column(Date, nullable=False)
     calories: Mapped[float] = mapped_column(Float, nullable=False)

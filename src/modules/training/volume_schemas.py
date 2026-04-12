@@ -105,6 +105,7 @@ class LandmarkConfigResponse(BaseModel):
 
 class WNSLandmarks(BaseModel):
     """WNS volume landmark thresholds in Hypertrophy Units."""
+
     mv: float = Field(ge=0, description="Maintenance Volume in HU")
     mev: float = Field(ge=0, description="Minimum Effective Volume in HU")
     mav_low: float = Field(ge=0, description="MAV lower bound in HU")
@@ -114,6 +115,7 @@ class WNSLandmarks(BaseModel):
 
 class WNSExerciseContribution(BaseModel):
     """Per-exercise contribution to muscle group stimulus."""
+
     exercise_name: str
     coefficient: float = Field(ge=0, le=1.0)
     sets_count: int = Field(ge=0)
@@ -123,12 +125,14 @@ class WNSExerciseContribution(BaseModel):
 
 class WNSWeeklyTrendPoint(BaseModel):
     """Single week's volume in a 4-week trend."""
+
     week: date
     volume: float = Field(ge=0)
 
 
 class WNSMuscleVolume(BaseModel):
     """Weekly Net Stimulus volume for a single muscle group."""
+
     muscle_group: str
     gross_stimulus: float = Field(ge=0)
     atrophy_effect: float = Field(ge=0)
@@ -152,6 +156,7 @@ LANDMARK_DESCRIPTIONS: dict[str, str] = {
 
 class WNSWeeklyResponse(BaseModel):
     """Response for the WNS weekly muscle volume endpoint."""
+
     week_start: date
     week_end: date
     muscle_groups: list[WNSMuscleVolume]

@@ -14,7 +14,6 @@ from src.modules.training.models import TrainingSession
 from src.modules.training.volume_schemas import (
     LANDMARK_DESCRIPTIONS,
     WNSWeeklyResponse,
-    WNSWeeklyTrendPoint,
 )
 from src.modules.training.wns_volume_service import WNSVolumeService
 
@@ -23,13 +22,17 @@ from src.modules.training.wns_volume_service import WNSVolumeService
 
 
 async def _create_user(db: AsyncSession, email: str) -> User:
-    user = User(id=uuid.uuid4(), email=email, hashed_password="x", auth_provider="email", role="user")
+    user = User(
+        id=uuid.uuid4(), email=email, hashed_password="x", auth_provider="email", role="user"
+    )
     db.add(user)
     await db.flush()
     return user
 
 
-async def _log_session(db: AsyncSession, user_id: uuid.UUID, session_date: date, exercises: list[dict]) -> None:
+async def _log_session(
+    db: AsyncSession, user_id: uuid.UUID, session_date: date, exercises: list[dict]
+) -> None:
     s = TrainingSession(user_id=user_id, session_date=session_date, exercises=exercises)
     db.add(s)
     await db.flush()
@@ -39,8 +42,7 @@ def _make_exercise(name: str, sets: list[tuple[float, int, float | None]]) -> di
     return {
         "exercise_name": name,
         "sets": [
-            {"weight_kg": w, "reps": r, "rpe": rpe, "set_type": "normal"}
-            for w, r, rpe in sets
+            {"weight_kg": w, "reps": r, "rpe": rpe, "set_type": "normal"} for w, r, rpe in sets
         ],
     }
 
@@ -63,9 +65,14 @@ class TestVolumeTrend:
         set_counts = [3, 6, 9, 3]
         for week_idx, n_sets in enumerate(set_counts):
             d = base + timedelta(weeks=week_idx)
-            await _log_session(db_session, user.id, d, [
-                _make_exercise("Barbell Bench Press", [(80, 8, 8.0)] * n_sets),
-            ])
+            await _log_session(
+                db_session,
+                user.id,
+                d,
+                [
+                    _make_exercise("Barbell Bench Press", [(80, 8, 8.0)] * n_sets),
+                ],
+            )
         await db_session.commit()
         return user, base
 
@@ -82,7 +89,9 @@ class TestVolumeTrend:
         assert len(chest.trend) == 4
 
     @pytest.mark.asyncio
-    async def test_trend_volumes_match_set_counts(self, db_session: AsyncSession, user_with_4_weeks):
+    async def test_trend_volumes_match_set_counts(
+        self, db_session: AsyncSession, user_with_4_weeks
+    ):
         """Trend volumes should be in HU (not raw set counts) and scale with set count."""
         user, base = user_with_4_weeks
         week_start = base + timedelta(weeks=3)
@@ -125,14 +134,21 @@ class TestVolumeTrend:
         """Warm-up sets should not count in trend volume."""
         user = await _create_user(db_session, "warmup@test.com")
         d = date(2026, 2, 23)
-        await _log_session(db_session, user.id, d, [{
-            "exercise_name": "Barbell Bench Press",
-            "sets": [
-                {"weight_kg": 40, "reps": 10, "rpe": None, "set_type": "warm-up"},
-                {"weight_kg": 80, "reps": 8, "rpe": 8.0, "set_type": "normal"},
-                {"weight_kg": 80, "reps": 8, "rpe": 8.0, "set_type": "normal"},
+        await _log_session(
+            db_session,
+            user.id,
+            d,
+            [
+                {
+                    "exercise_name": "Barbell Bench Press",
+                    "sets": [
+                        {"weight_kg": 40, "reps": 10, "rpe": None, "set_type": "warm-up"},
+                        {"weight_kg": 80, "reps": 8, "rpe": 8.0, "set_type": "normal"},
+                        {"weight_kg": 80, "reps": 8, "rpe": 8.0, "set_type": "normal"},
+                    ],
+                }
             ],
-        }])
+        )
         await db_session.commit()
 
         svc = WNSVolumeService(db_session)
@@ -230,4 +246,10 @@ class TestLandmarksInResponse:
             assert r.landmarks.mav_high >= 0
             assert r.landmarks.mrv >= 0
             # Ordering: mv < mev < mav_low < mav_high < mrv
-            assert r.landmarks.mv <= r.landmarks.mev <= r.landmarks.mav_low <= r.landmarks.mav_high <= r.landmarks.mrv
+            assert (
+                r.landmarks.mv
+                <= r.landmarks.mev
+                <= r.landmarks.mav_low
+                <= r.landmarks.mav_high
+                <= r.landmarks.mrv
+            )

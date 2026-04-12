@@ -7,10 +7,9 @@ Tests: user with frequency data gets personalized results,
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
 import pytest
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.auth.models import User
@@ -20,6 +19,7 @@ from src.shared.pagination import PaginationParams
 
 
 # ── Helpers ──
+
 
 async def _create_user(db: AsyncSession) -> User:
     user = User(
@@ -72,6 +72,7 @@ async def _add_frequency(
 
 
 # ── Tests ──
+
 
 class TestFoodSearchRankingIntegration:
     @pytest.mark.asyncio
@@ -167,8 +168,12 @@ class TestFoodSearchRankingIntegration:
         await _add_frequency(db_session, user_a.id, tikka.id, 50)
         await _add_frequency(db_session, user_b.id, breast.id, 50)
 
-        result_a = await svc.search("chicken", PaginationParams(page=1, limit=10), user_id=user_a.id)
-        result_b = await svc.search("chicken", PaginationParams(page=1, limit=10), user_id=user_b.id)
+        result_a = await svc.search(
+            "chicken", PaginationParams(page=1, limit=10), user_id=user_a.id
+        )
+        result_b = await svc.search(
+            "chicken", PaginationParams(page=1, limit=10), user_id=user_b.id
+        )
 
         # Both users should get all 4 results regardless of ranking
         assert len(result_a.items) >= 4

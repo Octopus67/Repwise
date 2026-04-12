@@ -35,7 +35,7 @@ def validate_image_upload(file_bytes: bytes, content_type: str) -> None:
         if b"ftyp" not in file_bytes[4:12]:
             raise ValidationError("File content does not match declared content type")
     elif content_type in ALLOWED_MAGIC_BYTES:
-        if not any(file_bytes[:len(sig)] == sig for sig in ALLOWED_MAGIC_BYTES[content_type]):
+        if not any(file_bytes[: len(sig)] == sig for sig in ALLOWED_MAGIC_BYTES[content_type]):
             raise ValidationError("File content does not match declared content type")
     else:
         raise ValidationError(
@@ -45,10 +45,13 @@ def validate_image_upload(file_bytes: bytes, content_type: str) -> None:
     # Dimension check (best-effort with Pillow)
     try:
         from PIL import Image
+
         img = Image.open(io.BytesIO(file_bytes))
         w, h = img.size
         if w > MAX_DIMENSION or h > MAX_DIMENSION:
-            raise ValidationError(f"Image dimensions {w}x{h} exceed maximum {MAX_DIMENSION}x{MAX_DIMENSION}")
+            raise ValidationError(
+                f"Image dimensions {w}x{h} exceed maximum {MAX_DIMENSION}x{MAX_DIMENSION}"
+            )
     except ImportError:
         pass  # Pillow not available; size limit is sufficient
     except ValidationError:

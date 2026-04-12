@@ -7,7 +7,7 @@ Operates at the service level using the db_session fixture.
 from __future__ import annotations
 
 import uuid
-from datetime import date, timedelta
+from datetime import date
 
 import pytest
 from hypothesis import HealthCheck, given, settings as h_settings, strategies as st
@@ -26,10 +26,14 @@ from src.shared.pagination import PaginationParams
 # Strategies
 # ---------------------------------------------------------------------------
 
-_reasonable_float = st.floats(min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False)
+_reasonable_float = st.floats(
+    min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False
+)
 
 _meal_names = st.text(
-    alphabet=st.characters(whitelist_categories=("L", "N", "Zs"), min_codepoint=32, max_codepoint=127),
+    alphabet=st.characters(
+        whitelist_categories=("L", "N", "Zs"), min_codepoint=32, max_codepoint=127
+    ),
     min_size=1,
     max_size=100,
 ).filter(lambda s: s.strip() != "")
@@ -77,9 +81,7 @@ class TestProperty1CreationRoundTrip:
     @pytest.mark.asyncio
     @_fixture_settings
     @given(data=_nutrition_entry_create)
-    async def test_create_and_retrieve_round_trip(
-        self, data: NutritionEntryCreate, db_session
-    ):
+    async def test_create_and_retrieve_round_trip(self, data: NutritionEntryCreate, db_session):
         """Created entries must be retrievable with equivalent field values.
 
         **Validates: Requirements 3.1**
@@ -131,9 +133,7 @@ class TestProperty2DateRangeFiltering:
             min_size=3,
             max_size=10,
         ),
-        range_dates=st.tuples(_entry_dates, _entry_dates).map(
-            lambda t: (min(t), max(t))
-        ),
+        range_dates=st.tuples(_entry_dates, _entry_dates).map(lambda t: (min(t), max(t))),
     )
     async def test_date_range_returns_only_matching_entries(
         self,
@@ -174,8 +174,7 @@ class TestProperty2DateRangeFiltering:
         # All returned entries must be within range
         for entry in result.items:
             assert start_date <= entry.entry_date <= end_date, (
-                f"Entry date {entry.entry_date} outside range "
-                f"[{start_date}, {end_date}]"
+                f"Entry date {entry.entry_date} outside range [{start_date}, {end_date}]"
             )
 
         # Count expected entries
@@ -232,16 +231,9 @@ class TestProperty3SoftDeletion:
         await db_session.commit()
 
         # Pick a random subset to delete (at least 1)
-        num_to_delete = data.draw(
-            st.integers(min_value=1, max_value=len(created_ids))
-        )
+        num_to_delete = data.draw(st.integers(min_value=1, max_value=len(created_ids)))
         ids_to_delete = data.draw(
-            st.sampled_from(
-                [
-                    combo
-                    for combo in _combinations(created_ids, num_to_delete)
-                ]
-            )
+            st.sampled_from([combo for combo in _combinations(created_ids, num_to_delete)])
         )
 
         for entry_id in ids_to_delete:
@@ -265,9 +257,7 @@ class TestProperty3SoftDeletion:
             stmt = select(NutritionEntry).where(NutritionEntry.id == deleted_id)
             row = (await db_session.execute(stmt)).scalar_one_or_none()
             assert row is not None, f"Entry {deleted_id} should still exist in DB"
-            assert row.deleted_at is not None, (
-                f"Entry {deleted_id} should have deleted_at set"
-            )
+            assert row.deleted_at is not None, f"Entry {deleted_id} should have deleted_at set"
 
         # Verify non-deleted entries still appear
         expected_visible = len(created_ids) - len(ids_to_delete)
@@ -277,4 +267,5 @@ class TestProperty3SoftDeletion:
 def _combinations(items: list, r: int) -> list[list]:
     """Generate all combinations of r items from the list."""
     from itertools import combinations
+
     return [list(c) for c in combinations(items, r)]

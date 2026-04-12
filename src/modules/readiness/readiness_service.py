@@ -37,9 +37,7 @@ class ReadinessService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def submit_checkin(
-        self, user_id: uuid.UUID, data: CheckinRequest
-    ) -> CheckinResponse:
+    async def submit_checkin(self, user_id: uuid.UUID, data: CheckinRequest) -> CheckinResponse:
         """Upsert recovery check-in for the given date."""
         try:
             stmt = select(RecoveryCheckin).where(
@@ -72,7 +70,8 @@ class ReadinessService:
         except SQLAlchemyError:
             logger.exception("Failed to submit checkin for user=%s", user_id)
             raise ApiError(
-                status=500, code="INTERNAL_ERROR",
+                status=500,
+                code="INTERNAL_ERROR",
                 message="Failed to save recovery check-in",
             )
 
@@ -89,15 +88,25 @@ class ReadinessService:
 
             # Validate and clamp negative values
             hrv_ms = max(0, health_req.hrv_ms) if health_req.hrv_ms is not None else None
-            resting_hr_bpm = max(0, health_req.resting_hr_bpm) if health_req.resting_hr_bpm is not None else None
-            sleep_duration_hours = max(0, health_req.sleep_duration_hours) if health_req.sleep_duration_hours is not None else None
+            resting_hr_bpm = (
+                max(0, health_req.resting_hr_bpm) if health_req.resting_hr_bpm is not None else None
+            )
+            sleep_duration_hours = (
+                max(0, health_req.sleep_duration_hours)
+                if health_req.sleep_duration_hours is not None
+                else None
+            )
 
             # Fetch 30-day score history for baselines
-            stmt = select(ReadinessScore).where(
-                ReadinessScore.user_id == user_id,
-                ReadinessScore.score_date >= start,
-                ReadinessScore.score_date <= score_date,
-            ).order_by(ReadinessScore.score_date)
+            stmt = (
+                select(ReadinessScore)
+                .where(
+                    ReadinessScore.user_id == user_id,
+                    ReadinessScore.score_date >= start,
+                    ReadinessScore.score_date <= score_date,
+                )
+                .order_by(ReadinessScore.score_date)
+            )
             result = await self.session.execute(stmt)
             history = list(result.scalars().all())
 
@@ -120,7 +129,11 @@ class ReadinessService:
             )
             # Return sensible defaults if no check-in data exists
             if checkin_row is None:
-                logger.info("No check-in data found for user=%s date=%s, using defaults", user_id, score_date)
+                logger.info(
+                    "No check-in data found for user=%s date=%s, using defaults",
+                    user_id,
+                    score_date,
+                )
                 user_checkin = UserCheckin(
                     soreness=None,
                     stress=None,
@@ -144,8 +157,13 @@ class ReadinessService:
             existing_score = score_result.scalar_one_or_none()
 
             factors_data: List[dict] = [
-                {"name": f.name, "normalized": f.normalized, "weight": f.weight,
-                 "effective_weight": f.effective_weight, "present": f.present}
+                {
+                    "name": f.name,
+                    "normalized": f.normalized,
+                    "weight": f.weight,
+                    "effective_weight": f.effective_weight,
+                    "present": f.present,
+                }
                 for f in engine_result.factors
             ]
 
@@ -178,7 +196,9 @@ class ReadinessService:
 
             logger.info(
                 "Readiness score computed: user=%s date=%s score=%s",
-                user_id, score_date, engine_result.score,
+                user_id,
+                score_date,
+                engine_result.score,
             )
 
             return ReadinessScoreResponse(
@@ -196,7 +216,8 @@ class ReadinessService:
         except (SQLAlchemyError, ValueError, TypeError):
             logger.exception("Failed to compute readiness score for user=%s", user_id)
             raise ApiError(
-                status=500, code="INTERNAL_ERROR",
+                status=500,
+                code="INTERNAL_ERROR",
                 message="Failed to compute readiness score",
             )
 
@@ -209,22 +230,28 @@ class ReadinessService:
         """Fetch scores in date range ordered by score_date DESC."""
         if start_date > end_date:
             raise ApiError(
-                status=422, code="INVALID_RANGE",
+                status=422,
+                code="INVALID_RANGE",
                 message="start_date must be before or equal to end_date",
             )
 
         if (end_date - start_date).days > MAX_HISTORY_DAYS:
             raise ApiError(
-                status=422, code="RANGE_TOO_LARGE",
+                status=422,
+                code="RANGE_TOO_LARGE",
                 message=f"Date range must not exceed {MAX_HISTORY_DAYS} days",
             )
 
         try:
-            stmt = select(ReadinessScore).where(
-                ReadinessScore.user_id == user_id,
-                ReadinessScore.score_date >= start_date,
-                ReadinessScore.score_date <= end_date,
-            ).order_by(ReadinessScore.score_date.desc())
+            stmt = (
+                select(ReadinessScore)
+                .where(
+                    ReadinessScore.user_id == user_id,
+                    ReadinessScore.score_date >= start_date,
+                    ReadinessScore.score_date <= end_date,
+                )
+                .order_by(ReadinessScore.score_date.desc())
+            )
 
             result = await self.session.execute(stmt)
             rows = list(result.scalars().all())
@@ -253,6 +280,7 @@ class ReadinessService:
         except SQLAlchemyError:
             logger.exception("Failed to fetch readiness history for user=%s", user_id)
             raise ApiError(
-                status=500, code="INTERNAL_ERROR",
+                status=500,
+                code="INTERNAL_ERROR",
                 message="Failed to fetch readiness history",
             )

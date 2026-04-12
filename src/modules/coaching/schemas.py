@@ -19,7 +19,7 @@ class CoachingRequestCreate(BaseModel):
     progress_data: Optional[dict[str, Any]] = None
 
     # Audit fix 2.4 — HTML sanitization
-    @field_validator('goals', mode='before')
+    @field_validator("goals", mode="before")
     @classmethod
     def sanitize_text(cls, v: str) -> str:
         return strip_html(v) if isinstance(v, str) else v
@@ -88,7 +88,7 @@ class SessionCompleteRequest(BaseModel):
     notes: Optional[str] = Field(default=None, max_length=5000)
 
     # Audit fix 2.4 — HTML sanitization
-    @field_validator('notes', mode='before')
+    @field_validator("notes", mode="before")
     @classmethod
     def sanitize_text(cls, v: str) -> str:
         return strip_html(v) if isinstance(v, str) else v
@@ -97,7 +97,9 @@ class SessionCompleteRequest(BaseModel):
 class DocumentUploadRequest(BaseModel):
     """Payload for uploading a document URL to a session."""
 
-    document_url: str = Field(..., min_length=1, max_length=2048, pattern=r'^https?://[^\s/$.?#][^\s]*$')
+    document_url: str = Field(
+        ..., min_length=1, max_length=2048, pattern=r"^https?://[^\s/$.?#][^\s]*$"
+    )
 
 
 class CoachProfileCreate(BaseModel):
@@ -107,7 +109,7 @@ class CoachProfileCreate(BaseModel):
     specializations: Optional[list[str]] = Field(default=None, max_length=20)
 
     # Audit fix 2.4 — HTML sanitization
-    @field_validator('bio', mode='before')
+    @field_validator("bio", mode="before")
     @classmethod
     def sanitize_text(cls, v: str) -> str:
         return strip_html(v) if isinstance(v, str) else v

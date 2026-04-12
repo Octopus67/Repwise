@@ -50,6 +50,7 @@ _valid_goal_rate = st.floats(min_value=-2.0, max_value=2.0, allow_nan=False, all
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _is_valid_height(h: float) -> bool:
     return 100.0 <= h <= 250.0
 

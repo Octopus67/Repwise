@@ -6,7 +6,17 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Index, String, Text, text
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    String,
+    Text,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.shared.base_model import Base
@@ -19,7 +29,8 @@ class BodyMeasurement(SoftDeleteMixin, Base):  # Audit fix 8.6
     __tablename__ = "body_measurements"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
     )
     measured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     weight_kg: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
@@ -37,14 +48,17 @@ class BodyMeasurement(SoftDeleteMixin, Base):  # Audit fix 8.6
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     photos: Mapped[list["MeasurementProgressPhoto"]] = relationship(
-        back_populates="measurement", cascade="all, delete-orphan",
+        back_populates="measurement",
+        cascade="all, delete-orphan",
     )
 
     __table_args__ = (
         Index("ix_body_measurements_user_id", "user_id"),
         # Audit fix 8.5 — composite index for user measurement history queries
         Index("ix_body_measurements_user_measured", "user_id", "measured_at"),
-        Index("ix_body_measurements_not_deleted", "id", postgresql_where=text("deleted_at IS NULL")),
+        Index(
+            "ix_body_measurements_not_deleted", "id", postgresql_where=text("deleted_at IS NULL")
+        ),
     )
 
 
@@ -54,20 +68,26 @@ class MeasurementProgressPhoto(Base):
     __tablename__ = "measurement_progress_photos"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
     )
     measurement_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("body_measurements.id", ondelete="CASCADE"), nullable=False,
+        ForeignKey("body_measurements.id", ondelete="CASCADE"),
+        nullable=False,
     )
     photo_url: Mapped[str] = mapped_column(String(1024), nullable=False)
     photo_type: Mapped[str] = mapped_column(String(10), nullable=False)
     taken_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    is_private: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
+    is_private: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
 
     measurement: Mapped["BodyMeasurement"] = relationship(back_populates="photos")
 
     __table_args__ = (
-        CheckConstraint("photo_type IN ('front', 'side', 'back', 'other')", name="ck_photo_type_valid"),
+        CheckConstraint(
+            "photo_type IN ('front', 'side', 'back', 'other')", name="ck_photo_type_valid"
+        ),
         Index("ix_measurement_photos_user_id", "user_id"),
         Index("ix_measurement_photos_measurement_id", "measurement_id"),
     )

@@ -6,14 +6,9 @@ feature flag cache TTL/dedup, and pre-computed styles usage.
 
 from __future__ import annotations
 
-import ast
 import re
-import textwrap
-import time
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 
 # ── Paths ──────────────────────────────────────────────────────────────────
 
@@ -58,8 +53,7 @@ class TestDashboardParallelExecution:
         """Dashboard must use useQueries (TanStack Query) for parallel fetches."""
         src = _read(HOOKS_DIR / "queries" / "useDashboardQueries.ts")
         assert "useQueries" in src, (
-            "Dashboard should use useQueries for parallel API execution. "
-            "Found 0 occurrences."
+            "Dashboard should use useQueries for parallel API execution. Found 0 occurrences."
         )
         # Verify no sequential await-per-call pattern
         hook_src = _read(HOOKS_DIR / "useDashboardData.ts")
@@ -120,8 +114,7 @@ class TestSessionDetailExerciseImagesBatch:
             re.IGNORECASE,
         )
         assert len(per_exercise_pattern) == 0, (
-            "Found per-exercise image API calls inside a loop. "
-            "Images should be batch-loaded."
+            "Found per-exercise image API calls inside a loop. Images should be batch-loaded."
         )
 
 
@@ -156,9 +149,7 @@ class TestTodayWorkoutCardMemo:
     def test_today_workout_card_memo_works(self):
         """TodayWorkoutCard export must use React.memo with custom comparator."""
         src = _read(COMPONENTS_DIR / "dashboard" / "TodayWorkoutCard.tsx")
-        assert "React.memo(" in src, (
-            "TodayWorkoutCard must be exported via React.memo"
-        )
+        assert "React.memo(" in src, "TodayWorkoutCard must be exported via React.memo"
         # Verify custom comparator is provided (second arg to React.memo)
         memo_match = re.search(r"React\.memo\(\s*\w+\s*,\s*\(", src)
         assert memo_match, (
@@ -178,9 +169,7 @@ class TestFeatureFlagCacheDedup:
     def test_feature_flag_cache_dedup(self):
         """Flag cache must store promises to dedup concurrent requests."""
         src = _read(HOOKS_DIR / "useFeatureFlag.ts")
-        assert "_flagCache" in src, (
-            "useFeatureFlag must use a _flagCache Map for deduplication"
-        )
+        assert "_flagCache" in src, "useFeatureFlag must use a _flagCache Map for deduplication"
         # Verify it checks existing cache before fetching
         assert re.search(r"_flagCache\.get\(", src), (
             "useFeatureFlag must check _flagCache.get() before making a new request"
@@ -298,9 +287,7 @@ class TestWeeklyCheckinCardUsesStyles:
         """WeeklyCheckinCard must pre-compute styles and reference styles.xxx in JSX."""
         src = _read(COMPONENTS_DIR / "coaching" / "WeeklyCheckinCard.tsx")
         # Should have getThemedStyles defined
-        assert "getThemedStyles" in src, (
-            "WeeklyCheckinCard must define getThemedStyles"
-        )
+        assert "getThemedStyles" in src, "WeeklyCheckinCard must define getThemedStyles"
         # Should pre-compute in component body
         assert re.search(r"const styles\s*=\s*getThemedStyles\(", src), (
             "WeeklyCheckinCard should pre-compute: const styles = getThemedStyles(c)"

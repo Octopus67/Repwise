@@ -1,8 +1,10 @@
 """Tests for exercise mapper — token matching, thresholds, edge cases."""
 
-import pytest
 from src.modules.import_data.exercise_mapper import (
-    map_exercises, normalize_exercise, jaccard_similarity, MATCH_THRESHOLD,
+    map_exercises,
+    normalize_exercise,
+    jaccard_similarity,
+    MATCH_THRESHOLD,
 )
 
 DB_EXERCISES = [

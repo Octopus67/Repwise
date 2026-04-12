@@ -13,13 +13,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import pytest
 from hypothesis import HealthCheck, given, settings as h_settings, strategies as st
 
 
 # ---------------------------------------------------------------------------
 # Pure scaling function (mirrors frontend scaleMacros and backend logic)
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class Macros:
@@ -47,9 +47,7 @@ def scale_macros(base: Macros, multiplier: float) -> Macros:
 # Strategies
 # ---------------------------------------------------------------------------
 
-_macro_values = st.floats(
-    min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False
-)
+_macro_values = st.floats(min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False)
 
 _positive_multipliers = st.floats(
     min_value=0.01, max_value=100.0, allow_nan=False, allow_infinity=False
@@ -159,7 +157,7 @@ class TestProperty3MacroScalingProportionality:
         direct_scaled = scale_macros(base, m1 * m2)
 
         # Use relative tolerance for large values
-        for attr in ('calories', 'protein_g', 'carbs_g', 'fat_g'):
+        for attr in ("calories", "protein_g", "carbs_g", "fat_g"):
             d = getattr(double_scaled, attr)
             s = getattr(direct_scaled, attr)
             # Allow slightly larger tolerance for chained floating-point ops

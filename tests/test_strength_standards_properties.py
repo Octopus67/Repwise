@@ -9,7 +9,7 @@ from __future__ import annotations
 import pytest
 from hypothesis import given, settings as h_settings, strategies as st
 
-from src.modules.training.milestone_generator import Milestone, generate_milestones
+from src.modules.training.milestone_generator import generate_milestones
 from src.modules.training.strength_standards import (
     STRENGTH_STANDARDS,
     SUPPORTED_LIFTS,

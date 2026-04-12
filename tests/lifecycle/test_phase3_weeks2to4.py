@@ -29,28 +29,42 @@ async def _onboard(client: LifecycleClient, p: PersonaProfile) -> None:
     await client.get_me()
     await client.update_profile(display_name=p.display_name)
     await client.log_metrics(
-        height_cm=p.height_cm, weight_kg=p.weight_kg,
-        body_fat_pct=p.body_fat_pct, activity_level=p.activity_level,
+        height_cm=p.height_cm,
+        weight_kg=p.weight_kg,
+        body_fat_pct=p.body_fat_pct,
+        activity_level=p.activity_level,
     )
     await client.set_goals(goal_type=p.goal_type, goal_rate_per_week=p.goal_rate_per_week)
     await client.log_bodyweight(p.weight_kg, SIM_START)
-    await client.create_snapshot({
-        "weight_kg": p.weight_kg, "height_cm": p.height_cm,
-        "age_years": p.age_years, "sex": p.sex,
-        "activity_level": p.activity_level, "goal_type": p.goal_type,
-        "goal_rate_per_week": p.goal_rate_per_week,
-        "bodyweight_history": [{"date": SIM_START.isoformat(), "weight_kg": p.weight_kg}],
-        "training_load_score": 0.0,
-    })
+    await client.create_snapshot(
+        {
+            "weight_kg": p.weight_kg,
+            "height_cm": p.height_cm,
+            "age_years": p.age_years,
+            "sex": p.sex,
+            "activity_level": p.activity_level,
+            "goal_type": p.goal_type,
+            "goal_rate_per_week": p.goal_rate_per_week,
+            "bodyweight_history": [{"date": SIM_START.isoformat(), "weight_kg": p.weight_kg}],
+            "training_load_score": 0.0,
+        }
+    )
 
 
 async def _simulate_day(
-    client: LifecycleClient, persona: PersonaProfile, day_num: int,
+    client: LifecycleClient,
+    persona: PersonaProfile,
+    day_num: int,
 ) -> dict:
     gen = DAILY_PLAN_GENERATORS[persona.name]
     plan = gen(day_num)
     sim_date = SIM_START + timedelta(days=day_num)
-    result = {"date": sim_date.isoformat(), "meals_logged": 0, "training_logged": False, "bw_logged": False}
+    result = {
+        "date": sim_date.isoformat(),
+        "meals_logged": 0,
+        "training_logged": False,
+        "bw_logged": False,
+    }
 
     for meal in plan.meals:
         await client.log_food(
@@ -60,7 +74,9 @@ async def _simulate_day(
             carbs_g=meal["carbs_g"],
             fat_g=meal["fat_g"],
             entry_date=sim_date,
-            micro_nutrients={"water_ml": plan.water_ml / max(len(plan.meals), 1)} if plan.water_ml > 0 else None,
+            micro_nutrients={"water_ml": plan.water_ml / max(len(plan.meals), 1)}
+            if plan.water_ml > 0
+            else None,
         )
         result["meals_logged"] += 1
 
@@ -79,7 +95,10 @@ async def _simulate_day(
 
 
 async def _simulate_range(
-    client: LifecycleClient, persona: PersonaProfile, start_day: int, end_day: int,
+    client: LifecycleClient,
+    persona: PersonaProfile,
+    start_day: int,
+    end_day: int,
 ) -> list[dict]:
     """Simulate a range of days [start_day, end_day) and return results."""
     results = []
@@ -95,7 +114,6 @@ async def _simulate_range(
 
 
 class TestPersonaA28Day:
-
     @pytest.mark.asyncio
     async def test_persona_a_28day_simulation(self, override_get_db):
         """Full 28-day sim for Persona A: consistent logging, 3x/week training."""
@@ -154,7 +172,6 @@ class TestPersonaA28Day:
 
 
 class TestPersonaB28Day:
-
     @pytest.mark.asyncio
     async def test_persona_b_28day_simulation(self, override_get_db):
         """Full 28-day sim for Persona B: heavy training 6x/week, bulking."""
@@ -184,7 +201,9 @@ class TestPersonaB28Day:
                 w_start = SIM_START + timedelta(days=week * 7)
                 w_end = SIM_START + timedelta(days=week * 7 + 6)
                 week_entries = await c.get_nutrition_entries(
-                    start_date=w_start, end_date=w_end, limit=100,
+                    start_date=w_start,
+                    end_date=w_end,
+                    limit=100,
                 )
                 total_cal += sum(e["calories"] for e in week_entries["items"])
             assert total_cal > 80000, f"Expected >80000 cal for bulking, got {total_cal}"
@@ -193,8 +212,7 @@ class TestPersonaB28Day:
             bw = await c.get_bodyweight_history(limit=100)
             bw_dates = {e["recorded_date"] for e in bw["items"]}
             even_day_dates = {
-                (SIM_START + timedelta(days=d)).isoformat()
-                for d in range(28) if d % 2 == 0
+                (SIM_START + timedelta(days=d)).isoformat() for d in range(28) if d % 2 == 0
             }
             # All even-day dates should be present (plus onboarding)
             assert even_day_dates.issubset(bw_dates), "Missing bodyweight entries on even days"
@@ -209,7 +227,6 @@ class TestPersonaB28Day:
 
 
 class TestPersonaC28Day:
-
     @pytest.mark.asyncio
     async def test_persona_c_28day_inconsistent(self, override_get_db):
         """Persona C: inconsistent logging with gaps."""
@@ -254,7 +271,6 @@ class TestPersonaC28Day:
 
 
 class TestPersonaD28Day:
-
     @pytest.mark.asyncio
     async def test_persona_d_28day_inactive(self, override_get_db):
         """Persona D: logs 2 days, 1 training, then goes completely inactive."""
@@ -306,7 +322,6 @@ class TestPersonaD28Day:
 
 
 class TestWeeklyTotals:
-
     @pytest.mark.asyncio
     async def test_weekly_totals_match_daily_sums(self, override_get_db):
         """For Persona A, weekly sums must match sum of individual daily entries."""
@@ -320,15 +335,16 @@ class TestWeeklyTotals:
                 await _simulate_day(c, PERSONA_A, day)
                 sim_date = SIM_START + timedelta(days=day)
                 entries = await c.get_nutrition_entries(
-                    start_date=sim_date, end_date=sim_date,
+                    start_date=sim_date,
+                    end_date=sim_date,
                 )
                 day_cal = sum(e["calories"] for e in entries["items"])
                 daily_cals.append(day_cal)
 
             # Verify each week's total matches sum of daily entries
             weeks = [
-                (0, 7),    # days 0-6
-                (7, 14),   # days 7-13
+                (0, 7),  # days 0-6
+                (7, 14),  # days 7-13
                 (14, 21),  # days 14-20
                 (21, 28),  # days 21-27
             ]

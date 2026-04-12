@@ -16,11 +16,8 @@ from sqlalchemy import select
 
 from src.config.settings import settings
 from src.middleware.rate_limiter import clear_all
-from src.modules.auth.models import User
 from src.modules.auth.router import clear_verify_attempts
 from src.modules.auth.schemas import RegisterRequest, ResetPasswordRequest
-from src.modules.auth.service import AuthService, DUMMY_HASH
-from src.modules.sharing.service import SharingService
 from src.modules.training.models import TrainingSession
 from src.modules.training.pr_detector import PRDetector
 from src.modules.training.schemas import ExerciseEntry, SetEntry
@@ -151,9 +148,7 @@ async def test_apple_oauth_nonce_verification_success(
         "src.modules.auth.service._apple_jwk_client.get_signing_key_from_jwt",
         lambda t: fake_key,
     )
-    monkeypatch.setattr(
-        "src.modules.auth.service.pyjwt.decode", lambda token, key, **kw: decoded
-    )
+    monkeypatch.setattr("src.modules.auth.service.pyjwt.decode", lambda token, key, **kw: decoded)
 
     resp = await client.post(
         "/api/v1/auth/oauth/apple",
@@ -183,9 +178,7 @@ async def test_apple_oauth_nonce_verification_failure(
         "src.modules.auth.service._apple_jwk_client.get_signing_key_from_jwt",
         lambda t: fake_key,
     )
-    monkeypatch.setattr(
-        "src.modules.auth.service.pyjwt.decode", lambda token, key, **kw: decoded
-    )
+    monkeypatch.setattr("src.modules.auth.service.pyjwt.decode", lambda token, key, **kw: decoded)
 
     resp = await client.post(
         "/api/v1/auth/oauth/apple",
@@ -213,9 +206,7 @@ async def test_apple_oauth_nonce_optional_backward_compat(
         "src.modules.auth.service._apple_jwk_client.get_signing_key_from_jwt",
         lambda t: fake_key,
     )
-    monkeypatch.setattr(
-        "src.modules.auth.service.pyjwt.decode", lambda token, key, **kw: decoded
-    )
+    monkeypatch.setattr("src.modules.auth.service.pyjwt.decode", lambda token, key, **kw: decoded)
 
     resp = await client.post(
         "/api/v1/auth/oauth/apple",
@@ -230,9 +221,7 @@ async def test_apple_oauth_nonce_optional_backward_compat(
 
 
 @pytest.mark.asyncio
-async def test_oauth_conflict_doesnt_leak_provider(
-    client, override_get_db, monkeypatch, mock_ses
-):
+async def test_oauth_conflict_doesnt_leak_provider(client, override_get_db, monkeypatch, mock_ses):
     """When OAuth email conflicts with existing OAuth user, error doesn't reveal provider."""
     monkeypatch.setattr(settings, "APPLE_CLIENT_ID", "com.octopuslabs.repwise")
 
@@ -467,16 +456,12 @@ def test_password_validation_frontend_backend_aligned():
     with pytest.raises(PydanticValidationError):
         RegisterRequest(email="a@b.com", password="alllowercase1")
     with pytest.raises(PydanticValidationError):
-        ResetPasswordRequest(
-            email="a@b.com", code="123456", new_password="alllowercase1"
-        )
+        ResetPasswordRequest(email="a@b.com", code="123456", new_password="alllowercase1")
 
     # Both should accept a valid password
     r = RegisterRequest(email="a@b.com", password="ValidPass1!")
     assert r.password == "ValidPass1!"
-    rp = ResetPasswordRequest(
-        email="a@b.com", code="123456", new_password="ValidPass1!"
-    )
+    rp = ResetPasswordRequest(email="a@b.com", code="123456", new_password="ValidPass1!")
     assert rp.new_password == "ValidPass1!"
 
 

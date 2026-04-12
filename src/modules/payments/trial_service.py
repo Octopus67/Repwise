@@ -115,7 +115,9 @@ class TrialService:
         return {
             "active": active,
             "has_used_trial": user.has_used_trial,
-            "trial_started_at": user.trial_started_at.isoformat() if user.trial_started_at else None,
+            "trial_started_at": user.trial_started_at.isoformat()
+            if user.trial_started_at
+            else None,
             "trial_ends_at": ends_at.isoformat() if ends_at else None,
             "days_remaining": days_remaining,
         }
@@ -148,8 +150,7 @@ class TrialService:
 
         # Total volume (sum of sets * reps * weight from JSONB)
         sessions_result = await self.session.execute(
-            select(TrainingSession.exercises)
-            .where(
+            select(TrainingSession.exercises).where(
                 TrainingSession.user_id == user_id,
                 TrainingSession.session_date >= start_date,
                 TrainingSession.session_date <= end_date,

@@ -24,33 +24,33 @@ from src.modules.nutrition.models import NutritionEntry
 # ─── RDA Values (server-side, matching frontend rdaValues.ts) ─────────────────
 
 RDA_VALUES: dict[str, dict[str, float]] = {
-    "vitamin_a_mcg":       {"male": 900, "female": 700},
-    "vitamin_c_mg":        {"male": 90, "female": 75},
-    "vitamin_d_mcg":       {"male": 15, "female": 15},
-    "vitamin_e_mg":        {"male": 15, "female": 15},
-    "vitamin_k_mcg":       {"male": 120, "female": 90},
-    "thiamin_mg":          {"male": 1.2, "female": 1.1},
-    "riboflavin_mg":       {"male": 1.3, "female": 1.1},
-    "niacin_mg":           {"male": 16, "female": 14},
+    "vitamin_a_mcg": {"male": 900, "female": 700},
+    "vitamin_c_mg": {"male": 90, "female": 75},
+    "vitamin_d_mcg": {"male": 15, "female": 15},
+    "vitamin_e_mg": {"male": 15, "female": 15},
+    "vitamin_k_mcg": {"male": 120, "female": 90},
+    "thiamin_mg": {"male": 1.2, "female": 1.1},
+    "riboflavin_mg": {"male": 1.3, "female": 1.1},
+    "niacin_mg": {"male": 16, "female": 14},
     "pantothenic_acid_mg": {"male": 5, "female": 5},
-    "vitamin_b6_mg":       {"male": 1.3, "female": 1.3},
-    "biotin_mcg":          {"male": 30, "female": 30},
-    "folate_mcg":          {"male": 400, "female": 400},
-    "vitamin_b12_mcg":     {"male": 2.4, "female": 2.4},
-    "calcium_mg":          {"male": 1000, "female": 1000},
-    "iron_mg":             {"male": 8, "female": 18},
-    "zinc_mg":             {"male": 11, "female": 8},
-    "magnesium_mg":        {"male": 400, "female": 310},
-    "potassium_mg":        {"male": 3400, "female": 2600},
-    "selenium_mcg":        {"male": 55, "female": 55},
-    "sodium_mg":           {"male": 2300, "female": 2300},
-    "phosphorus_mg":       {"male": 700, "female": 700},
-    "manganese_mg":        {"male": 2.3, "female": 1.8},
-    "copper_mg":           {"male": 0.9, "female": 0.9},
-    "omega_3_g":           {"male": 1.6, "female": 1.1},
-    "omega_6_g":           {"male": 17, "female": 12},
-    "cholesterol_mg":      {"male": 300, "female": 300},
-    "fibre_g":             {"male": 38, "female": 25},
+    "vitamin_b6_mg": {"male": 1.3, "female": 1.3},
+    "biotin_mcg": {"male": 30, "female": 30},
+    "folate_mcg": {"male": 400, "female": 400},
+    "vitamin_b12_mcg": {"male": 2.4, "female": 2.4},
+    "calcium_mg": {"male": 1000, "female": 1000},
+    "iron_mg": {"male": 8, "female": 18},
+    "zinc_mg": {"male": 11, "female": 8},
+    "magnesium_mg": {"male": 400, "female": 310},
+    "potassium_mg": {"male": 3400, "female": 2600},
+    "selenium_mcg": {"male": 55, "female": 55},
+    "sodium_mg": {"male": 2300, "female": 2300},
+    "phosphorus_mg": {"male": 700, "female": 700},
+    "manganese_mg": {"male": 2.3, "female": 1.8},
+    "copper_mg": {"male": 0.9, "female": 0.9},
+    "omega_3_g": {"male": 1.6, "female": 1.1},
+    "omega_6_g": {"male": 17, "female": 12},
+    "cholesterol_mg": {"male": 300, "female": 300},
+    "fibre_g": {"male": 38, "female": 25},
 }
 
 
@@ -60,6 +60,7 @@ RDA_VALUES: dict[str, dict[str, float]] = {
 @dataclass
 class NutrientSummary:
     """Summary for a single nutrient over a time window."""
+
     key: str
     label: str
     unit: str
@@ -74,6 +75,7 @@ class NutrientSummary:
 @dataclass
 class DeficiencyAlert:
     """A nutrient consistently below threshold."""
+
     key: str
     label: str
     daily_average: float
@@ -86,6 +88,7 @@ class DeficiencyAlert:
 @dataclass
 class MicronutrientDashboard:
     """Complete weekly/period micronutrient dashboard."""
+
     start_date: date
     end_date: date
     days_tracked: int
@@ -193,17 +196,19 @@ def aggregate_micros(
         has_data = key in seen_keys
         rda_pct = (daily_avg / rda * 100) if rda > 0 and has_data else 0.0
 
-        results.append(NutrientSummary(
-            key=key,
-            label=label,
-            unit=unit,
-            group=group,
-            daily_average=round(daily_avg, 2),
-            rda=rda,
-            rda_pct=round(rda_pct, 1),
-            status=_classify_status(rda_pct) if has_data else "no_data",
-            has_data=has_data,
-        ))
+        results.append(
+            NutrientSummary(
+                key=key,
+                label=label,
+                unit=unit,
+                group=group,
+                daily_average=round(daily_avg, 2),
+                rda=rda,
+                rda_pct=round(rda_pct, 1),
+                status=_classify_status(rda_pct) if has_data else "no_data",
+                has_data=has_data,
+            )
+        )
 
     return results
 
@@ -235,15 +240,17 @@ def detect_deficiencies(
         if total_days > 0 and days_below >= total_days * 0.5:
             daily_avg = total_intake / total_days
             deficit_pct = (rda - daily_avg) / rda * 100 if rda > 0 else 0
-            alerts.append(DeficiencyAlert(
-                key=key,
-                label=label,
-                daily_average=round(daily_avg, 2),
-                rda=rda,
-                deficit_pct=round(deficit_pct, 1),
-                days_below_50pct=days_below,
-                total_days=total_days,
-            ))
+            alerts.append(
+                DeficiencyAlert(
+                    key=key,
+                    label=label,
+                    daily_average=round(daily_avg, 2),
+                    rda=rda,
+                    deficit_pct=round(deficit_pct, 1),
+                    days_below_50pct=days_below,
+                    total_days=total_days,
+                )
+            )
 
     return sorted(alerts, key=lambda a: a.deficit_pct, reverse=True)
 
@@ -288,10 +295,7 @@ class MicronutrientDashboardService:
         num_days = (end_date - start_date).days + 1
         days_with_data = len({r.entry_date for r in rows})
 
-        entries = [
-            {"micro_nutrients": r.micro_nutrients}
-            for r in rows
-        ]
+        entries = [{"micro_nutrients": r.micro_nutrients} for r in rows]
 
         # Aggregate per-day micros for deficiency detection
         daily_micros: dict[date, dict[str, float]] = defaultdict(lambda: defaultdict(float))
@@ -313,8 +317,16 @@ class MicronutrientDashboardService:
         nutrients_with_data = sum(1 for n in nutrients if n.has_data)
 
         sorted_by_rda = sorted(nutrients, key=lambda n: n.rda_pct, reverse=True)
-        top_5 = [n for n in sorted_by_rda if n.rda > 0 and n.has_data and n.key not in ("sodium_mg", "cholesterol_mg")][:5]
-        worst_5 = [n for n in reversed(sorted_by_rda) if n.rda > 0 and n.has_data and n.key not in ("sodium_mg", "cholesterol_mg")][:5]
+        top_5 = [
+            n
+            for n in sorted_by_rda
+            if n.rda > 0 and n.has_data and n.key not in ("sodium_mg", "cholesterol_mg")
+        ][:5]
+        worst_5 = [
+            n
+            for n in reversed(sorted_by_rda)
+            if n.rda > 0 and n.has_data and n.key not in ("sodium_mg", "cholesterol_mg")
+        ][:5]
 
         return MicronutrientDashboard(
             start_date=start_date,

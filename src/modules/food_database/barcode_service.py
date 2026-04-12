@@ -37,7 +37,9 @@ class BarcodeService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
-    async def lookup_barcode(self, barcode: str, user_id: str | uuid.UUID | None = None) -> BarcodeResponse:
+    async def lookup_barcode(
+        self, barcode: str, user_id: str | uuid.UUID | None = None
+    ) -> BarcodeResponse:
         """Look up a barcode through the cache → OFF → USDA chain."""
 
         # 1. Check cache
@@ -76,26 +78,29 @@ class BarcodeService:
 
     async def _check_cache(self, barcode: str) -> Optional[FoodItem]:
         """Check barcode_cache for a previously looked-up barcode."""
-        stmt = (
-            select(BarcodeCache)
-            .where(BarcodeCache.barcode == barcode)
-        )
+        stmt = select(BarcodeCache).where(BarcodeCache.barcode == barcode)
         result = await self.db.execute(stmt)
         cache_entry = result.scalar_one_or_none()
         if cache_entry is None:
             return None
 
         # Load the associated FoodItem
-        food_stmt = select(FoodItem).where(FoodItem.id == cache_entry.food_item_id, FoodItem.deleted_at.is_(None))
+        food_stmt = select(FoodItem).where(
+            FoodItem.id == cache_entry.food_item_id, FoodItem.deleted_at.is_(None)
+        )
         food_result = await self.db.execute(food_stmt)
         return food_result.scalar_one_or_none()
 
-    async def _create_food_item(self, data: dict, source: str, created_by: str | None = None) -> FoodItem:
+    async def _create_food_item(
+        self, data: dict, source: str, created_by: str | None = None
+    ) -> FoodItem:
         """Create a FoodItem from normalised API response data."""
         # Check if a food item with this barcode already exists
         barcode = data.get("barcode")
         if barcode:
-            existing_stmt = select(FoodItem).where(FoodItem.barcode == barcode, FoodItem.deleted_at.is_(None))
+            existing_stmt = select(FoodItem).where(
+                FoodItem.barcode == barcode, FoodItem.deleted_at.is_(None)
+            )
             existing_result = await self.db.execute(existing_stmt)
             existing_item = existing_result.scalar_one_or_none()
             if existing_item:
