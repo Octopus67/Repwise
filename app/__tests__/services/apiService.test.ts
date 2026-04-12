@@ -56,7 +56,7 @@ function getRequestInterceptor() {
 
 function getResponseErrorHandler() {
   const instance = axiosDefault.create();
-  return instance.interceptors.response.handlers[0]?.err;
+  return instance.interceptors.response.handlers[1]?.err;
 }
 
 /** Build a fake JWT with given exp (seconds since epoch). */
@@ -230,7 +230,9 @@ describe('apiService', () => {
         onRefreshFailed,
       });
 
-      axiosDefault.post.mockRejectedValueOnce(new Error('refresh failed'));
+      axiosDefault.post.mockRejectedValueOnce(
+        Object.assign(new Error('refresh failed'), { response: { status: 401 } }),
+      );
 
       const errorHandler = getResponseErrorHandler();
       const error = {
