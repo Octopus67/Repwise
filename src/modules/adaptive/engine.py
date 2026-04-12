@@ -66,6 +66,7 @@ MAX_DAILY_FLUCTUATION_KG = 2.0  # exclude >2 kg/day swings from EMA
 # Data classes
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class AdaptiveInput:
     """All inputs required for a single adaptive computation."""
@@ -79,9 +80,10 @@ class AdaptiveInput:
     goal_rate_per_week: float  # kg/week, e.g. -0.5 for cutting
     bodyweight_history: list[tuple[date, float]]  # (date, weight_kg)
     training_load_score: float  # 0-100
-    diet_style: Optional[Literal['balanced', 'high_protein', 'low_carb', 'keto']] = None
+    diet_style: Optional[Literal["balanced", "high_protein", "low_carb", "keto"]] = None
     protein_per_kg_override: Optional[float] = None
     body_fat_pct: Optional[float] = None
+    avg_daily_steps: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -98,16 +100,17 @@ class AdaptiveOutput:
 
 # Diet style macro splits (fat_pct + carb_pct of remaining kcal after protein)
 DIET_STYLE_MACROS = {
-    'balanced': {'fat_pct': 0.25, 'carb_pct': 0.75},
-    'high_protein': {'fat_pct': 0.25, 'carb_pct': 0.75},
-    'low_carb': {'fat_pct': 0.40, 'carb_pct': 0.60},
-    'keto': {'fat_pct': 0.70, 'carb_pct': 0.30},
+    "balanced": {"fat_pct": 0.25, "carb_pct": 0.75},
+    "high_protein": {"fat_pct": 0.25, "carb_pct": 0.75},
+    "low_carb": {"fat_pct": 0.40, "carb_pct": 0.60},
+    "keto": {"fat_pct": 0.70, "carb_pct": 0.30},
 }
 
 
 # ---------------------------------------------------------------------------
 # Step 1: BMR (Mifflin-St Jeor or Katch-McArdle if body fat available)
 # ---------------------------------------------------------------------------
+
 
 def _compute_bmr(input: AdaptiveInput) -> float:
     """Basal Metabolic Rate. Uses Katch-McArdle if body_fat_pct is available,
@@ -129,14 +132,24 @@ def _compute_bmr(input: AdaptiveInput) -> float:
 # Step 2: TDEE
 # ---------------------------------------------------------------------------
 
-def _compute_tdee(bmr: float, activity_level: ActivityLevel) -> float:
-    """Total Daily Energy Expenditure = BMR × activity multiplier."""
+
+def _compute_tdee(
+    bmr: float,
+    activity_level: ActivityLevel,
+    avg_daily_steps: Optional[float] = None,
+) -> float:
+    """TDEE = BMR × activity multiplier. Uses step data when available."""
+    if avg_daily_steps is not None and avg_daily_steps > 0:
+        # Continuous function: 0 steps = 1.2, 5000 = ~1.55, 10000 = ~1.9
+        multiplier = min(1.9, max(1.2, 1.2 + (avg_daily_steps / 14286)))
+        return bmr * multiplier
     return bmr * ACTIVITY_MULTIPLIERS[activity_level]
 
 
 # ---------------------------------------------------------------------------
 # Step 3: EMA smoothing
 # ---------------------------------------------------------------------------
+
 
 def _filter_extreme_fluctuations(
     sorted_history: list[tuple[date, float]],
@@ -209,6 +222,7 @@ def _compute_ema_n_days_ago(
 # Step 4: Adaptive adjustment
 # ---------------------------------------------------------------------------
 
+
 def _compute_adjustment(
     ema_current: float,
     ema_7_days_ago: Optional[float],
@@ -226,6 +240,7 @@ def _compute_adjustment(
 # ---------------------------------------------------------------------------
 # Step 5: Macro distribution
 # ---------------------------------------------------------------------------
+
 
 def _compute_macros(
     weight_kg: float,
@@ -249,15 +264,15 @@ def _compute_macros(
     protein_kcal = protein_g * 4.0
     remaining_kcal = target_calories - protein_kcal
 
-    style = diet_style if diet_style in DIET_STYLE_MACROS else 'balanced'
-    fat_pct = DIET_STYLE_MACROS[style]['fat_pct']
-    carb_pct = DIET_STYLE_MACROS[style]['carb_pct']
+    style = diet_style if diet_style in DIET_STYLE_MACROS else "balanced"
+    fat_pct = DIET_STYLE_MACROS[style]["fat_pct"]
+    carb_pct = DIET_STYLE_MACROS[style]["carb_pct"]
 
     fat_g = remaining_kcal * fat_pct / 9.0
     carbs_g = remaining_kcal * carb_pct / 4.0
 
     # Keto: cap carbs at 50g, give remaining to fat
-    if diet_style == 'keto' and carbs_g > 50:
+    if diet_style == "keto" and carbs_g > 50:
         carbs_g = 50.0
         carb_kcal = 50 * 4
         fat_kcal = remaining_kcal - carb_kcal
@@ -275,6 +290,7 @@ def _compute_macros(
 # Public API
 # ---------------------------------------------------------------------------
 
+
 def compute_snapshot(input: AdaptiveInput) -> AdaptiveOutput:
     """Pure, deterministic computation of caloric and macro targets.
 
@@ -287,7 +303,7 @@ def compute_snapshot(input: AdaptiveInput) -> AdaptiveOutput:
     bmr = _compute_bmr(input)
 
     # Step 2 — TDEE
-    tdee = _compute_tdee(bmr, input.activity_level)
+    tdee = _compute_tdee(bmr, input.activity_level, input.avg_daily_steps)
 
     # Step 3 — EMA smoothing
     sorted_history = sorted(input.bodyweight_history, key=lambda t: t[0])
@@ -316,8 +332,11 @@ def compute_snapshot(input: AdaptiveInput) -> AdaptiveOutput:
 
     # Step 5 — Macro distribution
     protein_g, fat_g, carbs_g = _compute_macros(
-        input.weight_kg, target_calories, input.goal_type,
-        input.diet_style, input.protein_per_kg_override,
+        input.weight_kg,
+        target_calories,
+        input.goal_type,
+        input.diet_style,
+        input.protein_per_kg_override,
     )
 
     # If carbs were floored, reconcile target_calories upward

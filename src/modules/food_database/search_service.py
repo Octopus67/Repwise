@@ -74,9 +74,7 @@ class SearchService:
                 UserFoodFrequency.food_item_id.in_(item_ids),
             )
             freq_result = await self.db.execute(stmt)
-            freq_map = {
-                f.food_item_id: f for f in freq_result.scalars().all()
-            }
+            freq_map = {f.food_item_id: f for f in freq_result.scalars().all()}
 
             now = datetime.now(timezone.utc)
             frequency_weight = 0.3
@@ -88,11 +86,7 @@ class SearchService:
                 freq = freq_map.get(item.id)
                 if freq and freq.log_count > 0:
                     freq_bonus = frequency_weight * math.log(1 + freq.log_count)
-                    days_since = (
-                        (now - freq.last_logged_at).days
-                        if freq.last_logged_at
-                        else 999
-                    )
+                    days_since = (now - freq.last_logged_at).days if freq.last_logged_at else 999
                     recency_bonus = recency_weight * (1.0 / (1 + days_since / 30))
                     total = base_score + freq_bonus + recency_bonus
                 else:
@@ -108,7 +102,7 @@ class SearchService:
                 page=result.page,
                 limit=result.limit,
             )
-        except (SQLAlchemyError, TypeError, ValueError) as e:
+        except (SQLAlchemyError, TypeError, ValueError):
             # Fallback: return unranked results if frequency scoring fails
             logger.exception("Food search failed")  # Audit fix 10.1
             return result
@@ -129,11 +123,7 @@ class SearchService:
         if region:
             base = base.where(FoodItem.region == region)
 
-        items_stmt = (
-            base.order_by(FoodItem.name)
-            .offset(pagination.offset)
-            .limit(pagination.limit)
-        )
+        items_stmt = base.order_by(FoodItem.name).offset(pagination.offset).limit(pagination.limit)
         result = await self.db.execute(items_stmt)
         items = list(result.scalars().all())
 
@@ -168,8 +158,11 @@ class SearchService:
                 return False
 
             from sqlalchemy import text
+
             result = await self.db.execute(
-                text("SELECT 1 FROM sqlite_master WHERE type='table' AND name='food_items_fts' LIMIT 1")
+                text(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='food_items_fts' LIMIT 1"
+                )
             )
             available = result.scalar_one_or_none() is not None
         except (SQLAlchemyError, AttributeError):
@@ -201,10 +194,11 @@ class SearchService:
 
         # Sanitize query for FTS5: remove special chars, collapse whitespace
         import re
-        safe_query = re.sub(r'["*(){}\[\]^~<>|+\-]', ' ', query).strip()
+
+        safe_query = re.sub(r'["*(){}\[\]^~<>|+\-]', " ", query).strip()
         # Audit fix 6.1 — strip FTS5 boolean operators
-        safe_query = re.sub(r'\b(AND|OR|NOT|NEAR)\b', ' ', safe_query, flags=re.IGNORECASE)
-        safe_query = ' '.join(safe_query.split())  # collapse whitespace
+        safe_query = re.sub(r"\b(AND|OR|NOT|NEAR)\b", " ", safe_query, flags=re.IGNORECASE)
+        safe_query = " ".join(safe_query.split())  # collapse whitespace
         if not safe_query:
             # Return popular items (USDA items) for empty queries
             return await self._get_popular_items(pagination, category, region, user_prefs)
@@ -224,7 +218,8 @@ class SearchService:
         # Build SQL string separately — never use f-string inside text()
         fts_query = (
             "SELECT fts.rowid FROM food_items_fts fts"
-            " WHERE fts.name MATCH :match_expr" + fts_filter
+            " WHERE fts.name MATCH :match_expr"
+            + fts_filter
             + " ORDER BY bm25(food_items_fts) LIMIT :limit OFFSET :offset"
         )
         fts_sql = text(fts_query)
@@ -258,7 +253,9 @@ class SearchService:
             " is_recipe, source, barcode, description, total_servings,"
             " created_by, deleted_at, created_at, updated_at"
         )
-        fetch_query = f"SELECT {_FETCH_COLS} FROM food_items WHERE rowid IN ({ph}) AND deleted_at IS NULL"
+        fetch_query = (
+            f"SELECT {_FETCH_COLS} FROM food_items WHERE rowid IN ({ph}) AND deleted_at IS NULL"
+        )
         params = {f"rowid_{i}": rowid for i, rowid in enumerate(rowids)}
         if region:
             fetch_query += " AND region = :region"
@@ -288,6 +285,7 @@ class SearchService:
         # Build ordered FoodItem objects preserving FTS rank
         import json as _json
         from datetime import datetime as _dt
+
         items = []
         for rid in rowids:
             fid = rowid_to_id.get(rid)
@@ -327,6 +325,7 @@ class SearchService:
         q_lower = query.lower()
         q_words = q_lower.split()
         source_order = {"usda": 0, "verified": 1, "community": 2, "custom": 3}
+
         def _rank(item: FoodItem) -> tuple:
             n = item.name.lower()
             if n == q_lower:
@@ -338,12 +337,15 @@ class SearchService:
             else:
                 tier = 3  # substring: "Breadless" contains "bread"
             return (tier, source_order.get(item.source, 9), len(item.name), item.name)
+
         items.sort(key=_rank)
         items = items[:limit]  # Trim to requested limit after re-ranking
 
         return PaginatedResult(
             items=items,
-            total_count=len(items) if len(items) < limit else -1,  # Estimate: if less than limit, that's the total
+            total_count=len(items)
+            if len(items) < limit
+            else -1,  # Estimate: if less than limit, that's the total
             page=pagination.page,
             limit=limit,
         )
@@ -362,7 +364,9 @@ class SearchService:
 
         if query:
             escaped = query.replace("%", r"\%").replace("_", r"\_")
-            base = base.where(func.lower(FoodItem.name).like(func.lower(f"%{escaped}%"), escape="\\"))
+            base = base.where(
+                func.lower(FoodItem.name).like(func.lower(f"%{escaped}%"), escape="\\")
+            )
 
         if category:
             base = base.where(FoodItem.category == category)
@@ -429,7 +433,7 @@ class SearchService:
         user_prefs: Optional[dict],
     ) -> list[Any]:
         """Re-rank search results based on user's Food DNA preferences.
-        
+
         Boost factors (multiplicative):
           +50% if food.region matches any cuisine_preferences
           +30% if food.source == 'verified'

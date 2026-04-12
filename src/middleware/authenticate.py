@@ -63,9 +63,8 @@ async def get_current_user(
     jti = payload.get("jti")
     if jti:
         from src.modules.auth.models import TokenBlacklist
-        blacklist_result = await db.execute(
-            select(TokenBlacklist).where(TokenBlacklist.jti == jti)
-        )
+
+        blacklist_result = await db.execute(select(TokenBlacklist).where(TokenBlacklist.jti == jti))
         if blacklist_result.scalar_one_or_none() is not None:
             raise UnauthorizedError("Token has been revoked")
 
@@ -78,9 +77,7 @@ async def get_current_user(
     except (ValueError, AttributeError):
         raise UnauthorizedError("Invalid token payload")
 
-    result = await db.execute(
-        select(User).where(User.id == user_id, User.deleted_at.is_(None))
-    )
+    result = await db.execute(select(User).where(User.id == user_id, User.deleted_at.is_(None)))
     user = result.scalar_one_or_none()
 
     if user is None:
@@ -93,6 +90,7 @@ async def get_current_user(
             raise UnauthorizedError("Password changed. Please login again.")
 
     return user
+
 
 async def get_current_user_optional(
     request: Request,
@@ -131,9 +129,8 @@ async def get_current_user_optional(
     jti = payload.get("jti")
     if jti:
         from src.modules.auth.models import TokenBlacklist
-        blacklist_result = await db.execute(
-            select(TokenBlacklist).where(TokenBlacklist.jti == jti)
-        )
+
+        blacklist_result = await db.execute(select(TokenBlacklist).where(TokenBlacklist.jti == jti))
         if blacklist_result.scalar_one_or_none() is not None:
             return None
 
@@ -146,9 +143,7 @@ async def get_current_user_optional(
     except (ValueError, AttributeError):
         return None
 
-    result = await db.execute(
-        select(User).where(User.id == user_id, User.deleted_at.is_(None))
-    )
+    result = await db.execute(select(User).where(User.id == user_id, User.deleted_at.is_(None)))
     user = result.scalar_one_or_none()
     if user is None:
         return None
@@ -160,4 +155,3 @@ async def get_current_user_optional(
             return None
 
     return user
-

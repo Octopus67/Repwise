@@ -33,8 +33,9 @@ class SnapshotRequest(BaseModel):
     bodyweight_history: list[BodyweightEntry] = Field(
         min_length=1, description="Recent bodyweight entries (min 1)"
     )
-    training_load_score: float = Field(
-        ge=0, le=100, description="Training load score 0-100"
+    training_load_score: float = Field(ge=0, le=100, description="Training load score 0-100")
+    avg_daily_steps: Optional[float] = Field(
+        default=None, ge=0, description="Average daily steps from pedometer"
     )
 
 

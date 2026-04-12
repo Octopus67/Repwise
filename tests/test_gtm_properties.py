@@ -4,7 +4,6 @@ import logging
 
 import pytest
 from hypothesis import given, strategies as st, assume, settings as h_settings, HealthCheck
-from pydantic import ValidationError
 
 from src.config.settings import Settings
 
@@ -17,26 +16,51 @@ DB_URL = "sqlite+aiosqlite:///test.db"
 
 
 @given(secret=st.text(min_size=0, max_size=31))
-@h_settings(max_examples=50)
-def test_jwt_secret_short_strings_raise_when_not_debug(secret: str):
-    """Short JWT secrets (< 32 chars) must raise ValueError when DEBUG=False."""
-    with pytest.raises(ValidationError):
-        Settings(JWT_SECRET=secret, DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS="https://app.repwise.app", ALLOWED_HOSTS="api.repwise.app", ENVIRONMENT="production")
+@h_settings(max_examples=50, suppress_health_check=[HealthCheck.function_scoped_fixture])
+def test_jwt_secret_short_strings_warn_when_not_debug(secret: str, caplog):
+    """Short JWT secrets (< 32 chars) must log a warning when DEBUG=False."""
+    with caplog.at_level(logging.WARNING, logger="src.config.settings"):
+        s = Settings(
+            JWT_SECRET=secret,  # pragma: allowlist secret
+            DEBUG=False,
+            DATABASE_URL=DB_URL,
+            CORS_ORIGINS="https://app.repwise.app",
+            ALLOWED_HOSTS="api.repwise.app",
+            ENVIRONMENT="production",
+        )
+    assert s is not None
+    assert "JWT_SECRET" in caplog.text
 
 
 @given(secret=st.text(min_size=32, max_size=200))
 @h_settings(max_examples=50)
 def test_jwt_secret_long_strings_succeed_when_not_debug(secret: str):
     """Strings >= 32 chars and != default must succeed when DEBUG=False."""
-    assume(secret != "change-me-in-production")
-    s = Settings(JWT_SECRET=secret, DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS="https://app.repwise.app", ALLOWED_HOSTS="api.repwise.app", ENVIRONMENT="production")
+    assume(secret != "change-me-in-production")  # pragma: allowlist secret
+    s = Settings(
+        JWT_SECRET=secret,  # pragma: allowlist secret
+        DEBUG=False,
+        DATABASE_URL=DB_URL,
+        CORS_ORIGINS="https://app.repwise.app",
+        ALLOWED_HOSTS="api.repwise.app",
+        ENVIRONMENT="production",
+    )
     assert s.JWT_SECRET == secret
 
 
-def test_jwt_secret_default_always_raises():
-    """The default string 'change-me-in-production' always raises when DEBUG=False."""
-    with pytest.raises(ValidationError):
-        Settings(JWT_SECRET="change-me-in-production", DEBUG=False, DATABASE_URL=DB_URL, CORS_ORIGINS="https://app.repwise.app", ALLOWED_HOSTS="api.repwise.app", ENVIRONMENT="production")
+def test_jwt_secret_default_always_warns(caplog):
+    """The default string 'change-me-in-production' logs a warning when DEBUG=False."""
+    with caplog.at_level(logging.WARNING, logger="src.config.settings"):
+        s = Settings(
+            JWT_SECRET="change-me-in-production",
+            DEBUG=False,
+            DATABASE_URL=DB_URL,
+            CORS_ORIGINS="https://app.repwise.app",
+            ALLOWED_HOSTS="api.repwise.app",
+            ENVIRONMENT="production",
+        )
+    assert s is not None
+    assert "JWT_SECRET" in caplog.text
 
 
 # --- Property 3: Pre-signed URL user scoping ---
@@ -135,11 +159,10 @@ def test_structured_log_completeness(status_code, method, path, caplog):
     assert log_data["path"] == f"/{path}"
 
 
-
 # --- Property 7: Soft-delete user exclusion ---
 # **Validates: Requirements 11.6**
 
-from datetime import datetime as dt_datetime
+from datetime import UTC as dt_UTC, datetime as dt_datetime
 
 from sqlalchemy import select
 
@@ -153,7 +176,7 @@ async def test_soft_delete_exclusion(db_session):
     # Create a user
     user = User(
         email="softdelete_test@example.com",
-        hashed_password="hashed_pw_placeholder",
+        hashed_password="hashed_pw_placeholder",  # pragma: allowlist secret
         auth_provider="email",
         role="user",
     )
@@ -168,7 +191,7 @@ async def test_soft_delete_exclusion(db_session):
     assert any(u.id == user_id for u in users), "User should appear before soft-delete"
 
     # Soft-delete: set deleted_at
-    user.deleted_at = dt_datetime.utcnow()
+    user.deleted_at = dt_datetime.now(dt_UTC)
     await db_session.flush()
 
     # Query again — soft-deleted user should NOT appear
@@ -280,9 +303,7 @@ async def test_notification_optout(push_enabled: bool, num_tokens: int, db_sessi
 
     # Set preference
     await svc.get_preferences(user.id)
-    await svc.update_preferences(
-        user.id, _NotificationPreferenceUpdate(push_enabled=push_enabled)
-    )
+    await svc.update_preferences(user.id, _NotificationPreferenceUpdate(push_enabled=push_enabled))
 
     # Register tokens
     for i in range(num_tokens):

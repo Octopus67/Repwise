@@ -51,6 +51,7 @@ build-backend = "setuptools.build_meta"
 asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["."]
+filterwarnings = ["ignore::pytest.PytestCollectionWarning"]
 
 [tool.ruff]
 target-version = "py312"

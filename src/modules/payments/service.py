@@ -11,8 +11,6 @@ from typing import Optional
 import uuid
 
 from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.payments.models import Subscription
@@ -28,26 +26,30 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 VALID_TRANSITIONS: dict[str, set[str]] = {
-    SubscriptionStatus.FREE: {SubscriptionStatus.PENDING_PAYMENT, SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING},
+    SubscriptionStatus.FREE: {
+        SubscriptionStatus.PENDING_PAYMENT,
+        SubscriptionStatus.ACTIVE,
+        SubscriptionStatus.TRIALING,
+    },
     SubscriptionStatus.PENDING_PAYMENT: {
         SubscriptionStatus.ACTIVE,
         SubscriptionStatus.FREE,
     },
     SubscriptionStatus.TRIALING: {
-        SubscriptionStatus.ACTIVE,      # trial converts to paid
-        SubscriptionStatus.CANCELLED,   # trial expired or user cancels
+        SubscriptionStatus.ACTIVE,  # trial converts to paid
+        SubscriptionStatus.CANCELLED,  # trial expired or user cancels
     },
     SubscriptionStatus.ACTIVE: {
-        SubscriptionStatus.ACTIVE,      # renewal success
-        SubscriptionStatus.PAST_DUE,    # renewal failed
-        SubscriptionStatus.CANCELLED,   # user cancels
+        SubscriptionStatus.ACTIVE,  # renewal success
+        SubscriptionStatus.PAST_DUE,  # renewal failed
+        SubscriptionStatus.CANCELLED,  # user cancels
     },
     SubscriptionStatus.PAST_DUE: {
-        SubscriptionStatus.ACTIVE,      # retry success
-        SubscriptionStatus.CANCELLED,   # grace period expired
+        SubscriptionStatus.ACTIVE,  # retry success
+        SubscriptionStatus.CANCELLED,  # grace period expired
     },
     SubscriptionStatus.CANCELLED: {
-        SubscriptionStatus.FREE,        # subscription period ends
+        SubscriptionStatus.FREE,  # subscription period ends
     },
 }
 
@@ -56,9 +58,7 @@ def validate_transition(current: str, target: str) -> None:
     """Raise UnprocessableError if the status transition is invalid."""
     allowed = VALID_TRANSITIONS.get(current, set())
     if target not in allowed:
-        raise UnprocessableError(
-            f"Invalid subscription transition: {current} → {target}"
-        )
+        raise UnprocessableError(f"Invalid subscription transition: {current} → {target}")
 
 
 class PaymentService:
@@ -98,6 +98,7 @@ class PaymentService:
         # Idempotency check
         if event.event_id:
             from src.modules.payments.models import WebhookEventLog
+
             existing_stmt = select(WebhookEventLog).where(
                 WebhookEventLog.event_id == event.event_id
             )
@@ -134,9 +135,7 @@ class PaymentService:
 
         Requirement 10.4: Invoke provider's cancellation API and update status.
         """
-        subscription = await self._get_subscription_or_raise(
-            user_id, data.subscription_id
-        )
+        subscription = await self._get_subscription_or_raise(user_id, data.subscription_id)
 
         validate_transition(subscription.status, SubscriptionStatus.CANCELLED)
         subscription.status = SubscriptionStatus.CANCELLED
@@ -165,6 +164,7 @@ class PaymentService:
 
         if sub and sub.status == SubscriptionStatus.TRIALING and sub.current_period_end:
             from datetime import datetime, timezone
+
             if datetime.now(timezone.utc) > sub.current_period_end:
                 sub.status = SubscriptionStatus.CANCELLED
                 await self.session.flush()
@@ -178,6 +178,7 @@ class PaymentService:
     async def check_revenuecat_entitlement(self, user_id: str) -> bool:
         """Check if a user has an active RevenueCat entitlement."""
         from src.modules.payments.revenuecat_provider import RevenueCatProvider
+
         provider = RevenueCatProvider()
         return await provider.verify_entitlement(user_id)
 
@@ -186,7 +187,9 @@ class PaymentService:
     # ------------------------------------------------------------------
 
     async def _get_or_create_subscription(
-        self, user_id: uuid.UUID, is_trial: bool = False,
+        self,
+        user_id: uuid.UUID,
+        is_trial: bool = False,
     ) -> Subscription:
         """Get existing subscription or create a new free one.
 
@@ -212,7 +215,9 @@ class PaymentService:
         return sub
 
     async def _get_or_create_subscription_from_webhook(
-        self, user_id: str, event: WebhookEvent,
+        self,
+        user_id: str,
+        event: WebhookEvent,
     ) -> Optional[Subscription]:
         """Find or create a subscription for a first-time purchase webhook."""
         try:
@@ -263,10 +268,14 @@ class PaymentService:
         """Update subscription status based on webhook event type."""
         # Try to find existing subscription by provider_subscription_id
         # Audit fix #6: exclude soft-deleted subscriptions to prevent reactivation
-        stmt = select(Subscription).where(
-            Subscription.provider_subscription_id == event.provider_subscription_id,
-            Subscription.deleted_at.is_(None),
-        ).with_for_update()
+        stmt = (
+            select(Subscription)
+            .where(
+                Subscription.provider_subscription_id == event.provider_subscription_id,
+                Subscription.deleted_at.is_(None),
+            )
+            .with_for_update()
+        )
         result = await self.session.execute(stmt)
         subscription = result.scalar_one_or_none()
 
@@ -313,5 +322,8 @@ class PaymentService:
         except UnprocessableError:
             logger.warning(
                 "Invalid webhook transition ignored: %s -> %s for subscription %s, event: %s",
-                subscription.status, new_status, subscription.id, event.event_type
+                subscription.status,
+                new_status,
+                subscription.id,
+                event.event_type,
             )

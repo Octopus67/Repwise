@@ -14,13 +14,13 @@ class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
             # Allow localhost (development)
             if request.url.hostname in ("localhost", "127.0.0.1"):
                 return await call_next(request)
-            
+
             # Allow health checks on HTTP
             if request.url.path == "/api/v1/health":
                 return await call_next(request)
-            
+
             # Redirect to HTTPS
             url = request.url.replace(scheme="https")
             return RedirectResponse(url=str(url), status_code=307)
-        
+
         return await call_next(request)

@@ -5,7 +5,7 @@ import json
 import logging
 import time
 import uuid
-from urllib.parse import parse_qs, urlencode, urlparse
+from urllib.parse import parse_qs, urlencode
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -44,7 +44,9 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
         # Phase 3 — F21: scrub sensitive query params before logging
         safe_path = _scrub_path(
             request.url.path,
-            request.url.query.decode("utf-8") if isinstance(request.url.query, bytes) else (request.url.query or ""),
+            request.url.query.decode("utf-8")
+            if isinstance(request.url.query, bytes)
+            else (request.url.query or ""),
         )
 
         logger.info(

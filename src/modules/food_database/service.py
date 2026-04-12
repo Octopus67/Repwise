@@ -5,14 +5,14 @@ from __future__ import annotations
 import uuid
 from typing import Any, Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.food_database.favorites_service import FavoritesService
 from src.modules.food_database.models import FoodItem
 from src.modules.food_database.recipe_service import (
     RecipeService,
-    aggregate_recipe_nutrition,
+    aggregate_recipe_nutrition,  # noqa: F401 — re-exported for tests
 )
 from src.modules.food_database.schemas import (
     FoodItemCreate,
@@ -77,7 +77,13 @@ class FoodDatabaseService:
     # Get by ID
     # ------------------------------------------------------------------
 
-    async def get_by_id(self, food_item_id: uuid.UUID, user_id: Optional[uuid.UUID] = None, *, allow_any_owner: bool = False) -> FoodItem:
+    async def get_by_id(
+        self,
+        food_item_id: uuid.UUID,
+        user_id: Optional[uuid.UUID] = None,
+        *,
+        allow_any_owner: bool = False,
+    ) -> FoodItem:
         """Retrieve a single food item by ID."""
         stmt = select(FoodItem).where(FoodItem.id == food_item_id)
         stmt = FoodItem.not_deleted(stmt)
@@ -85,7 +91,11 @@ class FoodDatabaseService:
         item = result.scalar_one_or_none()
         if item is None:
             raise NotFoundError("Food item not found")
-        if not allow_any_owner and item.created_by is not None and (user_id is None or item.created_by != user_id):
+        if (
+            not allow_any_owner
+            and item.created_by is not None
+            and (user_id is None or item.created_by != user_id)
+        ):
             raise NotFoundError("Food item not found")
         return item
 
@@ -108,7 +118,9 @@ class FoodDatabaseService:
         3. Compute aggregate nutrition via aggregate_recipe_nutrition()
         4. Store per-serving macros on FoodItem (denormalized for search)
         """
-        return await self._recipes.create_recipe(user_id, name, description, total_servings, ingredients)
+        return await self._recipes.create_recipe(
+            user_id, name, description, total_servings, ingredients
+        )
 
     async def list_user_recipes(
         self,
@@ -132,7 +144,9 @@ class FoodDatabaseService:
         Recomputes nutrition if ingredients or total_servings change.
         Only the recipe owner can update.
         """
-        return await self._recipes.update_recipe(user_id, recipe_id, name, description, total_servings, ingredients)
+        return await self._recipes.update_recipe(
+            user_id, recipe_id, name, description, total_servings, ingredients
+        )
 
     async def delete_recipe(
         self,
@@ -146,7 +160,9 @@ class FoodDatabaseService:
     # Recipe with nutritional aggregation
     # ------------------------------------------------------------------
 
-    async def get_recipe(self, recipe_id: uuid.UUID, user_id: uuid.UUID | None = None) -> RecipeDetailResponse:
+    async def get_recipe(
+        self, recipe_id: uuid.UUID, user_id: uuid.UUID | None = None
+    ) -> RecipeDetailResponse:
         """Retrieve a recipe with its ingredients and aggregated nutrition.
 
         Nutritional aggregation: for each ingredient, scale its per-serving
@@ -183,9 +199,7 @@ class FoodDatabaseService:
         await self.db.refresh(item)
         return item
 
-    async def update_food_item(
-        self, food_item_id: uuid.UUID, data: FoodItemUpdate
-    ) -> FoodItem:
+    async def update_food_item(self, food_item_id: uuid.UUID, data: FoodItemUpdate) -> FoodItem:
         """Update an existing food item (admin only)."""
         item = await self.get_by_id(food_item_id, allow_any_owner=True)
         update_data = data.model_dump(exclude_unset=True)

@@ -34,11 +34,13 @@ async def validation_exception_handler(
     details = []
     for error in exc.errors():
         loc = " → ".join(str(part) for part in error.get("loc", []))
-        details.append({
-            "field": loc,
-            "message": error.get("msg", "Validation error"),
-            "type": error.get("type", "value_error"),
-        })
+        details.append(
+            {
+                "field": loc,
+                "message": error.get("msg", "Validation error"),
+                "type": error.get("type", "value_error"),
+            }
+        )
 
     response = ApiErrorResponse(
         status=400,
@@ -65,11 +67,13 @@ async def pydantic_validation_exception_handler(
     details = []
     for error in exc.errors():
         loc = " → ".join(str(part) for part in error.get("loc", []))
-        details.append({
-            "field": loc,
-            "message": error.get("msg", "Validation error"),
-            "type": error.get("type", "value_error"),
-        })
+        details.append(
+            {
+                "field": loc,
+                "message": error.get("msg", "Validation error"),
+                "type": error.get("type", "value_error"),
+            }
+        )
 
     response = ApiErrorResponse(
         status=400,

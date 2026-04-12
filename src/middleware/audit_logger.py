@@ -28,6 +28,7 @@ from src.shared.types import AuditAction
 # Request-scoped audit context
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class _AuditEntry:
     """A single pending audit record collected during a request."""
@@ -41,9 +42,7 @@ class _AuditEntry:
 
 # ContextVar holds the list of audit entries for the current request
 # NOTE: default=None, create new list on first access to avoid shared mutable state
-_pending_audits: ContextVar[list[_AuditEntry] | None] = ContextVar(
-    "_pending_audits", default=None
-)
+_pending_audits: ContextVar[list[_AuditEntry] | None] = ContextVar("_pending_audits", default=None)
 
 
 def record_audit(
@@ -104,6 +103,7 @@ async def flush_audit_logs(db: AsyncSession) -> list[AuditLog]:
 # ---------------------------------------------------------------------------
 # FastAPI dependency
 # ---------------------------------------------------------------------------
+
 
 class AuditLogger:
     """FastAPI dependency that provides audit logging within a request.

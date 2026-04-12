@@ -5,7 +5,6 @@ Tests the pure ``compute_suggestion`` function directly — no DB access needed.
 
 from __future__ import annotations
 
-import pytest
 
 from src.modules.training.overload_service import (
     _DEFAULT_RPE,
@@ -26,10 +25,7 @@ def _make_snapshots(
     avg_rpe: float = 7.0,
 ) -> list[_SessionSnapshot]:
     """Create *count* identical session snapshots."""
-    return [
-        _SessionSnapshot(weight_kg=weight_kg, reps=reps, avg_rpe=avg_rpe)
-        for _ in range(count)
-    ]
+    return [_SessionSnapshot(weight_kg=weight_kg, reps=reps, avg_rpe=avg_rpe) for _ in range(count)]
 
 
 # ---------------------------------------------------------------------------
@@ -66,16 +62,18 @@ class TestInsufficientData:
 
 class TestWeightIncrease:
     def test_low_rpe_suggests_weight_increase(self):
+        # Use custom exercise name (no biomechanics data) to test RPE-only fallback
         snaps = _make_snapshots(3, weight_kg=80.0, reps=8, avg_rpe=6.0)
-        result = compute_suggestion("Barbell Bench Press", snaps, equipment="barbell")
+        result = compute_suggestion("Custom Barbell Press", snaps, equipment="barbell")
         assert result is not None
         assert result.suggested_weight_kg == 82.5  # +2.5 for barbell
         assert result.suggested_reps == 8
         assert "increase weight" in result.reasoning.lower()
 
     def test_very_low_rpe(self):
+        # Use custom exercise name (no biomechanics data) to test RPE-only fallback
         snaps = _make_snapshots(4, weight_kg=40.0, reps=10, avg_rpe=5.0)
-        result = compute_suggestion("Dumbbell Curl", snaps, equipment="dumbbell")
+        result = compute_suggestion("Custom Dumbbell Curl", snaps, equipment="dumbbell")
         assert result is not None
         assert result.suggested_weight_kg == 41.0  # +1 for dumbbell
         assert result.suggested_reps == 10
@@ -140,13 +138,13 @@ class TestMaintain:
 class TestEquipmentIncrement:
     def test_barbell_increment_2_5(self):
         snaps = _make_snapshots(3, weight_kg=60.0, reps=8, avg_rpe=6.0)
-        result = compute_suggestion("Barbell Bench Press", snaps, equipment="barbell")
+        result = compute_suggestion("Custom Barbell Exercise", snaps, equipment="barbell")
         assert result is not None
         assert result.suggested_weight_kg == 62.5
 
     def test_dumbbell_increment_1(self):
         snaps = _make_snapshots(3, weight_kg=20.0, reps=10, avg_rpe=6.0)
-        result = compute_suggestion("Dumbbell Curl", snaps, equipment="dumbbell")
+        result = compute_suggestion("Custom Dumbbell Exercise", snaps, equipment="dumbbell")
         assert result is not None
         assert result.suggested_weight_kg == 21.0
 

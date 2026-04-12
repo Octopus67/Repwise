@@ -47,6 +47,7 @@ def _get_cached(flag_name: str) -> Optional[FeatureFlag] | type[_MISS]:
 
 class _MissSentinel:
     """Sentinel indicating a cache miss."""
+
     pass
 
 
@@ -78,6 +79,7 @@ def invalidate_cache(flag_name: Optional[str] = None) -> None:
         _cache.pop(flag_name, None)
     # Cross-invalidate PostHog evaluation cache
     from src.services.feature_flags import invalidate_posthog_cache
+
     invalidate_posthog_cache(flag_name)
 
 
@@ -85,8 +87,10 @@ def invalidate_cache(flag_name: Optional[str] = None) -> None:
 # Public user-like object protocol (duck-typed)
 # ---------------------------------------------------------------------------
 
+
 class _UserLike:
     """Minimal protocol expected by ``is_feature_enabled``."""
+
     id: uuid.UUID
     role: str
     # Optional: region attribute for region-based conditions
@@ -95,6 +99,7 @@ class _UserLike:
 # ---------------------------------------------------------------------------
 # Service
 # ---------------------------------------------------------------------------
+
 
 class FeatureFlagService:
     """Service for managing and evaluating feature flags."""
@@ -147,7 +152,7 @@ class FeatureFlagService:
 
     async def get_flags(self) -> list[FeatureFlag]:
         """Return all feature flags."""
-        stmt = select(FeatureFlag).order_by(FeatureFlag.flag_name)
+        stmt = select(FeatureFlag).order_by(FeatureFlag.flag_name).limit(200)
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 

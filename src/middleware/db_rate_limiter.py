@@ -57,8 +57,6 @@ async def reset_db_attempts(session: AsyncSession, key: str, endpoint: str) -> N
 async def cleanup_expired_entries(session: AsyncSession, max_age_seconds: int = 3600) -> int:
     """Purge rate limit entries older than max_age_seconds. Returns count deleted."""
     cutoff = datetime.now(timezone.utc) - timedelta(seconds=max_age_seconds)
-    result = await session.execute(
-        delete(RateLimitEntry).where(RateLimitEntry.created_at < cutoff)
-    )
+    result = await session.execute(delete(RateLimitEntry).where(RateLimitEntry.created_at < cutoff))
     await session.flush()
     return result.rowcount or 0

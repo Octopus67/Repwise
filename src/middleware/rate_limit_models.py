@@ -12,6 +12,4 @@ class RateLimitEntry(Base):
     key: Mapped[str] = mapped_column(String(255), nullable=False)
     endpoint: Mapped[str] = mapped_column(String(50), nullable=False)
 
-    __table_args__ = (
-        Index("ix_rate_limit_key_created", "key", "created_at"),
-    )
+    __table_args__ = (Index("ix_rate_limit_key_created", "key", "created_at"),)

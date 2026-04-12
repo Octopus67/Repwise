@@ -14,8 +14,8 @@ def _is_upload_path(path: str) -> bool:
     """Check if the path is a file upload endpoint."""
     upload_prefixes = (
         "/api/v1/body-measurements/",  # /{id}/photos
-        "/api/v1/progress-photos/",     # /upload-url
-        "/api/v1/coaching/",            # /sessions/{id}/documents
+        "/api/v1/progress-photos/",  # /upload-url
+        "/api/v1/coaching/",  # /sessions/{id}/documents
     )
     return any(path.startswith(p) for p in upload_prefixes)
 
@@ -24,7 +24,9 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
         if request.method in ("POST", "PUT", "PATCH"):
             content_length = request.headers.get("content-length")
-            max_size = UPLOAD_MAX_BODY_SIZE if _is_upload_path(request.url.path) else DEFAULT_MAX_BODY_SIZE
+            max_size = (
+                UPLOAD_MAX_BODY_SIZE if _is_upload_path(request.url.path) else DEFAULT_MAX_BODY_SIZE
+            )
             # Reject requests without Content-Length (blocks chunked encoding).
             # Acceptable for mobile-first API; clients always send Content-Length.
             if content_length is None:
@@ -42,7 +44,9 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
             if size > max_size:
                 return JSONResponse(
                     status_code=413,
-                    content={"detail": f"Request body too large. Maximum: {max_size // (1024 * 1024)}MB"},
+                    content={
+                        "detail": f"Request body too large. Maximum: {max_size // (1024 * 1024)}MB"
+                    },
                 )
 
             # Streaming safety net: track actual bytes read in case Content-Length lies
@@ -65,7 +69,9 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
             except _BodyTooLargeError:
                 return JSONResponse(
                     status_code=413,
-                    content={"detail": f"Request body too large. Maximum: {max_size // (1024 * 1024)}MB"},
+                    content={
+                        "detail": f"Request body too large. Maximum: {max_size // (1024 * 1024)}MB"
+                    },
                 )
 
         return await call_next(request)

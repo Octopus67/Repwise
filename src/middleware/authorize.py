@@ -21,9 +21,7 @@ def require_role(*roles: UserRole) -> Callable:
 
     async def _check_role(user: User = Depends(get_current_user)) -> User:
         if user.role not in roles:
-            raise ForbiddenError(
-                f"Role '{user.role}' is not allowed. Required: {', '.join(roles)}"
-            )
+            raise ForbiddenError(f"Role '{user.role}' is not allowed. Required: {', '.join(roles)}")
         return user
 
     return _check_role

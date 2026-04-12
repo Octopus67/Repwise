@@ -12,12 +12,10 @@ import logging
 import time
 
 import sentry_sdk
-from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.config.database import async_session_factory
 from src.modules.account.service import AccountService
-from src.modules.auth.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +24,10 @@ async def run_permanent_deletion() -> int:
     """Permanently delete accounts whose grace period has expired. Returns count deleted."""
     start = time.monotonic()
     logger.info("Permanent deletion job started")
-    sentry_sdk.set_tag('component', 'job')
-    sentry_sdk.set_tag('job_name', 'permanent_deletion')
+    sentry_sdk.set_tag("component", "job")
+    sentry_sdk.set_tag("job_name", "permanent_deletion")
 
     deleted = 0
-    failed = 0
     async with async_session_factory() as session:
         svc = AccountService(session)
         try:

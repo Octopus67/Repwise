@@ -72,10 +72,15 @@ async def _renew_lock_loop() -> None:
         if r is None:
             continue  # single-worker mode — no lock to renew
         try:
-            val = await r.get(LOCK_KEY)
-            if val == _worker_id:
-                await r.expire(LOCK_KEY, LOCK_TTL)
-            else:
+            # Atomic: only renew if we still own the lock
+            renewed = await r.eval(
+                "if redis.call('get',KEYS[1])==ARGV[1] then return redis.call('expire',KEYS[1],ARGV[2]) else return 0 end",
+                1,
+                LOCK_KEY,
+                _worker_id,
+                LOCK_TTL,
+            )
+            if not renewed:
                 logger.warning("Lost scheduler lock — stopping scheduler")
                 scheduler.shutdown(wait=False)
                 break
@@ -167,9 +172,14 @@ async def stop_scheduler() -> None:
     r = await get_redis()
     try:
         if r:
-            val = await r.get(LOCK_KEY)
-            if val == _worker_id:
-                await r.delete(LOCK_KEY)
+            # Atomic: only delete if we still own the lock
+            released = await r.eval(
+                "if redis.call('get',KEYS[1])==ARGV[1] then return redis.call('del',KEYS[1]) else return 0 end",
+                1,
+                LOCK_KEY,
+                _worker_id,
+            )
+            if released:
                 logger.info("Released scheduler lock (worker %s)", _worker_id[:8])
     except (OSError, ConnectionError, Exception) as exc:
         logger.warning("Redis error during lock release (%s) — best-effort cleanup", exc)

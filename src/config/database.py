@@ -6,21 +6,26 @@ import time
 from collections.abc import AsyncGenerator
 
 from sqlalchemy import event
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.config.settings import settings
 
-pool_kwargs = {} if "sqlite" in settings.DATABASE_URL else {
-    "pool_size": int(os.getenv("DB_POOL_SIZE", "5")),  # Audit fix 8.8
-    "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "10")),  # Audit fix 8.8
-    "pool_timeout": 30,
-    "pool_recycle": 3600,
-    "pool_pre_ping": True,
-}
+pool_kwargs = (
+    {}
+    if "sqlite" in settings.DATABASE_URL
+    else {
+        "pool_size": int(os.getenv("DB_POOL_SIZE", "5")),  # Audit fix 8.8
+        "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "10")),  # Audit fix 8.8
+        "pool_timeout": 30,
+        "pool_recycle": 3600,
+        "pool_pre_ping": True,
+    }
+)
 
 connect_args = {} if "sqlite" in settings.DATABASE_URL else {"timeout": 30}
-engine = create_async_engine(settings.DATABASE_URL, echo=settings.DEBUG, connect_args=connect_args, **pool_kwargs)
+engine = create_async_engine(
+    settings.DATABASE_URL, echo=settings.DEBUG, connect_args=connect_args, **pool_kwargs
+)
 
 # --- Slow query logging (attached to sync engine underneath async engine) ---
 _slow_query_logger = logging.getLogger("slow_queries")

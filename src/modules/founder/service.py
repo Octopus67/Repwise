@@ -33,7 +33,7 @@ class FounderService:
         if section_key is not None:
             stmt = stmt.where(FounderContent.section_key == section_key)
         stmt = stmt.where(FounderContent.locale == locale)
-        stmt = stmt.order_by(FounderContent.section_key)
+        stmt = stmt.order_by(FounderContent.section_key).limit(100)
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 

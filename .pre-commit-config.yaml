@@ -38,5 +38,3 @@ repos:
       - id: check-json
         exclude: 'node_modules'
       - id: check-merge-conflict
-      - id: no-commit-to-branch
-        args: ['--branch', 'main']

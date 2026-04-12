@@ -46,18 +46,19 @@ _recalculate_attempts: dict[str, float] = {}
 RECALCULATE_COOLDOWN_SECONDS = 60
 
 
-def _check_recalculate_cooldown(user_id: str) -> int | None:
+async def _check_recalculate_cooldown(user_id: str) -> int | None:
     """Return remaining cooldown seconds, or None if not rate-limited.
 
     Uses Redis when available (multi-worker safe), falls back to in-memory.
     """
-    redis = get_redis()
+    redis = await get_redis()
     if redis:
         try:
             key = f"recalculate_cooldown:{user_id}"
-            result = redis.set(key, "1", nx=True, ex=RECALCULATE_COOLDOWN_SECONDS)
+            result = await redis.set(key, "1", nx=True, ex=RECALCULATE_COOLDOWN_SECONDS)
             if result is None:
-                return redis.ttl(key) or RECALCULATE_COOLDOWN_SECONDS
+                ttl = await redis.ttl(key)
+                return ttl or RECALCULATE_COOLDOWN_SECONDS
             return None
         except Exception:
             logger.warning("[UserService] Redis cooldown check failed, using in-memory fallback")
@@ -113,19 +114,29 @@ class UserService:
             self.db.add(profile)
 
         update_data = data.model_dump(exclude_unset=True)
-        
+
         # Validate preferences field
         if "preferences" in update_data and update_data["preferences"] is not None:
             prefs = update_data["preferences"]
             if not isinstance(prefs, dict):
                 raise ValidationError("Preferences must be a dictionary")
-            
+
             # Allow only known preference keys
             allowed_keys = {
-                "age_years", "sex", "theme", "units", "notifications",
-                "unit_system", "rest_timer", "cuisine_preferences",
-                "dietary_restrictions", "allergies", "meal_frequency",
-                "diet_style", "protein_per_kg", "exercise_types",
+                "age_years",
+                "sex",
+                "theme",
+                "units",
+                "notifications",
+                "unit_system",
+                "rest_timer",
+                "cuisine_preferences",
+                "dietary_restrictions",
+                "allergies",
+                "meal_frequency",
+                "diet_style",
+                "protein_per_kg",
+                "exercise_types",
                 "exercise_sessions_per_week",
             }
             unknown_keys = set(prefs.keys()) - allowed_keys
@@ -143,9 +154,7 @@ class UserService:
     # Metrics (append-only history — Requirement 2.5)
     # ------------------------------------------------------------------
 
-    async def log_metrics(
-        self, user_id: uuid.UUID, data: UserMetricCreate
-    ) -> UserMetricResponse:
+    async def log_metrics(self, user_id: uuid.UUID, data: UserMetricCreate) -> UserMetricResponse:
         """Append a new metrics snapshot."""
         metric = UserMetric(
             user_id=user_id,
@@ -253,9 +262,7 @@ class UserService:
     # Goals (upsert — one active goal set per user)
     # ------------------------------------------------------------------
 
-    async def set_goals(
-        self, user_id: uuid.UUID, data: UserGoalSet
-    ) -> UserGoalResponse:
+    async def set_goals(self, user_id: uuid.UUID, data: UserGoalSet) -> UserGoalResponse:
         """Create or update the user's goals."""
         stmt = select(UserGoal).where(UserGoal.user_id == user_id)
         result = await self.db.execute(stmt)
@@ -292,7 +299,7 @@ class UserService:
         self, user_id: uuid.UUID, data: RecalculateRequest
     ) -> RecalculateResponse:
         """Recalculate adaptive targets after updating metrics and/or goals."""
-        remaining = _check_recalculate_cooldown(str(user_id))
+        remaining = await _check_recalculate_cooldown(str(user_id))
         if remaining is not None:
             raise RateLimitedError(
                 message="Recalculate rate limit exceeded. Please wait before trying again.",
@@ -319,7 +326,11 @@ class UserService:
         latest_result = await self.db.execute(latest_stmt)
         latest_metrics = latest_result.scalar_one_or_none()
 
-        if latest_metrics is None or latest_metrics.weight_kg is None or latest_metrics.height_cm is None:
+        if (
+            latest_metrics is None
+            or latest_metrics.weight_kg is None
+            or latest_metrics.height_cm is None
+        ):
             raise ValidationError(
                 "Height and weight are required for recalculation. Please log your body stats first."
             )
@@ -365,7 +376,9 @@ class UserService:
         sex = prefs.get("sex")
 
         # Fallback: try additional_metrics from user_metrics before using defaults
-        additional = (latest_metrics.additional_metrics or {}) if latest_metrics.additional_metrics else {}
+        additional = (
+            (latest_metrics.additional_metrics or {}) if latest_metrics.additional_metrics else {}
+        )
         if age_years is None:
             birth_year = additional.get("birth_year")
             if birth_year:
@@ -390,7 +403,9 @@ class UserService:
             height_cm=latest_metrics.height_cm,
             age_years=age_years,
             sex=sex,
-            activity_level=ActivityLevel(latest_metrics.activity_level or "moderate") if latest_metrics.activity_level in [e.value for e in ActivityLevel] else ActivityLevel.MODERATE,
+            activity_level=ActivityLevel(latest_metrics.activity_level or "moderate")
+            if latest_metrics.activity_level in [e.value for e in ActivityLevel]
+            else ActivityLevel.MODERATE,
             goal_type=goal_type,
             goal_rate_per_week=goal_rate_per_week,
             bodyweight_history=bw_history,
@@ -454,7 +469,7 @@ class UserService:
             snap = (await self.db.execute(snap_stmt)).scalar_one_or_none()
             if snap is None:
                 return  # No snapshot to compare against
-            
+
             # Get current EMA weight from recent bodyweight logs
             bw_stmt = (
                 select(BodyweightLog)
@@ -465,41 +480,45 @@ class UserService:
             bw_rows = (await self.db.execute(bw_stmt)).scalars().all()
             if len(bw_rows) < 3:
                 return  # Not enough data for EMA
-            
+
             # Simple EMA: average of last 7 entries
             recent_weights = [r.weight_kg for r in bw_rows[:7]]
             current_ema = sum(recent_weights) / len(recent_weights)
-            
+
             # Compare with snapshot weight
             snapshot_weight = snap.ema_current
             if snapshot_weight is None or snapshot_weight <= 0:
                 return
-            
+
             # Threshold: recalculate if weight changed by > 1kg or > 1.5%
             diff = abs(current_ema - snapshot_weight)
             pct_diff = diff / snapshot_weight * 100
             if diff < 1.0 and pct_diff < 1.5:
                 return  # Not significant enough
-            
+
             # Trigger recalculation - get user data
-            goal = (await self.db.execute(
-                select(UserGoal).where(UserGoal.user_id == user_id)
-            )).scalar_one_or_none()
-            
-            metrics = (await self.db.execute(
-                select(UserMetric).where(UserMetric.user_id == user_id)
-                .order_by(UserMetric.recorded_at.desc()).limit(1)
-            )).scalar_one_or_none()
-            
+            goal = (
+                await self.db.execute(select(UserGoal).where(UserGoal.user_id == user_id))
+            ).scalar_one_or_none()
+
+            metrics = (
+                await self.db.execute(
+                    select(UserMetric)
+                    .where(UserMetric.user_id == user_id)
+                    .order_by(UserMetric.recorded_at.desc())
+                    .limit(1)
+                )
+            ).scalar_one_or_none()
+
             if not goal or not metrics:
                 return
-            
+
             # Get profile for age/sex
             profile = await self.get_profile(user_id)
             prefs = profile.preferences or {}
             age_years = prefs.get("age_years", 30)
             sex = prefs.get("sex", "male")
-            
+
             # Build adaptive input
             bw_history = [(r.recorded_date, r.weight_kg) for r in reversed(bw_rows)]
             adaptive_input = AdaptiveInput(
@@ -516,9 +535,9 @@ class UserService:
                 protein_per_kg_override=prefs.get("protein_per_kg"),
                 body_fat_pct=metrics.body_fat_pct,
             )
-            
+
             new_snap = compute_snapshot(adaptive_input)
-            
+
             # Save new snapshot
             snap_model = AdaptiveSnapshot(
                 user_id=user_id,
@@ -541,7 +560,7 @@ class UserService:
             )
             self.db.add(snap_model)
             await self.db.flush()
-            
+
         except (SQLAlchemyError, ValueError, TypeError):
             # Non-critical — don't fail the bodyweight log
             logger.warning("Adaptive snapshot creation failed", exc_info=True)
