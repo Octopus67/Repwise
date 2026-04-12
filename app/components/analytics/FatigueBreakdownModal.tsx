@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { getFatigueColor, getFatigueLabel } from '../../utils/fatigueColorMapping';
@@ -29,6 +30,7 @@ function BarRow({ label, value }: { label: string; value: number }) {
 export function FatigueBreakdownModal({ visible, score, onClose }: Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const insets = useSafeAreaInsets();
   if (!score) return null;
 
   const color = getFatigueColor(score.score);
@@ -37,7 +39,7 @@ export function FatigueBreakdownModal({ visible, score, onClose }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={getStyles().overlay}>
-        <View style={[getStyles().sheet, { backgroundColor: c.bg.surface }]}>
+        <View style={[getStyles().sheet, { backgroundColor: c.bg.surface, paddingBottom: spacing[8] + insets.bottom }]}>
           <View style={getStyles().header}>
             <Text style={[getStyles().title, { color: c.text.primary }]}>{score.muscle_group}</Text>
             <TouchableOpacity onPress={onClose}>

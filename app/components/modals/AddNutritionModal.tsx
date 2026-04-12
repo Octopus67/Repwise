@@ -351,7 +351,7 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
         {successMessage && (
           <View style={styles.successRow}>
             <Text style={styles.successText}>{successMessage}</Text>
-            <TouchableOpacity onPress={handleSaveAsFavorite}>
+            <TouchableOpacity onPress={handleSaveAsFavorite} disabled={savingFavorite}>
               <Text style={[styles.saveFavLink, { color: c.accent.primary }]}>Save as Favorite</Text>
             </TouchableOpacity>
           </View>

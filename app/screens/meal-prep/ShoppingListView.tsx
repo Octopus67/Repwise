@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { typography, spacing } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import api from '../../services/api';
@@ -61,14 +62,17 @@ export function ShoppingListView({ route }: ProfileScreenProps<'ShoppingList'>) 
 
   if (loading) {
     return (
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <View style={styles.center}>
         <ActivityIndicator size="large" color={c.accent.primary} />
       </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <View style={styles.center}>
         <Text style={[styles.errorText, { color: c.semantic.negative }]}>{error}</Text>
         <TouchableOpacity
@@ -85,10 +89,12 @@ export function ShoppingListView({ route }: ProfileScreenProps<'ShoppingList'>) 
           <Text style={[styles.retryText, { color: c.text.primary }]}>Retry</Text>
         </TouchableOpacity>
       </View>
+      </SafeAreaView>
     );
   }
 
   return (
+    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
     <SectionList
       style={[styles.container, { backgroundColor: c.bg.base }]}
       sections={sections}
@@ -112,8 +118,16 @@ export function ShoppingListView({ route }: ProfileScreenProps<'ShoppingList'>) 
         </TouchableOpacity>
       )}
       stickySectionHeadersEnabled={false}
+      ListEmptyComponent={
+        <View style={styles.center}>
+          <Text style={{ color: c.text.muted, fontSize: typography.size.base, textAlign: 'center' }}>
+            No items on your shopping list
+          </Text>
+        </View>
+      }
       SectionSeparatorComponent={() => <View style={styles.sectionSpacer} />}
     />
+    </SafeAreaView>
   );
 }
 

@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { typography, spacing } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../../components/common/Card';
@@ -67,6 +68,7 @@ export function MealPlanScreen({ navigation }: ProfileScreenProps<'MealPlan'>) {
   const weeklySummary = daySummaries.length > 0 ? computeWeeklyMacroTotal(daySummaries) : null;
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.bg.base }} edges={['top']}>
     <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]}>
       <Text style={[styles.title, { color: c.text.primary }]}>Meal Prep</Text>
 
@@ -148,6 +150,7 @@ export function MealPlanScreen({ navigation }: ProfileScreenProps<'MealPlan'>) {
         )}
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 

@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity, TextInput, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, type ThemeColors } from '../../hooks/useThemeColors';
@@ -29,6 +30,13 @@ export function FeedScreen() {
   const c = useThemeColors();
   const s = styles(c);
   const user = useStore((st) => st.user);
+  const navigation = useNavigation<any>();
+
+  const handleFeedCardPress = useCallback((event: FeedEvent) => {
+    if (event.event_type === 'workout_completed' && event.id) {
+      navigation.navigate('Home', { screen: 'SessionDetail', params: { sessionId: event.id } });
+    }
+  }, [navigation]);
 
   const {
     data,
@@ -162,7 +170,7 @@ export function FeedScreen() {
       <FlatList
         data={events}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <FeedCard event={item} />}
+        renderItem={({ item }) => <FeedCard event={item} onPress={handleFeedCardPress} />}
         contentContainerStyle={s.container}
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={c.accent.primary} />

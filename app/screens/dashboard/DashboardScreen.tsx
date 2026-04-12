@@ -38,6 +38,7 @@ import { useActiveWorkoutStore } from '../../store/activeWorkoutSlice';
 import { computeEMA, computeWeeklyChange, formatWeeklyChange } from '../../utils/emaTrend';
 import { WeeklyCheckinCard } from '../../components/coaching/WeeklyCheckinCard';
 import { FatigueAlertCard } from '../../components/dashboard/FatigueAlertCard';
+import { StepCountCard } from '../../components/dashboard/StepCountCard';
 import { RecompDashboardCard } from '../../components/dashboard/RecompDashboardCard';
 import NudgeCard from '../../components/dashboard/NudgeCard';
 import GoalProgressPill from '../../components/dashboard/GoalProgressPill';
@@ -115,6 +116,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
   const emailVerified = useStore((st) => st.user?.emailVerified);
   const [verifyDismissed, setVerifyDismissed] = useState(false);
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
+  const [coachingLoading, setCoachingLoading] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem('@repwise:verify_dismissed').then(val => {
@@ -161,9 +163,9 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
   const isToday = selectedDate === today;
   const showRestDay = !isLoading && data.trainingSessions.length === 0 && (!isToday || new Date().getHours() >= 14);
 
-  const handleCheckinAccept = useCallback(async (id: string) => { try { await api.post(`adaptive/suggestions/${id}/accept`); store.setWeeklyCheckin(null); loadDashboardData(selectedDate); } catch (err: unknown) { Alert.alert('Error', 'Could not update. Please try again.'); } }, [store, loadDashboardData, selectedDate]); // Audit fix 7.2
-  const handleCheckinModify = useCallback(async (id: string, t: MacroTargets) => { try { await api.post(`adaptive/suggestions/${id}/modify`, t); store.setWeeklyCheckin(null); loadDashboardData(selectedDate); } catch (err: unknown) { Alert.alert('Error', 'Could not update. Please try again.'); } }, [store, loadDashboardData, selectedDate]); // Audit fix 7.2
-  const handleCheckinDismiss = useCallback(async (id: string) => { try { await api.post(`adaptive/suggestions/${id}/dismiss`); store.setWeeklyCheckin(null); } catch (err: unknown) { Alert.alert('Error', 'Could not update. Please try again.'); } }, [store]); // Audit fix 7.2
+  const handleCheckinAccept = useCallback(async (id: string) => { if (coachingLoading) return; setCoachingLoading(true); try { await api.post(`adaptive/suggestions/${id}/accept`); store.setWeeklyCheckin(null); loadDashboardData(selectedDate); } catch (err: unknown) { Alert.alert('Error', 'Could not update. Please try again.'); } finally { setCoachingLoading(false); } }, [store, loadDashboardData, selectedDate, coachingLoading]); // Audit fix 7.2
+  const handleCheckinModify = useCallback(async (id: string, t: MacroTargets) => { if (coachingLoading) return; setCoachingLoading(true); try { await api.post(`adaptive/suggestions/${id}/modify`, t); store.setWeeklyCheckin(null); loadDashboardData(selectedDate); } catch (err: unknown) { Alert.alert('Error', 'Could not update. Please try again.'); } finally { setCoachingLoading(false); } }, [store, loadDashboardData, selectedDate, coachingLoading]); // Audit fix 7.2
+  const handleCheckinDismiss = useCallback(async (id: string) => { if (coachingLoading) return; setCoachingLoading(true); try { await api.post(`adaptive/suggestions/${id}/dismiss`); store.setWeeklyCheckin(null); } catch (err: unknown) { Alert.alert('Error', 'Could not update. Please try again.'); } finally { setCoachingLoading(false); } }, [store, coachingLoading]); // Audit fix 7.2
 
   const dismissTrialModal = useCallback(() => {
     setShowTrialExpiration(false);
@@ -287,6 +289,8 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
         {sectionErrors.training && <SectionError label="training" onRetry={refetchBySection.training} />}
 
         {!isLoading && <WeeklyChallengeCard challenges={data.challenges} />}
+
+        {Platform.OS !== 'web' && <StepCountCard />}
 
         {renderWeightTrend()}
 

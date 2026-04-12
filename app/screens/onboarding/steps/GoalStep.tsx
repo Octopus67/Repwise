@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { View, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { spacing, typography, radius } from '../../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../../hooks/useThemeColors';
 import { Button } from '../../../components/common/Button';
@@ -81,6 +81,7 @@ export function GoalStep({ onNext }: Props) {
   }, [store.targetWeightKg, store.weightKg, isLose, isBuild, isMaintain]);
 
   return (
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
       <Text style={[styles.heading, { color: c.text.primary }]}>Set Your Pace</Text>
       <Text style={[styles.subheading, { color: c.text.secondary }]}>
@@ -162,6 +163,7 @@ export function GoalStep({ onNext }: Props) {
 
       {onNext && <Button title="Next" onPress={onNext} disabled={!targetWeightValid} style={styles.btn} />}
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

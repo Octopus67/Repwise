@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share, Alert } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { convertWeight } from '../../utils/unitConversion';
+import { useStore } from '../../store';
 import { Card } from '../../components/common/Card';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Skeleton } from '../../components/common/Skeleton';
@@ -62,6 +64,8 @@ function DeltaBadge({ value, unit, invert }: { value: number | null; unit: strin
 export function MonthlyReportScreen({ navigation }: AnalyticsScreenProps<'MonthlyReport'>) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const unitSystem = useStore((s) => s.unitSystem);
+  const wUnit = unitSystem === 'imperial' ? 'lbs' : 'kg';
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -100,7 +104,7 @@ export function MonthlyReportScreen({ navigation }: AnalyticsScreenProps<'Monthl
   const handleShare = async () => {
     if (!report) return;
     try {
-      const msg = `${MONTH_NAMES[report.month - 1]} ${report.year} — ${report.training.session_count} sessions, ${Math.round(report.training.total_volume)}kg volume, ${report.nutrition.compliance_pct}% compliance`;
+      const msg = `${MONTH_NAMES[report.month - 1]} ${report.year} — ${report.training.session_count} sessions, ${Math.round(convertWeight(report.training.total_volume, unitSystem))}${wUnit} volume, ${report.nutrition.compliance_pct}% compliance`;
       await Share.share({ message: msg });
     } catch {
       Alert.alert('Error', 'Could not share report');
@@ -172,8 +176,8 @@ export function MonthlyReportScreen({ navigation }: AnalyticsScreenProps<'Monthl
                 <View style={styles.metricsGrid}>
                   <View style={styles.metricItem}>
                     <Text style={[styles.metricLabel, { color: c.text.secondary }]}>Total Volume</Text>
-                    <Text style={[styles.metricValue, { color: c.text.primary }]}>{Math.round(report.training.total_volume)} kg</Text>
-                    <DeltaBadge value={d?.volume_delta ?? null} unit=" kg" />
+                    <Text style={[styles.metricValue, { color: c.text.primary }]}>{Math.round(convertWeight(report.training.total_volume, unitSystem))} {wUnit}</Text>
+                    <DeltaBadge value={d?.volume_delta ?? null} unit={` ${wUnit}`} />
                   </View>
                   <View style={styles.metricItem}>
                     <Text style={[styles.metricLabel, { color: c.text.secondary }]}>Sessions</Text>
@@ -183,7 +187,7 @@ export function MonthlyReportScreen({ navigation }: AnalyticsScreenProps<'Monthl
                   {Object.entries(report.training.volume_by_muscle_group).slice(0, 4).map(([mg, vol]) => (
                     <View key={mg} style={styles.metricItem}>
                       <Text style={[styles.metricLabel, { color: c.text.secondary }]}>{mg}</Text>
-                      <Text style={[styles.metricValue, { color: c.text.primary }]}>{Math.round(vol)} kg</Text>
+                      <Text style={[styles.metricValue, { color: c.text.primary }]}>{Math.round(convertWeight(vol, unitSystem))} {wUnit}</Text>
                     </View>
                   ))}
                 </View>
@@ -253,7 +257,7 @@ export function MonthlyReportScreen({ navigation }: AnalyticsScreenProps<'Monthl
                       <Text style={[styles.metricValue, { color: c.text.primary }]}>
                         {report.body.weight_change_kg > 0 ? '+' : ''}{report.body.weight_change_kg} kg
                       </Text>
-                      <DeltaBadge value={d?.weight_change_delta ?? null} unit=" kg" invert />
+                      <DeltaBadge value={d?.weight_change_delta ?? null} unit={` ${wUnit}`} invert />
                     </View>
                   )}
                 </View>

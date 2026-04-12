@@ -18,6 +18,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { useToast } from '../../contexts/ToastContext';
 import { Card } from '../../components/common/Card';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Skeleton } from '../../components/common/Skeleton';
@@ -76,6 +77,7 @@ export function LogsScreen() {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const pillStyles = getPillStyles(c);
+  const { showToast } = useToast();
   const navigation = useNavigation<NativeStackNavigationProp<LogsStackParamList>>();
   const fabAnim = useStaggeredEntrance(0, 200);
   const { impact } = useHaptics();
@@ -223,6 +225,7 @@ export function LogsScreen() {
         try {
           await api.delete(`nutrition/entries/${id}`);
           loadNutritionData();
+          showToast('Deleted');
         } catch (err: unknown) { Alert.alert('Error', 'Failed to delete. Please try again.'); }
       }},
     ]);
@@ -235,6 +238,7 @@ export function LogsScreen() {
         try {
           await api.delete(`training/sessions/${id}`);
           setTrainingSessions((prev) => prev.filter((s) => s.id !== id));
+          showToast('Deleted');
         } catch (err: unknown) { Alert.alert('Error', 'Failed to delete. Please try again.'); }
       }},
     ]);

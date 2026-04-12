@@ -25,6 +25,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../services/api';
 import type { FoodItem, Macros } from '../../types/nutrition';
 import { AddIngredientsStep } from './AddIngredientsStep';
@@ -270,6 +271,7 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
   // ── Render steps ───────────────────────────────────────────────────────────
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.bg.base }} edges={['top']}>
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: c.bg.base }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -451,6 +453,7 @@ export function RecipeBuilderScreen({ visible, onClose, onSaved }: Props) {
         </View>
       )}
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

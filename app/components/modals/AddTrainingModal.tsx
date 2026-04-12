@@ -124,6 +124,9 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
       setExercises(formStateRef.current.exercises);
       setNotes(formStateRef.current.notes);
       formStateRef.current = null;
+    } else if (visible) {
+      // No pending restoration — reset to fresh state
+      reset();
     }
   }, [visible]);
 
@@ -291,6 +294,8 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
       if (ex.sets.length === 0) return `"${ex.name}" needs at least one set.`;
       for (const s of ex.sets) {
         if (s.reps === '' || s.weight === '') return `Fill in reps and weight for "${ex.name}".`;
+        if ((parseInt(s.reps, 10) || 0) <= 0) return `Reps must be greater than 0 for "${ex.name}".`;
+        if ((parseFloat(s.weight) || 0) < 0) return `Weight cannot be negative for "${ex.name}".`;
       }
     }
     return null;
@@ -308,11 +313,14 @@ export function AddTrainingModal({ visible, onClose, onSuccess }: Props) {
         session_date: selectedDate,
         exercises: exercises.map((ex) => ({
           exercise_name: ex.name.trim(),
-          sets: ex.sets.map((s) => ({
-            reps: Number(s.reps),
-            weight_kg: Number(s.weight),
-            ...(s.rpe !== '' ? { rpe: Number(s.rpe) } : {}),
-          })),
+          sets: ex.sets.map((s) => {
+            const rpe = parseFloat(s.rpe);
+            return {
+              reps: parseInt(s.reps, 10) || 0,
+              weight_kg: parseFloat(s.weight) || 0,
+              ...(s.rpe !== '' ? { rpe: isNaN(rpe) ? undefined : Math.min(10, Math.max(1, rpe)) } : {}),
+            };
+          }),
         })),
         ...(notes.trim() ? { metadata: { notes: notes.trim() } } : {}),
       });

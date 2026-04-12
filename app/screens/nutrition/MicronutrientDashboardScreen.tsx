@@ -18,6 +18,7 @@ import {
   ActivityIndicator,
   SectionList,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../../components/common/Icon';
@@ -104,23 +105,28 @@ export function MicronutrientDashboardScreen() {
 
   if (loading) {
     return (
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <View style={styles.center}>
         <ActivityIndicator color={c.accent.primary} />
       </View>
+      </SafeAreaView>
     );
   }
 
   if (error || !data) {
     return (
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <View style={styles.center}>
         <Text style={[styles.errorText, { color: c.semantic.negative }]}>{error ?? 'No data available'}</Text>
       </View>
+      </SafeAreaView>
     );
   }
 
   // Empty state — no nutrition data logged this week
   if (data.days_with_data === 0) {
     return (
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]} contentContainerStyle={styles.content}>
         <View style={styles.weekNav}>
           <TouchableOpacity onPress={() => setWeekStart(getAdjacentWeek(weekStart, 'prev'))}>
@@ -141,6 +147,7 @@ export function MicronutrientDashboardScreen() {
           </Text>
         </View>
       </ScrollView>
+      </SafeAreaView>
     );
   }
 
@@ -148,6 +155,7 @@ export function MicronutrientDashboardScreen() {
   const scoreLabel = getScoreLabel(data.nutrient_score);
 
   return (
+    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
     <SectionList
       sections={sections}
       keyExtractor={(n: NutrientSummary) => n.key}
@@ -223,6 +231,7 @@ export function MicronutrientDashboardScreen() {
         </>
       }
     />
+    </SafeAreaView>
   );
 }
 

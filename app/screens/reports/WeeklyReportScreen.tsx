@@ -5,6 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
+import { convertWeight } from '../../utils/unitConversion';
+import { useStore } from '../../store';
 import { Card } from '../../components/common/Card';
 import { EmptyState } from '../../components/common/EmptyState';
 import { Skeleton } from '../../components/common/Skeleton';
@@ -102,6 +104,8 @@ function getMuscleInsight(m: WNSMuscleVolume): string | null {
 export function WeeklyReportScreen({ navigation }: AnalyticsScreenProps<'WeeklyReport'>) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const unitSystem = useStore((s) => s.unitSystem);
+  const wUnit = unitSystem === 'imperial' ? 'lbs' : 'kg';
   const now = getISOWeek(new Date());
   const [year, setYear] = useState(now.year);
   const [week, setWeek] = useState(now.week);
@@ -177,7 +181,7 @@ export function WeeklyReportScreen({ navigation }: AnalyticsScreenProps<'WeeklyR
   const handleShare = async () => {
     if (!report) return;
     try {
-      const message = `Week ${report.week}, ${report.year} — ${report.training.session_count} sessions, ${Math.round(report.training.total_volume)}kg volume, ${report.nutrition.compliance_pct}% compliance`;
+      const message = `Week ${report.week}, ${report.year} — ${report.training.session_count} sessions, ${Math.round(convertWeight(report.training.total_volume, unitSystem))}${wUnit} volume, ${report.nutrition.compliance_pct}% compliance`;
 
       // Try image capture first (native only)
       if (Platform.OS !== 'web' && reportCardRef.current) {
@@ -229,10 +233,10 @@ export function WeeklyReportScreen({ navigation }: AnalyticsScreenProps<'WeeklyR
                 <Text style={[getStyles().emptyText, { color: c.text.muted }]}>No training sessions this week</Text>
               ) : (
                 <View style={getStyles().metricsGrid}>
-                  <MetricItem label="Total Volume" value={`${Math.round(report.training.total_volume)} kg`} />
+                  <MetricItem label="Total Volume" value={`${Math.round(convertWeight(report.training.total_volume, unitSystem))} ${wUnit}`} />
                   <MetricItem label="Sessions" value={String(report.training.session_count)} />
                   {Object.entries(report.training.volume_by_muscle_group).slice(0, 4).map(([mg, vol]) => (
-                    <MetricItem key={mg} label={mg} value={`${Math.round(vol)} kg`} />
+                    <MetricItem key={mg} label={mg} value={`${Math.round(convertWeight(vol, unitSystem))} ${wUnit}`} />
                   ))}
                   {report.training.personal_records.map((pr, i) => (
                     <Text key={i} style={[getStyles().prText, { color: c.semantic.positive }]}><Icon name="trophy" size={14} color={c.accent.primary} /> {pr.exercise_name}: {pr.new_weight_kg}kg × {pr.reps}</Text>
@@ -312,7 +316,7 @@ export function WeeklyReportScreen({ navigation }: AnalyticsScreenProps<'WeeklyR
                 <>
                   <Text style={[getStyles().goalText, { color: c.text.primary }]}>
                     Your goal: {GOAL_LABELS[goals.goalType] ?? goals.goalType}
-                    {goals.goalRatePerWeek ? ` (${goals.goalRatePerWeek > 0 ? '+' : ''}${goals.goalRatePerWeek} kg/week)` : ''}
+                    {goals.goalRatePerWeek ? ` (${goals.goalRatePerWeek > 0 ? '+' : ''}${convertWeight(goals.goalRatePerWeek, unitSystem)} ${wUnit}/week)` : ''}
                   </Text>
                   {(() => {
                     const mult = getGoalMultiplier(goals.goalType, goals.goalRatePerWeek);

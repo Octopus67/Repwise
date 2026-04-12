@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { useStore } from '../../store';
 import { kgToLbs, lbsToKg, parseWeightToKg } from '../../utils/unitConversion';
 import api from '../../services/api';
 import { haptic } from '../../utils/haptics';
+import { useToast } from '../../contexts/ToastContext';
 
 interface Props {
   visible: boolean;
@@ -26,11 +27,15 @@ export function AddBodyweightModal({ visible, onClose, onSuccess }: Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const segmentStyles = getSegmentStyles(c);
+  const { showToast } = useToast();
   const unitSystem = useStore((s) => s.unitSystem);
   const selectedDate = useStore((s) => s.selectedDate);
   const [weight, setWeight] = useState('');
   const [unit, setUnit] = useState<'kg' | 'lbs'>(unitSystem === 'imperial' ? 'lbs' : 'kg');
   const [loading, setLoading] = useState(false);
+
+  // Reset state on every open, regardless of how previous close happened
+  useEffect(() => { if (visible) reset(); }, [visible]);
 
   const reset = () => {
     setWeight('');
@@ -68,7 +73,7 @@ export function AddBodyweightModal({ visible, onClose, onSuccess }: Props) {
         weight_kg: parseWeightToKg(numVal, unit),
       });
       reset();
-      Alert.alert('Logged!', 'Weight entry saved.');
+      showToast('Weight entry saved');
       onSuccess();
       onClose();
     } catch {

@@ -11,11 +11,11 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
+import { FallbackImage } from '../common/FallbackImage';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { AlignmentData, ImageTransform, PhotoMeta, PhotoPathMap } from '../../utils/progressPhotoTypes';
@@ -142,7 +142,7 @@ function ComparisonSide({ uri, info, transform }: ComparisonSideProps) {
     <View style={[getStyles().side, { backgroundColor: c.bg.surface }]}>
       <View style={getStyles().photoClip}>
         {uri ? (
-          <Image source={{ uri }} style={imageStyle} resizeMode="cover" />
+          <FallbackImage source={{ uri }} style={imageStyle} resizeMode="cover" />
         ) : (
           <View style={[getStyles().photoPlaceholder, { width: SIDE_WIDTH, height: PHOTO_HEIGHT }]}>
             <Text style={[getStyles().placeholderText, { color: c.text.muted }]}>No photo</Text>

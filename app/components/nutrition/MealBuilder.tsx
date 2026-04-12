@@ -22,6 +22,7 @@ import {
   type MealBuilderItem,
   type Macros,
 } from '../../utils/mealBuilderLogic';
+import { useToast } from '../../contexts/ToastContext';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -38,6 +39,7 @@ interface Props {
 export function MealBuilder({ visible, onClose, onSuccess, targets, consumed }: Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const { showToast } = useToast();
   const selectedDate = useStore((s) => s.selectedDate);
   const [state, dispatch] = useReducer(mealBuilderReducer, undefined, createInitialState);
   const [showFoodSearch, setShowFoodSearch] = useState(false);
@@ -121,7 +123,7 @@ export function MealBuilder({ visible, onClose, onSuccess, targets, consumed }: 
         carbs_g: Math.round(totals.carbs_g * 10) / 10,
         fat_g: Math.round(totals.fat_g * 10) / 10,
       });
-      Alert.alert('Saved', `"${state.mealName}" saved as favorite.`);
+      showToast(`"${state.mealName}" saved as favorite`);
     } catch {
       Alert.alert('Error', 'Failed to save as favorite.');
     } finally {

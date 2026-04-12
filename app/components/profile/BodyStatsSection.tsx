@@ -358,7 +358,7 @@ export function BodyStatsSection({ metrics, unitSystem }: BodyStatsSectionProps)
           Last updated: {getRelativeTime(metrics.recordedAt)}
         </Text>
         <TouchableOpacity
-          onPress={() => navigation.navigate('MetricsHistory')}
+          onPress={() => navigation.navigate('Measurements')}
           activeOpacity={0.7}
         >
           <Text style={styles.viewHistory}>View History →</Text>
