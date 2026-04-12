@@ -63,13 +63,20 @@ export function activeExercisesToPayload(
       exercise_name: ex.exerciseName,
       sets: ex.sets
         .filter((s) => s.completed)
-        .map((s) => ({
-          reps: parseInt(s.reps, 10) || 0,
-          weight_kg: parseWeightInput(parseFloat(s.weight) || 0, unitSystem),
-          rpe: s.rpe ? parseFloat(s.rpe) : null,
-          rir: s.rir ? parseInt(s.rir, 10) : null,
-          set_type: s.setType,
-        })),
+        .map((s) => {
+          const reps = Math.min(999, Math.max(0, parseInt(s.reps, 10) || 0));
+          const weight_kg = Math.min(9999, Math.max(0, parseWeightInput(parseFloat(s.weight) || 0, unitSystem)));
+          const parsedRpe = s.rpe ? parseFloat(s.rpe) : NaN;
+          const parsedRir = s.rir ? parseInt(s.rir, 10) : NaN;
+          return {
+            reps,
+            weight_kg,
+            rpe: isNaN(parsedRpe) ? null : Math.min(10, Math.max(1, parsedRpe)),
+            rir: isNaN(parsedRir) ? null : Math.min(5, Math.max(0, parsedRir)),
+            set_type: s.setType,
+          };
+        })
+        .filter((s) => !(s.reps === 0 && s.weight_kg === 0)),
     }))
     .filter((ex) => ex.sets.length > 0);
 }

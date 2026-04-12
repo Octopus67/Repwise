@@ -1,11 +1,10 @@
 /**
- * useOfflineWorkoutQueue — Minimal offline queue for workout saves.
+ * useOfflineWorkoutQueue — Array-based offline queue for workout saves.
  *
  * When a workout save fails due to a network error, the payload is
- * persisted to AsyncStorage. On network reconnect, the queued workout
- * is retried automatically.
- *
- * Deferred: offline queue planned for v2 — this is the v2 implementation.
+ * persisted to AsyncStorage as an array. Multiple workouts can be queued.
+ * On network reconnect, all queued workouts are retried in order.
+ * Edit mode is preserved — edits use PUT, new sessions use POST.
  */
 
 import { useEffect, useCallback } from 'react';
@@ -15,50 +14,84 @@ import { AxiosError } from 'axios';
 import api from '../services/api';
 import { queryClient } from '../services/queryClient';
 
-const QUEUE_KEY = '@repwise:offline_workout_queue';
+const QUEUE_KEY = '@repwise:offline_workout_queue_v2';
+
+interface QueuedWorkout {
+  payload: Record<string, unknown>;
+  isEdit: boolean;
+  editSessionId?: string;
+  queuedAt: string;
+}
 
 function isNetworkError(error: unknown): boolean {
   if (error instanceof AxiosError) {
-    return !error.response; // No response = network error
+    return !error.response;
   }
   return false;
 }
 
-/** Save a failed workout payload to AsyncStorage for later retry. */
-export async function enqueueOfflineWorkout(payload: Record<string, unknown>): Promise<void> {
+/** Append a failed workout to the offline queue. */
+export async function enqueueOfflineWorkout(
+  payload: Record<string, unknown>,
+  isEdit = false,
+  editSessionId?: string,
+): Promise<void> {
   try {
-    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(payload));
-    console.log('[OfflineQueue] Workout queued for retry');
+    const raw = await AsyncStorage.getItem(QUEUE_KEY);
+    const queue: QueuedWorkout[] = raw ? JSON.parse(raw) : [];
+    queue.push({ payload, isEdit, editSessionId, queuedAt: new Date().toISOString() });
+    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
   } catch (e) {
     console.error('[OfflineQueue] Failed to queue workout:', e);
   }
 }
 
-/** Process any queued offline workout. Returns true if a workout was retried. */
-export async function processOfflineQueue(): Promise<boolean> {
+/** Process all queued offline workouts in order. Returns count of successful retries. */
+export async function processOfflineQueue(): Promise<number> {
   try {
     const raw = await AsyncStorage.getItem(QUEUE_KEY);
-    if (!raw) return false;
+    if (!raw) return 0;
 
-    const payload = JSON.parse(raw) as Record<string, unknown>;
-    await api.post('training/sessions', payload);
-    await AsyncStorage.removeItem(QUEUE_KEY);
-    queryClient.invalidateQueries({ queryKey: ['sessions'] });
-    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-    console.log('[OfflineQueue] Queued workout saved successfully');
-    return true;
-  } catch (e) {
-    console.warn('[OfflineQueue] Retry failed, keeping in queue:', e);
-    return false;
+    const queue: QueuedWorkout[] = JSON.parse(raw);
+    if (queue.length === 0) return 0;
+
+    let processed = 0;
+    const remaining: QueuedWorkout[] = [];
+
+    for (const item of queue) {
+      try {
+        if (item.isEdit && item.editSessionId) {
+          await api.put(`training/sessions/${item.editSessionId}`, item.payload);
+        } else {
+          await api.post('training/sessions', item.payload);
+        }
+        processed++;
+      } catch {
+        remaining.push(item); // Keep failed items for next retry
+      }
+    }
+
+    if (remaining.length > 0) {
+      await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(remaining));
+    } else {
+      await AsyncStorage.removeItem(QUEUE_KEY);
+    }
+
+    if (processed > 0) {
+      queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    }
+    return processed;
+  } catch {
+    return 0;
   }
 }
 
-/** Check if an error is a network error suitable for offline queueing. */
 export { isNetworkError };
 
 /**
  * Hook that listens for network reconnection and processes the offline queue.
- * Mount once at app level (e.g., in App.tsx or root navigator).
+ * Mount once at app level.
  */
 export function useOfflineWorkoutQueue() {
   const processQueue = useCallback(async () => {

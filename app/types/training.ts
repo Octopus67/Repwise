@@ -53,6 +53,7 @@ export interface OverloadSuggestion {
   suggested_reps: number;
   reasoning: string;
   confidence: 'high' | 'medium' | 'low';
+  biomechanics_informed?: boolean;
 }
 
 export interface ActiveWorkoutState {

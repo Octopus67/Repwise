@@ -45,6 +45,7 @@ export function useWorkoutSave({
   const [finishSheetVisible, setFinishSheetVisible] = useState(false);
   const summaryDataRef = useRef<Record<string, unknown> | null>(null);
   const savingRef = useRef(false);
+  const templateSavingRef = useRef(false);
 
   const saveWorkoutMutation = useMutation({
     mutationKey: ['saveWorkout'],
@@ -107,21 +108,26 @@ export function useWorkoutSave({
     if (savingRef.current) return;
     savingRef.current = true;
     try {
+      // Snapshot state BEFORE finishWorkout() resets the store
+      const exercisesSnapshot = [...store.exercises];
+      const previousPerformanceSnapshot = { ...store.previousPerformance };
+      const isEdit = store.mode === 'edit' && !!store.editSessionId;
+      const editSessionId = store.editSessionId ?? undefined;
+
       const payload = store.finishWorkout(unitSystem);
       payload.client_id = Date.now().toString() + '_' + Math.random().toString(36).slice(2);
       payload.client_updated_at = new Date().toISOString();
 
-      const isEdit = store.mode === 'edit' && !!store.editSessionId;
       const response = await saveWorkoutMutation.mutateAsync({
         payload,
         isEdit,
-        editSessionId: store.editSessionId ?? undefined,
+        editSessionId,
       });
 
       setFinishSheetVisible(false);
 
-      // Prepare exercise breakdown data
-      const exerciseBreakdown = store.exercises
+      // Prepare exercise breakdown data (from snapshot, store is already reset)
+      const exerciseBreakdown = exercisesSnapshot
         .filter(ex => !ex.skipped)
         .map(ex => {
           const completedSets = ex.sets.filter(s => s.completed && s.setType !== 'warm-up');
@@ -146,8 +152,8 @@ export function useWorkoutSave({
       // Check for personal records
       const prs: PersonalRecordResponse[] = response.data?.personal_records ?? [];
       
-      // Compute summary inside callback (fresh values)
-      const currentSummary = computeWorkoutSummary(store.exercises);
+      // Compute summary from snapshot (store is already reset by finishWorkout)
+      const currentSummary = computeWorkoutSummary(exercisesSnapshot);
       const finalRecs = generateRecommendations(sessionHURef.current, {});
 
       const navigateToSummary = () => {
@@ -160,6 +166,7 @@ export function useWorkoutSave({
           exerciseBreakdown,
           huByMuscle: sessionHURef.current,
           recommendations: finalRecs,
+          previousPerformance: previousPerformanceSnapshot,
         });
       };
 
@@ -173,6 +180,7 @@ export function useWorkoutSave({
           exerciseBreakdown,
           huByMuscle: sessionHURef.current,
           recommendations: finalRecs,
+          previousPerformance: previousPerformanceSnapshot,
         };
         setPrData(prs);
         setPrCelebrationVisible(true);
@@ -187,7 +195,7 @@ export function useWorkoutSave({
         // The payload was already built and sent to mutateAsync — retrieve from mutation variables
         const vars = saveWorkoutMutation.variables;
         if (vars?.payload) {
-          enqueueOfflineWorkout(vars.payload);
+          enqueueOfflineWorkout(vars.payload, vars.isEdit, vars.editSessionId);
           showAlert('Saved Offline', 'No connection. Your workout will be saved when you reconnect.');
         } else {
           showAlert('Save Failed', errorMessage);
@@ -201,13 +209,29 @@ export function useWorkoutSave({
   }, [store, navigation, unitSystem, elapsedSeconds, muscleGroupMap]);
 
   const handleSaveAsTemplate = useCallback(async () => {
-    const payload = store.finishWorkout(unitSystem);
-    const templateName = `Workout - ${store.sessionDate || new Date().toLocaleDateString('en-CA')}`;
+    if (templateSavingRef.current) return;
+    templateSavingRef.current = true;
     try {
-      await api.post('training/user-templates', { name: templateName, exercises: payload.exercises });
-      showAlert('Template Saved', `"${templateName}" saved.`);
-    } catch {
-      showAlert('Error', 'Could not save template.');
+      // Build template from current exercises WITHOUT resetting the store
+      const templateName = `Workout - ${store.sessionDate || new Date().toLocaleDateString('en-CA')}`;
+      const exercises = store.exercises
+        .filter(ex => !ex.skipped)
+        .map(ex => ({
+          exercise_name: ex.exerciseName,
+          sets: ex.sets.filter(s => s.setType === 'normal').map(s => ({
+            reps: parseInt(s.reps, 10) || 0,
+            weight_kg: parseFloat(s.weight) || 0,
+            rpe: s.rpe ? parseFloat(s.rpe) : null,
+          })),
+        }));
+      try {
+        await api.post('training/user-templates', { name: templateName, exercises });
+        showAlert('Template Saved', `"${templateName}" saved.`);
+      } catch {
+        showAlert('Error', 'Could not save template.');
+      }
+    } finally {
+      templateSavingRef.current = false;
     }
   }, [store]);
 

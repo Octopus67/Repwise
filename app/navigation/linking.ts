@@ -1,15 +1,37 @@
 // Audit fix 4.2 — deep linking configuration
 import { LinkingOptions, getStateFromPath as defaultGetStateFromPath } from '@react-navigation/native';
 
-const linking: LinkingOptions<any> = {
-  prefixes: ['repwise://', 'https://app.repwise.app'],
+const prefixes = ['repwise://', 'https://app.repwise.app'];
+
+function safeGetStateFromPath(fallbackRoute: string) {
+  return function getStateFromPath(path: string, options: any) {
+    try {
+      const state = defaultGetStateFromPath(path, options);
+      if (state) return state;
+    } catch {
+      // Invalid deep link — fall through to fallback
+    }
+    return { routes: [{ name: fallbackRoute }] };
+  };
+}
+
+/** Linking config for unauthenticated users (auth screens only) */
+export const authLinking: LinkingOptions<any> = {
+  prefixes,
   config: {
     screens: {
-      // Auth screens (unauthenticated)
       Login: 'login',
       ResetPassword: 'reset-password/:email',
+    },
+  },
+  getStateFromPath: safeGetStateFromPath('Login'),
+};
 
-      // Main tab navigator (authenticated)
+/** Linking config for authenticated users (all app screens) */
+export const appLinking: LinkingOptions<any> = {
+  prefixes,
+  config: {
+    screens: {
       Home: {
         screens: {
           DashboardHome: 'dashboard',
@@ -42,15 +64,8 @@ const linking: LinkingOptions<any> = {
       },
     },
   },
-  getStateFromPath(path, options) {
-    try {
-      const state = defaultGetStateFromPath(path, options);
-      if (state) return state;
-    } catch {
-      // Invalid deep link — fall through to home
-    }
-    return { routes: [{ name: 'Home' }] };
-  },
+  getStateFromPath: safeGetStateFromPath('Home'),
 };
 
-export default linking;
+// Default export for backward compatibility
+export default appLinking;

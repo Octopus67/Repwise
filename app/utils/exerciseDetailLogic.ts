@@ -6,6 +6,13 @@
  */
 
 import type { Exercise } from '../types/exercise';
+import { API_BASE_URL } from '../services/api';
+
+/** Resolve relative exercise image URLs to absolute URLs. */
+export function resolveImageUrl(url: string): string {
+  if (url.startsWith('/')) return `${API_BASE_URL}${url}`;
+  return url;
+}
 
 /** Whether the exercise has instructions to display */
 export function shouldShowInstructions(exercise: Exercise): boolean {

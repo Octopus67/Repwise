@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useHaptics } from './useHaptics';
 import { isPremiumWorkoutLoggerEnabled } from '../utils/featureFlags';
 
@@ -29,6 +29,7 @@ export function useDashboardNavigation({
   openUpgrade,
 }: UseDashboardNavigationParams) {
   const { impact } = useHaptics();
+  const startingRef = useRef(false);
 
   const handleArticlePress = useCallback((articleId: string) => {
     navigation?.navigate?.('ArticleDetail', { articleId });
@@ -44,11 +45,14 @@ export function useDashboardNavigation({
   }, [impact]);
 
   const handleStartWorkout = useCallback(() => {
+    if (startingRef.current) return;
+    startingRef.current = true;
     if (isPremiumWorkoutLoggerEnabled()) {
       navigation.push?.('ActiveWorkout', { mode: 'new' });
     } else {
       openTraining();
     }
+    setTimeout(() => { startingRef.current = false; }, 1000);
   }, [navigation, openTraining]);
 
   const handleSessionPress = useCallback((sessionId: string) => {

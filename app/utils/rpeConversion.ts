@@ -15,14 +15,14 @@ export const RPE_VALUES: number[] = [2, 3, 4, 5, 6, 7, 8, 9, 10];
 /** RIR quick-select values (4 means "4+") */
 export const RIR_VALUES: number[] = [4, 3, 2, 1, 0];
 
-/** Convert RIR to RPE for storage. RPE = 10 - RIR */
+/** Convert RIR to RPE for storage. RPE = 10 - RIR, clamped to valid RPE range. */
 export function rirToRpe(rir: number): number {
-  return 10 - rir;
+  return Math.min(10, Math.max(1, 10 - rir));
 }
 
-/** Convert RPE to RIR for display. RIR = 10 - RPE */
+/** Convert RPE to RIR for display. RIR = 10 - RPE, clamped to non-negative. */
 export function rpeToRir(rpe: number): number {
-  return 10 - rpe;
+  return Math.max(0, 10 - rpe);
 }
 
 /** Get display label for an RIR value (4 shows as "4+") */

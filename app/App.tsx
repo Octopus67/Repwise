@@ -26,6 +26,7 @@ import { useStore } from './store';
 import { useActiveWorkoutStore } from './store/activeWorkoutSlice';
 import { isPremiumWorkoutLoggerEnabled } from './utils/featureFlags';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { ErrorFallback } from './components/common/ErrorFallback';
 import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
 import api from './services/api';
@@ -33,9 +34,11 @@ import { configurePurchases } from './services/purchases';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { queryClient } from './services/queryClient';
 import { mmkvPersister } from './services/mmkvStorage';
-import { setupNetworkManager } from './services/networkManager';
+import { setupNetworkManager, setupFocusManager } from './services/networkManager';
 import { useOfflineWorkoutQueue } from './hooks/useOfflineWorkoutQueue';
-import linking from './navigation/linking'; // Audit fix 4.2 — deep linking configuration
+import { OfflineBanner } from './components/common/OfflineBanner';
+import { ToastProvider } from './contexts/ToastContext';
+import { appLinking, authLinking } from './navigation/linking'; // Audit fix 4.2 — deep linking configuration
 
 if (process.env.EXPO_PUBLIC_SENTRY_DSN) {
   Sentry.init({
@@ -207,6 +210,7 @@ export default function App() {
     // PostHog does not collect IDFA — ATT prompt unnecessary
     initAnalytics(process.env.EXPO_PUBLIC_POSTHOG_KEY);
     setupNetworkManager();
+    setupFocusManager();
     restoreSession();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -391,12 +395,15 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
+        <ToastProvider>
+        <OfflineBanner />
         <PersistQueryClientProvider
           client={queryClient}
           persistOptions={{ persister: mmkvPersister }}
           onSuccess={() => { queryClient.resumePausedMutations().then(() => {}); }}
         >
-          <NavigationContainer ref={navigationRef} theme={navTheme} linking={ready && isAuthenticated ? linking : undefined} onStateChange={(state) => {
+          <ErrorBoundary fallback={(error, retry) => <ErrorFallback error={error} onReset={retry} />}>
+          <NavigationContainer ref={navigationRef} theme={navTheme} linking={ready ? (isAuthenticated ? appLinking : authLinking) : undefined} onStateChange={(state) => {
             const currentRoute = state?.routes[state.index];
             if (currentRoute) {
               Sentry.addBreadcrumb({ category: 'navigation', message: `Navigate to ${currentRoute.name}`, level: 'info' });
@@ -421,7 +428,9 @@ export default function App() {
               )}
             </ErrorBoundary>
           </NavigationContainer>
+          </ErrorBoundary>
         </PersistQueryClientProvider>
+        </ToastProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

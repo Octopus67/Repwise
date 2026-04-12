@@ -1,7 +1,8 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useState, useRef } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navigation/native-stack';
-import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Svg, { Path, Circle, Rect, Line } from 'react-native-svg';
 import { typography, spacing } from '../theme/tokens';
 import { triggerHaptic } from '../hooks/useHaptics';
@@ -9,7 +10,6 @@ import { haptic } from '../utils/haptics';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { useThemeColors, getThemeColors, ThemeColors } from '../hooks/useThemeColors';
 import { useActiveWorkoutStore } from '../store/activeWorkoutSlice';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Eagerly loaded screens (tab roots + frequently navigated)
 import { DashboardScreen } from '../screens/dashboard/DashboardScreen';
@@ -19,6 +19,7 @@ import { ExercisePickerScreen } from '../screens/exercise-picker/ExercisePickerS
 import { ActiveWorkoutScreen } from '../screens/training/ActiveWorkoutScreen';
 import { WorkoutSummaryScreen } from '../screens/training/WorkoutSummaryScreen';
 import { SessionDetailScreen } from '../screens/training/SessionDetailScreen';
+import { ExerciseDetailScreen } from '../screens/training/ExerciseDetailScreen';
 
 // Lazily loaded screens (heavy / infrequently visited)
 const AnalyticsScreen = React.lazy(() => import('../screens/analytics/AnalyticsScreen').then(m => ({ default: m.AnalyticsScreen })));
@@ -88,18 +89,7 @@ function TabErrorFallback(tabName: string) {
 /** Auto-save workout state on crash, then show ErrorBoundary recovery UI */
 function ActiveWorkoutWithBoundary(props: any) {
   return (
-    <ErrorBoundary
-      onError={() => {
-        const state = useActiveWorkoutStore.getState();
-        if (state.exercises?.length > 0) {
-          AsyncStorage.setItem('workout_crash_recovery', JSON.stringify({
-            exercises: state.exercises,
-            startedAt: state.startedAt,
-            isActive: state.isActive,
-          })).catch(err => console.warn('[Repwise] workout crash recovery save:', err));
-        }
-      }}
-    >
+    <ErrorBoundary>
       <ActiveWorkoutScreen {...props} />
     </ErrorBoundary>
   );
@@ -126,6 +116,8 @@ export type DashboardStackParamList = {
   WeeklyReport: undefined;
   ArticleDetail: { articleId: string };
   Learn: undefined;
+  ExerciseDetail: { exerciseId: string };
+  SessionDetail: { sessionId: string };
 };
 
 export type LogsStackParamList = {
@@ -145,6 +137,7 @@ export type LogsStackParamList = {
     recommendations?: string[];
   };
   SessionDetail: { sessionId: string };
+  ExerciseDetail: { exerciseId: string };
 };
 
 export type AnalyticsStackParamList = {
@@ -177,7 +170,6 @@ export type ProfileStackParamList = {
   PRHistory: undefined;
   YearInReview: undefined;
   ImportData: undefined;
-  MetricsHistory: undefined;
 };
 
 export type BottomTabParamList = {
@@ -234,6 +226,8 @@ function DashboardStackScreen() {
         )}
       </DashboardStack.Screen>
       <DashboardStack.Screen name="Learn" component={withSuspense(LearnScreen)} />
+      <DashboardStack.Screen name="ExerciseDetail" component={ExerciseDetailScreen} options={{ headerShown: false }} />
+      <DashboardStack.Screen name="SessionDetail" component={SessionDetailScreen} options={{ headerShown: false }} />
     </DashboardStack.Navigator>
     </ErrorBoundary>
   );
@@ -255,6 +249,7 @@ function LogsStackScreen() {
       <LogsStack.Screen name="ActiveWorkout" component={ActiveWorkoutWithBoundary} options={{ headerShown: false }} />
       <LogsStack.Screen name="WorkoutSummary" component={WorkoutSummaryScreen} options={{ headerShown: false }} />
       <LogsStack.Screen name="SessionDetail" component={SessionDetailScreen} options={{ headerShown: false }} />
+      <LogsStack.Screen name="ExerciseDetail" component={ExerciseDetailScreen} options={{ headerShown: false }} />
     </LogsStack.Navigator>
     </ErrorBoundary>
   );
@@ -386,32 +381,104 @@ function TabSvgIcon({ name, color, showBadge }: { name: keyof BottomTabParamList
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
+/** Floating rest timer pill shown above tab bar when rest timer is active */
+function RestTimerFloatingIndicator() {
+  const { restTimerActive, restTimerDuration, restTimerStartedAt } = useActiveWorkoutStore();
+  const [remaining, setRemaining] = useState(0);
+  const navigation = useNavigation<any>();
+  const themeColors = useThemeColors();
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!restTimerActive || !restTimerStartedAt) return;
+    const update = () => {
+      const elapsed = (Date.now() - new Date(restTimerStartedAt).getTime()) / 1000;
+      setRemaining(Math.max(0, restTimerDuration - Math.floor(elapsed)));
+    };
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [restTimerActive, restTimerStartedAt, restTimerDuration]);
+
+  useEffect(() => {
+    if (!restTimerActive) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 0.6, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [restTimerActive, pulseAnim]);
+
+  if (!restTimerActive) return null;
+
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+
+  return (
+    <Animated.View style={{ opacity: pulseAnim }}>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('Home', { screen: 'ActiveWorkout', params: { mode: 'resume' } })}
+        style={{
+          position: 'absolute',
+          bottom: 4,
+          alignSelf: 'center',
+          backgroundColor: themeColors.accent.primary,
+          paddingHorizontal: 12,
+          paddingVertical: 4,
+          borderRadius: 16,
+          zIndex: 100,
+        }}
+      >
+        <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>
+          Rest: {mins}:{secs.toString().padStart(2, '0')}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
+
 export function BottomTabNavigator() {
   const themeColors = useThemeColors();
+  const isWorkoutActive = useActiveWorkoutStore((s) => s.isActive);
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarStyle: [getStyles().tabBar, { backgroundColor: themeColors.bg.surface, borderTopColor: themeColors.border.subtle }],
-        tabBarActiveTintColor: themeColors.accent.primary,
-        tabBarInactiveTintColor: themeColors.text.muted,
-        tabBarLabelStyle: getStyles().tabLabel,
-        tabBarIcon: ({ focused }) => (
-          <View style={[getStyles().iconWrap, focused && { backgroundColor: themeColors.accent.primaryMuted }]}>
-            <TabSvgIcon
-              name={route.name as keyof BottomTabParamList}
-              color={focused ? themeColors.accent.primary : themeColors.text.muted}
-              showBadge={route.name === 'Profile'}
-            />
-          </View>
-        ),
-      })}
-    >
-      <Tab.Screen name="Home" component={DashboardStackScreen} options={{ tabBarTestID: 'tab-home' }} listeners={{ tabPress: () => haptic.selection() }} />
-      <Tab.Screen name="Log" component={LogsStackScreen} options={{ tabBarTestID: 'tab-log' }} listeners={{ tabPress: () => haptic.selection() }} />
-      <Tab.Screen name="Analytics" component={AnalyticsStackScreen} options={{ tabBarTestID: 'tab-analytics' }} listeners={{ tabPress: () => haptic.selection() }} />
-      <Tab.Screen name="Profile" component={ProfileStackScreen} options={{ tabBarTestID: 'tab-profile' }} listeners={{ tabPress: () => haptic.selection() }} />
-    </Tab.Navigator>
+    <View style={{ flex: 1 }}>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarStyle: [getStyles().tabBar, { backgroundColor: themeColors.bg.surface, borderTopColor: themeColors.border.subtle }],
+          tabBarActiveTintColor: themeColors.accent.primary,
+          tabBarInactiveTintColor: themeColors.text.muted,
+          tabBarLabelStyle: getStyles().tabLabel,
+          tabBarIcon: ({ focused }) => (
+            <View style={[getStyles().iconWrap, focused && { backgroundColor: themeColors.accent.primaryMuted }]}>
+              <TabSvgIcon
+                name={route.name as keyof BottomTabParamList}
+                color={focused ? themeColors.accent.primary : themeColors.text.muted}
+                showBadge={route.name === 'Profile'}
+              />
+            </View>
+          ),
+        })}
+      >
+        <Tab.Screen
+          name="Home"
+          component={DashboardStackScreen}
+          options={{
+            tabBarTestID: 'tab-home',
+            tabBarBadge: isWorkoutActive ? '●' : undefined,
+            tabBarBadgeStyle: isWorkoutActive ? { backgroundColor: 'transparent', color: themeColors.accent.primary, fontSize: 10, minWidth: 14, height: 14, lineHeight: 14 } : undefined,
+          }}
+          listeners={{ tabPress: () => haptic.selection() }}
+        />
+        <Tab.Screen name="Log" component={LogsStackScreen} options={{ tabBarTestID: 'tab-log' }} listeners={{ tabPress: () => haptic.selection() }} />
+        <Tab.Screen name="Analytics" component={AnalyticsStackScreen} options={{ tabBarTestID: 'tab-analytics' }} listeners={{ tabPress: () => haptic.selection() }} />
+        <Tab.Screen name="Profile" component={ProfileStackScreen} options={{ tabBarTestID: 'tab-profile' }} listeners={{ tabPress: () => haptic.selection() }} />
+      </Tab.Navigator>
+      <RestTimerFloatingIndicator />
+    </View>
   );
 }
 
