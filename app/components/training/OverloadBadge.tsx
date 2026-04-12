@@ -51,6 +51,7 @@ export const OverloadBadge = React.memo<OverloadBadgeProps>(({
       <View style={[styles.dot, { backgroundColor: dotColor }]} />
       <Text style={styles.text}>
         <Icon name="lightbulb" size={14} color={c.text.secondary} /> Try {displayWeight}{unit} × {suggestion.suggested_reps}
+        {suggestion.biomechanics_informed ? ' 🧬' : ''}
       </Text>
     </TouchableOpacity>
   );

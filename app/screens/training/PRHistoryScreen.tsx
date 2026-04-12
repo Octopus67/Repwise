@@ -44,6 +44,7 @@ export function PRHistoryScreen({ navigation }: { navigation: { goBack: () => vo
   const [records, setRecords] = useState<PRRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -68,6 +69,12 @@ export function PRHistoryScreen({ navigation }: { navigation: { goBack: () => vo
   }, []);
 
   useEffect(() => { fetchPRs(); }, [fetchPRs]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchPRs();
+    setRefreshing(false);
+  }, [fetchPRs]);
 
   const exerciseNames = useMemo(
     () => [...new Set(records.map((r) => r.exercise_name))].sort(),
@@ -156,6 +163,8 @@ export function PRHistoryScreen({ navigation }: { navigation: { goBack: () => vo
         data={grouped}
         keyExtractor={([exerciseName]) => exerciseName}
         contentContainerStyle={styles.content}
+        onRefresh={onRefresh}
+        refreshing={refreshing}
         ListHeaderComponent={
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
             <TouchableOpacity

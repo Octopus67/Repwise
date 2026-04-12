@@ -8,6 +8,7 @@
  */
 import { useState, useEffect } from 'react';
 import { View, Text, Modal, TouchableOpacity, Switch, ScrollView, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActiveExercise } from '../../types/training';
 import { computeLiveWorkoutSummary, formatMiniSummary } from '../../utils/workoutSummaryFormatter';
 import { calculateSetProgress } from '../../utils/setProgressCalculator';
@@ -35,6 +36,7 @@ export const ConfirmationSheet = ({
 }: ConfirmationSheetProps) => {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const insets = useSafeAreaInsets();
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
 
   // Reset toggle state whenever the sheet is opened
@@ -55,7 +57,7 @@ export const ConfirmationSheet = ({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onCancel}>
       <View style={styles.overlay}>
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: spacing[6] + insets.bottom }]}>
           <Text style={styles.header}>Workout Summary</Text>
 
           <ScrollView style={styles.exerciseList}>

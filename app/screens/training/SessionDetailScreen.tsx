@@ -39,6 +39,7 @@ import api from '../../services/api';
 import type { AxiosError } from 'axios';
 import type { TrainingSessionResponse } from '../../types/training';
 import type { Exercise } from '../../types/exercise';
+import { resolveImageUrl } from '../../utils/exerciseDetailLogic';
 import { ShareCardCustomizer } from '../../components/sharing/ShareCardCustomizer';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 
@@ -55,9 +56,23 @@ interface SessionDetailScreenProps {
 export function SessionDetailScreen({ route, navigation, showE1RM = true }: SessionDetailScreenProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
-  const { sessionId } = route.params;
+  const { sessionId } = route.params ?? {};
   const unitSystem = useStore((s) => s.unitSystem);
   const { enabled: sharingEnabled } = useFeatureFlag('social_sharing');
+
+  if (!sessionId) {
+    return (
+      <SafeAreaView style={[getThemedStyles(c).safe, { backgroundColor: c.bg.base }]} edges={['top']}>
+        <View style={getThemedStyles(c).errorContainer}>
+          <Icon name="alert-circle" />
+          <Text style={[getThemedStyles(c).errorText, { color: c.text.secondary }]}>No session specified</Text>
+          <TouchableOpacity style={[getThemedStyles(c).errorBackBtn, { backgroundColor: c.accent.primaryMuted }]} onPress={() => navigation.goBack()}>
+            <Text style={[getThemedStyles(c).errorBackText, { color: c.accent.primary }]}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const [session, setSession] = useState<TrainingSessionResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -225,7 +240,7 @@ export function SessionDetailScreen({ route, navigation, showE1RM = true }: Sess
                 <View style={styles.exerciseNameRow}>
                   {imageUrl ? (
                     <Image
-                      source={{ uri: imageUrl }}
+                      source={{ uri: resolveImageUrl(imageUrl) }}
                       style={styles.exerciseThumb}
                       testID={`exercise-image-${exIdx}`}
                       accessibilityLabel={`${exercise.exercise_name} image`}

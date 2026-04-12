@@ -11,7 +11,7 @@
  * Phase 5, Task 5.2
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Modal,
   View,
@@ -23,6 +23,7 @@ import {
   Dimensions,
   StyleSheet,
 } from 'react-native';
+import Markdown from 'react-native-markdown-display';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -35,6 +36,7 @@ import {
   GestureDetector,
 } from 'react-native-gesture-handler';
 import type { Exercise } from '../../types/exercise';
+import api from '../../services/api';
 import { spacing, typography, radius, springs, motion } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
@@ -45,6 +47,7 @@ import {
   getDisplayImageUrl,
   getMusclesTargeted,
   getExerciseTags,
+  resolveImageUrl,
 } from '../../utils/exerciseDetailLogic';
 import { MuscleGroupIcon } from '../exercise-picker/MuscleGroupIcon';
 import { findMuscleGroupConfig } from '../../config/muscleGroups';
@@ -63,7 +66,17 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
   const styles = getThemedStyles(c);
   const slideAnim = useSharedValue(SHEET_HEIGHT);
   const [internalVisible, setInternalVisible] = useState(false);
+  const [alternatives, setAlternatives] = useState<Exercise[]>([]);
+  const [showAlternatives, setShowAlternatives] = useState(false);
   const reduceMotion = useReduceMotion();
+
+  const fetchAlternatives = async () => {
+    if (!exercise) return;
+    try {
+      const { data } = await api.get(`training/exercises/${exercise.id}/substitutes`);
+      setAlternatives(data);
+    } catch { /* silently fail */ }
+  };
 
   const setInternalVisibleFalse = () => setInternalVisible(false);
 
@@ -92,11 +105,22 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
   useEffect(() => {
     if (visible) {
       setInternalVisible(true);
+      setAlternatives([]);
+      setShowAlternatives(false);
       if (reduceMotion) {
         slideAnim.value = 0;
       } else {
         slideAnim.value = SHEET_HEIGHT;
         slideAnim.value = withSpring(0, springs.gentle);
+      }
+    } else if (internalVisible) {
+      // Animate out and sync internal state when parent sets visible=false
+      if (reduceMotion) {
+        setInternalVisible(false);
+      } else {
+        slideAnim.value = withTiming(SHEET_HEIGHT, { duration: 200 }, () => {
+          runOnJS(setInternalVisibleFalse)();
+        });
       }
     }
   }, [visible, reduceMotion]);
@@ -123,6 +147,20 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
   const hasTips = shouldShowTips(exercise);
   const config = findMuscleGroupConfig(exercise.muscle_group);
   const mgColor = config?.color ?? '#2563EB';
+
+  // Compact description: first 2 paragraphs, no biomechanics
+  const compactDescription = useMemo(() => {
+    if (!exercise?.description) return null;
+    const withoutBio = exercise.description.split('**Biomechanics:**')[0].trim();
+    const paragraphs = withoutBio.split(/\n\n+/).filter(Boolean);
+    return paragraphs.slice(0, 2).join('\n\n');
+  }, [exercise?.description]);
+
+  const mdStyles = useMemo(() => ({
+    body: { color: c.text.secondary, fontSize: typography.size.base },
+    strong: { fontWeight: typography.weight.bold, color: c.text.primary },
+    paragraph: { marginBottom: spacing[2] },
+  }), [c]);
 
   return (
     <Modal
@@ -155,7 +193,7 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
           {/* Image or placeholder */}
           {hasImage && imageUrl ? (
             <Image
-              source={{ uri: imageUrl }}
+              source={{ uri: resolveImageUrl(imageUrl) }}
               style={[styles.image, { backgroundColor: c.bg.surfaceRaised }]}
               resizeMode="contain"
               accessibilityLabel={`${exercise.name} demonstration`}
@@ -195,6 +233,14 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
             )}
           </View>
 
+          {/* Description (compact preview) */}
+          {compactDescription && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Description</Text>
+              <Markdown style={mdStyles}>{compactDescription}</Markdown>
+            </View>
+          )}
+
           {/* Instructions */}
           {hasInstructions ? (
             <View style={styles.section}>
@@ -225,6 +271,23 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
               ))}
             </View>
           )}
+
+          {/* Find Alternatives */}
+          <View style={styles.section}>
+            <TouchableOpacity onPress={() => { setShowAlternatives(!showAlternatives); if (!showAlternatives && alternatives.length === 0) fetchAlternatives(); }}>
+              <Text style={[styles.sectionTitle, { color: c.accent.primary }]}>Find Alternatives {showAlternatives ? '▲' : '▼'}</Text>
+            </TouchableOpacity>
+            {showAlternatives && alternatives.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {alternatives.map(alt => (
+                  <View key={alt.id} style={[styles.altCard, { backgroundColor: c.bg.surfaceRaised }]}>
+                    <Text style={[styles.altName, { color: c.text.primary }]}>{alt.name}</Text>
+                    <Text style={[styles.altEquipment, { color: c.text.muted }]}>{alt.equipment}</Text>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+          </View>
 
           {/* Bottom padding for scroll */}
           <View style={{ height: spacing[8] }} />
@@ -361,5 +424,20 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     fontSize: typography.size.base,
     flex: 1,
     lineHeight: typography.size.base * typography.lineHeight.normal,
+  },
+  altCard: {
+    padding: spacing[3],
+    borderRadius: radius.md,
+    marginRight: spacing[2],
+    minWidth: 120,
+  },
+  altName: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+    marginBottom: spacing[1],
+  },
+  altEquipment: {
+    fontSize: typography.size.xs,
+    textTransform: 'capitalize',
   },
 });

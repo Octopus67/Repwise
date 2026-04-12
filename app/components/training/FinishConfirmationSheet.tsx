@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform, Modal, Pressable } from 'react-native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { radius, spacing, typography } from '../../theme/tokens';
@@ -27,12 +27,15 @@ export function FinishConfirmationSheet({
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (Platform.OS === 'web') return; // Modal handles visibility on web
     if (visible) {
+      setIsSubmitting(false);
       bottomSheetRef.current?.expand();
     } else {
+      setIsSubmitting(false);
       bottomSheetRef.current?.close();
     }
   }, [visible]);
@@ -97,7 +100,8 @@ export function FinishConfirmationSheet({
 
         <TouchableOpacity
           style={[styles.confirmBtn, { backgroundColor: c.accent.primary }]}
-          onPress={onConfirm}
+          onPress={() => { setIsSubmitting(true); onConfirm(); }}
+          disabled={isSubmitting}
           accessibilityLabel="Confirm and save workout"
           accessibilityRole="button"
           activeOpacity={0.7}

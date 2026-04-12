@@ -38,15 +38,29 @@ interface ExerciseHistoryScreenProps {
 export function ExerciseHistoryScreen({ route, navigation }: ExerciseHistoryScreenProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
-  const { exerciseName } = route.params;
+  const { exerciseName } = route.params ?? {};
   const unitSystem = useStore((s) => s.unitSystem);
   const unitLabel = unitSystem === 'metric' ? 'kg' : 'lbs';
+
+  if (!exerciseName) {
+    return (
+      <SafeAreaView style={[getThemedStyles(c).safe, { backgroundColor: c.bg.base }]} edges={['top']}>
+        <View style={getThemedStyles(c).errorContainer}>
+          <Text style={{ color: c.text.muted }}>No exercise specified.</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={{ color: c.accent.primary, marginTop: spacing[2] }}>Go back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
   const [e1rmData, setE1rmData] = useState<E1RMPoint[]>([]);
   const [strengthData, setStrengthData] = useState<StrengthPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -85,6 +99,12 @@ export function ExerciseHistoryScreen({ route, navigation }: ExerciseHistoryScre
   }, [exerciseName, timeRange]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  }, [fetchData]);
 
   const chartData = e1rmData.map((p) => ({
     date: p.date,
@@ -171,6 +191,8 @@ export function ExerciseHistoryScreen({ route, navigation }: ExerciseHistoryScre
         keyExtractor={(item) => item.date}
         renderItem={renderSession}
         contentContainerStyle={styles.listContent}
+        onRefresh={onRefresh}
+        refreshing={refreshing}
         ListHeaderComponent={
           <>
             <Card style={styles.chartCard}>

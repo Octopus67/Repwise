@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { radius, spacing, typography, shadows } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 
@@ -20,11 +21,12 @@ export function StickyFinishBar({
   disabled,
 }: StickyFinishBarProps) {
   const c = useThemeColors();
+  const insets = useSafeAreaInsets();
   const styles = getThemedStyles(c);
   const summaryText = `${exerciseCount} exercise${exerciseCount !== 1 ? 's' : ''} · ${setCount} set${setCount !== 1 ? 's' : ''} · ${durationFormatted}`;
 
   return (
-    <View style={[styles.container, { backgroundColor: c.bg.surfaceRaised, borderTopColor: c.border.default }]}>
+    <View style={[styles.container, { backgroundColor: c.bg.surfaceRaised, borderTopColor: c.border.default, paddingBottom: insets.bottom }]}>
       <Text style={[styles.summary, { color: c.text.secondary }]} numberOfLines={1} accessibilityRole="text" accessibilityLabel={summaryText}>{summaryText}</Text>
       <TouchableOpacity
         style={[styles.finishBtn, loading && styles.finishBtnDisabled]}
@@ -34,7 +36,7 @@ export function StickyFinishBar({
         accessibilityRole="button"
         activeOpacity={0.7}
       >
-        <Text style={[styles.finishText, { color: c.text.primary }]}>
+        <Text style={styles.finishText}>
           {loading ? 'Saving…' : 'Finish Workout'}
         </Text>
       </TouchableOpacity>
@@ -74,7 +76,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     opacity: 0.5,
   },
   finishText: {
-    color: c.text.primary,
+    color: '#FFFFFF',
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
     lineHeight: typography.lineHeight.base,

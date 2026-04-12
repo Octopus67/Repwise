@@ -4,7 +4,7 @@
  * Contains the scrollable body: volume pills, HU pill, exercise cards, and add button.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
@@ -68,9 +68,13 @@ export function ActiveWorkoutBody({
   profile,
 }: ActiveWorkoutBodyProps) {
   const styles = getStyles(c);
+  const [supersetLinkingSource, setSupersetLinkingSource] = useState<string | null>(null);
+
+  const findSupersetGroupForExercise = (localId: string) =>
+    store.supersetGroups.find((sg) => sg.exerciseLocalIds.includes(localId));
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{flex: 1}}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{flex: 1}}>
     <ScrollView
       style={styles.scroll}
       contentContainerStyle={styles.scrollContent}
@@ -90,6 +94,18 @@ export function ActiveWorkoutBody({
 
         return (
           <ExerciseCardWrapper key={exercise.localId} index={idx}>
+            {supersetLinkingSource && supersetLinkingSource !== exercise.localId && (
+              <TouchableOpacity
+                style={[styles.supersetLinkTarget, { backgroundColor: c.accent.primary }]}
+                onPress={() => {
+                  store.createSuperset([supersetLinkingSource, exercise.localId]);
+                  setSupersetLinkingSource(null);
+                }}
+              >
+                <Text style={styles.supersetLinkTargetText}>Tap to link superset</Text>
+              </TouchableOpacity>
+            )}
+            <View style={findSupersetGroupForExercise(exercise.localId) ? [styles.supersetBorder, { borderLeftColor: c.accent.primary }] : undefined}>
             <ExerciseCardPremium
               exercise={exercise}
               previousPerformance={prevPerf}
@@ -98,6 +114,20 @@ export function ActiveWorkoutBody({
               showRpeRir={showRpeRir}
               rpeMode={rpeMode}
               currentHU={exerciseHUMap[exercise.localId]}
+              isSupersetMember={!!findSupersetGroupForExercise(exercise.localId)}
+              onLinkSuperset={() => {
+                if (supersetLinkingSource) {
+                  store.createSuperset([supersetLinkingSource, exercise.localId]);
+                  setSupersetLinkingSource(null);
+                } else {
+                  setSupersetLinkingSource(exercise.localId);
+                  showAlert('Superset Linking', 'Now tap "Link Superset" on another exercise to pair them.');
+                }
+              }}
+              onUnlinkSuperset={() => {
+                const group = findSupersetGroupForExercise(exercise.localId);
+                if (group) store.removeSuperset(group.id);
+              }}
               onSwap={() => onSwapExercise(exercise.localId)}
               onSkip={() => store.toggleExerciseSkip(exercise.localId)}
               onGenerateWarmUp={(sets?: WarmUpSet[]) => {
@@ -155,6 +185,7 @@ export function ActiveWorkoutBody({
               onShowHUExplainer={() => onShowHUExplainer(exercise.exerciseName, exerciseHUMap[exercise.localId])}
               onOpenPlateCalculator={onOpenPlateCalculator}
             />
+            </View>
           </ExerciseCardWrapper>
         );
       })}
@@ -193,6 +224,23 @@ const getStyles = (c: ThemeColors) => StyleSheet.create({
   addExerciseText: {
     color: c.accent.primary,
     fontSize: typography.size.md,
+    fontWeight: typography.weight.medium,
+  },
+  supersetBorder: {
+    borderLeftWidth: 3,
+    borderLeftColor: c.accent.primary,
+    borderRadius: radius.md,
+  },
+  supersetLinkTarget: {
+    paddingVertical: spacing[2],
+    paddingHorizontal: spacing[3],
+    borderRadius: radius.sm,
+    marginBottom: spacing[1],
+    alignItems: 'center' as const,
+  },
+  supersetLinkTargetText: {
+    color: '#fff',
+    fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
 });

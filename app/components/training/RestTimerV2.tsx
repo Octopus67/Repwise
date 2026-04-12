@@ -7,6 +7,7 @@ import {
   Modal,
   Animated,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 import { formatRestTimer } from '../../utils/durationFormat';
 import { getTimerRingColor } from '../../utils/restDurationV2';
@@ -36,6 +37,7 @@ export function RestTimerV2({
 }: RestTimerV2Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const insets = useSafeAreaInsets();
   const [state, setState] = useState<TimerState>('IDLE');
   const [remaining, setRemaining] = useState(durationSeconds);
   const [originalDuration, setOriginalDuration] = useState(durationSeconds);
@@ -129,7 +131,7 @@ export function RestTimerV2({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleSkip}>
       <View style={[styles.overlay, { backgroundColor: c.bg.overlay }]}>
-        <View style={[styles.container, { backgroundColor: c.bg.surfaceRaised }]}>
+        <View style={[styles.container, { backgroundColor: c.bg.surfaceRaised, paddingBottom: spacing[8] + insets.bottom }]}>
           <Text style={[styles.label, { color: c.text.secondary }]}>Rest Timer</Text>
 
           {/* Progress Ring */}

@@ -33,6 +33,9 @@ import { typography, spacing, radius, springs } from '../../theme/tokens';
 import { useThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { useHaptics } from '../../hooks/useHaptics';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
+import { getProgressionStatus } from '../../utils/progressionLogic';
+import { getProgressionBg, getProgressionBorder } from '../../utils/progressionColors';
+import { Ionicons } from '@expo/vector-icons';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -75,6 +78,10 @@ export const SetRowPremium = React.memo<SetRowPremiumProps>(({
   const weightRef = useRef<TextInput>(null);
   const rpeRef = useRef<TextInput>(null);
   const rirRef = useRef<TextInput>(null);
+
+  const progressionStatus = isCompleted
+    ? getProgressionStatus(set.weight, set.reps, previousSet, set.setType, unitSystem)
+    : 'no_data';
 
   const { impact, notification } = useHaptics();
   const reduceMotion = useReduceMotion();
@@ -195,11 +202,26 @@ export const SetRowPremium = React.memo<SetRowPremiumProps>(({
         <Animated.View
           style={[
             styles.row,
-            isCompleted ? styles.rowCompleted : styles.rowUncompleted,
+            isCompleted
+              ? [styles.rowCompleted, { backgroundColor: getProgressionBg(progressionStatus), borderLeftColor: getProgressionBorder(progressionStatus) }]
+              : styles.rowUncompleted,
             swipeStyle,
           ]}
           accessibilityRole="none"
         >
+      {/* Delete button */}
+      {onRemoveSet && (
+        <TouchableOpacity
+          onPress={onRemoveSet}
+          style={styles.deleteBtn}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityLabel={`Delete set ${setIndex + 1}`}
+          accessibilityRole="button"
+        >
+          <Ionicons name="close-circle-outline" size={16} color={c.text.muted} />
+        </TouchableOpacity>
+      )}
+
       {/* Set number */}
       <Text style={styles.setNumber}>{setIndex + 1}</Text>
 
@@ -229,7 +251,7 @@ export const SetRowPremium = React.memo<SetRowPremiumProps>(({
 
       {/* Reps input */}
       <TextInput
-        style={styles.input}
+        style={[styles.input, styles.repsInput]}
         value={set.reps}
         onChangeText={(v) => onUpdateField('reps', v)}
         onSubmitEditing={handleRepsSubmit}
@@ -350,6 +372,7 @@ export const SetRowPremium = React.memo<SetRowPremiumProps>(({
             onToggleComplete();
           }}
           style={[styles.checkBtn, isCompleted && styles.checkBtnCompleted]}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           accessibilityLabel={`Complete set ${setIndex + 1}`}
           accessibilityRole="button"
         >
@@ -399,9 +422,16 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     backgroundColor: 'rgba(0, 255, 100, 0.08)',
     borderLeftWidth: 3,
     borderLeftColor: c.semantic.positive,
+    opacity: 0.85,
   },
   rowUncompleted: {
-    opacity: 0.7,
+  },
+
+  deleteBtn: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   setNumber: {
@@ -414,6 +444,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
 
   previousContainer: {
     width: 68,
+    flexShrink: 1,
   },
   previousText: {
     fontSize: typography.size.xs,
@@ -437,16 +468,21 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     paddingHorizontal: spacing[1],
   },
 
+  repsInput: {
+    fontSize: typography.size.md,
+    fontWeight: typography.weight.bold,
+  },
+
   weightGroup: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
+    flexShrink: 1,
   },
   weightInput: {
     width: 56,
     fontSize: typography.size.md,
     fontWeight: typography.weight.bold,
-    color: c.accent.primary,
   },
   stepperBtn: {
     width: 26,

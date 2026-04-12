@@ -14,6 +14,7 @@
  */
 
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import {
@@ -45,6 +46,7 @@ interface RPEPickerProps {
 export function RPEPicker({ visible, mode, onSelect, onDismiss }: RPEPickerProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
+  const insets = useSafeAreaInsets();
   const values = mode === 'rpe' ? RPE_VALUES : RIR_VALUES;
 
   const handleSelect = (value: number) => {
@@ -62,7 +64,7 @@ export function RPEPicker({ visible, mode, onSelect, onDismiss }: RPEPickerProps
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onDismiss}>
-        <View style={[styles.pickerContainer, { backgroundColor: c.bg.surface }]}>
+        <View style={[styles.pickerContainer, { backgroundColor: c.bg.surface, paddingBottom: spacing[4] + insets.bottom }]}>
           <Text style={[styles.modeLabel, { color: c.text.secondary }]}>{mode === 'rpe' ? 'RPE' : 'RIR'}</Text>
           <View style={styles.buttonRow}>
             {values.map((value) => (

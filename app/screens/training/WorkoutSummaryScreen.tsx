@@ -5,7 +5,7 @@
  * Displays workout stats, exercise breakdown, and personal records.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
+import { parseWeightInput, formatWeight, convertWeight } from '../../utils/unitConversion';
+import { useStore } from '../../store';
 
 import { spacing, typography, radius, shadows } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
@@ -43,6 +45,7 @@ interface WorkoutSummaryScreenParams {
     bestSet: { weight: string; reps: string } | null;
   }>;
   huByMuscle?: Record<string, number>;
+  previousPerformance?: Record<string, { exerciseName: string; sessionDate: string; sets: Array<{ weightKg: number; reps: number }> } | null>;
 }
 
 interface WorkoutSummaryScreenProps {
@@ -82,7 +85,21 @@ function StatCard({ label, value }: { label: string; value: string }) {
 function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
-  const { summary, duration, personalRecords, exerciseBreakdown, huByMuscle } = route.params;
+  const unitSystem = useStore((s) => s.unitSystem);
+  const { summary, duration, personalRecords, exerciseBreakdown, huByMuscle, previousPerformance } = route.params ?? {} as Partial<WorkoutSummaryScreenParams>;
+
+  if (!summary) {
+    return (
+      <SafeAreaView style={[getStyles().container, { backgroundColor: c.bg.base }]} edges={['top']}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: c.text.muted }}>No workout summary available.</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('DashboardHome')}>
+            <Text style={{ color: c.accent.primary, marginTop: spacing[2] }}>Go Home</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
   const [sharePromptDismissed, setSharePromptDismissed] = useState(false);
   const { enabled: sharingEnabled } = useFeatureFlag('social_sharing');
 
@@ -95,6 +112,22 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
   const muscleData = huByMuscle
     ? Object.entries(huByMuscle).map(([muscle, hu]) => ({ muscle, hu }))
     : [];
+
+  const progressionCount = useMemo(() => {
+    if (!previousPerformance) return null;
+    let progressed = 0;
+    let total = 0;
+    for (const ex of exerciseBreakdown) {
+      const prev = previousPerformance[ex.exerciseName];
+      if (!prev?.sets?.length || !ex.bestSet) continue;
+      total++;
+      const bestW = parseWeightInput(parseFloat(ex.bestSet.weight) || 0, unitSystem);
+      const bestR = parseInt(ex.bestSet.reps, 10) || 0;
+      const prevBest = prev.sets.reduce((a, b) => (b.weightKg > a.weightKg || (b.weightKg === a.weightKg && b.reps > a.reps)) ? b : a, prev.sets[0]);
+      if (bestW > prevBest.weightKg || (bestW === prevBest.weightKg && bestR > prevBest.reps)) progressed++;
+    }
+    return total > 0 ? { progressed, total } : null;
+  }, [exerciseBreakdown, previousPerformance]);
 
   const handleDone = () => {
     navigation.navigate('DashboardHome');
@@ -111,11 +144,11 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
     setSharePromptDismissed(true);
   }, []);
 
+  const unit = unitSystem === 'imperial' ? 'lbs' : 'kg';
   const formatVolume = (kg: number) => {
-    if (kg >= 1000) {
-      return `${(kg / 1000).toFixed(1)}t`;
-    }
-    return `${Math.round(kg)}kg`;
+    const val = convertWeight(kg, unitSystem);
+    if (val >= 1000) return `${(val / 1000).toFixed(1)}t`;
+    return `${Math.round(val)}${unit}`;
   };
 
   const renderExerciseItem = useCallback(({ item: exercise, index }: { item: typeof exerciseBreakdown[number]; index: number }) => (
@@ -131,7 +164,7 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
       </View>
       {exercise.bestSet && (
         <Text style={[getStyles().bestSet, { color: c.text.muted }]}>
-          Best: {exercise.bestSet.weight}kg × {exercise.bestSet.reps}
+          Best: {exercise.bestSet.weight}{unit} × {exercise.bestSet.reps}
         </Text>
       )}
     </View>
@@ -162,6 +195,11 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
             </View>
 
             {/* Exercise Breakdown header */}
+            {progressionCount && (
+              <Text style={[styles.progressionBanner, { color: c.semantic.positive }]}>
+                You progressed on {progressionCount.progressed}/{progressionCount.total} exercises 💪
+              </Text>
+            )}
             <Text style={[getStyles().sectionTitle, { color: c.text.primary }]}>Exercise Breakdown</Text>
           </>
         }
@@ -184,12 +222,12 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
                         <Text style={[getStyles().prExercise, { color: c.text.primary }]}>{pr.exercise_name}</Text>
                         <Text style={[getStyles().prImprovement, { color: c.accent.primary }]}>
                           {pr.previous_weight_kg
-                            ? `+${(pr.new_weight_kg - pr.previous_weight_kg).toFixed(1)}kg`
+                            ? `+${convertWeight(pr.new_weight_kg - pr.previous_weight_kg, unitSystem).toFixed(1)}${unit}`
                             : 'New PR!'}
                         </Text>
                       </View>
                       <Text style={[getStyles().prDetails, { color: c.text.secondary }]}>
-                        {pr.new_weight_kg}kg × {pr.reps} reps
+                        {convertWeight(pr.new_weight_kg, unitSystem)}{unit} × {pr.reps} reps
                       </Text>
                     </View>
                   ))}
@@ -426,5 +464,11 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     color: c.text.primary,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
+  },
+  progressionBanner: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+    textAlign: 'center',
+    marginBottom: spacing[4],
   },
 });

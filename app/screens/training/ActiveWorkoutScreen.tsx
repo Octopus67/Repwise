@@ -40,7 +40,6 @@ import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThem
 import { FloatingRestTimerBar } from '../../components/training/FloatingRestTimerBar';
 import { StickyFinishBar } from '../../components/training/StickyFinishBar';
 import { FinishConfirmationSheet } from '../../components/training/FinishConfirmationSheet';
-import { ExercisePickerSheet } from '../../components/training/ExercisePickerSheet';
 import { PRCelebration } from '../../components/training/PRCelebration';
 import { RPEEducationSheet } from '../../components/training/RPEEducationSheet';
 import { PlateCalculatorSheet } from '../../components/training/PlateCalculatorSheet';
@@ -86,7 +85,6 @@ export function ActiveWorkoutScreen({ route, navigation }: DashboardScreenProps<
 
   // ── Local UI state ──
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [exercisePickerVisible, setExercisePickerVisible] = useState(false);
   const [overflowMenuVisible, setOverflowMenuVisible] = useState(false);
   const [rpeEducationVisible, setRpeEducationVisible] = useState(false);
   const [huExplainerVisible, setHuExplainerVisible] = useState(false);
@@ -103,7 +101,7 @@ export function ActiveWorkoutScreen({ route, navigation }: DashboardScreenProps<
 
   // ── Extracted hooks ──
 
-  const { exerciseList, recentExercises, muscleGroupMap } = useWorkoutData({ store });
+  const { muscleGroupMap } = useWorkoutData({ store });
 
   // ── HU computation (recalculates on every set change) ──
 
@@ -299,11 +297,6 @@ export function ActiveWorkoutScreen({ route, navigation }: DashboardScreenProps<
     }
   }, [store, navigation]);
 
-  const handleAddExerciseFromPicker = useCallback((name: string) => {
-    store.addExercise(name);
-    setExercisePickerVisible(false);
-  }, [store]);
-
   const handleWeightStep = useCallback((exerciseLocalId: string, setLocalId: string, direction: 'up' | 'down') => {
     const exercise = store.exercises.find((e) => e.localId === exerciseLocalId);
     const set = exercise?.sets.find((s) => s.localId === setLocalId);
@@ -488,7 +481,7 @@ export function ActiveWorkoutScreen({ route, navigation }: DashboardScreenProps<
         onGenerateWarmUp={handleGenerateWarmUp}
         onWeightStep={handleWeightStep}
         onApplyOverload={handleApplyOverload}
-        onOpenExercisePicker={() => setExercisePickerVisible(true)}
+        onOpenExercisePicker={() => navigation.push('ExercisePicker', { target: 'activeWorkout' })}
         onShowRpeEducation={() => setRpeEducationVisible(true)}
         onShowHUExplainer={(name, hu) => {
           setHuExplainerExercise(name);
@@ -518,14 +511,6 @@ export function ActiveWorkoutScreen({ route, navigation }: DashboardScreenProps<
       />
 
       {/* Bottom sheets */}
-      <ExercisePickerSheet
-        visible={exercisePickerVisible}
-        onSelect={handleAddExerciseFromPicker}
-        onClose={() => setExercisePickerVisible(false)}
-        exercises={exerciseList}
-        recentExercises={recentExercises}
-      />
-
       <FinishConfirmationSheet
         visible={finishSheetVisible}
         summary={summary}
