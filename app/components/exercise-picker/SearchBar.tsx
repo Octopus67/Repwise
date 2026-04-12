@@ -24,6 +24,7 @@ export function SearchBar({ value, onChangeText, onClear, resultCount }: SearchB
           placeholder="Search exercises..."
           placeholderTextColor={c.text.muted}
           autoCorrect={false}
+          autoFocus
           returnKeyType="search"
           accessibilityLabel="Search exercises"
         />

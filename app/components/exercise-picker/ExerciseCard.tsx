@@ -1,27 +1,22 @@
 import React, { useState } from 'react';
 import { TouchableOpacity, View, Text, Image, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Exercise } from '../../types/exercise';
 import { findMuscleGroupConfig } from '../../config/muscleGroups';
 import { radius, spacing, typography } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { hexToRgba } from '../../utils/formatting';
 import { MuscleGroupIcon } from './MuscleGroupIcon';
-import { API_BASE_URL } from '../../services/api';
+import { resolveImageUrl } from '../../utils/exerciseDetailLogic';
 
 interface ExerciseCardProps {
   exercise: Exercise;
   onPress: (exercise: Exercise) => void;
   onLongPress?: (exercise: Exercise) => void;
+  onInfoPress?: (exercise: Exercise) => void;
 }
 
-function resolveImageUrl(url: string): string {
-  if (url.startsWith('/')) {
-    return `${API_BASE_URL}${url}`;
-  }
-  return url;
-}
-
-export function ExerciseCard({ exercise, onPress, onLongPress }: ExerciseCardProps) {
+export function ExerciseCard({ exercise, onPress, onLongPress, onInfoPress }: ExerciseCardProps) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const config = findMuscleGroupConfig(exercise.muscle_group);
@@ -55,7 +50,7 @@ export function ExerciseCard({ exercise, onPress, onLongPress }: ExerciseCardPro
         <Text style={[styles.name, { color: c.text.primary }]} numberOfLines={1}>{exercise.name}</Text>
         <View style={styles.tagRow}>
           <View style={[styles.equipmentTag, { backgroundColor: c.accent.primaryMuted }]}>
-            <Text style={[styles.tagText, { color: c.text.secondary }]}>{exercise.equipment.replace('_', ' ')}</Text>
+            <Text style={[styles.tagText, { color: c.text.secondary }]}>{exercise.equipment.replace(/_/g, ' ')}</Text>
           </View>
           <View style={[styles.categoryTag, exercise.category === 'isolation' && styles.isolationTag]}>
             <Text style={[styles.tagText, { color: c.text.secondary }]}>{exercise.category}</Text>
@@ -63,7 +58,17 @@ export function ExerciseCard({ exercise, onPress, onLongPress }: ExerciseCardPro
         </View>
       </View>
 
-      <Text style={[styles.chevron, { color: c.text.muted }]}>›</Text>
+      {onInfoPress && (
+        <TouchableOpacity
+          onPress={(e) => { e.stopPropagation?.(); onInfoPress(exercise); }}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel={`Info about ${exercise.name}`}
+          accessibilityRole="button"
+          style={styles.infoBtn}
+        >
+          <Ionicons name="information-circle-outline" size={22} color={c.accent.primary} />
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 }
@@ -129,5 +134,17 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     fontSize: typography.size.xl,
     lineHeight: typography.lineHeight.xl,
     marginLeft: spacing[2],
+  },
+  infoBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: c.bg.surfaceRaised,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: spacing[1],
+  },
+  infoIcon: {
+    fontSize: 16,
   },
 });

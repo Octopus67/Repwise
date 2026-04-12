@@ -140,6 +140,10 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
     setDetailVisible(true);
   }, []);
 
+  const handleExerciseInfo = useCallback((exercise: Exercise) => {
+    (navigation as any).navigate('ExerciseDetail', { exerciseId: exercise.id });
+  }, [navigation]);
+
   const handleCustomExerciseCreated = useCallback((exercise: { id: string; name: string }) => {
     setShowCustomForm(false);
     didSelectRef.current = true;
@@ -258,7 +262,7 @@ export function ExercisePickerScreen({ route, navigation }: Props) {
         filteredExercises.length > 0 ? (
           <FlatList
             data={filteredExercises}
-            renderItem={({ item }) => <ExerciseCard exercise={item} onPress={handleExercisePress} onLongPress={handleExerciseLongPress} />}
+            renderItem={({ item }) => <ExerciseCard exercise={item} onPress={handleExercisePress} onLongPress={handleExerciseLongPress} onInfoPress={handleExerciseInfo} />}
             keyExtractor={(item) => item.id}
             keyboardDismissMode="on-drag"
           />
