@@ -15,6 +15,7 @@ from src.middleware.rate_limiter import check_ip_endpoint_rate_limit, check_user
 from src.modules.auth.models import User
 from src.shared.ip_utils import get_client_ip
 from src.modules.training.exercises import (
+    find_substitutes,
     get_all_exercises,
     get_muscle_groups,
     search_exercises,
@@ -73,6 +74,19 @@ async def search_exercises_endpoint(
     return search_exercises(
         query=q, muscle_group=muscle_group, equipment=equipment, category=category
     )
+
+
+@router.get("/exercises/{identifier}/substitutes")
+async def get_exercise_substitutes(
+    identifier: str,
+    equipment: str | None = Query(None, description="Comma-separated equipment filter"),
+    limit: int = Query(5, ge=1, le=20),
+):
+    """Find biomechanics-similar substitute exercises."""
+    available_equipment = equipment.split(",") if equipment else None
+    results = find_substitutes(identifier, available_equipment, limit)
+    # Remove internal scoring field
+    return [{k: v for k, v in r.items() if k != "_similarity_score"} for r in results]
 
 
 @router.get(

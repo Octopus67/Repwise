@@ -27,9 +27,7 @@ class SetEntry(BaseModel):
     rpe: Optional[float] = Field(
         default=None, ge=0, le=10, description="Rate of perceived exertion (0-10)"
     )
-    rir: Optional[int] = Field(
-        default=None, ge=0, le=5, description="Reps in Reserve (0-5)"
-    )
+    rir: Optional[int] = Field(default=None, ge=0, le=5, description="Reps in Reserve (0-5)")
     set_type: str = Field(
         default="normal",
         max_length=50,
@@ -49,10 +47,12 @@ class ExerciseEntry(BaseModel):
     """A single exercise with its sets."""
 
     exercise_name: str = Field(min_length=1, max_length=200, description="Name of the exercise")
-    sets: list[SetEntry] = Field(min_length=1, max_length=20, description="At least one set required")
+    sets: list[SetEntry] = Field(
+        min_length=1, max_length=20, description="At least one set required"
+    )
 
     # Audit fix 2.4 — HTML sanitization
-    @field_validator('exercise_name', mode='before')
+    @field_validator("exercise_name", mode="before")
     @classmethod
     def sanitize_exercise_name(cls, v: str) -> str:
         return strip_html(v) if isinstance(v, str) else v
@@ -75,6 +75,7 @@ class TrainingSessionCreate(BaseModel):
     @classmethod
     def no_future_dates(cls, v: date) -> date:
         from datetime import timedelta
+
         if v > date.today() + timedelta(days=1):
             raise ValueError("session_date cannot be more than 1 day in the future")
         return v
@@ -89,7 +90,7 @@ class TrainingSessionCreate(BaseModel):
     def ensure_tz_aware(cls, v: datetime | None) -> datetime | None:
         return _ensure_tz_aware(v)
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def check_time_order(self) -> TrainingSessionCreate:
         """5.3: Reject negative durations — end_time must be >= start_time."""
         if self.start_time is not None and self.end_time is not None:
@@ -117,8 +118,8 @@ class TrainingSessionUpdate(BaseModel):
     def ensure_tz_aware(cls, v: datetime | None) -> datetime | None:
         return _ensure_tz_aware(v)
 
-    @model_validator(mode='after')
-    def check_time_order(self) -> 'TrainingSessionUpdate':
+    @model_validator(mode="after")
+    def check_time_order(self) -> "TrainingSessionUpdate":
         """Reject negative durations — end_time must be >= start_time."""
         if self.start_time is not None and self.end_time is not None:
             if self.end_time < self.start_time:
@@ -285,7 +286,7 @@ class WorkoutTemplateCreate(BaseModel):
     metadata: Optional[dict[str, Any]] = None
 
     # Audit fix 2.4 — HTML sanitization
-    @field_validator('name', 'description', mode='before')
+    @field_validator("name", "description", mode="before")
     @classmethod
     def sanitize_text(cls, v: str) -> str:
         return strip_html(v) if isinstance(v, str) else v
@@ -305,7 +306,7 @@ class WorkoutTemplateUpdate(BaseModel):
     metadata: Optional[dict[str, Any]] = None
 
     # Audit fix 2.4 — HTML sanitization
-    @field_validator('name', 'description', mode='before')
+    @field_validator("name", "description", mode="before")
     @classmethod
     def sanitize_text(cls, v: str) -> str:
         return strip_html(v) if isinstance(v, str) else v
@@ -366,6 +367,7 @@ class OverloadSuggestion(BaseModel):
     suggested_reps: int
     reasoning: str
     confidence: str  # "high", "medium", "low"
+    biomechanics_informed: bool = False
 
 
 class BatchOverloadRequest(BaseModel):
@@ -395,9 +397,6 @@ class PRHistoryResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-
-
-
 # ─── Custom Exercises ─────────────────────────────────────────────────────────
 
 
@@ -412,7 +411,7 @@ class CustomExerciseCreate(BaseModel):
     notes: Optional[str] = Field(default=None, max_length=1000)
 
     # Audit fix 2.4 — HTML sanitization
-    @field_validator('name', 'notes', mode='before')
+    @field_validator("name", "notes", mode="before")
     @classmethod
     def sanitize_text(cls, v: str) -> str:
         return strip_html(v) if isinstance(v, str) else v
@@ -429,7 +428,7 @@ class CustomExerciseUpdate(BaseModel):
     notes: Optional[str] = Field(default=None, max_length=1000)
 
     # Audit fix 2.4 — HTML sanitization
-    @field_validator('name', 'notes', mode='before')
+    @field_validator("name", "notes", mode="before")
     @classmethod
     def sanitize_text(cls, v: str) -> str:
         return strip_html(v) if isinstance(v, str) else v
@@ -467,4 +466,3 @@ class CustomExerciseResponse(BaseModel):
             notes=obj.notes,
             created_at=obj.created_at,
         )
-

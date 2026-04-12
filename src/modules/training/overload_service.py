@@ -13,7 +13,7 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.training.exercises import get_all_exercises
+from src.modules.training.exercises import get_all_exercises, get_exercise_biomechanics
 from src.modules.training.models import TrainingSession
 from src.modules.training.schemas import OverloadSuggestion
 
@@ -97,32 +97,82 @@ def compute_suggestion(
     # Confidence based on session count
     confidence = "high" if len(recent) >= 5 else "medium"
 
-    if avg_rpe < 7:
-        increment = _weight_increment(equipment)
-        return OverloadSuggestion(
-            exercise_name=exercise_name,
-            suggested_weight_kg=latest.weight_kg + increment,
-            suggested_reps=latest.reps,
-            reasoning=f"Avg RPE {avg_rpe:.1f} — increase weight by {increment}kg",
-            confidence=confidence,
-        )
+    # Look up biomechanics data
+    bio = get_exercise_biomechanics(exercise_name)
 
-    if avg_rpe <= 9:
+    if bio is None:
+        # Fallback: existing RPE-only logic for custom exercises / no bio data
+        if avg_rpe < 7:
+            increment = _weight_increment(equipment)
+            return OverloadSuggestion(
+                exercise_name=exercise_name,
+                suggested_weight_kg=latest.weight_kg + increment,
+                suggested_reps=latest.reps,
+                reasoning=f"Avg RPE {avg_rpe:.1f} — increase weight by {increment}kg",
+                confidence=confidence,
+            )
+        if avg_rpe <= 9:
+            return OverloadSuggestion(
+                exercise_name=exercise_name,
+                suggested_weight_kg=latest.weight_kg,
+                suggested_reps=latest.reps + 1,
+                reasoning=f"Avg RPE {avg_rpe:.1f} — add 1 rep at same weight",
+                confidence=confidence,
+            )
         return OverloadSuggestion(
             exercise_name=exercise_name,
             suggested_weight_kg=latest.weight_kg,
-            suggested_reps=latest.reps + 1,
-            reasoning=f"Avg RPE {avg_rpe:.1f} — add 1 rep at same weight",
+            suggested_reps=latest.reps,
+            reasoning=f"Avg RPE {avg_rpe:.1f} — maintain current load",
             confidence=confidence,
         )
 
-    # avg_rpe > 9
+    # Biomechanics-informed progression
+    curve = bio["strength_curve"]
+    increment = _weight_increment(equipment)
+
+    if avg_rpe > 9:
+        action = "maintain"
+    elif avg_rpe < 7:
+        if curve in ("ascending", "flat"):
+            action = "increase_weight"
+        else:
+            action = "increase_reps"
+    else:
+        # Moderate RPE 7-9
+        if curve == "ascending":
+            action = "increase_weight_small"
+        else:
+            action = "increase_reps"
+
+    # Apply action
+    if action == "increase_weight":
+        weight = latest.weight_kg + increment
+        reps = latest.reps
+        desc = f"increase weight by {increment}kg"
+    elif action == "increase_weight_small":
+        small_inc = increment / 2
+        weight = latest.weight_kg + small_inc
+        reps = latest.reps
+        desc = f"increase weight by {small_inc}kg"
+    elif action == "increase_reps":
+        weight = latest.weight_kg
+        reps = latest.reps + 1
+        desc = "add 1 rep at same weight"
+    else:  # maintain
+        weight = latest.weight_kg
+        reps = latest.reps
+        desc = "maintain current load"
+
+    reasoning = f"{curve.replace('_', '-')} strength curve — {desc}. Avg RPE {avg_rpe:.1f}."
+
     return OverloadSuggestion(
         exercise_name=exercise_name,
-        suggested_weight_kg=latest.weight_kg,
-        suggested_reps=latest.reps,
-        reasoning=f"Avg RPE {avg_rpe:.1f} — maintain current load",
+        suggested_weight_kg=weight,
+        suggested_reps=reps,
+        reasoning=reasoning,
         confidence=confidence,
+        biomechanics_informed=True,
     )
 
 
@@ -153,10 +203,7 @@ class OverloadSuggestionService:
         from the cached result, avoiding N separate queries.
         """
         # Single DB fetch — same query as _fetch_snapshots but unfiltered by exercise
-        stmt = (
-            select(TrainingSession)
-            .where(TrainingSession.user_id == user_id)
-        )
+        stmt = select(TrainingSession).where(TrainingSession.user_id == user_id)
         stmt = TrainingSession.not_deleted(stmt)
         stmt = stmt.order_by(TrainingSession.session_date.desc()).limit(50)
 
@@ -178,18 +225,13 @@ class OverloadSuggestionService:
                         continue
 
                     rpe_values = [
-                        s["rpe"] for s in sets
+                        s["rpe"]
+                        for s in sets
                         if s.get("rpe") is not None and s.get("set_type", "normal") == "normal"
                     ]
-                    avg_rpe = (
-                        sum(rpe_values) / len(rpe_values)
-                        if rpe_values
-                        else _DEFAULT_RPE
-                    )
+                    avg_rpe = sum(rpe_values) / len(rpe_values) if rpe_values else _DEFAULT_RPE
 
-                    normal_sets = [
-                        s for s in sets if s.get("set_type", "normal") == "normal"
-                    ]
+                    normal_sets = [s for s in sets if s.get("set_type", "normal") == "normal"]
                     if not normal_sets:
                         continue
                     best = max(normal_sets, key=lambda s: s.get("weight_kg", 0))
@@ -210,15 +252,11 @@ class OverloadSuggestionService:
 
         return suggestions
 
-
     async def _fetch_snapshots(
         self, user_id: uuid.UUID, exercise_name: str
     ) -> list[_SessionSnapshot]:
         """Fetch the last ``_MAX_SESSIONS`` sessions containing *exercise_name*."""
-        stmt = (
-            select(TrainingSession)
-            .where(TrainingSession.user_id == user_id)
-        )
+        stmt = select(TrainingSession).where(TrainingSession.user_id == user_id)
         stmt = TrainingSession.not_deleted(stmt)
         stmt = stmt.order_by(TrainingSession.session_date.desc()).limit(50)
 
@@ -238,19 +276,14 @@ class OverloadSuggestionService:
 
                 # Compute average RPE for this exercise in this session
                 rpe_values = [
-                    s["rpe"] for s in sets
+                    s["rpe"]
+                    for s in sets
                     if s.get("rpe") is not None and s.get("set_type", "normal") == "normal"
                 ]
-                avg_rpe = (
-                    sum(rpe_values) / len(rpe_values)
-                    if rpe_values
-                    else _DEFAULT_RPE
-                )
+                avg_rpe = sum(rpe_values) / len(rpe_values) if rpe_values else _DEFAULT_RPE
 
                 # Use the heaviest normal set as the representative weight/reps
-                normal_sets = [
-                    s for s in sets if s.get("set_type", "normal") == "normal"
-                ]
+                normal_sets = [s for s in sets if s.get("set_type", "normal") == "normal"]
                 if not normal_sets:
                     continue
                 best = max(normal_sets, key=lambda s: s.get("weight_kg", 0))

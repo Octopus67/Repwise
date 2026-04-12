@@ -20,7 +20,7 @@ from src.modules.training.schemas import (
     TrainingSessionResponse,
     TrainingSessionUpdate,
 )
-from src.shared.errors import ConflictError, NotFoundError
+from src.shared.errors import NotFoundError
 from src.shared.pagination import PaginatedResult, PaginationParams
 from src.shared.types import AuditAction
 
@@ -120,16 +120,25 @@ class TrainingService:
             ]
         except (ImportError, RuntimeError, ValueError) as e:
             # Non-critical — achievement failure must not break session creation
-            logger.exception("Achievement evaluation failed for training session: %s", type(e).__name__)
+            logger.exception(
+                "Achievement evaluation failed for training session: %s", type(e).__name__
+            )
 
         # Update weekly challenge progress
         try:
             from src.modules.challenges.service import update_challenge_progress_from_session
-            exercises_raw = [ex.model_dump() if hasattr(ex, 'model_dump') else ex for ex in data.exercises] if data.exercises else []
+
+            exercises_raw = (
+                [ex.model_dump() if hasattr(ex, "model_dump") else ex for ex in data.exercises]
+                if data.exercises
+                else []
+            )
             await update_challenge_progress_from_session(self.session, user_id, exercises_raw)
         except (ImportError, RuntimeError, ValueError) as e:
             # Non-critical — challenge tracking failure must not break session creation
-            logger.exception("Failed to update challenge progress for user %s: %s", user_id, type(e).__name__)
+            logger.exception(
+                "Failed to update challenge progress for user %s: %s", user_id, type(e).__name__
+            )
 
         # Generate social feed event (non-critical)
         try:
@@ -150,7 +159,9 @@ class TrainingService:
             )
         except (ImportError, RuntimeError, ValueError) as e:
             # Non-critical — feed event failure must not break session creation
-            logger.exception("Feed event creation failed for session %s: %s", training.id, type(e).__name__)
+            logger.exception(
+                "Feed event creation failed for session %s: %s", training.id, type(e).__name__
+            )
 
         return TrainingSessionResponse.from_orm_model(
             training, personal_records=pr_responses, newly_unlocked=achievement_unlocks
@@ -191,7 +202,11 @@ class TrainingService:
         result = await self.session.execute(items_stmt)
         rows = result.scalars().all()
 
-        mapper = TrainingSessionListItem.from_orm_model if lightweight else TrainingSessionResponse.from_orm_model
+        mapper = (
+            TrainingSessionListItem.from_orm_model
+            if lightweight
+            else TrainingSessionResponse.from_orm_model
+        )
 
         return PaginatedResult(
             items=[mapper(r) for r in rows],
@@ -226,6 +241,7 @@ class TrainingService:
             # Re-run PR detection on updated exercises
             # Clear old PRs for this session to prevent duplicates
             from sqlalchemy import delete
+
             await self.session.execute(
                 delete(PersonalRecord).where(PersonalRecord.session_id == session_id)
             )
@@ -287,9 +303,7 @@ class TrainingService:
 
         return TrainingSessionResponse.from_orm_model(training, personal_records=pr_responses)
 
-    async def soft_delete_session(
-        self, user_id: uuid.UUID, session_id: uuid.UUID
-    ) -> None:
+    async def soft_delete_session(self, user_id: uuid.UUID, session_id: uuid.UUID) -> None:
         """Soft-delete a training session (Requirement 6.4)."""
         training = await self._get_or_404(user_id, session_id)
 
@@ -309,9 +323,7 @@ class TrainingService:
     # Internal helpers
     # ------------------------------------------------------------------
 
-    async def _get_or_404(
-        self, user_id: uuid.UUID, session_id: uuid.UUID
-    ) -> TrainingSession:
+    async def _get_or_404(self, user_id: uuid.UUID, session_id: uuid.UUID) -> TrainingSession:
         """Fetch a non-deleted training session or raise NotFoundError."""
         stmt = select(TrainingSession).where(
             TrainingSession.id == session_id,
@@ -323,6 +335,7 @@ class TrainingService:
         if training is None:
             raise NotFoundError("Training session not found")
         return training
+
     async def get_session_by_id(
         self, user_id: uuid.UUID, session_id: uuid.UUID
     ) -> TrainingSessionResponse:
@@ -336,7 +349,9 @@ class TrainingService:
         """Return all training sessions for a specific date."""
         from datetime import date as date_type
 
-        parsed = date_type.fromisoformat(target_date) if isinstance(target_date, str) else target_date
+        parsed = (
+            date_type.fromisoformat(target_date) if isinstance(target_date, str) else target_date
+        )
         stmt = select(TrainingSession).where(
             TrainingSession.user_id == user_id,
             TrainingSession.session_date == parsed,
@@ -379,5 +394,3 @@ class TrainingService:
             else:
                 break
         return streak
-
-

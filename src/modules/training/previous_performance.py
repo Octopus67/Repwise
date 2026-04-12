@@ -28,12 +28,11 @@ class PreviousPerformanceResolver:
 
         Uses JSONB filtering to avoid loading all sessions.
         """
-        from sqlalchemy import func
-        
+
         # For SQLite (dev), fall back to loading sessions
         if "sqlite" in str(self.session.bind.url):
             return await self._get_previous_performance_sqlite(user_id, exercise_name)
-        
+
         # PostgreSQL: Filter sessions containing the exercise (parameterized, no injection)
         stmt = (
             select(TrainingSession)
@@ -72,7 +71,7 @@ class PreviousPerformanceResolver:
                         )
 
         return None
-    
+
     async def _get_previous_performance_sqlite(
         self, user_id: uuid.UUID, exercise_name: str
     ) -> Optional[PreviousPerformance]:
@@ -108,6 +107,8 @@ class PreviousPerformanceResolver:
                         )
 
         return None
+
+
 from src.modules.training.schemas import (
     PreviousPerformanceResult,
     PreviousPerformanceSetData,
@@ -179,4 +180,3 @@ class BatchPreviousPerformanceResolver:
             results[name] = found.get(key)
 
         return results
-
