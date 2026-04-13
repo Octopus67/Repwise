@@ -38,6 +38,7 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
   const setNeedsOnboarding = useStore((s) => s.setNeedsOnboarding);
   const reduceMotion = useReduceMotion();
   const [dangerZoneExpanded, setDangerZoneExpanded] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const toggleDangerZone = useCallback(() => {
     setDangerZoneExpanded((prev) => !prev);
@@ -46,7 +47,7 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
   const performLogout = useCallback(async () => {
     try {
       const refreshToken = await secureGet(TOKEN_KEYS.refresh);
-      
+
       // Call backend logout to blacklist both tokens
       await api.post('auth/logout', { refresh_token: refreshToken });
     } catch (error: unknown) {
@@ -110,27 +111,53 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
     );
   }, [setNeedsOnboarding]);
 
+  const performAccountDeletion = useCallback(async () => {
+    setIsDeleting(true);
+    try {
+      await api.delete('auth/delete-account');
+      // Mirror performLogout cleanup to prevent data leaks
+      await onLogout();
+      store.clearAuth();
+      Sentry.setUser(null);
+      Sentry.addBreadcrumb({ category: 'auth', message: 'Account deleted', level: 'info' });
+      try { queryClient.clear(); } catch (e) { console.warn('Failed to clear query cache:', e); }
+      try { mmkv.clearAll(); } catch (e) { console.warn('Failed to clear MMKV:', e); }
+      try { useActiveWorkoutStore.getState().discardWorkout(); } catch (e) { console.warn('Failed to clear workout store:', e); }
+      try { useTooltipStore.persist.clearStorage(); } catch (e) { console.warn('Failed to clear tooltip store:', e); }
+      try { useWorkoutPreferencesStore.persist.clearStorage(); } catch (e) { console.warn('Failed to clear workout preferences:', e); }
+      try { useOnboardingStore.getState().reset(); } catch (e) { console.warn('Failed to clear onboarding store:', e); }
+      try { useThemeStore.persist.clearStorage(); } catch (e) { console.warn('Failed to clear theme store:', e); }
+    } catch {
+      Alert.alert('Error', 'Failed to delete account. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [store, onLogout]);
+
   const handleDeleteAccount = useCallback(() => {
     Alert.alert(
       'Delete Account',
-      'Your account will be permanently deleted. This action cannot be undone.',
+      'Your account will be permanently deleted. All your data — workouts, nutrition, progress — will be lost forever. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Delete My Account',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.delete('account/');
-              store.clearAuth();
-            } catch {
-              Alert.alert('Error', 'Failed to delete account. Please try again.');
-            }
+          onPress: () => {
+            // Second confirmation step
+            Alert.alert(
+              'Final Confirmation',
+              'Are you absolutely sure? This is irreversible.',
+              [
+                { text: 'Go Back', style: 'cancel' },
+                { text: 'Permanently Delete', style: 'destructive', onPress: performAccountDeletion },
+              ],
+            );
           },
         },
       ],
     );
-  }, [store]);
+  }, [performAccountDeletion]);
 
   const appVersion = Constants.expoConfig?.version ?? '1.0.0';
 
@@ -183,9 +210,10 @@ export function AccountSection({ onLogout }: AccountSectionProps) {
       {dangerZoneExpanded && (
         <Animated.View layout={reduceMotion ? undefined : Layout} style={styles.dangerZoneContent}>
           <Button
-            title="Delete Account"
+            title={isDeleting ? "Deleting Account…" : "Delete Account"}
             variant="danger"
             onPress={handleDeleteAccount}
+            disabled={isDeleting}
           />
         </Animated.View>
       )}

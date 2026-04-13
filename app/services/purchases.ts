@@ -88,3 +88,26 @@ export async function hasActiveEntitlement(): Promise<boolean> {
   const info = await getCustomerInfo();
   return !!info?.entitlements.active['premium'];
 }
+
+/**
+ * Check subscription status from RevenueCat entitlements.
+ */
+export async function checkSubscriptionStatus(): Promise<{
+  isSubscribed: boolean;
+  expirationDate: string | null;
+}> {
+  const info = await getCustomerInfo();
+  const premium = info?.entitlements.active['premium'];
+  return {
+    isSubscribed: !!premium,
+    expirationDate: premium?.expirationDate ?? null,
+  };
+}
+
+/**
+ * Purchase a specific RevenueCat package directly.
+ */
+export async function purchasePackage(pkg: import('react-native-purchases').PurchasesPackage) {
+  const Purchases = (await import('react-native-purchases')).default;
+  return Purchases.purchasePackage(pkg);
+}
