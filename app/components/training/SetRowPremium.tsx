@@ -42,7 +42,6 @@ import { Ionicons } from '@expo/vector-icons';
 export interface SetRowPremiumProps {
   set: ActiveSet;
   setIndex: number;
-  exerciseLocalId: string;
   previousSet: { weightKg: number; reps: number } | null;
   isCompleted: boolean;
   unitSystem: UnitSystem;

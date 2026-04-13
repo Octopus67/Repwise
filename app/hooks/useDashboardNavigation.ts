@@ -2,11 +2,16 @@ import { useCallback, useRef } from 'react';
 import { useHaptics } from './useHaptics';
 import { isPremiumWorkoutLoggerEnabled } from '../utils/featureFlags';
 
+// Matches React Navigation's overloaded navigate/push signatures
 interface NavigationActions {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  navigate?: (...args: any[]) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  push?: (...args: any[]) => void;
+  navigate: {
+    (...args: [screen: string]): void;
+    (...args: [screen: string, params: object]): void;
+  };
+  push: {
+    (...args: [screen: string]): void;
+    (...args: [screen: string, params: object]): void;
+  };
 }
 
 interface UseDashboardNavigationParams {
@@ -64,7 +69,8 @@ export function useDashboardNavigation({
   }, [navigation]);
 
   const handleNavigateAnalytics = useCallback((params?: Record<string, unknown>) => {
-    navigation?.navigate?.('Analytics', params);
+    if (params) navigation?.navigate?.('Analytics', params);
+    else navigation?.navigate?.('Analytics');
   }, [navigation]);
 
   const handleNavigateLearn = useCallback(() => {

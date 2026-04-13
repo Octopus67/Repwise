@@ -275,9 +275,9 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
         testID="share-bottom-sheet"
       >
         {[
-          { icon: 'image' as const, label: 'Share as Image', testID: 'share-as-image' },
-          { icon: 'text' as const, label: 'Share as Text', testID: 'share-as-text' },
-          { icon: 'link' as const, label: 'Copy Link', testID: 'share-copy-link' },
+          { icon: 'camera' as const, label: 'Share as Image', testID: 'share-as-image' },
+          { icon: 'chat' as const, label: 'Share as Text', testID: 'share-as-text' },
+          { icon: 'clipboard' as const, label: 'Copy Link', testID: 'share-copy-link' },
         ].map((opt) => (
           <TouchableOpacity
             key={opt.testID}

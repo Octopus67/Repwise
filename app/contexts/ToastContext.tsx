@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Toast } from '../components/common/Toast';
 
-type ToastVariant = 'success' | 'error' | 'info';
+export type ToastVariant = 'success' | 'error' | 'info';
 interface ToastState { message: string; variant: ToastVariant; visible: boolean; }
 
 const ToastContext = createContext<{ showToast: (message: string, variant?: ToastVariant) => void }>({

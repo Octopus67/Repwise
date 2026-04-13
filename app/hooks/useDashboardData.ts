@@ -23,6 +23,7 @@ export interface VolumeSummary {
 export interface NutritionEntryRaw {
   id: string;
   meal_name: string;
+  food_name?: string;
   calories: number;
   protein_g: number;
   carbs_g: number;

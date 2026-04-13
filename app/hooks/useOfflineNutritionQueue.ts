@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { queryClient } from '../services/queryClient';
 import api from '../services/api';
-import { useToast } from '../contexts/ToastContext';
+import { useToast, type ToastVariant } from '../contexts/ToastContext';
 
 const QUEUE_KEY = '@repwise:offline_nutrition_queue_v1';
 const MAX_QUEUE_SIZE = 100;
@@ -26,7 +26,7 @@ export async function enqueueNutritionEntry(payload: Record<string, unknown>): P
 }
 
 /** Process queued entries. Returns count of successfully synced entries. */
-async function processQueue(showToast: (msg: string, type: string) => void): Promise<number> {
+async function processQueue(showToast: (msg: string, type?: ToastVariant) => void): Promise<number> {
   if (processing) return 0;
   processing = true;
   try {

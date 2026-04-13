@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity, TextInput, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, type ThemeColors } from '../../hooks/useThemeColors';
 import { Skeleton } from '../../components/common/Skeleton';
@@ -82,7 +82,7 @@ export function FeedScreen() {
         user_reacted: false,
         user: { id: user?.id ?? '', display_name: 'You', avatar_url: null },
       };
-      queryClient.setQueryData(['feed'], (old: any) => {
+      queryClient.setQueryData(['feed'], (old: InfiniteData<FeedPage> | undefined) => {
         if (!old?.pages?.length) return old;
         const first = { ...old.pages[0], events: [optimistic, ...old.pages[0].events] };
         return { ...old, pages: [first, ...old.pages.slice(1)] };

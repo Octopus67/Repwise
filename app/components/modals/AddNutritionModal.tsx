@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react'; // Audit fix 7.6
+import React, { useState, useEffect, useRef, useCallback, Suspense, type Dispatch, type SetStateAction } from 'react'; // Audit fix 7.6
 import {
   View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, Platform, Modal,
 } from 'react-native';
@@ -349,12 +349,14 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
 
   const handleMacroChange = (field: string, value: string | number | boolean | Record<string, string>) => {
     /* eslint-disable @typescript-eslint/no-explicit-any */
-    const setters: Record<string, (v: any) => void> = {
+    type Setter = Dispatch<SetStateAction<string>> | Dispatch<SetStateAction<number>> | Dispatch<SetStateAction<boolean>> | Dispatch<SetStateAction<Record<string, string>>>;
+    const setters: Record<string, Setter> = {
       calories: setCalories, protein: setProtein, carbs: setCarbs, fat: setFat,
       notes: setNotes, fibre: setFibre, waterGlasses: setWaterGlasses,
       microNutrients: setMicroNutrients, microExpanded: setMicroExpanded,
     };
-    setters[field]?.(value);
+    const setter = setters[field];
+    if (setter) (setter as (v: typeof value) => void)(value);
   };
 
   const handleMealPlanSelect = (macros: { calories: string; protein: string; carbs: string; fat: string; notes: string }) => {

@@ -4,7 +4,7 @@ import { LinkingOptions, getStateFromPath as defaultGetStateFromPath } from '@re
 const prefixes = ['repwise://', 'https://app.repwise.app'];
 
 function safeGetStateFromPath(fallbackRoute: string) {
-  return function getStateFromPath(path: string, options: any) {
+  return function getStateFromPath(path: string, options: Parameters<typeof defaultGetStateFromPath>[1]) {
     try {
       const state = defaultGetStateFromPath(path, options);
       if (state) return state;
@@ -21,7 +21,7 @@ export const authLinking: LinkingOptions<any> = {
   config: {
     screens: {
       Login: 'login',
-      ResetPassword: 'reset-password/:email',
+      ResetPassword: 'reset-password/:email',  // pragma: allowlist secret
     },
   },
   getStateFromPath: safeGetStateFromPath('Login'),

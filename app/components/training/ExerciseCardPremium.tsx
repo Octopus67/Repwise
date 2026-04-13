@@ -109,15 +109,15 @@ export const ExerciseCardPremium = React.memo<ExerciseCardPremiumProps>(({
   const [notesVisible, setNotesVisible] = useState(false);
   const [notesText, setNotesText] = useState(exercise.notes ?? '');
   const [menuVisible, setMenuVisible] = useState(false);
-  
+
   // Sync notes from props (handles store rehydration)
   useEffect(() => {
     setNotesText(exercise.notes ?? '');
   }, [exercise.notes]);
-  
+
   // Debounce store updates to avoid re-render on every keystroke
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Cleanup debounce timer on unmount
   useEffect(() => {
     return () => {
@@ -348,7 +348,6 @@ export const ExerciseCardPremium = React.memo<ExerciseCardPremiumProps>(({
             key={set.localId}
             set={set}
             setIndex={idx}
-            exerciseLocalId={exercise.localId}
             previousSet={prevSet ? { weightKg: prevSet.weightKg, reps: prevSet.reps } : null}
             isCompleted={set.completed}
             unitSystem={unitSystem}

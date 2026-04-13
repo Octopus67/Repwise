@@ -145,7 +145,7 @@ export function WorkoutSummaryModal({
 }
 
 function StatCard({ index, value, label, hasPR, styles, accentColor }: {
-  index: number; value: string; label: string; hasPR: boolean; styles: any; accentColor: string;
+  index: number; value: string; label: string; hasPR: boolean; styles: ReturnType<typeof getThemedStyles>; accentColor: string;
 }) {
   const entranceStyle = useStaggeredEntrance(index);
   const goldBorder = hasPR ? { borderWidth: 1, borderColor: colors.premium.gold, borderRadius: radius.sm } : undefined;

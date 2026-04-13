@@ -8,7 +8,7 @@ import { useCountingValue } from '../../hooks/useCountingValue';
 import { haptic } from '../../utils/haptics';
 
 // Conditionally import LottieView
-let LottieView: any = null;
+let LottieView: React.ComponentType<{ source: unknown; autoPlay?: boolean; loop?: boolean; style?: object }> | null = null;
 try { LottieView = require('lottie-react-native').default; } catch {}
 
 interface StreakIndicatorProps {
@@ -63,7 +63,7 @@ export function StreakIndicator({ count, type = 'week' }: StreakIndicatorProps) 
 
 const AnimatedText = Animated.createAnimatedComponent(Text);
 
-function AnimatedCount({ value, type, styles }: { value: SharedValue<number>; type: string; styles: any }) {
+function AnimatedCount({ value, type, styles }: { value: SharedValue<number>; type: string; styles: ReturnType<typeof getThemedStyles> }) {
   const animatedProps = useAnimatedProps(() => ({
     text: `${Math.round(value.value)} ${type} streak`,
   } as any));

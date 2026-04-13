@@ -22,8 +22,7 @@ import { useWorkoutPreferencesStore } from '../store/workoutPreferencesStore';
 
 interface UseWorkoutSaveParams {
   store: ActiveWorkoutState & ActiveWorkoutActions;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  navigation: { navigate: (...args: any[]) => void };
+  navigation: { navigate: { (...args: [screen: string]): void; (...args: [screen: string, params: object]): void } };
   unitSystem: UnitSystem;
   elapsedSeconds: number;
   muscleGroupMap: Record<string, string>;
@@ -71,11 +70,11 @@ export function useWorkoutSave({
       };
       queryClient.setQueryData(['sessions'], (old: unknown) => {
         if (Array.isArray(old)) {
-          if (params.isEdit) return old.map((item: any) => (item.id === params.editSessionId ? optimisticSession : item));
+          if (params.isEdit) return old.map((item: Record<string, unknown>) => (item.id === params.editSessionId ? optimisticSession : item));
           return [optimisticSession, ...old];
         }
         if (old && typeof old === 'object' && 'items' in old) {
-          const o = old as { items: any[] };
+          const o = old as { items: Record<string, unknown>[] };
           if (params.isEdit) return { ...o, items: o.items.map((item) => (item.id === params.editSessionId ? optimisticSession : item)) };
           return { ...o, items: [optimisticSession, ...o.items] };
         }
@@ -132,7 +131,7 @@ export function useWorkoutSave({
         .map(ex => {
           const completedSets = ex.sets.filter(s => s.completed && s.setType !== 'warm-up');
           let bestSet = null;
-          
+
           if (completedSets.length > 0) {
             // Find best set by volume (weight × reps)
             bestSet = completedSets.reduce((best, current) => {
@@ -151,7 +150,7 @@ export function useWorkoutSave({
 
       // Check for personal records
       const prs: PersonalRecordResponse[] = response.data?.personal_records ?? [];
-      
+
       // Compute summary from snapshot (store is already reset by finishWorkout)
       const currentSummary = computeWorkoutSummary(exercisesSnapshot);
       const finalRecs = generateRecommendations(sessionHURef.current, {});

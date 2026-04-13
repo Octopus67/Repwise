@@ -1,7 +1,7 @@
 import React from 'react';
 import { ActivityIndicator } from 'react-native';
 
-let LottieView: any = null;
+let LottieView: React.ComponentType<{ source: unknown; autoPlay?: boolean; loop?: boolean; style?: object }> | null = null;
 try { LottieView = require('lottie-react-native'); } catch {}
 
 export function BrandedLoader({ size = 48 }: { size?: number }) {

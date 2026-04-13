@@ -30,13 +30,13 @@ export function ReactionButton({ eventId, count, reacted }: ReactionButtonProps)
         item.id === eventId
           ? { ...item, reacted: !variables.wasReacted, reaction_count: Math.max(0, ((item.reaction_count as number) ?? 0) + (variables.wasReacted ? -1 : 1)) }
           : item;
-      qc.setQueryData(['feed'], (old: any) => {
+      qc.setQueryData(['feed'], (old: { pages?: Array<{ events?: Record<string, unknown>[] }>; items?: Record<string, unknown>[] } | Record<string, unknown>[] | undefined) => {
         if (!old || typeof old !== 'object') return old;
-        if (old.pages) {
-          return { ...old, pages: old.pages.map((page: any) => ({ ...page, events: (page.events || []).map(updateItem) })) };
+        if ('pages' in old && old.pages) {
+          return { ...old, pages: old.pages.map((page) => ({ ...page, events: (page.events || []).map(updateItem) })) };
         }
         if (Array.isArray(old)) return old.map(updateItem);
-        if ('items' in old) return { ...old, items: old.items.map(updateItem) };
+        if ('items' in old) return { ...old, items: (old.items || []).map(updateItem) };
         return old;
       });
       return { previous };

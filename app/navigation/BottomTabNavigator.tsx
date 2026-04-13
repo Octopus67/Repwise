@@ -47,6 +47,7 @@ const ShoppingListView = React.lazy(() => import('../screens/meal-prep/ShoppingL
 const PrepSundayFlow = React.lazy(() => import('../screens/meal-prep/PrepSundayFlow').then(m => ({ default: m.PrepSundayFlow })));
 const DataExportScreen = React.lazy(() => import('../screens/profile/DataExportScreen').then(m => ({ default: m.DataExportScreen })));
 const ImportDataScreen = React.lazy(() => import('../screens/settings/ImportDataScreen').then(m => ({ default: m.ImportDataScreen })));
+const PaywallScreen = React.lazy(() => import('../screens/PaywallScreen').then(m => ({ default: m.PaywallScreen })));
 
 function LazyFallback() {
   const c = getThemeColors();
@@ -84,6 +85,7 @@ function withSuspense<P extends object>(LazyComponent: React.LazyExoticComponent
 }
 
 import type { ActiveWorkoutScreenParams } from '../types/training';
+import type { DashboardScreenProps } from '../types/navigation';
 
 /** Reusable error fallback for tab-level ErrorBoundaries (#19) */
 function TabErrorFallback(tabName: string) {
@@ -102,7 +104,7 @@ function TabErrorFallback(tabName: string) {
 }
 
 /** Auto-save workout state on crash, then show ErrorBoundary recovery UI */
-function ActiveWorkoutWithBoundary(props: any) {
+function ActiveWorkoutWithBoundary(props: DashboardScreenProps<'ActiveWorkout'>) {
   return (
     <ErrorBoundary>
       <ActiveWorkoutScreen {...props} />
@@ -133,6 +135,7 @@ export type DashboardStackParamList = {
   Learn: undefined;
   ExerciseDetail: { exerciseId: string };
   SessionDetail: { sessionId: string };
+  Paywall: undefined;
 };
 
 export type LogsStackParamList = {
@@ -185,6 +188,7 @@ export type ProfileStackParamList = {
   PRHistory: undefined;
   YearInReview: undefined;
   ImportData: undefined;
+  Paywall: undefined;
 };
 
 export type BottomTabParamList = {
@@ -198,7 +202,7 @@ export type BottomTabParamList = {
 
 export const TAB_NAMES: (keyof BottomTabParamList)[] = ['Home', 'Log', 'Analytics', 'Profile'];
 export const PROFILE_STACK_ROUTES: (keyof ProfileStackParamList)[] = [
-  'ProfileHome', 'Learn', 'ArticleDetail', 'Coaching', 'Community', 'Feed', 'Leaderboard', 'Discover', 'FounderStory', 'ProgressPhotos', 'Measurements', 'MealPlan', 'ShoppingList', 'PrepSunday', 'NotificationSettings', 'DataExport', 'PRHistory', 'YearInReview', 'ImportData',
+  'ProfileHome', 'Learn', 'ArticleDetail', 'Coaching', 'Community', 'Feed', 'Leaderboard', 'Discover', 'FounderStory', 'ProgressPhotos', 'Measurements', 'MealPlan', 'ShoppingList', 'PrepSunday', 'NotificationSettings', 'DataExport', 'PRHistory', 'YearInReview', 'ImportData', 'Paywall',
 ];
 
 // ─── Stack navigators ────────────────────────────────────────────────────────
@@ -243,6 +247,7 @@ function DashboardStackScreen() {
       <DashboardStack.Screen name="Learn" component={withSuspense(LearnScreen)} />
       <DashboardStack.Screen name="ExerciseDetail" component={ExerciseDetailScreen} options={{ headerShown: false }} />
       <DashboardStack.Screen name="SessionDetail" component={SessionDetailScreen} options={{ headerShown: false }} />
+      <DashboardStack.Screen name="Paywall" component={withSuspense(PaywallScreen)} options={{ presentation: 'modal', headerShown: false, animation: 'slide_from_bottom' }} />
     </DashboardStack.Navigator>
     </ErrorBoundary>
   );
@@ -334,6 +339,7 @@ function ProfileStackScreen() {
       <ProfileStack.Screen name="PRHistory" component={withSuspense(PRHistoryScreen)} />
       <ProfileStack.Screen name="YearInReview" component={withSuspense(YearInReviewScreen)} />
       <ProfileStack.Screen name="ImportData" component={withSuspense(ImportDataScreen)} />
+      <ProfileStack.Screen name="Paywall" component={withSuspense(PaywallScreen)} options={{ presentation: 'modal', headerShown: false, animation: 'slide_from_bottom' }} />
     </ProfileStack.Navigator>
     </ErrorBoundary>
   );

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { typography, spacing, letterSpacing } from '../../theme/tokens';
@@ -6,7 +6,7 @@ import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThem
 import { Button } from './Button';
 
 // Lottie: try/catch for graceful fallback
-let LottieView: any = null;
+let LottieView: React.ComponentType<{ source: unknown; autoPlay?: boolean; loop?: boolean; style?: object }> | null = null;
 try { LottieView = require('lottie-react-native'); } catch { /* not installed */ }
 
 interface EmptyStateProps {
@@ -16,7 +16,7 @@ interface EmptyStateProps {
   actionLabel?: string;
   onAction?: () => void;
   children?: ReactNode;
-  lottieSource?: any;
+  lottieSource?: string | { uri: string } | number;
 }
 
 export function EmptyState({
