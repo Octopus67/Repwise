@@ -238,7 +238,6 @@
       ],
       "expo-image-picker",
       "expo-av",
-      "react-native-purchases",
       [
         "expo-health",
         {
