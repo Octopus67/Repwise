@@ -159,7 +159,7 @@ export function FeedScreen() {
               style={[s.postBtn, { backgroundColor: postText.trim() ? c.accent.primary : c.border.default }]}
             >
               {postMutation.isPending ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={c.text.onAccent} />
               ) : (
                 <Text style={s.postBtnText}>Post</Text>
               )}
@@ -252,7 +252,7 @@ const styles = (c: ThemeColors) =>
       alignItems: 'center',
     },
     postBtnText: {
-      color: '#fff',
+      color: c.text.onAccent,
       fontWeight: typography.weight.semibold,
       fontSize: typography.size.sm,
     },
@@ -272,7 +272,7 @@ const styles = (c: ThemeColors) =>
       }),
     },
     fabIcon: {
-      color: '#fff',
+      color: c.text.onAccent,
       fontSize: 28,
       fontWeight: typography.weight.bold,
       lineHeight: 30,

@@ -10,9 +10,9 @@
 import { useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-import { AxiosError } from 'axios';
 import api from '../services/api';
 import { queryClient } from '../services/queryClient';
+import { isNetworkError } from '../utils/errors';
 
 const QUEUE_KEY = '@repwise:offline_workout_queue_v2';
 
@@ -21,13 +21,6 @@ interface QueuedWorkout {
   isEdit: boolean;
   editSessionId?: string;
   queuedAt: string;
-}
-
-function isNetworkError(error: unknown): boolean {
-  if (error instanceof AxiosError) {
-    return !error.response;
-  }
-  return false;
 }
 
 /** Append a failed workout to the offline queue. */

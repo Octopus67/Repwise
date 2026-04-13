@@ -17,6 +17,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, letterSpacing as ls } from '../../theme/tokens';
@@ -41,6 +42,8 @@ import type { TrainingSessionResponse } from '../../types/training';
 import type { Exercise } from '../../types/exercise';
 import { resolveImageUrl } from '../../utils/exerciseDetailLogic';
 import { ShareCardCustomizer } from '../../components/sharing/ShareCardCustomizer';
+import { SessionComparison } from '../../components/training/SessionComparison';
+import { ModalContainer } from '../../components/common/ModalContainer';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 
 interface SessionDetailScreenProps {
@@ -60,27 +63,17 @@ export function SessionDetailScreen({ route, navigation, showE1RM = true }: Sess
   const unitSystem = useStore((s) => s.unitSystem);
   const { enabled: sharingEnabled } = useFeatureFlag('social_sharing');
 
-  if (!sessionId) {
-    return (
-      <SafeAreaView style={[getThemedStyles(c).safe, { backgroundColor: c.bg.base }]} edges={['top']}>
-        <View style={getThemedStyles(c).errorContainer}>
-          <Icon name="alert-circle" />
-          <Text style={[getThemedStyles(c).errorText, { color: c.text.secondary }]}>No session specified</Text>
-          <TouchableOpacity style={[getThemedStyles(c).errorBackBtn, { backgroundColor: c.accent.primaryMuted }]} onPress={() => navigation.goBack()}>
-            <Text style={[getThemedStyles(c).errorBackText, { color: c.accent.primary }]}>Go Back</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   const [session, setSession] = useState<TrainingSessionResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exerciseImages, setExerciseImages] = useState<Record<string, string | null>>({});
   const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [comparisonVisible, setComparisonVisible] = useState(false);
+  const [previousSession, setPreviousSession] = useState<TrainingSessionResponse | null>(null);
+  const [comparisonLoading, setComparisonLoading] = useState(false);
 
   useEffect(() => {
+    if (!sessionId) return;
     let cancelled = false;
     async function fetchSession() {
       try {
@@ -102,6 +95,7 @@ export function SessionDetailScreen({ route, navigation, showE1RM = true }: Sess
 
   // Fetch exercise images for thumbnails
   useEffect(() => {
+    if (!sessionId) return;
     if (!session) return;
     let cancelled = false;
     async function fetchExerciseImages() {
@@ -122,6 +116,45 @@ export function SessionDetailScreen({ route, navigation, showE1RM = true }: Sess
     fetchExerciseImages();
     return () => { cancelled = true; };
   }, [session]);
+
+  const handleCompare = async () => {
+    if (!session) return;
+    setComparisonLoading(true);
+    try {
+      const { data } = await api.get('training/sessions', {
+        params: { before_date: session.session_date, limit: 20 },
+      });
+      const sessions: TrainingSessionResponse[] = data.items ?? data ?? [];
+      const currNames = new Set(session.exercises.map((e) => e.exercise_name));
+      const match = sessions.find((s) =>
+        s.id !== session.id && s.exercises.some((e) => currNames.has(e.exercise_name)),
+      );
+      if (match) {
+        setPreviousSession(match);
+        setComparisonVisible(true);
+      } else {
+        Alert.alert('No Match', 'No previous session found to compare');
+      }
+    } catch (err) {
+      console.warn('[SessionDetail] Compare fetch failed:', err);
+    } finally {
+      setComparisonLoading(false);
+    }
+  };
+
+  if (!sessionId) {
+    return (
+      <SafeAreaView style={[getThemedStyles(c).safe, { backgroundColor: c.bg.base }]} edges={['top']}>
+        <View style={getThemedStyles(c).errorContainer}>
+          <Icon name="alert-circle" />
+          <Text style={[getThemedStyles(c).errorText, { color: c.text.secondary }]}>No session specified</Text>
+          <TouchableOpacity style={[getThemedStyles(c).errorBackBtn, { backgroundColor: c.accent.primaryMuted }]} onPress={() => navigation.goBack()}>
+            <Text style={[getThemedStyles(c).errorBackText, { color: c.accent.primary }]}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const unitLabel = unitSystem === 'metric' ? 'kg' : 'lbs';
 
@@ -323,6 +356,19 @@ export function SessionDetailScreen({ route, navigation, showE1RM = true }: Sess
           </Card>
         ) : null}
 
+        {/* Compare with Previous */}
+        <TouchableOpacity
+          style={[styles.compareButton, { backgroundColor: c.bg.surface, borderColor: c.border.default }]}
+          activeOpacity={0.8}
+          testID="compare-session-button"
+          onPress={handleCompare}
+          disabled={comparisonLoading}
+        >
+          <Text style={[styles.compareButtonText, { color: c.accent.primary }]}>
+            {comparisonLoading ? 'Loading...' : 'Compare with Previous'}
+          </Text>
+        </TouchableOpacity>
+
         {/* Edit button */}
         <TouchableOpacity
           style={[styles.editButton, { backgroundColor: c.accent.primary }]}
@@ -343,6 +389,22 @@ export function SessionDetailScreen({ route, navigation, showE1RM = true }: Sess
         session={session}
         unitSystem={unitSystem}
       />
+
+      {/* Comparison modal */}
+      {session && previousSession && (
+        <ModalContainer
+          visible={comparisonVisible}
+          onClose={() => setComparisonVisible(false)}
+          title="Session Comparison"
+          testID="comparison-modal"
+        >
+          <SessionComparison
+            currentSession={session}
+            previousSession={previousSession}
+            unitSystem={unitSystem}
+          />
+        </ModalContainer>
+      )}
     </SafeAreaView>
   );
 }
@@ -564,6 +626,17 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   },
   editButtonText: {
     color: c.text.inverse,
+    fontSize: typography.size.md,
+    fontWeight: typography.weight.semibold,
+  },
+  compareButton: {
+    borderRadius: radius.sm,
+    paddingVertical: spacing[3],
+    alignItems: 'center',
+    marginTop: spacing[2],
+    borderWidth: 1,
+  },
+  compareButtonText: {
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
   },

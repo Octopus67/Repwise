@@ -126,6 +126,7 @@ export function AddIngredientsStep({
           <FlatList
             data={searchResults.slice(0, 10)}
             keyExtractor={(item) => item.id}
+            keyboardShouldPersistTaps="handled"
             style={[styles.searchResults, { backgroundColor: c.bg.surfaceRaised }]}
             renderItem={({ item }) => (
               <TouchableOpacity
@@ -153,6 +154,7 @@ export function AddIngredientsStep({
       <FlatList
         data={ingredients}
         keyExtractor={(item) => item.tempId}
+        keyboardShouldPersistTaps="handled"
         style={styles.flexOne}
         renderItem={({ item }) => (
           <View style={[styles.ingredientRow, { borderBottomColor: c.bg.surfaceRaised }]}>

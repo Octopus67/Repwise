@@ -29,5 +29,5 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: typography.size.lg, marginBottom: spacing[4] },
   error: { fontSize: typography.size.sm, textAlign: 'center', marginBottom: spacing[6] },
   button: { paddingHorizontal: spacing[6], paddingVertical: spacing[3], borderRadius: 8 },
-  buttonText: { color: '#fff', fontSize: typography.size.base, fontWeight: '600' },
+  buttonText: { color: getThemeColors().text.onAccent, fontSize: typography.size.base, fontWeight: '600' },
 });

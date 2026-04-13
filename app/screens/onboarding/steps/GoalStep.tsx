@@ -32,6 +32,17 @@ export function GoalStep({ onNext }: Props) {
   const { impact } = useHaptics();
   const age = computeAge(store.birthYear, store.birthMonth);
 
+  const isImperial = store.unitSystem === 'imperial';
+  const KG_TO_LBS = 2.20462;
+  const formatRate = (rateKg: number): string => {
+    if (isImperial) {
+      const lbs = rateKg * KG_TO_LBS;
+      return lbs % 1 === 0 ? String(lbs) : lbs.toFixed(1);
+    }
+    return String(rateKg);
+  };
+  const rateUnitLabel = isImperial ? 'lbs/wk' : 'kg/wk';
+
   const tdee = useMemo(() => {
     if (store.tdeeOverride) return store.tdeeOverride;
     if (!store.sex) return 0;
@@ -103,11 +114,11 @@ export function GoalStep({ onNext }: Props) {
                 ]}
                 onPress={() => { impact('light'); store.updateField('rateKgPerWeek', r); }}
                 activeOpacity={0.7}
-                accessibilityLabel={`Select rate ${r} kg per week`}
+                accessibilityLabel={`Select rate ${formatRate(r)} ${rateUnitLabel}`}
                 accessibilityRole="button"
               >
-                <Text style={[styles.rateValue, selected && { color }]}>{r}</Text>
-                <Text style={[styles.rateUnit, { color: c.text.muted }]}>kg/wk</Text>
+                <Text style={[styles.rateValue, selected && { color }]}>{formatRate(r)}</Text>
+                <Text style={[styles.rateUnit, { color: c.text.muted }]}>{rateUnitLabel}</Text>
               </TouchableOpacity>
             );
           })}
@@ -142,18 +153,19 @@ export function GoalStep({ onNext }: Props) {
           <Text style={[styles.targetLabel, { color: c.text.secondary }]}>Target weight (optional)</Text>
           <TextInput
             style={[styles.targetInput, !targetWeightValid && styles.targetInputError]}
-            value={store.targetWeightKg ? String(store.targetWeightKg) : ''}
+            value={store.targetWeightKg ? String(isImperial ? Math.round(store.targetWeightKg * KG_TO_LBS) : store.targetWeightKg) : ''}
             onChangeText={(t) => {
               const v = parseFloat(t);
-              store.updateField('targetWeightKg', isNaN(v) ? null : v);
+              if (isNaN(v)) { store.updateField('targetWeightKg', null); return; }
+              store.updateField('targetWeightKg', isImperial ? v / KG_TO_LBS : v);
             }}
             keyboardType="numeric"
-            placeholder="kg"
+            placeholder={isImperial ? 'lbs' : 'kg'}
             placeholderTextColor={c.text.muted}
-            accessibilityLabel="Target weight in kilograms"
+            accessibilityLabel={`Target weight in ${isImperial ? 'pounds' : 'kilograms'}`}
           />
           {!targetWeightValid && (
-            <Text style={[styles.errorText, { color: c.semantic.negative }]}>Target weight must be between 30-300 kg</Text>
+            <Text style={[styles.errorText, { color: c.semantic.negative }]}>Target weight must be between {isImperial ? '66-660 lbs' : '30-300 kg'}</Text>
           )}
           {targetDirectionWarning && targetWeightValid && (
             <Text style={[styles.warningHint, { color: c.semantic.warning }]}><Icon name="alert-triangle" size={14} color={c.semantic.warning} /> {targetDirectionWarning}</Text>

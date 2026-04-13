@@ -8,6 +8,7 @@ import { useStepTransition } from '../../hooks/useStepTransition';
 import { useHaptics } from '../../hooks/useHaptics';
 import { useOnboardingStore } from '../../store/onboardingSlice';
 import { ErrorBoundary } from '../../components/common/ErrorBoundary';
+import { BrandedLoader } from '../../components/common/BrandedLoader';
 
 // Step components (will be created in subsequent tasks)
 import { IntentStep } from './steps/IntentStep';
@@ -35,6 +36,7 @@ export function OnboardingWizard({ onComplete }: Props) {
   const currentStep = useOnboardingStore((s) => s.currentStep);
   const setStep = useOnboardingStore((s) => s.setStep);
   const reset = useOnboardingStore((s) => s.reset);
+  const hydrated = useOnboardingStore((s) => s._hydrated);
 
   const stepTransitionStyle = useStepTransition(currentStep);
   const { impact } = useHaptics();
@@ -78,18 +80,26 @@ export function OnboardingWizard({ onComplete }: Props) {
     switch (currentStep) {
       case ONBOARDING_STEPS.INTENT: return <IntentStep onNext={goNext} />;
       case ONBOARDING_STEPS.BODY_BASICS: return <BodyBasicsStep onNext={goNext} onBack={goBack} />;
-      case ONBOARDING_STEPS.BODY_MEASUREMENTS: return <BodyMeasurementsStep onNext={goNext} onBack={goBack} />;
+      case ONBOARDING_STEPS.BODY_MEASUREMENTS: return <BodyMeasurementsStep onNext={goNext} onBack={goBack} onSkip={goNext} />;
       case ONBOARDING_STEPS.BODY_COMPOSITION: return <BodyCompositionStep onNext={goNext} onBack={goBack} onSkip={goNext} />;
       case ONBOARDING_STEPS.LIFESTYLE: return <LifestyleStep onNext={goNext} onBack={goBack} />;
       case ONBOARDING_STEPS.TDEE_REVEAL: return <TDEERevealStep onNext={goNext} onBack={goBack} />;
       case ONBOARDING_STEPS.GOAL: return <GoalStep onNext={goNext} onBack={goBack} />;
-      case ONBOARDING_STEPS.DIET_STYLE: return <DietStyleStep onNext={goNext} onBack={goBack} />;
+      case ONBOARDING_STEPS.DIET_STYLE: return <DietStyleStep onNext={goNext} onBack={goBack} onSkip={goNext} />;
       case ONBOARDING_STEPS.FOOD_DNA: return <FoodDNAStep onNext={goNext} onBack={goBack} onSkip={goNext} />;
       case ONBOARDING_STEPS.HEALTH_DISCLAIMER: return <HealthDisclaimerStep onNext={goNext} onBack={goBack} />;
       case ONBOARDING_STEPS.SUMMARY: return <SummaryStep onComplete={handleComplete} onBack={goBack} onEditStep={jumpToStep} />;
       default: return null;
     }
   };
+
+  if (!hydrated) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: c.bg.base }]}>
+        <BrandedLoader />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.bg.base }]}>

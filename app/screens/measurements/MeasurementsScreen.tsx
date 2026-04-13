@@ -6,7 +6,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  Alert, ActivityIndicator,
+  Alert, ActivityIndicator, RefreshControl,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -33,6 +34,7 @@ export function MeasurementsScreen() {
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [showNavyCalc, setShowNavyCalc] = useState(false);
   const [calcBodyFatPct, setCalcBodyFatPct] = useState<string>('');
 
@@ -73,6 +75,12 @@ export function MeasurementsScreen() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
 
   const handleSubmit = useCallback(async (data: MeasurementFormData) => {
     setSaving(true);
@@ -142,8 +150,9 @@ export function MeasurementsScreen() {
       </View>
 
       {/* Content */}
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
       {tab === 'measurements' ? (
-        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={c.accent.primary} />}>
           <MeasurementTrendChart measurements={measurements} />
           <View style={styles.formSection}>
             <Text style={[styles.sectionTitle, { color: c.text.primary }]}>New Entry</Text>
@@ -156,13 +165,14 @@ export function MeasurementsScreen() {
           </View>
         </ScrollView>
       ) : (
-        <ScrollView style={styles.content}>
+        <ScrollView style={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={c.accent.primary} />}>
           <ProgressPhotoGrid
             photos={photos}
             onPhotosChange={setPhotos}
           />
         </ScrollView>
       )}
+      </KeyboardAvoidingView>
 
       <NavyBFCalculator
         visible={showNavyCalc}

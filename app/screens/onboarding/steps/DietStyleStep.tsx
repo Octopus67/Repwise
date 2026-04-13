@@ -13,6 +13,7 @@ import {
 interface Props {
   onNext?: () => void;
   onBack?: () => void;
+  onSkip?: () => void;
 }
 
 const DIET_STYLES: { type: DietStyle; title: string; desc: string }[] = [
@@ -22,7 +23,7 @@ const DIET_STYLES: { type: DietStyle; title: string; desc: string }[] = [
   { type: 'keto', title: 'Keto', desc: 'Very low carb (<50g) for ketosis' },
 ];
 
-export function DietStyleStep({ onNext }: Props) {
+export function DietStyleStep({ onNext, onSkip }: Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const store = useOnboardingStore();
@@ -201,6 +202,13 @@ export function DietStyleStep({ onNext }: Props) {
         })}
       </View>
 
+      {onSkip && (
+        <TouchableOpacity onPress={onSkip} style={styles.skipBtn}
+          accessibilityLabel="Skip diet style" accessibilityRole="button">
+          <Text style={[styles.skipText, { color: c.text.secondary }]}>Skip for now</Text>
+        </TouchableOpacity>
+      )}
+
       {onNext && <Button title="Continue" onPress={handleNext} style={styles.btn} />}
     </ScrollView>
   );
@@ -350,7 +358,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
   },
   checkmarkText: {
-    color: '#fff',
+    color: c.text.onAccent,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.bold,
   },
@@ -384,4 +392,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   btn: { marginTop: spacing[4] },
+  skipBtn: { alignItems: 'center', marginTop: spacing[3] },
+  skipText: { fontSize: typography.size.sm },
 });

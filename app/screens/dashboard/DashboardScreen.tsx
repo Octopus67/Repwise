@@ -14,6 +14,7 @@ import { QuickActionButton } from '../../components/dashboard/QuickActionButton'
 import { DateScroller } from '../../components/dashboard/DateScroller';
 import { WeeklyTrainingCalendar } from '../../components/dashboard/WeeklyTrainingCalendar';
 import { MealSlotDiary } from '../../components/dashboard/MealSlotDiary';
+import { QuickAddFoods } from '../../components/dashboard/QuickAddFoods';
 import { BudgetBar } from '../../components/nutrition/BudgetBar';
 import { SectionHeader } from '../../components/common/SectionHeader';
 import { Skeleton } from '../../components/common/Skeleton';
@@ -47,6 +48,7 @@ import { Icon } from '../../components/common/Icon';
 import { TrendLineChart } from '../../components/charts/TrendLineChart';
 import api from '../../services/api';
 import { haptic } from '../../utils/haptics';
+import { getGreeting } from '../../utils/greeting';
 import { getApiErrorMessage } from '../../utils/errors';
 import { showRetryAlert } from '../../utils/alertRetry';
 import { validateApiResponse, PaymentStatusSchema } from '../../schemas/api';
@@ -173,6 +175,27 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
   }, []); // Audit fix 7.2
 
   // ── Weight trend render ────────────────────────────────────────────────
+  const recentFoods = useMemo(() => {
+    const seen = new Set<string>();
+    return data.nutritionEntries
+      .filter((e) => { const key = e.food_name ?? e.meal_name; if (seen.has(key)) return false; seen.add(key); return true; })
+      .slice(0, 5)
+      .map((e) => ({
+        name: e.food_name ?? e.meal_name,
+        calories: e.calories,
+        payload: { meal_name: e.meal_name, calories: e.calories, protein_g: e.protein_g, carbs_g: e.carbs_g, fat_g: e.fat_g, entry_date: selectedDate },
+      }));
+  }, [data.nutritionEntries, selectedDate]);
+
+  const handleQuickAddFood = useCallback(async (payload: object) => {
+    try {
+      await api.post('nutrition/entries', payload);
+      loadDashboardData(selectedDate);
+    } catch (err: unknown) {
+      Alert.alert('Error', 'Failed to log food');
+    }
+  }, [loadDashboardData, selectedDate]);
+
   const renderWeightTrend = () => {
     if (isLoading) return <View style={s.trendSection}><Skeleton width="60%" height={20} /></View>;
     if (data.weightHistory.length === 0) return (
@@ -212,8 +235,11 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { haptic.light(); handleRefresh(); }} tintColor={c.accent.primary} />}>
 
         <Animated.View style={hA}><View style={s.header} testID="dashboard-greeting">
+          <Text style={{ color: c.text.primary, fontSize: typography.size.lg, fontWeight: typography.weight.semibold, lineHeight: typography.lineHeight.lg }}>{getGreeting(store.profile?.displayName?.split(' ')[0] || 'there')}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2] }}>
           {premium && <PremiumBadge size="md" />}
           {trialStatus?.active && trialStatus.days_remaining > 0 && <TrialBadge daysRemaining={trialStatus.days_remaining} />}
+          </View>
         </View></Animated.View>
 
         {error && <ErrorBanner message={error} onRetry={() => loadDashboardData(selectedDate)} onDismiss={() => setError(null)} />}
@@ -281,6 +307,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
         <Animated.View style={bA}>{!isLoading && <BudgetBar consumed={consumed} targets={targets} />}</Animated.View>
         {sectionErrors.nutrition && <SectionError label="nutrition" onRetry={refetchBySection.nutrition} />}
         <Animated.View style={msA}>{!isLoading && <MealSlotDiary entries={data.nutritionEntries} onAddToSlot={nav.handleAddToSlot} />}</Animated.View>
+        {!isLoading && <QuickAddFoods recentFoods={recentFoods} onQuickAdd={handleQuickAddFood} />}
 
         {!isLoading && !nudgeDismissed && data.nudges.length > 0 && <NudgeCard nudge={data.nudges[0]} onDismiss={async () => { setNudgeDismissed(true); setData(); try { await AsyncStorage.setItem('@repwise:nudge_dismissed', Date.now().toString()); } catch (e) { console.error('[Dashboard] Nudge dismiss save failed:', e); } }} onAction={(a) => { if (a === 'recalculate' || a === 'edit_goals') { navigation.getParent()?.navigate('Profile'); } }} />}
         {showRestDay
@@ -289,10 +316,12 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
         {sectionErrors.training && <SectionError label="training" onRetry={refetchBySection.training} />}
 
         {!isLoading && <WeeklyChallengeCard challenges={data.challenges} />}
+        {sectionErrors.challenges && <SectionError label="challenges" onRetry={refetchBySection.challenges} />}
 
         {Platform.OS !== 'web' && <StepCountCard />}
 
         {renderWeightTrend()}
+        {sectionErrors.bodyweight && <SectionError label="weight trend" onRetry={refetchBySection.bodyweight} />}
 
         {isLoading ? <View style={bannerStyle}><Skeleton width={16} height={16} variant="circle" /><Skeleton width="70%" height={16} /><Skeleton width={16} height={16} /></View>
           : data.milestoneMessage && <InfoBanner style={bannerStyle} icon="dumbbell" text={data.milestoneMessage} chevronColor={c.accent.primary} onPress={nav.handleNavigateAnalytics} accessibilityLabel="View milestone progress" />}
@@ -307,7 +336,10 @@ export function DashboardScreen({ navigation }: DashboardScreenProps<'DashboardH
         {!isLoading && data.recompMetrics && store.goals?.goalType === 'recomposition' && <RecompDashboardCard metrics={data.recompMetrics} />}
         {!isLoading && store.weeklyCheckin && <WeeklyCheckinCard checkin={store.weeklyCheckin} onDismiss={() => store.setWeeklyCheckin(null)} onAccept={handleCheckinAccept} onModify={handleCheckinModify} onDismissSuggestion={handleCheckinDismiss} />}
         {!isLoading && data.fatigueSuggestions.length > 0 && <FatigueAlertCard suggestions={data.fatigueSuggestions} onPress={nav.handleNavigateAnalytics} />}
+        {sectionErrors.fatigue && <SectionError label="recovery insights" onRetry={refetchBySection.fatigue} />}
         {!isLoading && volumeFlagEnabled && data.volumeSummary && <InfoBanner style={bannerStyle} icon="chart" text={`${data.volumeSummary.optimal} muscle${data.volumeSummary.optimal !== 1 ? 's' : ''} optimal${data.volumeSummary.approachingMrv > 0 ? `, ${data.volumeSummary.approachingMrv} approaching MRV` : ''}`} chevronColor={c.accent.primary} onPress={() => nav.handleNavigateAnalytics({ screen: 'AnalyticsHome', params: { initialTab: 'volume' } })} accessibilityLabel="View volume insights" />}
+        {sectionErrors.volume && <SectionError label="volume summary" onRetry={refetchBySection.volume} />}
+        {sectionErrors.streak && <SectionError label="streak" onRetry={refetchBySection.streak} />}
 
         {!isLoading && data.articles.length > 0 && (
           <Animated.View style={fA}>

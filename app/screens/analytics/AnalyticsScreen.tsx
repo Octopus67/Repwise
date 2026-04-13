@@ -1,22 +1,13 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'; // Audit fix 7.3
 import { getLocalDateString } from '../../utils/localDate';
-import { View, Text, StyleSheet, ScrollView, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, typography, letterSpacing } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
-import { Card } from '../../components/common/Card';
-import { EmptyState } from '../../components/common/EmptyState';
-import { Skeleton } from '../../components/common/Skeleton';
 import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { AnimatedTabIndicator } from '../../components/common/AnimatedTabIndicator';
-import { TrendLineChart } from '../../components/charts/TrendLineChart';
 import { TimeRangeSelector } from '../../components/charts/TimeRangeSelector';
 import { filterByTimeRange } from '../../utils/filterByTimeRange';
-import { formatWeight } from '../../utils/unitConversion';
-import { getComparisonColor } from '../../utils/comparisonColor';
-import { computeEMA } from '../../utils/emaTrend';
-import { WeeklySummaryCard } from '../../components/analytics/WeeklySummaryCard';
-import { ExpenditureTrendCard } from '../../components/analytics/ExpenditureTrendCard';
 import { useStore, isPremium } from '../../store';
 import { Icon } from '../../components/common/Icon';
 import api from '../../services/api';
@@ -25,14 +16,14 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Audit fix 7.7
 import type { AnalyticsStackParamList } from '../../navigation/BottomTabNavigator'; // Audit fix 7.7
 import { useHaptics } from '../../hooks/useHaptics';
-import { PeriodizationCalendar } from '../../components/periodization/PeriodizationCalendar';
 import { TrainingTabContent } from './TrainingTabContent';
-import { ReadinessTrendChart } from '../../components/analytics/ReadinessTrendChart';
-import { VolumeLandmarksCard } from '../../components/volume/VolumeLandmarksCard';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 import { useRoute } from '@react-navigation/native';
 import type { WNSMuscleVolume } from '../../types/volume';
 import type { TimeRange, TrendPoint, FatigueScore, Classification } from '../../types/analytics';
+import { NutritionTab } from './tabs/NutritionTab';
+import { BodyTab } from './tabs/BodyTab';
+import { VolumeTab } from './tabs/VolumeTab';
 
 type AnalyticsTab = 'nutrition' | 'training' | 'body' | 'volume';
 
@@ -63,18 +54,9 @@ const E1RM_EXERCISE_OPTIONS = [
 
 type E1RMExerciseOption = typeof E1RM_EXERCISE_OPTIONS[number];
 
-function ChartSkeleton() {
-  return (
-    <View style={{ padding: spacing[4] }}>
-      <Skeleton width="100%" height={160} borderRadius={8} />
-    </View>
-  );
-}
-
 export function AnalyticsScreen() {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
-  const compStyles = getCompStyles(c);
   const store = useStore();
   const premium = isPremium(store);
   const unitSystem = store.unitSystem;
@@ -276,21 +258,8 @@ export function AnalyticsScreen() {
   }, [selectedTab, loadVolumeLandmarks]);
 
   // Audit fix 7.3 — memoize expensive computations
-  const filteredWeight = useMemo(() => filterByTimeRange(weightTrend, timeRange), [weightTrend, timeRange]);
   const filteredCalories = useMemo(() => filterByTimeRange(calorieTrend, timeRange), [calorieTrend, timeRange]);
   const filteredProtein = useMemo(() => filterByTimeRange(proteinTrend, timeRange), [proteinTrend, timeRange]);
-
-  // Compute EMA trend line for bodyweight chart
-  const weightEMA = useMemo(() => computeEMA(filteredWeight), [filteredWeight]);
-
-  // Compute caloriesByDate record for ExpenditureTrendCard
-  const caloriesByDate = useMemo(() => {
-    const result: Record<string, number> = {};
-    calorieTrend.forEach((p) => { result[p.date] = p.value; });
-    return result;
-  }, [calorieTrend]);
-
-  const weightSuffix = unitSystem === 'metric' ? ' kg' : ' lbs';
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="analytics-screen">
@@ -298,14 +267,7 @@ export function AnalyticsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await loadAnalytics(); setRefreshing(false); }} tintColor={c.accent.primary} />}>
         <Text style={[styles.title, { color: c.text.primary }]}>Analytics</Text>
 
-        {/* Error Banner */}
-        {error && (
-          <ErrorBanner
-            message={error}
-            onRetry={loadAnalytics}
-            onDismiss={() => setError(null)}
-          />
-        )}
+        {error && <ErrorBanner message={error} onRetry={loadAnalytics} onDismiss={() => setError(null)} />}
 
         {/* Tab Pills */}
         <View style={[styles.analyticsTabRow, { backgroundColor: c.bg.surface }]}
@@ -316,17 +278,16 @@ export function AnalyticsScreen() {
               style={[styles.analyticsTab, selectedTab === t && styles.analyticsTabActive]}
               onPress={() => { impact('light'); setSelectedTab(t); }}
               testID={`analytics-tab-${t}`}
+              accessibilityRole="tab"
+              accessibilityLabel={`${t.charAt(0).toUpperCase() + t.slice(1)} analytics tab`}
+              accessibilityState={{ selected: selectedTab === t }}
             >
               <Text style={[styles.analyticsTabText, selectedTab === t && styles.analyticsTabTextActive]}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
               </Text>
             </TouchableOpacity>
           ))}
-          <AnimatedTabIndicator
-            activeIndex={['nutrition', 'training', 'body', 'volume'].indexOf(selectedTab)}
-            tabCount={4}
-            containerWidth={tabContainerWidth}
-          />
+          <AnimatedTabIndicator activeIndex={['nutrition', 'training', 'body', 'volume'].indexOf(selectedTab)} tabCount={4} containerWidth={tabContainerWidth} />
         </View>
 
         {/* Weekly Intelligence Report link — visible on ALL tabs */}
@@ -334,176 +295,35 @@ export function AnalyticsScreen() {
           testID="analytics-weekly-report-link"
           style={[styles.nutritionReportBtn, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
           onPress={() => navigation.navigate('WeeklyReport')}
+          accessibilityRole="link"
+          accessibilityLabel="Weekly Intelligence Report"
+          accessibilityHint="Opens the weekly intelligence report"
         >
           <Text style={[styles.nutritionReportText, { color: c.accent.primary }]}><Icon name="chart" /> Weekly Intelligence Report</Text>
           <Text style={[styles.nutritionReportArrow, { color: c.accent.primary }]}>›</Text>
         </TouchableOpacity>
 
         {/* Time Range Selector — visible on ALL tabs */}
-        <View testID="analytics-time-range">
+        <View testID="analytics-time-range" accessibilityLabel="Time range selector">
           <TimeRangeSelector selected={timeRange} onSelect={(r) => setTimeRange(r as TimeRange)} />
         </View>
 
-        {/* ===== NUTRITION TAB ===== */}
         {selectedTab === 'nutrition' && (
-          <>
-            {/* Nutrition Report link */}
-            <TouchableOpacity
-              testID="analytics-nutrition-report-link"
-              style={[styles.nutritionReportBtn, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
-              onPress={() => navigation.navigate('NutritionReport')}
-            >
-              <Text style={[styles.nutritionReportText, { color: c.accent.primary }]}><Icon name="salad" /> Nutrition Report (27 nutrients)</Text>
-              <Text style={[styles.nutritionReportArrow, { color: c.accent.primary }]}>›</Text>
-            </TouchableOpacity>
-
-            {/* Micronutrient Dashboard link */}
-            <TouchableOpacity
-              testID="analytics-micro-dashboard-link"
-              style={[styles.nutritionReportBtn, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
-              onPress={() => navigation.navigate('MicronutrientDashboard')}
-            >
-              <Text style={[styles.nutritionReportText, { color: c.accent.primary }]}><Icon name="salad" /> Micronutrient Dashboard</Text>
-              <Text style={[styles.nutritionReportArrow, { color: c.accent.primary }]}>›</Text>
-            </TouchableOpacity>
-
-            {/* Calorie trend */}
-            {/* TDEE Card */}
-            {adaptiveTarget && (
-              <Card>
-                <Text style={[styles.sectionTitle, { color: c.text.muted, marginTop: 0 }]}>Estimated TDEE</Text>
-                <Text style={{ color: c.text.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, lineHeight: typography.lineHeight['2xl'] }}>
-                  {adaptiveTarget.calories} kcal
-                </Text>
-              </Card>
-            )}
-
-            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Calorie Trend</Text>
-            <View testID="analytics-calorie-chart">
-            <Card>
-              {isLoading ? (
-                <ChartSkeleton />
-              ) : filteredCalories.length === 0 ? (
-                <EmptyState
-                  icon={<Icon name="flame" />}
-                  title="No calorie data"
-                  description="Log meals to see calorie trends"
-                />
-              ) : (
-                <TrendLineChart
-                  data={filteredCalories}
-                  color={c.chart.calories}
-                  suffix=" kcal"
-                  targetLine={adaptiveTarget?.calories}
-                  emptyMessage="No calorie data for this period"
-                />
-              )}
-            </Card>
-            </View>
-
-            {/* Weekly Summary Card */}
-            {!isLoading && (
-              <>
-                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Weekly Summary</Text>
-                <WeeklySummaryCard
-                  entries={calorieTrend.map((p) => ({
-                    entry_date: p.date,
-                    calories: p.value,
-                    protein_g: proteinTrend.find((pt) => pt.date === p.date)?.value ?? 0,
-                    carbs_g: 0,
-                    fat_g: 0,
-                    micro_nutrients: null,
-                  }))}
-                  targetCalories={adaptiveTarget?.calories ?? 2400}
-                  timeRangeDays={{ '7d': 7, '14d': 14, '30d': 30, '90d': 90 }[timeRange]}
-                />
-              </>
-            )}
-
-            {/* Protein trend */}
-            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Protein Trend</Text>
-            <Card>
-              {isLoading ? (
-                <ChartSkeleton />
-              ) : filteredProtein.length === 0 ? (
-                <EmptyState
-                  icon={<Icon name="meat" />}
-                  title="No protein data"
-                  description="Log meals to see protein trends"
-                />
-              ) : (
-                <TrendLineChart
-                  data={filteredProtein}
-                  color={c.semantic.positive}
-                  suffix="g"
-                  targetLine={adaptiveTarget?.protein}
-                  emptyMessage="No protein data for this period"
-                />
-              )}
-            </Card>
-
-            {/* Target vs Actual */}
-            {adaptiveTarget && filteredCalories.length > 0 && (
-              <>
-                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Target vs Actual (Today)</Text>
-                <Card>
-                  <View style={styles.comparisonRow}>
-                    <ComparisonItem
-                      label="Calories"
-                      actual={filteredCalories.at(-1)?.value ?? 0}
-                      target={adaptiveTarget.calories}
-                      unit="kcal"
-                    />
-                    <ComparisonItem
-                      label="Protein"
-                      actual={filteredProtein.at(-1)?.value ?? 0}
-                      target={adaptiveTarget.protein}
-                      unit="g"
-                    />
-                  </View>
-                </Card>
-              </>
-            )}
-
-            {/* Dietary gap summary (premium) */}
-            {premium && gaps.length > 0 && (
-              <>
-                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Dietary Gaps</Text>
-                <Card>
-                  <FlatList
-                    data={gaps}
-                    keyExtractor={(gap: DietaryGap) => gap.nutrient}
-                    scrollEnabled={false}
-                    renderItem={({ item: gap }: { item: DietaryGap }) => (
-                      <View style={styles.gapRow}>
-                        <Text style={[styles.gapNutrient, { color: c.text.secondary }]}>{gap.nutrient}</Text>
-                        <View style={[styles.gapBar, { backgroundColor: c.bg.surfaceRaised }]}>
-                          <View
-                            style={[
-                              styles.gapFill,
-                              {
-                                width: `${Math.min((gap.average / gap.recommended) * 100, 100)}%`,
-                                backgroundColor:
-                                  gap.deficit_pct > 30
-                                    ? c.semantic.negative
-                                    : gap.deficit_pct > 10
-                                      ? c.semantic.warning
-                                      : c.semantic.positive,
-                              },
-                            ]}
-                          />
-                        </View>
-                        <Text style={[styles.gapPct, { color: c.semantic.negative }]}>-{Math.round(gap.deficit_pct)}%</Text>
-                      </View>
-                    )}
-                  />
-                </Card>
-              </>
-            )}
-          </>
+          <NutritionTab
+            isLoading={isLoading}
+            filteredCalories={filteredCalories}
+            filteredProtein={filteredProtein}
+            calorieTrend={calorieTrend}
+            proteinTrend={proteinTrend}
+            adaptiveTarget={adaptiveTarget}
+            gaps={gaps}
+            premium={premium}
+            timeRange={timeRange}
+            onNavigateNutritionReport={() => navigation.navigate('NutritionReport')}
+            onNavigateMicroDashboard={() => navigation.navigate('MicronutrientDashboard')}
+          />
         )}
 
-        {/* ===== TRAINING TAB ===== */}
         {selectedTab === 'training' && (
           <TrainingTabContent
             c={c}
@@ -530,141 +350,27 @@ export function AnalyticsScreen() {
           />
         )}
 
-        {/* ===== BODY TAB ===== */}
         {selectedTab === 'body' && (
-          <>
-            {/* Periodization Calendar */}
-            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Periodization</Text>
-            <PeriodizationCalendar />
-
-            {/* Readiness Trend */}
-            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Readiness Trend</Text>
-            <ReadinessTrendChart timeRange={timeRange} />
-
-            {/* Bodyweight trend */}
-            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Bodyweight Trend</Text>
-            <View testID="analytics-bodyweight-chart">
-            <Card>
-              {isLoading ? (
-                <ChartSkeleton />
-              ) : filteredWeight.length === 0 ? (
-                <EmptyState
-                  icon={<Icon name="scale" />}
-                  title="No bodyweight data"
-                  description="Log bodyweight to see trends"
-                />
-              ) : (
-                <TrendLineChart
-                  data={filteredWeight.map((p) => ({
-                    date: p.date,
-                    value: Number(formatWeight(p.value, unitSystem).split(' ')[0]),
-                  }))}
-                  color={c.chart.calories}
-                  suffix={weightSuffix}
-                  emptyMessage="No bodyweight data for this period"
-                  primaryAsDots={weightEMA.length > 0}
-                  secondaryData={weightEMA.length > 0 ? weightEMA.map((p) => ({
-                    date: p.date,
-                    value: Number(formatWeight(p.value, unitSystem).split(' ')[0]),
-                  })) : undefined}
-                  secondaryColor={c.accent.primary}
-                />
-              )}
-            </Card>
-            </View>
-
-            {/* Expenditure Trend (TDEE) */}
-            {!isLoading && (
-              <>
-                <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Expenditure Trend (TDEE)</Text>
-                <ExpenditureTrendCard
-                  weightHistory={weightTrend.map((p) => ({ date: p.date, weight_kg: p.value }))}
-                  caloriesByDate={caloriesByDate}
-                />
-              </>
-            )}
-          </>
+          <BodyTab
+            isLoading={isLoading}
+            weightTrend={weightTrend}
+            calorieTrend={calorieTrend}
+            timeRange={timeRange}
+            unitSystem={unitSystem}
+          />
         )}
 
-        {/* ===== VOLUME TAB ===== */}
         {selectedTab === 'volume' && (
-          <>
-            {!volumeFlagEnabled ? (
-              <EmptyState
-                icon={<Icon name="chart" />}
-                title="Coming soon"
-                description="Volume landmarks are not yet available for your account"
-              />
-            ) : volumeLoading ? (
-              <View style={styles.volumeSkeletonContainer}>
-                <Skeleton width="100%" height={140} borderRadius={8} />
-                <Skeleton width="100%" height={140} borderRadius={8} />
-                <Skeleton width="100%" height={140} borderRadius={8} />
-              </View>
-            ) : volumeLandmarks.length === 0 ? (
-              <EmptyState
-                icon={<Icon name="chart" />}
-                title="No volume data"
-                description="Start logging workouts to see your volume landmarks"
-              />
-            ) : (
-              <FlatList
-                data={volumeLandmarks}
-                keyExtractor={(mg: WNSMuscleVolume) => mg.muscle_group}
-                renderItem={({ item: mg }: { item: WNSMuscleVolume }) => (
-                  <VolumeLandmarksCard
-                    muscleGroup={mg.muscle_group}
-                    currentVolume={mg.hypertrophy_units ?? mg.net_stimulus ?? 0}
-                    landmarks={mg.landmarks}
-                    trend={mg.trend?.map((t) => ({ week: t.week, volume: t.volume })) ?? []}
-                    status={mg.status}
-                  />
-                )}
-                scrollEnabled={false}
-              />
-            )}
-          </>
+          <VolumeTab
+            volumeFlagEnabled={volumeFlagEnabled}
+            volumeLoading={volumeLoading}
+            volumeLandmarks={volumeLandmarks}
+          />
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-function ComparisonItem({
-  label,
-  actual,
-  target,
-  unit,
-}: {
-  label: string;
-  actual: number;
-  target: number;
-  unit: string;
-}) {
-  const c = useThemeColors();
-  const compStyles = getCompStyles(c);
-  const pct = target > 0 ? Math.round((actual / target) * 100) : 0;
-  const pctColor = getComparisonColor(actual, target);
-
-  return (
-    <View style={compStyles.item}>
-      <Text style={compStyles.label}>{label}</Text>
-      <Text style={compStyles.actual}>{actual} {unit}</Text>
-      <Text style={compStyles.target}>/ {target} {unit}</Text>
-      <Text style={[compStyles.diff, { color: pctColor }]}>
-        {pct}%
-      </Text>
-    </View>
-  );
-}
-
-const getCompStyles = (c: ThemeColors) => StyleSheet.create({
-  item: { flex: 1, alignItems: 'center' },
-  label: { color: c.text.secondary, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm },
-  actual: { color: c.text.primary, fontSize: typography.size['2xl'], fontWeight: typography.weight.bold, marginTop: spacing[1], lineHeight: typography.lineHeight['2xl'] },
-  target: { color: c.text.muted, fontSize: typography.size.sm, lineHeight: typography.lineHeight.sm },
-  diff: { fontSize: typography.size.sm, fontWeight: typography.weight.medium, marginTop: spacing[1], lineHeight: typography.lineHeight.sm },
-});
 
 const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: c.bg.base },
@@ -699,32 +405,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     color: c.accent.primary,
     fontSize: typography.size.lg,
   },
-  sectionTitle: {
-    color: c.text.primary,
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.semibold,
-    marginTop: spacing[6],
-    marginBottom: spacing[3],
-    lineHeight: typography.lineHeight.lg,
-    letterSpacing: letterSpacing.tight,
-  },
-  comparisonRow: { flexDirection: 'row', gap: spacing[4] },
-  gapRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[3],
-    marginBottom: spacing[2],
-  },
-  gapNutrient: { color: c.text.secondary, fontSize: typography.size.sm, width: 80, lineHeight: typography.lineHeight.sm },
-  gapBar: {
-    flex: 1,
-    height: 6,
-    backgroundColor: c.bg.surfaceRaised,
-    borderRadius: radius.full,
-    overflow: 'hidden',
-  },
-  gapFill: { height: '100%', borderRadius: radius.full },
-  gapPct: { color: c.semantic.negative, fontSize: typography.size.sm, fontWeight: typography.weight.medium, width: 44, textAlign: 'right', lineHeight: typography.lineHeight.sm },
   analyticsTabRow: {
     flexDirection: 'row',
     backgroundColor: c.bg.surface,
@@ -732,7 +412,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     padding: spacing[1],
     marginBottom: spacing[3],
   },
-  volumeSkeletonContainer: { marginTop: spacing[4], gap: spacing[3] },
   analyticsTab: {
     flex: 1,
     paddingVertical: spacing[2],

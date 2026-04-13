@@ -26,6 +26,7 @@ export const lightColors = {
     secondary: '#475569',
     muted: '#64748B',
     inverse: '#F8FAFC',
+    onAccent: '#FFFFFF',
   },
 
   accent: {

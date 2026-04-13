@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput, Alert, TouchableOpacity,
-  KeyboardAvoidingView, Platform,
+  KeyboardAvoidingView, Platform, RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -44,10 +44,17 @@ export function CoachingScreen() {
   const [goals, setGoals] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadData();
   }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
 
   const loadData = async () => {
     try {
@@ -105,9 +112,9 @@ export function CoachingScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="coaching-screen">
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={c.accent.primary} />}>
         {navigation.canGoBack() && (
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} activeOpacity={0.7}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Go back">
             <Text style={[styles.backButtonText, { color: c.accent.primary }]}>← Back</Text>
           </TouchableOpacity>
         )}
@@ -139,6 +146,9 @@ export function CoachingScreen() {
             onPress={openCoachingBooking}
             style={[styles.dmButton, { backgroundColor: c.accent.primaryMuted }]}
             activeOpacity={0.8}
+            accessibilityRole="link"
+            accessibilityLabel="Book a coaching session"
+            accessibilityHint="Opens external booking page"
           >
             <Icon name="calendar" size={18} color={c.accent.primary} />
             <Text style={[styles.dmButtonText, { color: c.accent.primary }]}>Book a Session</Text>

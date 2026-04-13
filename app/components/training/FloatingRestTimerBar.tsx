@@ -20,6 +20,8 @@ import { useHaptics } from '../../hooks/useHaptics';
 import { haptic } from '../../utils/haptics';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 import Svg, { Circle as SvgCircle } from 'react-native-svg';
+import { Audio } from 'expo-av';
+import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
 
 interface FloatingRestTimerBarProps {
   durationSeconds: number;
@@ -53,7 +55,25 @@ export function FloatingRestTimerBar({
   const pausedRemainingRef = useRef<number>(durationSeconds);
 
   const { notification: hapticNotification } = useHaptics();
+  const timerSoundEnabled = useWorkoutPreferencesStore((s) => s.timerSoundEnabled);
   const reduceMotion = useReduceMotion();
+
+  const playCompletionSound = useCallback(async () => {
+    if (!timerSoundEnabled) return;
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require('../../assets/sounds/timer-done.mp3'),
+        { shouldPlay: true }
+      );
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if ('didJustFinish' in status && status.didJustFinish) {
+          sound.unloadAsync();
+        }
+      });
+    } catch {
+      // Audio not available — haptics still fire
+    }
+  }, [timerSoundEnabled]);
   const translateY = useSharedValue(reduceMotion ? 0 : 80);
 
   const slideStyle = useAnimatedStyle(() => ({
@@ -95,13 +115,14 @@ export function FloatingRestTimerBar({
           }
           haptic.heavy();
           hapticNotification('success');
+          playCompletionSound();
           onCompleteRef.current();
         }
       }
     });
 
     return () => subscription.remove();
-  }, [isActive, paused, durationSeconds, hapticNotification]);
+  }, [isActive, paused, durationSeconds, hapticNotification, playCompletionSound]);
 
   // Countdown interval
   useEffect(() => {
@@ -123,6 +144,7 @@ export function FloatingRestTimerBar({
           setTimeout(() => {
             haptic.heavy();
             hapticNotification('success');
+            playCompletionSound();
             onCompleteRef.current();
           }, 0);
           return 0;

@@ -45,7 +45,7 @@ export function GradientButton({
   };
 
   const content = loading
-    ? <ActivityIndicator color={variant === 'primary' ? '#fff' : resolvedColors[0]} />
+    ? <ActivityIndicator color={variant === 'primary' ? colors.text.onAccent : resolvedColors[0]} />
     : <Text style={[styles.text, variant === 'secondary' && { color: resolvedColors[0] }]}>{title}</Text>;
 
   return (
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   text: {
-    color: '#fff',
+    color: colors.text.onAccent,
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
   },

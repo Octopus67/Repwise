@@ -15,13 +15,13 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   SectionList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Icon } from '../../components/common/Icon';
+import { Skeleton } from '../../components/common/Skeleton';
 import { useMicroDashboard, NutrientSummary, DeficiencyAlert } from '../../hooks/useMicroDashboard';
 import {
   getNutrientStatusColor,
@@ -106,8 +106,9 @@ export function MicronutrientDashboardScreen() {
   if (loading) {
     return (
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-      <View style={styles.center}>
-        <ActivityIndicator color={c.accent.primary} />
+      <View style={{ padding: spacing[4], gap: spacing[3] }}>
+        <Skeleton width="100%" height={44} borderRadius={radius.sm} />
+        {[0,1,2,3,4,5].map(i => <Skeleton key={i} width="100%" height={64} borderRadius={radius.md} />)}
       </View>
       </SafeAreaView>
     );

@@ -51,6 +51,7 @@ import {
 } from '../../utils/exerciseDetailLogic';
 import { MuscleGroupIcon } from '../exercise-picker/MuscleGroupIcon';
 import { findMuscleGroupConfig } from '../../config/muscleGroups';
+import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.7;
@@ -137,6 +138,10 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
     }
   };
 
+  const restOverride = useWorkoutPreferencesStore((s) => exercise ? s.exerciseRestOverrides[exercise.name] : undefined);
+  const setRestDefault = useWorkoutPreferencesStore((s) => s.setExerciseRestDefault);
+  const clearRestDefault = useWorkoutPreferencesStore((s) => s.clearExerciseRestDefault);
+
   if (!exercise) return null;
 
   const imageUrl = getDisplayImageUrl(exercise);
@@ -147,6 +152,11 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
   const hasTips = shouldShowTips(exercise);
   const config = findMuscleGroupConfig(exercise.muscle_group);
   const mgColor = config?.color ?? '#2563EB';
+
+  const restValue = restOverride ?? null;
+
+  const formatTime = (sec: number) => `${Math.floor(sec / 60)}:${(sec % 60).toString().padStart(2, '0')}`;
+
 
   // Compact description: first 2 paragraphs, no biomechanics
   const compactDescription = useMemo(() => {
@@ -231,6 +241,37 @@ export function ExerciseDetailSheet({ exercise, visible, onDismiss }: ExerciseDe
                 </Text>
               </Text>
             )}
+          </View>
+
+          {/* Rest Timer Default */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: c.text.primary }]}>Rest Timer Default</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
+              <TouchableOpacity
+                onPress={() => setRestDefault(exercise.name, Math.max(30, (restValue ?? 90) - 30))}
+                style={[styles.tag, { backgroundColor: c.bg.surfaceRaised, paddingHorizontal: spacing[3], paddingVertical: spacing[2] }]}
+                accessibilityLabel="Decrease rest time by 30 seconds"
+                accessibilityRole="button"
+              >
+                <Text style={{ color: c.text.primary, fontSize: typography.size.md, fontWeight: typography.weight.semibold }}>−</Text>
+              </TouchableOpacity>
+              <Text style={{ color: c.text.primary, fontSize: typography.size.base, fontWeight: typography.weight.medium }}>
+                {restValue ? formatTime(restValue) : 'Global default'}
+              </Text>
+              <TouchableOpacity
+                onPress={() => setRestDefault(exercise.name, Math.min(600, (restValue ?? 90) + 30))}
+                style={[styles.tag, { backgroundColor: c.bg.surfaceRaised, paddingHorizontal: spacing[3], paddingVertical: spacing[2] }]}
+                accessibilityLabel="Increase rest time by 30 seconds"
+                accessibilityRole="button"
+              >
+                <Text style={{ color: c.text.primary, fontSize: typography.size.md, fontWeight: typography.weight.semibold }}>+</Text>
+              </TouchableOpacity>
+              {restValue != null && (
+                <TouchableOpacity onPress={() => clearRestDefault(exercise.name)} accessibilityLabel="Reset to global default" accessibilityRole="button">
+                  <Text style={{ color: c.accent.primary, fontSize: typography.size.sm }}>Reset</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
 
           {/* Description (compact preview) */}

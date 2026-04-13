@@ -10,6 +10,8 @@ import {
   Dimensions,
   TextInput,
   Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import Animated, { useAnimatedReaction, runOnJS } from 'react-native-reanimated';
 import { spacing, typography, radius } from '../../../theme/tokens';
@@ -348,7 +350,7 @@ const getScaleStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: radius.sm,
   },
   modalConfirmText: {
-    color: '#fff',
+    color: c.text.onAccent,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
   },
@@ -356,7 +358,7 @@ const getScaleStyles = (c: ThemeColors) => StyleSheet.create({
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function BodyMeasurementsStep({ onNext }: Props) {
+export function BodyMeasurementsStep({ onNext, onSkip }: Props) {
   const c = useThemeColors();
   const styles = getThemedStyles(c);
   const {
@@ -454,6 +456,7 @@ export function BodyMeasurementsStep({ onNext }: Props) {
   const canProceed = heightCm > 0 && weightKg > 0 && heightValid && weightValid;
 
   return (
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
     <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Text style={[styles.title, { color: c.text.primary }]}>Measurements</Text>
       <Text style={[styles.subtitle, { color: c.text.secondary }]}>Height and weight help us dial in your metabolism</Text>
@@ -511,10 +514,18 @@ export function BodyMeasurementsStep({ onNext }: Props) {
         </View>
       )}
 
+      {onSkip && (
+        <TouchableOpacity onPress={onSkip} style={styles.skipBtn}
+          accessibilityLabel="Skip measurements" accessibilityRole="button">
+          <Text style={[styles.skipText, { color: c.text.secondary }]}>Skip for now</Text>
+        </TouchableOpacity>
+      )}
+
       {onNext && (
         <Button title="Next" onPress={onNext} disabled={!canProceed} style={styles.nextBtn} />
       )}
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -533,4 +544,6 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   bmrValue: { color: c.accent.primary, fontSize: typography.size.xl, fontWeight: typography.weight.bold, marginTop: spacing[1], fontVariant: ['tabular-nums'], lineHeight: typography.lineHeight.xl },
   bmrHint: { color: c.text.muted, fontSize: typography.size.xs, marginTop: spacing[1], lineHeight: typography.lineHeight.xs },
   nextBtn: { marginTop: spacing[6], width: '100%' },
+  skipBtn: { alignItems: 'center', marginTop: spacing[3] },
+  skipText: { fontSize: typography.size.sm },
 });

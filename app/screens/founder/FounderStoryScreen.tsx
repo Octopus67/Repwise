@@ -69,7 +69,7 @@ export function FounderStoryScreen() {
     <SafeAreaView style={[styles.safe, { backgroundColor: c.bg.base }]} edges={['top']} testID="founder-story-screen">
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {navigation.canGoBack() && (
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.7}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Go back">
             <Text style={[styles.backText, { color: c.accent.primary }]}>← Back</Text>
           </TouchableOpacity>
         )}

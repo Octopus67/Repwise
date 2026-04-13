@@ -3,6 +3,7 @@ import { Text, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useNetInfo } from '@react-native-community/netinfo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getThemeColors } from '../../hooks/useThemeColors';
 
 export function OfflineBanner() {
   const { isConnected } = useNetInfo();
@@ -32,5 +33,5 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 999,
   },
-  text: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  text: { color: getThemeColors().text.onAccent, fontSize: 13, fontWeight: '600' },
 });

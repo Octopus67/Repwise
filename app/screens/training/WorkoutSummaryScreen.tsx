@@ -13,7 +13,6 @@ import {
   ScrollView,
   FlatList,
   StyleSheet,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -27,6 +26,7 @@ import type { PersonalRecordResponse } from '../../types/training';
 import type { WorkoutSummaryResult } from '../../utils/workoutSummary';
 import type { DashboardScreenProps } from '../../types/navigation';
 import { Icon } from '../../components/common/Icon';
+import { ModalContainer } from '../../components/common/ModalContainer';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 import { ErrorBoundary } from '../../components/common/ErrorBoundary';
 import { SimpleModeDiscoveryModal } from '../../components/training/SimpleModeDiscoveryModal';
@@ -101,6 +101,7 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
     );
   }
   const [sharePromptDismissed, setSharePromptDismissed] = useState(false);
+  const [shareSheetVisible, setShareSheetVisible] = useState(false);
   const { enabled: sharingEnabled } = useFeatureFlag('social_sharing');
 
   const { simpleMode, hasCompletedFirstManualWorkout, simpleModeDiscoveryCount } =
@@ -134,13 +135,8 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
   };
 
   const handleShareWorkout = useCallback(() => {
-    // Navigate back to session detail with share modal open
-    // For now, show a prompt that the feature is available from session detail
-    Alert.alert(
-      'Share Your Workout',
-      'You can share a branded workout card from the Session Detail screen. Tap the share icon in the header!',
-      [{ text: 'Got it', style: 'default' }],
-    );
+    // Open share bottom sheet
+    setShareSheetVisible(true);
     setSharePromptDismissed(true);
   }, []);
 
@@ -270,6 +266,32 @@ function WorkoutSummaryScreenInner({ route, navigation }: WorkoutSummaryScreenPr
 
       {/* Discovery Modal */}
       <SimpleModeDiscoveryModal visible={discoveryVisible} onClose={() => setDiscoveryVisible(false)} />
+
+      {/* Share Bottom Sheet */}
+      <ModalContainer
+        visible={shareSheetVisible}
+        onClose={() => setShareSheetVisible(false)}
+        title="Share Your Workout"
+        testID="share-bottom-sheet"
+      >
+        {[
+          { icon: 'image' as const, label: 'Share as Image', testID: 'share-as-image' },
+          { icon: 'text' as const, label: 'Share as Text', testID: 'share-as-text' },
+          { icon: 'link' as const, label: 'Copy Link', testID: 'share-copy-link' },
+        ].map((opt) => (
+          <TouchableOpacity
+            key={opt.testID}
+            style={[getStyles().shareOption, { borderBottomColor: c.border.subtle }]}
+            onPress={() => setShareSheetVisible(false)}
+            testID={opt.testID}
+            accessibilityRole="button"
+            accessibilityLabel={opt.label}
+          >
+            <Icon name={opt.icon} size={20} color={c.accent.primary} />
+            <Text style={[getStyles().shareOptionText, { color: c.text.primary }]}>{opt.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </ModalContainer>
 
       {/* Done Button */}
       <View style={[getStyles().bottomBar, { borderTopColor: c.border.subtle }]}>
@@ -470,5 +492,16 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     fontWeight: typography.weight.semibold,
     textAlign: 'center',
     marginBottom: spacing[4],
+  },
+  shareOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
+    paddingVertical: spacing[4],
+    borderBottomWidth: 1,
+  },
+  shareOptionText: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.medium,
   },
 });

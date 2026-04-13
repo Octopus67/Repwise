@@ -61,9 +61,24 @@ function LazyFallback() {
 function withSuspense<P extends object>(LazyComponent: React.LazyExoticComponent<React.ComponentType<P>>) {
   return function SuspenseWrapper(props: P) {
     return (
-      <Suspense fallback={<LazyFallback />}>
-        <LazyComponent {...props} />
-      </Suspense>
+      <ErrorBoundary
+        fallback={(error: Error, retry: () => void) => {
+          const s = getThemedStyles(getThemeColors());
+          return (
+            <View style={s.errorFallback}>
+              <Text style={s.errorTitle}>Something went wrong</Text>
+              <Text style={s.errorMessage}>{error.message}</Text>
+              <TouchableOpacity style={s.retryButton} onPress={retry}>
+                <Text style={s.retryText}>Try Again</Text>
+              </TouchableOpacity>
+            </View>
+          );
+        }}
+      >
+        <Suspense fallback={<LazyFallback />}>
+          <LazyComponent {...props} />
+        </Suspense>
+      </ErrorBoundary>
     );
   };
 }
@@ -432,7 +447,7 @@ function RestTimerFloatingIndicator() {
           zIndex: 100,
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>
+        <Text style={{ color: themeColors.text.onAccent, fontSize: 12, fontWeight: '600' }}>
           Rest: {mins}:{secs.toString().padStart(2, '0')}
         </Text>
       </TouchableOpacity>
@@ -537,7 +552,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: 8,
   },
   retryText: {
-    color: c.text.primary,
+    color: c.text.onAccent,
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
   },

@@ -99,7 +99,7 @@ describe('Property 14 — Skeleton Loading Coverage', () => {
   const asyncScreensWithSkeleton = [
     { name: 'DashboardScreen', path: 'screens/dashboard/DashboardScreen.tsx', hasSkeleton: true },
     { name: 'LogsScreen', path: 'screens/logs/LogsScreen.tsx', hasSkeleton: true },
-    { name: 'AnalyticsScreen', path: 'screens/analytics/AnalyticsScreen.tsx', hasSkeleton: true },
+    { name: 'NutritionTab', path: 'screens/analytics/tabs/NutritionTab.tsx', hasSkeleton: true },
   ];
 
   test.each(asyncScreensWithSkeleton)(
@@ -144,9 +144,10 @@ describe('Property 15 — Empty State Coverage', () => {
 
   const screensWithEmptyState = [
     { name: 'LogsScreen', path: 'screens/logs/LogsScreen.tsx' },
-    { name: 'AnalyticsScreen', path: 'screens/analytics/AnalyticsScreen.tsx' },
+    { name: 'NutritionTab', path: 'screens/analytics/tabs/NutritionTab.tsx' },
     { name: 'LearnScreen', path: 'screens/learn/LearnScreen.tsx' },
     { name: 'CoachingScreen', path: 'screens/coaching/CoachingScreen.tsx' },
+    { name: 'ProgressPhotosScreen', path: 'screens/profile/ProgressPhotosScreen.tsx' },
   ];
 
   test.each(screensWithEmptyState)(
@@ -158,7 +159,6 @@ describe('Property 15 — Empty State Coverage', () => {
   );
 
   const screensMissingEmptyState = [
-    { name: 'ProgressPhotosScreen', path: 'screens/profile/ProgressPhotosScreen.tsx' },
     { name: 'CommunityScreen', path: 'screens/community/CommunityScreen.tsx' },
   ];
 

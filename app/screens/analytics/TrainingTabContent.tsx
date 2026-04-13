@@ -111,6 +111,10 @@ export function TrainingTabContent({
         style={[styles.explainerCard, { backgroundColor: c.bg.surface, borderColor: c.border.subtle }]}
         testID="wns-explainer-card"
         activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel="Why Repwise tracks Hypertrophy Units"
+        accessibilityHint={wnsExplainerExpanded ? 'Collapse explanation' : 'Expand explanation'}
+        accessibilityState={{ expanded: wnsExplainerExpanded }}
       >
         <View style={styles.explainerHeader}>
           <Text style={[styles.explainerTitle, { color: c.text.primary }]}><Icon name="brain" size={14} color={c.accent.primary} /> Why Repwise Tracks Hypertrophy Units (HU)</Text>
@@ -129,7 +133,7 @@ export function TrainingTabContent({
             <Text style={[styles.explainerBullet, { color: c.text.secondary }]}>• <Text style={[styles.explainerBold, { color: c.text.primary }]}>Frequency</Text> — spreading work across days is rewarded</Text>
             <Text style={[styles.explainerBullet, { color: c.text.secondary }]}>• <Text style={[styles.explainerBold, { color: c.text.primary }]}>Goal adjustment</Text> — targets adapt to your training phase</Text>
 
-            <TouchableOpacity onPress={onNavigateHUExplainer} style={styles.learnMoreBtn}>
+            <TouchableOpacity onPress={onNavigateHUExplainer} style={styles.learnMoreBtn} accessibilityRole="link" accessibilityLabel="Learn more about Hypertrophy Units">
               <Text style={[styles.learnMoreText, { color: c.accent.primary }]}>Learn More →</Text>
             </TouchableOpacity>
           </View>
@@ -198,6 +202,9 @@ export function TrainingTabContent({
                 selectedExercise === ex && styles.exercisePillActive,
               ]}
               onPress={() => onSelectExercise(ex)}
+              accessibilityRole="button"
+              accessibilityLabel={`${ex.split(' ').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ')} strength filter`}
+              accessibilityState={{ selected: selectedExercise === ex }}
             >
               <Text
                 style={[
@@ -248,6 +255,9 @@ export function TrainingTabContent({
                     selectedE1RMExercise === ex && styles.exercisePillActive,
                   ]}
                   onPress={() => onSelectE1RMExercise(ex)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${ex.split(' ').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ')} e1RM filter`}
+                  accessibilityState={{ selected: selectedE1RMExercise === ex }}
                 >
                   <Text
                     style={[

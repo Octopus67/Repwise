@@ -13,3 +13,14 @@ export function getApiErrorMessage(err: unknown, fallback: string): string {
   }
   return fallback;
 }
+
+/** Check if an error is a network connectivity error (vs server error). */
+export function isNetworkError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  if ('message' in err && typeof (err as { message: string }).message === 'string') {
+    const msg = (err as { message: string }).message;
+    return msg.includes('Network Error') || msg.includes('timeout') || msg.includes('network request failed');
+  }
+  if ('response' in err) return false;
+  return true;
+}

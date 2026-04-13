@@ -28,6 +28,7 @@ export const colors = {
     secondary: '#94A3B8',
     muted: '#7B8DA1',
     inverse: '#0B0F14',
+    onAccent: '#FFFFFF',
   },
 
   accent: {

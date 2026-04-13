@@ -406,7 +406,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: radius.sm,
   },
   deleteRevealText: {
-    color: '#fff',
+    color: c.text.onAccent,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.bold,
   },

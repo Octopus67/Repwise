@@ -103,6 +103,14 @@
             ]
           },
           {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeHealthInfo",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
             "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeOtherUserContent",
             "NSPrivacyCollectedDataTypeLinked": true,
             "NSPrivacyCollectedDataTypeTracking": false,
@@ -168,7 +176,9 @@
         "NSPhotoLibraryAddUsageDescription": "Repwise needs permission to save workout share cards to your photo library.",
         "ITSAppUsesNonExemptEncryption": false,
         "NSUserNotificationsUsageDescription": "Repwise sends notifications for workout reminders, personal records, and weekly check-ins.",
-        "NSMotionUsageDescription": "Repwise uses motion data to track your daily steps for TDEE calculation."
+        "NSMotionUsageDescription": "Repwise uses motion data to track your daily steps for TDEE calculation.",
+        "NSHealthShareUsageDescription": "Repwise reads heart rate variability and workout data from Apple Health to calculate your recovery readiness score.",
+        "NSHealthUpdateUsageDescription": "Repwise writes workout summaries to Apple Health so your training data stays in sync."
       }
     },
     "android": {

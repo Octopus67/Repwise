@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { typography, spacing } from '../../theme/tokens';
@@ -31,18 +32,32 @@ export function ShoppingListView({ route }: ProfileScreenProps<'ShoppingList'>) 
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     if (!planId) {
       setLoading(false);
       setError('No plan selected');
       return;
     }
-    api.get(`meal-plans/${planId}/shopping-list`)
-      .then(({ data }) => setItems(data.items ?? []))
-      .catch((e: unknown) => setError(extractApiError(e, 'Failed to load shopping list')))
-      .finally(() => setLoading(false));
+    try {
+      const { data } = await api.get(`meal-plans/${planId}/shopping-list`);
+      setItems(data.items ?? []);
+      setError(null);
+    } catch (e: unknown) {
+      setError(extractApiError(e, 'Failed to load shopping list'));
+    } finally {
+      setLoading(false);
+    }
   }, [planId]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
 
   const toggleCheck = (name: string) => {
     setChecked((prev) => {
@@ -80,10 +95,7 @@ export function ShoppingListView({ route }: ProfileScreenProps<'ShoppingList'>) 
           onPress={() => {
             setError(null);
             setLoading(true);
-            api.get(`meal-plans/${planId}/shopping-list`)
-              .then(({ data }) => setItems(data.items ?? []))
-              .catch((e: unknown) => setError(extractApiError(e, 'Failed to load shopping list')))
-              .finally(() => setLoading(false));
+            loadData();
           }}
         >
           <Text style={[styles.retryText, { color: c.text.primary }]}>Retry</Text>
@@ -99,6 +111,7 @@ export function ShoppingListView({ route }: ProfileScreenProps<'ShoppingList'>) 
       style={[styles.container, { backgroundColor: c.bg.base }]}
       sections={sections}
       keyExtractor={(item) => item.name}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={c.accent.primary} />}
       ListHeaderComponent={<Text style={[styles.title, { color: c.text.primary }]}>Shopping List</Text>}
       renderSectionHeader={({ section }) => (
         <Text style={[styles.categoryLabel, { color: c.accent.primary }]}>{section.title}</Text>

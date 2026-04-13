@@ -122,7 +122,6 @@ const getPickerStyles = (c: ThemeColors) => StyleSheet.create({
     height: PICKER_ITEM_HEIGHT * 1.5,
     backgroundColor: c.bg.surfaceRaised,
     opacity: 0.75,
-    zIndex: 5,
   },
   fadeBottom: {
     position: 'absolute',
@@ -132,7 +131,6 @@ const getPickerStyles = (c: ThemeColors) => StyleSheet.create({
     height: PICKER_ITEM_HEIGHT * 1.5,
     backgroundColor: c.bg.surfaceRaised,
     opacity: 0.75,
-    zIndex: 5,
   },
   item: {
     height: PICKER_ITEM_HEIGHT,

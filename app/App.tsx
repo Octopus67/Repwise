@@ -36,6 +36,7 @@ import { queryClient } from './services/queryClient';
 import { mmkvPersister } from './services/mmkvStorage';
 import { setupNetworkManager, setupFocusManager } from './services/networkManager';
 import { useOfflineWorkoutQueue } from './hooks/useOfflineWorkoutQueue';
+import { useOfflineNutritionQueue } from './hooks/useOfflineNutritionQueue';
 import { OfflineBanner } from './components/common/OfflineBanner';
 import { ToastProvider } from './contexts/ToastContext';
 import { appLinking, authLinking } from './navigation/linking'; // Audit fix 4.2 — deep linking configuration
@@ -289,6 +290,9 @@ export default function App() {
 
   // Process offline workout queue on network reconnect (#18)
   useOfflineWorkoutQueue();
+
+  // Process offline nutrition queue on network reconnect
+  useOfflineNutritionQueue();
 
   // ── Crash recovery: check for active workout on mount (Task 16.6) ──────
   useEffect(() => {

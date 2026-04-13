@@ -24,6 +24,8 @@ import { ServingSelector } from '../nutrition/ServingSelector';
 import { MealPlanTab } from '../nutrition/MealPlanTab';
 import { RecipeTab } from '../nutrition/RecipeTab';
 import type { FoodItem, MealFavorite } from '../../types/nutrition';
+import { enqueueNutritionEntry } from '../../hooks/useOfflineNutritionQueue';
+import { isNetworkError } from '../../utils/errors';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -305,7 +307,25 @@ export function AddNutritionModal({ visible, onClose, onSuccess, prefilledMealNa
       clearForm();
       if (successTimerRef.current) clearTimeout(successTimerRef.current);
       successTimerRef.current = setTimeout(() => setSuccessMessage(''), 2000);
-    } catch { /* onError handles rollback + user notification */ }
+    } catch (err) {
+      if (isNetworkError(err)) {
+        const microPayloadOffline = serializeMicroNutrients(microNutrients, fibre, waterGlasses);
+        await enqueueNutritionEntry({
+          entry_date: selectedDate, meal_name: notes.trim() || (waterGlasses > 0 && !(calories || protein || carbs || fat) ? 'Water' : 'Quick entry'),
+          food_name: selectedFood?.name ?? null, calories: Number(calories) || 0, protein_g: Number(protein) || 0,
+          carbs_g: Number(carbs) || 0, fat_g: Number(fat) || 0,
+          client_id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          client_updated_at: new Date().toISOString(),
+          ...(selectedFood?.id ? { food_item_id: selectedFood.id } : {}),
+          ...(notes.trim() ? { notes: notes.trim() } : {}),
+          ...(Object.keys(microPayloadOffline).length > 0 ? { micro_nutrients: microPayloadOffline } : {}),
+        });
+        Alert.alert('Saved Offline', "Nutrition entry will sync when you're back online.");
+        clearForm();
+        onSuccess();
+      }
+      /* onError handles rollback + user notification for non-network errors */
+    }
     finally { setLoading(false); }
   };
 

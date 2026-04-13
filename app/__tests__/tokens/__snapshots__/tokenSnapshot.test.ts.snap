@@ -108,6 +108,7 @@ exports[`Token System Snapshot colors tokens match snapshot 1`] = `
   "text": {
     "inverse": "#0B0F14",
     "muted": "#7B8DA1",
+    "onAccent": "#FFFFFF",
     "primary": "#F1F5F9",
     "secondary": "#94A3B8",
   },

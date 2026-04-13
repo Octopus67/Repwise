@@ -295,6 +295,7 @@ export function useDashboardData() {
     fatigue: () => refetchSection(Q.FATIGUE),
     volume: () => refetchSection(Q.VOLUME),
     challenges: () => refetchSection(Q.CHALLENGES),
+    streak: () => refetchSection(Q.STREAK),
   }), [refetchSection, Q]);
 
   const handleDateSelect = useCallback((date: string) => {

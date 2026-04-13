@@ -189,8 +189,6 @@ export function LogsScreen() {
     }
   }, [loadNutritionData, loadTrainingPage]);
 
-  useEffect(() => { loadData(); }, [loadData, selectedDate]);
-
   useFocusEffect(
     useCallback(() => {
       loadData();

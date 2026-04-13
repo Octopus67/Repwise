@@ -244,7 +244,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     borderRadius: radius.sm,
   },
   statusText: {
-    color: '#fff',
+    color: c.text.onAccent,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
   },

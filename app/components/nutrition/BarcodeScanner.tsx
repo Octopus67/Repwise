@@ -385,7 +385,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
     borderBottomRightRadius: 4,
   },
   instructionText: {
-    color: '#fff',
+    color: c.text.onAccent,
     fontSize: typography.size.base,
     textAlign: 'center',
   },

@@ -105,7 +105,7 @@ export function ImportDataScreen() {
                 <Text style={s.unitLabel}>Weight unit in export:</Text>
                 {(['kg', 'lbs'] as const).map((u) => (
                   <TouchableOpacity key={u} onPress={() => setWeightUnit(u)} style={[s.unitBtn, weightUnit === u && { backgroundColor: c.accent.primary }]}>
-                    <Text style={[s.unitText, weightUnit === u && { color: '#fff' }]}>{u}</Text>
+                    <Text style={[s.unitText, weightUnit === u && { color: c.text.onAccent }]}>{u}</Text>
                   </TouchableOpacity>
                 ))}
               </View>

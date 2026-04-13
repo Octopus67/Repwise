@@ -12,6 +12,7 @@ import { TimeRangeSelector } from '../../components/charts/TimeRangeSelector';
 import { convertWeight } from '../../utils/unitConversion';
 import { useStore } from '../../store';
 import api from '../../services/api';
+import { ProgressionChart } from '../../components/training/ProgressionChart';
 import type { TimeRange } from '../../types/analytics';
 
 const RANGE_DAYS: Record<TimeRange, number> = { '7d': 7, '14d': 14, '30d': 30, '90d': 90 };
@@ -111,6 +112,13 @@ export function ExerciseHistoryScreen({ route, navigation }: ExerciseHistoryScre
     value: unitSystem === 'metric' ? p.e1rm_kg : convertWeight(p.e1rm_kg, unitSystem),
   }));
 
+  const volumeChartData = strengthData.map((p) => ({
+    date: p.date,
+    value: unitSystem === 'metric'
+      ? p.best_weight_kg * p.best_reps
+      : convertWeight(p.best_weight_kg, unitSystem) * p.best_reps,
+  }));
+
   // Compute PR indices (where value is highest seen so far)
   const prIndices: number[] = [];
   let maxSoFar = -Infinity;
@@ -195,16 +203,11 @@ export function ExerciseHistoryScreen({ route, navigation }: ExerciseHistoryScre
         refreshing={refreshing}
         ListHeaderComponent={
           <>
-            <Card style={styles.chartCard}>
-              <Text style={[styles.chartLabel, { color: c.text.muted }]}>Estimated 1RM</Text>
-              <TrendLineChart
-                data={chartData}
-                color={c.accent.primary}
-                suffix={` ${unitLabel}`}
-                emptyMessage="No e1RM data for this period"
-                prIndices={prIndices}
-              />
-            </Card>
+            <ProgressionChart
+              e1rmData={chartData}
+              volumeData={volumeChartData}
+              unitLabel={unitLabel}
+            />
             <View style={styles.rangeRow}>
               <TimeRangeSelector selected={timeRange} onSelect={(r) => setTimeRange(r as TimeRange)} />
             </View>

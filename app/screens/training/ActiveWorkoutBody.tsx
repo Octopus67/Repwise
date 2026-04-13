@@ -18,6 +18,7 @@ import type { ActiveWorkoutState, ActiveWorkoutActions, ActiveExercise, ActiveSe
 import type { MuscleVolumeEntry } from '../../utils/volumeAggregator';
 import type { WarmUpSet } from '../../utils/warmUpGenerator';
 import type { UserProfile } from '../../store';
+import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
 
 function ExerciseCardWrapper({ children, index }: { children: React.ReactNode; index: number }) {
   const entranceStyle = useStaggeredEntrance(index, 60);
@@ -68,6 +69,7 @@ export function ActiveWorkoutBody({
   profile,
 }: ActiveWorkoutBodyProps) {
   const styles = getStyles(c);
+  const exerciseRestOverrides = useWorkoutPreferencesStore((s) => s.exerciseRestOverrides);
   const [supersetLinkingSource, setSupersetLinkingSource] = useState<string | null>(null);
 
   const findSupersetGroupForExercise = (localId: string) =>
@@ -165,7 +167,7 @@ export function ActiveWorkoutBody({
 
                   if (!isLastNormalSet && !shouldSkip && canStartTimer) {
                     const { getRestDuration } = require('../../utils/getRestDuration');
-                    const duration = getRestDuration(exercise.exerciseName, profile?.preferences?.rest_timer);
+                    const duration = exerciseRestOverrides[exercise.exerciseName] ?? getRestDuration(exercise.exerciseName, profile?.preferences?.rest_timer);
                     store.startRestTimer(exercise.exerciseName, duration);
                   }
                 }
@@ -239,7 +241,7 @@ const getStyles = (c: ThemeColors) => StyleSheet.create({
     alignItems: 'center' as const,
   },
   supersetLinkTargetText: {
-    color: '#fff',
+    color: c.text.onAccent,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },

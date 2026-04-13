@@ -7,11 +7,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { typography, spacing } from '../../theme/tokens';
 import { useThemeColors, getThemeColors, ThemeColors } from '../../hooks/useThemeColors';
 import { Card } from '../../components/common/Card';
+import { EmptyState } from '../../components/common/EmptyState';
+import { Icon } from '../../components/common/Icon';
 import api from '../../services/api';
 import { extractApiError } from '../../utils/extractApiError';
 import type { ProfileScreenProps } from '../../types/navigation';
@@ -33,6 +36,7 @@ export function MealPlanScreen({ navigation }: ProfileScreenProps<'MealPlan'>) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleGenerate = useCallback(async () => {
     setLoading(true);
@@ -46,6 +50,14 @@ export function MealPlanScreen({ navigation }: ProfileScreenProps<'MealPlan'>) {
       setLoading(false);
     }
   }, []);
+
+  const loadPlan = handleGenerate;
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadPlan();
+    setRefreshing(false);
+  }, [loadPlan]);
 
   const handleSave = useCallback(async () => {
     if (!plan) return;
@@ -69,7 +81,17 @@ export function MealPlanScreen({ navigation }: ProfileScreenProps<'MealPlan'>) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.bg.base }} edges={['top']}>
-    <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]}>
+    {!plan && !loading ? (
+      <EmptyState
+        icon={<Icon name="utensils" size={24} color={c.accent.primary} />}
+        title="No Meal Plan Yet"
+        description="Generate a personalized meal plan based on your goals and preferences."
+        actionLabel="Generate Plan"
+        onAction={handleGenerate}
+      />
+    ) : (
+    <ScrollView style={[styles.container, { backgroundColor: c.bg.base }]}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={c.accent.primary} />}>
       <Text style={[styles.title, { color: c.text.primary }]}>Meal Prep</Text>
 
       {weeklySummary && (
@@ -150,6 +172,7 @@ export function MealPlanScreen({ navigation }: ProfileScreenProps<'MealPlan'>) {
         )}
       </View>
     </ScrollView>
+    )}
     </SafeAreaView>
   );
 }

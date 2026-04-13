@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { documentDirectory, getInfoAsync, makeDirectoryAsync, copyAsync, deleteAsync } from 'expo-file-system/legacy';
 import { FallbackImage } from '../../components/common/FallbackImage';
+import { EmptyState } from '../../components/common/EmptyState';
 import { secureSet, secureGet } from '../../utils/secureStorage'; // Audit fix 6.10 — encrypted photo metadata
 import { saveImageToGallery } from '../../services/sharing';
 import { showRetryAlert } from '../../utils/alertRetry';
@@ -214,10 +215,11 @@ export function ProgressPhotosScreen() {
       </View>
 
       {photos.length === 0 ? (
-        <View style={styles.center}>
-          <Text style={[styles.emptyTitle, { color: c.text.primary }]}>No photos yet</Text>
-          <Text style={[styles.emptySubtitle, { color: c.text.secondary }]}>Take your first progress photo to start tracking your transformation.</Text>
-        </View>
+        <EmptyState
+          icon={<Icon name="camera" />}
+          title="No photos yet"
+          description="Take your first progress photo to start tracking your transformation."
+        />
       ) : (
         <FlatList
           data={photos}
@@ -230,7 +232,7 @@ export function ProgressPhotosScreen() {
       )}
 
       <TouchableOpacity style={[styles.fab, saving && styles.fabDisabled]} onPress={showAddOptions} disabled={saving} activeOpacity={0.8}>
-        {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.fabText}>+</Text>}
+        {saving ? <ActivityIndicator color={c.text.onAccent} size="small" /> : <Text style={styles.fabText}>+</Text>}
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -255,7 +257,7 @@ const getThemedStyles = (c: ThemeColors) => StyleSheet.create({
   photoDate: { color: c.text.secondary, fontSize: typography.size.xs, textAlign: 'center', paddingVertical: spacing[2] },
   fab: { position: 'absolute', bottom: spacing[8], right: spacing[4], width: 56, height: 56, borderRadius: radius.full, backgroundColor: c.accent.primary, alignItems: 'center', justifyContent: 'center', ...shadows.md },
   fabDisabled: { opacity: 0.5 },
-  fabText: { color: '#fff', fontSize: 28, fontWeight: typography.weight.bold },
+  fabText: { color: c.text.onAccent, fontSize: 28, fontWeight: typography.weight.bold },
   warningBanner: { marginHorizontal: spacing[4], marginTop: spacing[2], padding: spacing[3], borderRadius: radius.md },
   warningText: { fontSize: typography.size.xs, lineHeight: typography.lineHeight.sm },
   exportBtn: { marginTop: spacing[2], paddingVertical: spacing[2], paddingHorizontal: spacing[3], borderRadius: radius.md, borderWidth: 1, alignSelf: 'flex-start' },

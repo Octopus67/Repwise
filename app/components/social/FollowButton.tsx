@@ -32,9 +32,9 @@ export function FollowButton({ userId, isFollowing }: FollowButtonProps) {
       accessibilityLabel={isFollowing ? 'Unfollow' : 'Follow'}
     >
       {mutation.isPending ? (
-        <ActivityIndicator size="small" color="#fff" />
+        <ActivityIndicator size="small" color={c.text.onAccent} />
       ) : (
-        <Text style={[styles.text, { color: isFollowing ? c.text.primary : '#fff' }]}>
+        <Text style={[styles.text, { color: isFollowing ? c.text.primary : c.text.onAccent }]}>
           {isFollowing ? 'Following' : 'Follow'}
         </Text>
       )}

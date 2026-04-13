@@ -67,7 +67,7 @@ export function AvatarUpload({ avatarUrl, initial, onUpload }: AvatarUploadProps
         )}
         {uploading && (
           <View style={styles.loadingOverlay}>
-            <ActivityIndicator color="#fff" size="small" />
+            <ActivityIndicator color={c.text.onAccent} size="small" />
           </View>
         )}
       </View>
