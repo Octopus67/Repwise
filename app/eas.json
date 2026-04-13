@@ -20,7 +20,7 @@
         "EXPO_PUBLIC_API_URL": "https://api.repwise.app",
         "EXPO_PUBLIC_POSTHOG_KEY": "$EXPO_PUBLIC_POSTHOG_KEY",
         "EXPO_PUBLIC_SENTRY_DSN": "$EXPO_PUBLIC_SENTRY_DSN",
-        "SENTRY_DISABLE_AUTO_UPLOAD": "false"
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     }
   },
