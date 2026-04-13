@@ -943,6 +943,22 @@
     semver "^7.6.0"
     slugify "^1.3.4"
 
+"@expo/config@~55.0.15":
+  version "55.0.15"
+  resolved "https://registry.npmjs.org/@expo/config/-/config-55.0.15.tgz#6e6aa54f8f0f1883117d43d0e407a2e504c90618"
+  integrity sha512-lHc0ELIQ8126jYOMZpLv3WIuvordW98jFg5aT/J1/12n2ycuXu01XLZkJsdw0avO34cusUYb1It+MvY8JiMduA==
+  dependencies:
+    "@expo/config-plugins" "~55.0.8"
+    "@expo/config-types" "^55.0.5"
+    "@expo/json-file" "^10.0.13"
+    "@expo/require-utils" "^55.0.4"
+    deepmerge "^4.3.1"
+    getenv "^2.0.0"
+    glob "^13.0.0"
+    resolve-workspace-root "^2.0.0"
+    semver "^7.6.0"
+    slugify "^1.3.4"
+
 "@expo/devcert@^1.2.1":
   version "1.2.1"
   resolved "https://registry.npmjs.org/@expo/devcert/-/devcert-1.2.1.tgz"
@@ -3394,6 +3410,14 @@ expo-asset@~55.0.14:
     "@expo/image-utils" "^0.8.13"
     expo-constants "~55.0.13"
 
+expo-asset@~55.0.15:
+  version "55.0.15"
+  resolved "https://registry.npmjs.org/expo-asset/-/expo-asset-55.0.15.tgz#21da7801f27adeb0a66680b47c65de726827fedb"
+  integrity sha512-d3FIpHJ6ZngYXxRItYWBGT5H8Wkk7/l4fMe8Mmd2xDyKrO0/CM7c8r/J5M71D+BJr5P3My8wertGYZXHSiZYxQ==
+  dependencies:
+    "@expo/image-utils" "^0.8.13"
+    expo-constants "~55.0.14"
+
 expo-audio@~55.0.13:
   version "55.0.13"
   resolved "https://registry.npmjs.org/expo-audio/-/expo-audio-55.0.13.tgz"
@@ -3426,6 +3450,14 @@ expo-constants@~55.0.13, expo-constants@~55.0.7:
   integrity sha512-imSsHm94KWsJbBLvjsUNgubcPQ3H6dXaAm0IZj2Y6+XEdJmjWo2JreriYmeSu/azmpiYUd3Y7K+/Hq9WXQ2Elg==
   dependencies:
     "@expo/config" "~55.0.14"
+    "@expo/env" "~2.1.1"
+
+expo-constants@~55.0.14:
+  version "55.0.14"
+  resolved "https://registry.npmjs.org/expo-constants/-/expo-constants-55.0.14.tgz#5059aa518a02b6ff405da7d59ed568a501cf7fb3"
+  integrity sha512-l23QVQCYBPKT5zbxxZdJeuhiunadvWdjcQ9+GC8h+02jCoLmWRk20064nCINnQTP3Hf+uLPteUiwYrJd0e446w==
+  dependencies:
+    "@expo/config" "~55.0.15"
     "@expo/env" "~2.1.1"
 
 expo-crypto@~55.0.14:

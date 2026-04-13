@@ -284,18 +284,25 @@ The JSONB-based storage pattern (exercises and sets stored as JSON inside Postgr
 4. Build per-session fatigue heat map on workout summary
 
 ### Phase 2: The Intelligence Layer (Health + Surveys)
-5. Un-stub health data integration (HRV, HR, sleep)
-6. Build Health screen
-7. Expand pre-workout survey, add post-workout survey
-8. Feed device health + survey data into readiness engine
+5. **HealthKit / Health Connect integration**
+   - iOS: `react-native-health` + custom Expo config plugin (HealthKit entitlements)
+   - Android: `expo-health-connect` (Google Health Connect API)
+   - Un-stub `app/hooks/useHealthData.ts` → wire to real platform calls
+   - Read: HRV, resting heart rate, sleep duration, step count
+   - Existing: `HealthDisclaimerStep.tsx` (onboarding consent), backend `src/modules/health_reports/`
+   - Privacy: update privacy policy with HealthKit/Health Connect disclosure
+6. Build Health screen (`app/screens/health/`)
+7. Feed device health data into readiness engine
+8. Step tracking → TDEE engine (auto-adjust calorie expenditure from actual activity)
+9. Expand pre-workout survey, add post-workout survey
+10. Feed survey data into readiness engine
 
 ### Phase 3: Training Completeness
-9. Add unilateral tracking (L/R sets)
-10. Add isometric tracking (time-based sets)
-11. Build exercise substitution engine (powered by biomechanics data)
+11. Add unilateral tracking (L/R sets)
+12. Add isometric tracking (time-based sets)
+13. Build exercise substitution engine (powered by biomechanics data)
 
 ### Phase 4: Organization & Polish
-12. Workout folders
-13. Step tracking (if feeding TDEE)
-14. Auto-deload detection
-15. Volume landmarks per muscle (MEV/MRV/MAV overlay)
+14. Workout folders
+15. Auto-deload detection
+16. Volume landmarks per muscle (MEV/MRV/MAV overlay)
