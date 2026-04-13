@@ -20,7 +20,7 @@ import { useHaptics } from '../../hooks/useHaptics';
 import { haptic } from '../../utils/haptics';
 import { useReduceMotion } from '../../hooks/useReduceMotion';
 import Svg, { Circle as SvgCircle } from 'react-native-svg';
-import { Audio } from 'expo-av';
+import { useAudioPlayer } from 'expo-audio';
 import { useWorkoutPreferencesStore } from '../../store/workoutPreferencesStore';
 
 interface FloatingRestTimerBarProps {
@@ -58,22 +58,18 @@ export function FloatingRestTimerBar({
   const timerSoundEnabled = useWorkoutPreferencesStore((s) => s.timerSoundEnabled);
   const reduceMotion = useReduceMotion();
 
-  const playCompletionSound = useCallback(async () => {
+  // useAudioPlayer auto-cleans up on unmount — no manual unloadAsync needed
+  const completionPlayer = useAudioPlayer(require('../../assets/sounds/timer-done.mp3'));
+
+  const playCompletionSound = useCallback(() => {
     if (!timerSoundEnabled) return;
     try {
-      const { sound } = await Audio.Sound.createAsync(
-        require('../../assets/sounds/timer-done.mp3'),
-        { shouldPlay: true }
-      );
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if ('didJustFinish' in status && status.didJustFinish) {
-          sound.unloadAsync();
-        }
-      });
+      completionPlayer.seekTo(0);
+      completionPlayer.play();
     } catch {
       // Audio not available — haptics still fire
     }
-  }, [timerSoundEnabled]);
+  }, [timerSoundEnabled, completionPlayer]);
   const translateY = useSharedValue(reduceMotion ? 0 : 80);
 
   const slideStyle = useAnimatedStyle(() => ({
