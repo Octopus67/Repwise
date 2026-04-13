@@ -401,6 +401,18 @@ if settings.DEBUG:
         )
 
 
+# App Store support URL — public info endpoint (no auth required)
+@app.get("/support")
+async def support():
+    return {
+        "email": "support@repwise.app",
+        "faq_url": "https://repwise.app/faq",
+        "privacy_url": "https://repwise.app/privacy",
+        "terms_url": "https://repwise.app/terms",
+        "app_name": "Repwise",
+    }
+
+
 # Serve exercise images from local static directory
 _static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
 if os.path.isdir(_static_dir):
