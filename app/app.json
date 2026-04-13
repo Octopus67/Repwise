@@ -230,8 +230,7 @@
           "project": "repwise"
         }
       ],
-      "expo-image-picker",
-      "expo-av"
+      "expo-image-picker"
     ],
     "scheme": "repwise",
     "privacy": "https://api.repwise.app/privacy",
