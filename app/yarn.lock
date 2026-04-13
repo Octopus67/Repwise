@@ -3467,6 +3467,11 @@ expo-haptics@~55.0.14:
   resolved "https://registry.npmjs.org/expo-haptics/-/expo-haptics-55.0.14.tgz"
   integrity sha512-KjDItBsA9mi1f5nRwf8g1wOdfEcLHwvEdt5Jl1sMCDETR/homcGOl+F3QIiPOl/PRlbGVieQsjTtF4DGtHOj6g==
 
+expo-health@^0.0.0:
+  version "0.0.0"
+  resolved "https://registry.npmjs.org/expo-health/-/expo-health-0.0.0.tgz#fe2e94d07e5f59b2537bea28fc42db65b25ff443"
+  integrity sha512-GJ93cDee0bB1mgtSW621laJIeflZXF9dTeK/7hu1DfX/UoJTAlJ+bK73J8H8JfgBEvRJ+/+NhAfeb8gU4JKj2A==
+
 expo-image-loader@~55.0.0:
   version "55.0.0"
   resolved "https://registry.npmjs.org/expo-image-loader/-/expo-image-loader-55.0.0.tgz"

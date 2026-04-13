@@ -170,12 +170,6 @@
         "NSPrivacyTracking": false,
         "NSPrivacyTrackingDomains": []
       },
-      "entitlements": {
-        "com.apple.developer.healthkit": true,
-        "com.apple.developer.healthkit.access": [
-          "health-records"
-        ]
-      },
       "infoPlist": {
         "NSCameraUsageDescription": "Repwise needs camera access to take progress photos and scan food barcodes.",
         "NSPhotoLibraryUsageDescription": "Repwise needs photo library access to select progress photos.",
@@ -237,23 +231,7 @@
         }
       ],
       "expo-image-picker",
-      "expo-av",
-      [
-        "expo-health",
-        {
-          "iOSPermissions": [
-            "ActivitySummaryType",
-            "HeartRate",
-            "RestingHeartRate",
-            "HeartRateVariabilitySDNN",
-            "StepCount",
-            "ActiveEnergyBurned",
-            "BasalEnergyBurned",
-            "BodyMass",
-            "Workout"
-          ]
-        }
-      ]
+      "expo-av"
     ],
     "scheme": "repwise",
     "privacy": "https://api.repwise.app/privacy",
