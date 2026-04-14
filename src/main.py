@@ -69,6 +69,7 @@ async def lifespan(application: FastAPI):
         import src.modules.meal_plans.models  # noqa: F401
         import src.modules.notifications.models  # noqa: F401
         import src.modules.measurements.models  # noqa: F401
+        import src.modules.steps.models  # noqa: F401
         import src.modules.sharing.models  # noqa: F401
         import src.modules.export.models  # noqa: F401
         import src.modules.challenges.models  # noqa: F401
@@ -539,6 +540,10 @@ from src.modules.measurements.router import router as measurements_router
 app.include_router(
     measurements_router, prefix="/api/v1/body-measurements", tags=["body-measurements"]
 )
+
+from src.modules.steps.router import router as steps_router
+
+app.include_router(steps_router, prefix="/api/v1/steps", tags=["steps"])
 
 from src.modules.sharing.router import router as sharing_router
 

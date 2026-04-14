@@ -15,6 +15,7 @@ interface CardProps {
   variant?: CardVariant;
   style?: StyleProp<ViewStyle>;
   onPress?: () => void;
+  onLongPress?: () => void;
   animated?: boolean;
   animationIndex?: number;
   /** @deprecated Use variant='raised' instead */
@@ -62,6 +63,7 @@ export function Card({
   variant = 'flat',
   style,
   onPress,
+  onLongPress,
   animated = false,
   animationIndex = 0,
   raised,
@@ -79,9 +81,10 @@ export function Card({
 
   const hoverBorder = isHovered && onPress ? { borderColor: c.border.hover } : undefined;
 
-  const content = onPress ? (
+  const content = (onPress || onLongPress) ? (
     <TouchableOpacity
       onPress={onPress}
+      onLongPress={onLongPress}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       activeOpacity={0.8}
@@ -95,9 +98,9 @@ export function Card({
     <View style={[cardStyles, style]}>{children}</View>
   );
 
-  if (animated || onPress) {
+  if (animated || onPress || onLongPress) {
     return (
-      <Animated.View style={[onPress ? pressStyle : undefined, animated ? entranceStyle : undefined]}>
+      <Animated.View style={[(onPress || onLongPress) ? pressStyle : undefined, animated ? entranceStyle : undefined]}>
         {content}
       </Animated.View>
     );

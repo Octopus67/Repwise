@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, StyleSheet, Alert, Platform } from 'react-native';
 import { Card } from '../common/Card';
 import { Icon } from '../common/Icon';
 import { Skeleton } from '../common/Skeleton';
@@ -7,12 +7,26 @@ import { spacing, typography, radius } from '../../theme/tokens';
 import { useThemeColors, type ThemeColors } from '../../hooks/useThemeColors';
 import { useStepCount } from '../../hooks/useStepCount';
 
-const STEP_GOAL = 8000;
-
 function StepCountCardComponent() {
   const c = useThemeColors();
   const s = getThemedStyles(c);
-  const { steps, loading, permissionDenied, unavailable } = useStepCount();
+  const { steps, stepGoal, setStepGoal, loading, permissionDenied, unavailable } = useStepCount();
+
+  // Long-press to change step goal via native prompt
+  const handleLongPress = useCallback(() => {
+    if (Platform.OS !== 'ios') return;
+    Alert.prompt(
+      'Step Goal',
+      'Enter your daily step goal (min 1000):',
+      (input) => {
+        const parsed = parseInt(input, 10);
+        if (!isNaN(parsed) && parsed >= 1000) setStepGoal(parsed);
+      },
+      'plain-text',
+      String(stepGoal),
+      'number-pad',
+    );
+  }, [stepGoal, setStepGoal]);
 
   if (unavailable) return null;
 
@@ -37,14 +51,14 @@ function StepCountCardComponent() {
   }
 
   const current = steps ?? 0;
-  const progress = Math.min(current / STEP_GOAL, 1);
+  const progress = Math.min(current / stepGoal, 1);
 
   return (
-    <Card variant="flat" style={s.card}>
+    <Card variant="flat" style={s.card} onLongPress={handleLongPress}>
       <View style={s.header}>
         <Icon name="lightning" size={16} color={c.accent.primary} />
         <Text style={s.title}>{current.toLocaleString()} steps</Text>
-        <Text style={s.goal}>/ {STEP_GOAL.toLocaleString()}</Text>
+        <Text style={s.goal}>/ {stepGoal.toLocaleString()}</Text>
       </View>
       <View style={s.barBg}>
         <View style={[s.barFill, { width: `${progress * 100}%`, backgroundColor: c.accent.primary }]} />

@@ -58,6 +58,27 @@ class AdaptiveService:
         if not body_fat_pct:
             body_fat_pct = await self._get_recent_body_fat(user_id)
 
+        # Resolve avg_daily_steps: prefer client-supplied value, else query last 7 days
+        avg_daily_steps = getattr(data, "avg_daily_steps", None)
+        if avg_daily_steps is None:
+            from datetime import timedelta
+            from src.modules.steps.service import StepsService
+
+            steps_svc = StepsService(self.session)
+            end = datetime.now(timezone.utc).date()
+            start = end - timedelta(days=6)  # 7-day window inclusive
+            recent_steps = await steps_svc.get_history(
+                user_id, start_date=start, end_date=end, limit=7
+            )
+            if recent_steps:
+                avg_daily_steps = sum(s.step_count for s in recent_steps) / len(recent_steps)
+                logger.info(
+                    "Computed avg_daily_steps=%.0f from %d days for user=%s",
+                    avg_daily_steps,
+                    len(recent_steps),
+                    user_id,
+                )
+
         # Build the pure-function input
         engine_input = AdaptiveInput(
             weight_kg=data.weight_kg,
@@ -72,6 +93,7 @@ class AdaptiveService:
             diet_style=getattr(data, "diet_style", None),
             protein_per_kg_override=getattr(data, "protein_per_kg_override", None),
             body_fat_pct=body_fat_pct,
+            avg_daily_steps=avg_daily_steps,
         )
 
         # Pure computation — no side effects
